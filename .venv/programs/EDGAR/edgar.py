@@ -2,6 +2,9 @@ import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
 import sys
+import requests
+import numpy as np
+import urllib
 
 
 class StockData:
@@ -18,6 +21,29 @@ class StockData:
 
         self.symbol = symbol
         
+
+def get_CIK_list():
+    """ Webscrape list of stock tickers and their CIK numbers, ouput into a dictionary
+
+    Returns:
+        cikList (dict): dictionary of pairs of stock tickers and CIK numbers
+    """
+
+    # Initial data pull
+    cikData = urllib.request.urlopen("https://www.sec.gov/include/ticker.txt")    
+    if cikData.getcode() != requests.codes.ok:
+        pass
+        # messagebox error in GUI
+    
+    # Parse into dict
+    cikList = {}
+    for line in cikData:
+        line = line.decode("utf-8")
+        (key, val) = line.split()
+        cikList[key] = val
+
+    return cikList    
+
 
 def get_tickers():
     """ Function to open up a GUI that allows the user to select options. Can input one ticker for single stock DD.
@@ -74,6 +100,7 @@ def get_tickers():
         # If no data in one but data in two
         if t1Flag == False and t2Flag == True:
             ticker1 = ticker2
+            ticker2 = ""
             t2Flag = False
             t1Flag = True
 
@@ -139,23 +166,22 @@ def get_tickers():
 
 
 def main():
-    #print("it works")
 
     # Get ticker(s) and check for excel output flag
-    #guiReturn = get_tickers()
     """
     # Initiate class(es) for storing stock data
     ticker1 = stockData(guiReturn[0])
     
     # Only initiate ticker 2 if user supplies value
-    if guiReturn != None:
+    if guiReturn[1] != "":
         ticker2 = stockData(guiReturn[1])
     else:
-        ticker2 = False
+        ticker2 = ""
     excelFlag = guiReturn[2]
     """
 
 
+cikList = get_CIK_list()
 guiReturn = get_tickers()
 #if __name__ == "__main__":
     #main()
