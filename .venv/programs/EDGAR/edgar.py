@@ -45,6 +45,7 @@ def get_CIK_list():
     return cikList    
 
 
+
 def get_tickers():
     """ Function to open up a GUI that allows the user to select options. Can input one ticker for single stock DD.
     Can input two tickers for comparision. Can select a flag that will create a CSV for inport into excel dashboard. Also a quit option to abort execution of program
