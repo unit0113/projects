@@ -66,43 +66,47 @@ def get_tickers(cikList):
     
     # Pull ticker and execute rest of program
     def execute():
-
-        #Change text on execute button
-        submitText.set("Working...")
         
         # Pull tickers and initial ticker check
-        if not ticker1Entry.get():
-            t1Flag = False
+        if not ticker1Entry.get() or ticker1Entry.get() == "Ticker 1":
+            ticker1 = ""
+            cik1 = ""
         else:
-            t1Flag = True
-            ticker1 = ticker1Entry.get().lower()
-        if not ticker2Entry.get():
-            t2Flag = False
+            try:
+                ticker1 = ticker1Entry.get().lower()
+                cik1 = int(cikList[ticker1])
+            except:
+                tk.messagebox.showwarning(title="Invalid Ticker", message="Ticker 1 is invalid, please enter a valid ticker")
+                return
+        if not ticker2Entry.get() or ticker2Entry.get() == "Ticker 2":
             ticker2 = ""
             cik2 = ""
         else:
-            t2Flag = True
-            ticker2 = ticker2Entry.get().lower()
-
-        # If no data in one but data in two
-        if t1Flag == False and t2Flag == True:
-            ticker1 = ticker2
-            t2Flag = False
-            t1Flag = True
+            try:
+                ticker2 = ticker2Entry.get().lower()
+                cik2 = int(cikList[ticker2])
+            except:
+                tk.messagebox.showwarning(title="Invalid Ticker", message="Ticker 2 is invalid, please enter a valid ticker")
+                return
 
         # If no tickers
-        if t1Flag == False and t2Flag == False:
+        if ticker1 == "" and ticker2 == "":
             tk.messagebox.showwarning(title="No Tickers Provided", message="Please Provide at least one Stock ticker")
-            return
+            return                  
         
-        # Pull CIK codes
-        cik1 = cikList[ticker1]
-        if t2Flag is True:
-            cik2 = cikList[ticker2]
-        
+        #Change text on execute button
+        submitText.set("Working...")
+
         # Assembles values and pass to edgarquery
         guiReturn = [ticker1, cik1, ticker2, cik2, excelFlag.get()]
         edgarquery.main(guiReturn)
+        
+        # Offer to run new query or exit
+        response = tk.messagebox.askokcancel(title="Complete", message="Query Complete, select OK for new query or press cancel to exit")
+        if response == True:
+            submitText.set("Execute Query")
+        else:
+            sys.exit()
 
     # Set GUI size and layout
     canvas = tk.Canvas(root, width=gui_width, height=gui_height)
