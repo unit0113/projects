@@ -60,9 +60,49 @@ def get_tickers(cikList):
 
     # Delete contents of entry boxes when clicked on
     def entry_clear(e):
-        if ticker1Entry.get() == "Ticker 1" or ticker2Entry.get() == "Ticker 2":
+        if ticker1Entry.get() == "Ticker 1":
             ticker1Entry.delete(0, tk.END)
+        if ticker2Entry.get() == "Ticker 2":
             ticker2Entry.delete(0, tk.END)
+    
+    # Update autocomplete list box
+    def update(data, src):
+        
+        # Clear list box
+        src.delete(0,tk.END)
+    
+        # Add tickers to list
+        for ticker in data:
+            src.insert(tk.END, ticker.upper())
+    
+    # Fill entry box from selection in list box
+    def fillout(e, src, src2):
+        
+        # Delete current entry
+        src.delete(0,tk.END)
+        #ticker1Entry.delete(0,tk.END)
+
+        # Select from list box
+        src.insert(0, src2.get(tk.ACTIVE))
+        #ticker1Entry.insert(0, ticker1List.get(tk.ACTIVE))
+    
+    # Autocomplete
+    def autocomplete(e, src, src2):
+        
+        # Grab typed data
+        typed= src2.get()
+        
+        # Check if anything has been entered
+        if typed == '':
+            data = tickerList
+        
+        # Update list
+        else:
+            data=[]
+            for item in tickerList:
+                if typed.lower() in item.lower()[0:len(typed)]:
+                    data.append(item.upper())
+        update(data, src)    
     
     # Pull ticker and execute rest of program
     def execute():
@@ -143,22 +183,31 @@ def get_tickers(cikList):
     ticker1Entry.insert(0, "Ticker 1")
     ticker2Entry.insert(0, "Ticker 2")
 
+    # List Boxes
+    ticker1List = tk.Listbox(root, width=8)
+    ticker1ListWindow = canvas.create_window(112, 405, anchor="center", window=ticker1List)
+    ticker2List = tk.Listbox(root, width=8)
+    ticker2ListWindow = canvas.create_window(558, 405, anchor="center", window=ticker2List)
+    tickerList = [*cikList]
+    update(tickerList, ticker1List)
+    update(tickerList, ticker2List)
+
     # Label for entry boxes
     canvas.create_text(112, 260, text="First Ticker", anchor="center", fill="white", font=("Helvetica", 13, "bold"))
     canvas.create_text(558, 260, text="Second Ticker", anchor="center", fill="white", font=("Helvetica", 13, "bold"))
-
-    # TODO
-    """
-    Change Execute to working when in progress
-    Make execute button actually do something
-    Make it look good
-
-    """
 
     # Bind entry boxes
     ticker1Entry.bind("<Button-1>", entry_clear)
     ticker2Entry.bind("<Button-1>", entry_clear)
 
+    # Bind for clicking on list items
+    ticker1List.bind("<<ListboxSelect>>", lambda event, arg=ticker1Entry, arg2=ticker1List: fillout(event, arg, arg2))
+    ticker2List.bind("<<ListboxSelect>>", lambda event, arg=ticker2Entry, arg2=ticker2List: fillout(event, arg, arg2))
+    
+    # Bind for autocomplete
+    ticker1Entry.bind("<KeyRelease>", lambda event, arg=ticker1List, arg2=ticker1Entry: autocomplete(event, arg, arg2))
+    ticker2Entry.bind("<KeyRelease>", lambda event, arg=ticker2List, arg2=ticker2Entry: autocomplete(event, arg, arg2))
+    
     # End GUI code
     root.mainloop()
 
@@ -176,3 +225,11 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# TODO
+"""
+Make an executable using PyInstaller
+
+
+"""
