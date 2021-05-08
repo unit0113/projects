@@ -139,7 +139,14 @@ def get_tickers(cikList):
 
         # Assembles values and pass to edgarquery
         guiReturn = [ticker1, cik1, ticker2, cik2, excelFlag.get()]
-        edgarquery.main(guiReturn)
+        edgarquery.main(guiReturn)     #Activate for error checking
+        """
+        try:
+            edgarquery.main(guiReturn)
+        except:
+            tk.messagebox.showerror(title="Error", message="Network Error. Please try again")
+            submitText.set("Execute Query")
+        """
         
         # Offer to run new query or exit
         response = tk.messagebox.askokcancel(title="Complete", message="Query Complete, select OK for new query or press cancel to exit")
@@ -230,6 +237,7 @@ if __name__ == "__main__":
 # TODO
 """
 Make an executable using PyInstaller
+remove error checker for running edgarquery
 
 
 """
