@@ -16,21 +16,39 @@ class StockData:
         self.symbol = symbol
         self.cik = cik
 
-def fillingsList(cik):
+def filingsList(cik):
     """Creates URL based on CIK number, and pulls the complete list of EDGAR filings
 
     Args:
         cik (int): CIK number for the stock
 
     Returns:
-        fillings (dict): complete list of company fillings
+        filings (dict): complete list of company fillings
     """
     # Assemble URL
     url = "https://www.sec.gov/Archives/edgar/data/" + str(cik) + "/index.json"
 
-    # Get the fillings list
-    fillings = requests.get(url).json()
-    return fillings
+    # Get the filings list
+    filings = requests.get(url).json()
+    return filings
+
+def getfilings(filings, cik):
+
+    # Loop through list
+    for filing in filings['directory']['item']:
+
+        # Get URL for individual filing
+        filingNumber = filing['name']
+        filingURL = "https://www.sec.gov/Archives/edgar/data/" + str(cik) + "/" + str(filingNumber) + "/index.json"
+        filingData = requests.get(filingURL).json()
+        
+        # Pull data from filing
+        for doc in filingData['directory']['item']:
+            if doc['type'] != 'image2.gif':
+                docName = doc['name']
+                docURL = "https://www.sec.gov/Archives/edgar/data/" + str(cik) + "/" + str(filingNumber) + "/" + docName
+                print(docURL)
+
 
 def quarterlyData(cik):
     pass
@@ -58,9 +76,12 @@ def main(guiReturn):
     excelFlag = guiReturn[4]
 
     # Get list of fillings
-    fillings1 = fillingsList(stock1.cik)
+    filings1 = filingsList(stock1.cik)
     if stock2Flag:
-        fillings2 = fillingsList(stock2.cik)
+        filings2 = filingsList(stock2.cik)
+
+    # Pull fillings
+    getfilings(filings1, stock1.cik)
     
 
 
