@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import pandas as pd
 
 class StockData:
 
@@ -16,45 +17,96 @@ class StockData:
         self.symbol = symbol
         self.cik = cik
 
-def filingsList(cik):
-    """Creates URL based on CIK number, and pulls the complete list of EDGAR filings
+def getFilings(cik, period):
+    # Base URL for SEC EDGAR browser
+    endpoint = r"https://www.sec.gov/cgi-bin/browse-edgar"
 
-    Args:
-        cik (int): CIK number for the stock
+    # Define parameters dictionary
+    param_dict = {'action':'getcompany',
+                'CIK':cik,
+                'type':period,
+                'dateb':'',
+                'owner':'exclude',
+                'start':'',
+                'output':'',
+                'count':'100'}
 
-    Returns:
-        filings (dict): complete list of company fillings
-    """
-    # Assemble URL
-    url = "https://www.sec.gov/Archives/edgar/data/" + str(cik) + "/index.json"
+    # Get data
+    response = requests.get(url = endpoint, params = param_dict)
+    soup = BeautifulSoup(response.content, 'html.parser')
 
-    # Get the filings list
-    filings = requests.get(url).json()
-    return filings
+    # Build document table
+    doc_table = soup.find_all('table', class_='tableFile2')
 
-def getfilings(filings, cik):
+    # Base URL for link building
+    base_url_sec = r"https://www.sec.gov"
 
-    # Loop through list
-    for filing in filings['directory']['item']:
-
-        # Get URL for individual filing
-        filingNumber = filing['name']
-        filingURL = "https://www.sec.gov/Archives/edgar/data/" + str(cik) + "/" + str(filingNumber) + "/index.json"
-        filingData = requests.get(filingURL).json()
+    # Loop through rows in table
+    master_list = []
+    for row in doc_table[0].find_all('tr'):
         
-        # Pull data from filing
-        for doc in filingData['directory']['item']:
-            if doc['type'] != 'image2.gif':
-                docName = doc['name']
-                docURL = "https://www.sec.gov/Archives/edgar/data/" + str(cik) + "/" + str(filingNumber) + "/" + docName
-                print(docURL)
+        # Find columns
+        cols = row.find_all('td')
+        
+        # Move to next row if no columns
+        if len(cols) != 0:        
+            
+            # Grab text
+            filing_type = cols[0].text.strip()                 
+            filing_date = cols[3].text.strip()
+            filing_numb = cols[4].text.strip()
+            
+            # Grab links
+            filing_doc_href = cols[1].find('a', {'href':True, 'id':'documentsbutton'})       
+            filing_int_href = cols[1].find('a', {'href':True, 'id':'interactiveDataBtn'})
+            filing_num_href = cols[4].find('a')
+            
+            # Grab first href
+            if filing_doc_href != None:
+                filing_doc_link = base_url_sec + filing_doc_href['href'] 
+            else:
+                filing_doc_link = 'no link'
+            
+            # Grab second href
+            if filing_int_href != None:
+                filing_int_link = base_url_sec + filing_int_href['href'] 
+            else:
+                filing_int_link = 'no link'
+            
+            # Grab third href
+            if filing_num_href != None:
+                filing_num_link = base_url_sec + filing_num_href['href'] 
+            else:
+                filing_num_link = 'no link'
+            
+            # Store data in dict
+            file_dict = {}
+            file_dict['file_type'] = filing_type
+            file_dict['file_number'] = filing_numb
+            file_dict['file_date'] = filing_date
+            file_dict['links'] = {}
+            file_dict['links']['documents'] = filing_doc_link
+            file_dict['links']['interactive_data'] = filing_int_link
+            file_dict['links']['filing_number'] = filing_num_link
+        
+            # let the user know it's working
+            print('-'*100)        
+            print("Filing Type: " + filing_type)
+            print("Filing Date: " + filing_date)
+            print("Filing Number: " + filing_numb)
+            print("Document Link: " + filing_doc_link)
+            print("Filing Number Link: " + filing_num_link)
+            print("Interactive Data Link: " + filing_int_link)
+        
+            # Add data to master list
+            master_list.append(file_dict)
 
-
-def quarterlyData(cik):
+def quarterlyData(stock):
     pass
 
-def annualData(cik):
-    pass
+def annualData(stock):
+    # Get filings
+    filings = getFilings(stock.cik, '10-k')
 
 def main(guiReturn):
     """ Runs two subprograms. Webscrapes ticker/CIK paires from SEC site, gets tickers from user and passes the CIK codes and a seperate flag to the edgarquery program
@@ -76,12 +128,7 @@ def main(guiReturn):
     excelFlag = guiReturn[4]
 
     # Get list of fillings
-    filings1 = filingsList(stock1.cik)
-    if stock2Flag:
-        filings2 = filingsList(stock2.cik)
-
-    # Pull fillings
-    getfilings(filings1, stock1.cik)
+    annualData(stock1)
     
 
 
