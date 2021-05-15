@@ -1,4 +1,5 @@
 import requests
+from datetime import date
 from bs4 import BeautifulSoup
 import pandas as pd
 
@@ -43,6 +44,9 @@ def getFilings(cik, period):
 
     # Loop through rows in table
     master_list = []
+    today = date.today()
+    curYear = today.year
+
     for row in doc_table[0].find_all('tr'):
         
         # Find columns
@@ -78,28 +82,30 @@ def getFilings(cik, period):
                 filing_num_link = base_url_sec + filing_num_href['href'] 
             else:
                 filing_num_link = 'no link'
-            
+
+            # End loop if enough data has been captured (11 years for annuals, 5 full years plus current FY for quarterly)
+            if period == '10-k':
+                if int(filing_date[:4]) + 11 < int(curYear):
+                    break
+            '''else: #for quarterly
+                if date older:
+                    break'''
+
             # Store data in dict
             file_dict = {}
             file_dict['file_type'] = filing_type
             file_dict['file_number'] = filing_numb
             file_dict['file_date'] = filing_date
             file_dict['links'] = {}
-            file_dict['links']['documents'] = filing_doc_link
+            file_dict['links']['documents'] = filing_doc_link[:-10] + '.txt'
             file_dict['links']['interactive_data'] = filing_int_link
             file_dict['links']['filing_number'] = filing_num_link
         
-            # let the user know it's working
-            print('-'*100)        
-            print("Filing Type: " + filing_type)
-            print("Filing Date: " + filing_date)
-            print("Filing Number: " + filing_numb)
-            print("Document Link: " + filing_doc_link)
-            print("Filing Number Link: " + filing_num_link)
-            print("Interactive Data Link: " + filing_int_link)
-        
             # Add data to master list
             master_list.append(file_dict)
+
+    print(master_list)
+    
 
 def quarterlyData(stock):
     pass
@@ -136,3 +142,13 @@ def main(guiReturn):
 #guiReturn = []
 if __name__ == "__main__":
     main(guiReturn)
+
+
+'''TODO
+if filing is /A, skip next
+if /A filing is last, skip
+break condition for quarterly
+pull quarter data from 10-k
+
+
+'''
