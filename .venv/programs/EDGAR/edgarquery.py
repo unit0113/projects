@@ -1,5 +1,6 @@
 import requests
 from datetime import date
+from datetime import datetime
 from bs4 import BeautifulSoup
 import pandas as pd
 
@@ -18,7 +19,7 @@ class StockData:
         self.symbol = symbol
         self.cik = cik
 
-def getFilings(cik, period):
+def getFilings(cik, period, limit):
     # Base URL for SEC EDGAR browser
     endpoint = r"https://www.sec.gov/cgi-bin/browse-edgar"
 
@@ -47,6 +48,9 @@ def getFilings(cik, period):
     today = date.today()
     curYear = today.year
 
+    if type(limit) is not int:
+        limit = datetime.strptime(limit, '%Y-%m-%d').date()
+
     for row in doc_table[0].find_all('tr'):
         
         # Find columns
@@ -59,6 +63,14 @@ def getFilings(cik, period):
             filing_type = cols[0].text.strip()                 
             filing_date = cols[3].text.strip()
             filing_numb = cols[4].text.strip()
+
+            # End loop if enough data has been captured (10 years for annuals, 5 full years plus current FY for quarterly)
+            if type(limit) is int:
+                if (int(filing_date[:4]) + limit) < int(curYear):
+                    break
+            else:
+                if datetime.strptime(filing_date, '%Y-%m-%d').date() + pd.DateOffset(months=10) < limit:
+                    break
             
             # Grab links
             filing_doc_href = cols[1].find('a', {'href':True, 'id':'documentsbutton'})       
@@ -83,14 +95,6 @@ def getFilings(cik, period):
             else:
                 filing_num_link = 'no link'
 
-            # End loop if enough data has been captured (11 years for annuals, 5 full years plus current FY for quarterly)
-            if period == '10-k':
-                if int(filing_date[:4]) + 11 < int(curYear):
-                    break
-            '''else: #for quarterly
-                if date older:
-                    break'''
-
             # Store data in dict
             file_dict = {}
             file_dict['file_type'] = filing_type
@@ -103,16 +107,17 @@ def getFilings(cik, period):
         
             # Add data to master list
             master_list.append(file_dict)
-
     print(master_list)
-    
+    return master_list    
 
 def quarterlyData(stock):
-    pass
+    # Get filings
+    filings = getFilings(stock.cik, '10-k', 6)
+    filings.append(getFilings(stock.cik, '10-q', filings[-1]['file_date']))
 
 def annualData(stock):
     # Get filings
-    filings = getFilings(stock.cik, '10-k')
+    filings = getFilings(stock.cik, '10-k', 11)
 
 def main(guiReturn):
     """ Runs two subprograms. Webscrapes ticker/CIK paires from SEC site, gets tickers from user and passes the CIK codes and a seperate flag to the edgarquery program
@@ -134,7 +139,8 @@ def main(guiReturn):
     excelFlag = guiReturn[4]
 
     # Get list of fillings
-    annualData(stock1)
+    #annualData(stock1)
+    quarterlyData(stock1)
     
 
 
