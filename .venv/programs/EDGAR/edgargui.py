@@ -5,6 +5,7 @@ import sys
 import requests
 import urllib
 import edgarquery
+import time
         
 
 def get_CIK_list():
@@ -14,11 +15,15 @@ def get_CIK_list():
         cikList (dict): dictionary of pairs of stock tickers and CIK numbers
     """
 
-    # Initial data pull
-    cikData = urllib.request.urlopen("https://www.sec.gov/include/ticker.txt")    
-    if cikData.getcode() != requests.codes.ok:
-        pass
-        # messagebox error in GUI
+    # Initial CIK data pull
+    max_attempts = 5
+    for attempt in range(max_attempts):
+        cikData = urllib.request.urlopen("https://www.sec.gov/include/ticker.txt")    
+        if cikData.getcode() != requests.codes.ok:
+            time.sleep(0.25)
+            continue
+        else:
+            break
     
     # Parse into dict
     cikList = {}
@@ -54,9 +59,11 @@ def get_tickers(cikList):
     y = (screenHeight / 2) - (gui_height / 2)
     root.geometry(f'{gui_width}x{gui_height}+{int(x)}+{int(y)}')
 
+
     # Function for exiting GUI
     def clickExitButton():
         sys.exit()
+
 
     # Delete contents of entry boxes when clicked on
     def entry_clear(e):
@@ -65,6 +72,7 @@ def get_tickers(cikList):
         if ticker2Entry.get() == "Ticker 2":
             ticker2Entry.delete(0, tk.END)
     
+
     # Update autocomplete list box
     def update(data, src):
         
@@ -75,6 +83,7 @@ def get_tickers(cikList):
         for ticker in data:
             src.insert(tk.END, ticker.upper())
     
+
     # Fill entry box from selection in list box
     def fillout(e, src, src2):
         
@@ -86,6 +95,7 @@ def get_tickers(cikList):
         src.insert(0, src2.get(tk.ACTIVE))
         #ticker1Entry.insert(0, ticker1List.get(tk.ACTIVE))
     
+
     # Autocomplete
     def autocomplete(e, src, src2):
         
@@ -104,6 +114,7 @@ def get_tickers(cikList):
                     data.append(item.upper())
         update(data, src)    
     
+
     # Pull ticker and execute rest of program
     def execute():
         
@@ -140,13 +151,6 @@ def get_tickers(cikList):
         # Assembles values and pass to edgarquery
         guiReturn = [ticker1, cik1, ticker2, cik2, excelFlag.get()]
         edgarquery.main(guiReturn)     #Activate for error checking
-        """
-        try:
-            edgarquery.main(guiReturn)
-        except:
-            tk.messagebox.showerror(title="Error", message="Network Error. Please try again")
-            submitText.set("Execute Query")
-        """
         
         # Offer to run new query or exit
         response = tk.messagebox.askokcancel(title="Complete", message="Query Complete, select OK for new query or press cancel to exit")
@@ -154,6 +158,7 @@ def get_tickers(cikList):
             submitText.set("Execute Query")
         else:
             sys.exit()
+
 
     # Set GUI size and layout
     canvas = tk.Canvas(root, width=gui_width, height=gui_height)
@@ -238,6 +243,18 @@ if __name__ == "__main__":
 """
 Make an executable using PyInstaller
 remove error checker for running edgarquery
+add network error checker
+
+for _ in range(MAX_RETRIES):
+    try:
+        # ... do stuff ...
+    except SomeTransientError:
+        time.sleep(1)
+        continue
+    else:
+        break
+else:
+    raise PermanentError()
 
 
 """
