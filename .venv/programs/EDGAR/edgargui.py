@@ -21,6 +21,8 @@ def get_CIK_list():
         cikData = urllib.request.urlopen("https://www.sec.gov/include/ticker.txt")    
         if cikData.getcode() != requests.codes.ok:
             time.sleep(0.25)
+            if attempt == max_attempts - 1:
+                tk.messagebox.showerror(title="Error", message="Network Error. Please try again")
             continue
         else:
             break
