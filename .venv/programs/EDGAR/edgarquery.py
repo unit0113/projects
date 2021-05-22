@@ -3,14 +3,16 @@ from datetime import date
 from datetime import datetime
 from bs4 import BeautifulSoup
 import pandas as pd
+import time
+
 
 class StockData:
 
-    """ Class to store stock data for requested tickers, takes in initial input from get_tickers
+    """ Class to store stock data for requested tickers, takes in initial input from edgargui
     """    
     
     def __init__(self, symbol, cik):
-        """ Takes in ticker from get_tickers output and initiates the class
+        """ Takes in ticker and CIK, then initiates the class
 
         Args:
             symbol (str): Stocker ticker
@@ -18,6 +20,7 @@ class StockData:
 
         self.symbol = symbol
         self.cik = cik
+
 
 def getFilings(cik, period, limit):
     # Base URL for SEC EDGAR browser
@@ -36,7 +39,7 @@ def getFilings(cik, period, limit):
     # Get data
     response = requests.get(url = endpoint, params = param_dict)
     soup = BeautifulSoup(response.content, 'html.parser')
-
+    
     # Build document table
     doc_table = soup.find_all('table', class_='tableFile2')
 
@@ -107,17 +110,22 @@ def getFilings(cik, period, limit):
         
             # Add data to master list
             master_list.append(file_dict)
-    print(master_list)
+
     return master_list    
+
 
 def quarterlyData(stock):
     # Get filings
     filings = getFilings(stock.cik, '10-k', 6)
     filings.append(getFilings(stock.cik, '10-q', filings[-1]['file_date']))
+    return filings
+
 
 def annualData(stock):
     # Get filings
     filings = getFilings(stock.cik, '10-k', 11)
+    return filings
+
 
 def main(guiReturn):
     """ Runs two subprograms. Webscrapes ticker/CIK paires from SEC site, gets tickers from user and passes the CIK codes and a seperate flag to the edgarquery program
@@ -139,8 +147,32 @@ def main(guiReturn):
     excelFlag = guiReturn[4]
 
     # Get list of fillings
-    #annualData(stock1)
-    quarterlyData(stock1)
+    max_attempts = 5
+    for _ in range(max_attempts):
+        try:
+            annual_filings = annualData(stock1)
+        except:
+            time.sleep(1)
+            continue
+        else:
+            break
+    else:
+        tk.messagebox.showerror(title="Error", message="Network Error. Please try again")
+    
+    time.sleep(1)
+    
+    for _ in range(max_attempts):
+        try:
+            quarterly_filings = quarterlyData(stock1)
+        except:
+            time.sleep(1)
+            continue
+        else:
+            break
+    else:
+        tk.messagebox.showerror(title="Error", message="Network Error. Please try again")    
+
+    # Pull data from filings
     
 
 
@@ -153,8 +185,8 @@ if __name__ == "__main__":
 '''TODO
 if filing is /A, skip next
 if /A filing is last, skip
-break condition for quarterly
+skip next filing if previous is amended (period of report?)
 pull quarter data from 10-k
-
-
+complete comment strings
+remove extra stuff from get filings
 '''
