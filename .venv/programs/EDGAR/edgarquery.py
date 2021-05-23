@@ -46,7 +46,7 @@ def getFilings(cik, period, limit):
     doc_table = soup.find_all('table', class_='tableFile2')
 
     # Base URL for link building
-    base_url_sec = r"https://www.sec.gov"
+    base_url = r"https://www.sec.gov"
 
     # Loop through rows in table
     master_list = []
@@ -84,31 +84,37 @@ def getFilings(cik, period, limit):
             
             # Grab first href
             if filing_doc_href != None:
-                filing_doc_link = base_url_sec + filing_doc_href['href'] 
+                filing_doc_link = base_url + filing_doc_href['href'] 
             else:
                 filing_doc_link = 'no link'
             
+            '''
             # Grab second href
             if filing_int_href != None:
-                filing_int_link = base_url_sec + filing_int_href['href'] 
+                filing_int_link = base_url + filing_int_href['href'] 
             else:
                 filing_int_link = 'no link'
             
             # Grab third href
             if filing_num_href != None:
-                filing_num_link = base_url_sec + filing_num_href['href'] 
+                filing_num_link = base_url + filing_num_href['href'] 
             else:
                 filing_num_link = 'no link'
+            '''    
 
             # Store data in dict
             file_dict = {}
             file_dict['file_type'] = filing_type
             file_dict['file_number'] = filing_numb
             file_dict['file_date'] = filing_date
+            file_dict['documents'] = filing_doc_link[:-31].replace('-', '') + '/index.json'
+            
+            '''
             file_dict['links'] = {}
             file_dict['links']['documents'] = filing_doc_link[:-10] + '.txt'
             file_dict['links']['interactive_data'] = filing_int_link
             file_dict['links']['filing_number'] = filing_num_link
+            '''
         
             # Add data to master list
             master_list.append(file_dict)
@@ -116,17 +122,120 @@ def getFilings(cik, period, limit):
     return master_list    
 
 
-def quarterlyData(stock):
-    # Get filings
-    filings = getFilings(stock.cik, '10-k', 6)
-    filings.append(getFilings(stock.cik, '10-q', filings[-1]['file_date']))
+def quarterlyData(stock, max_attempts = 5):
+    # Get annual filings
+    for i in range(max_attempts):
+        try:
+            filings = getFilings(stock.cik, '10-k', 6)
+        except:
+            time.sleep(1.1)
+            continue
+        else:
+            break
+    else:
+        tk.messagebox.showerror(title="Error", message="Network Error. Please try again") 
+
+    time.sleep(1.1)
+    
+    for i in range(max_attempts):
+        try:
+            filings.append(getFilings(stock.cik, '10-q', filings[-1]['file_date']))
+        except:
+            time.sleep(1.1)
+            continue
+        else:
+            break
+    else:
+        tk.messagebox.showerror(title="Error", message="Network Error. Please try again")    
+    
     return filings
 
 
-def annualData(stock):
+def annualData(stock, max_attempts = 5):
     # Get filings
-    filings = getFilings(stock.cik, '10-k', 11)
+    for i in range(max_attempts):
+        try:
+            filings = getFilings(stock.cik, '10-k', 11)
+        except:
+            time.sleep(1.1)
+            continue
+        else:
+            break
+    else:
+        tk.messagebox.showerror(title="Error", message="Network Error. Please try again")
     return filings
+
+
+def parse_filings(filings, stock, type, max_attempts = 5):
+    
+    # Base url for link building
+    base_url = r"https://www.sec.gov"
+
+    for filing in filings:
+        time.sleep(.11)
+        for i in range(max_attempts):
+            try:
+                content = requests.get(filing['documents']).json()
+            except:
+                time.sleep(1.1)
+                continue
+            else:
+                break
+        else:
+            tk.messagebox.showerror(title="Error", message="Network Error. Please try again")        
+        
+        for file in content['directory']['item']:    
+            # Grab the filing summary and create a new url leading to the file so we can download it.
+            if file['name'] == 'FilingSummary.xml':
+                xml_summary = base_url + content['directory']['name'] + "/" + file['name']
+
+                # Define a new base url that represents the filing folder
+                base_url = xml_summary.replace('FilingSummary.xml', '')
+
+                time.sleep(.11)
+                # Request and parse the content
+                for i in range(max_attempts):
+                    try:
+                        content = requests.get(xml_summary).content
+                        soup = BeautifulSoup(content, 'lxml')
+
+                        # Find the 'myreports' tag because this contains all the individual reports submitted.
+                        reports = soup.find('myreports')
+                        temp  = reports.find_all
+                    except:
+                        time.sleep(1.1)
+                        continue
+                    else:
+                        break
+                else:
+                    tk.messagebox.showerror(title="Error", message="Network Error. Please try again")
+
+                master_reports = []
+                # Loop through each report in the 'myreports' tag but avoid the last one as this will cause an error.
+                for report in reports.find_all('report')[:-1]:
+
+                    # Create a dictionary to store all the different parts we need.
+                    report_dict = {}
+                    report_dict['name_short'] = report.shortname.text
+                    report_dict['name_long'] = report.longname.text
+                    report_dict['position'] = report.position.text
+                    report_dict['category'] = report.menucategory.text
+                    report_dict['url'] = base_url + report.htmlfilename.text
+
+                    # Append the dictionary to the master list.
+                    master_reports.append(report_dict)
+
+                    # print the info to the user.
+                    print('-'*100)
+                    print(base_url + report.htmlfilename.text)
+                    print(report.longname.text)
+                    print(report.shortname.text)
+                    print(report.menucategory.text)
+                    print(report.position.text)
+
+
+
+
 
 
 def main(guiReturn):
@@ -149,33 +258,14 @@ def main(guiReturn):
     excelFlag = guiReturn[4]
 
     # Get list of fillings
-    max_attempts = 5
-    for _ in range(max_attempts):
-        try:
-            annual_filings = annualData(stock1)
-        except:
-            time.sleep(1)
-            continue
-        else:
-            break
-    else:
-        tk.messagebox.showerror(title="Error", message="Network Error. Please try again")
+    annual_filings = annualData(stock1)
     
-    time.sleep(1)
+    time.sleep(1.1)
     
-    for _ in range(max_attempts):
-        try:
-            quarterly_filings = quarterlyData(stock1)
-        except:
-            time.sleep(1)
-            continue
-        else:
-            break
-    else:
-        tk.messagebox.showerror(title="Error", message="Network Error. Please try again")    
+    quarterly_filings = quarterlyData(stock1)   
 
     # Pull data from filings
-    
+    parse_filings(annual_filings, stock1, 'annual')
 
 
     
@@ -190,5 +280,5 @@ if /A filing is last, skip
 skip next filing if previous is amended (period of report?)
 pull quarter data from 10-k
 complete comment strings
-remove extra stuff from get filings
+remove extra stuff from get filings (currently commented out)
 '''
