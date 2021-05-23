@@ -18,14 +18,15 @@ def get_CIK_list():
     # Initial CIK data pull
     max_attempts = 5
     for attempt in range(max_attempts):
-        cikData = urllib.request.urlopen("https://www.sec.gov/include/ticker.txt")    
-        if cikData.getcode() != requests.codes.ok:
-            time.sleep(0.25)
-            if attempt == max_attempts - 1:
-                tk.messagebox.showerror(title="Error", message="Network Error. Please try again")
+        try:
+            cikData = urllib.request.urlopen("https://www.sec.gov/include/ticker.txt")    
+        except:
+            time.sleep(0.1)
             continue
         else:
             break
+    else:
+        tk.messagebox.showerror(title="Error", message="Network Error. Please try again")
     
     # Parse into dict
     cikList = {}
@@ -152,7 +153,7 @@ def get_tickers(cikList):
 
         # Assembles values and pass to edgarquery
         guiReturn = [ticker1, cik1, ticker2, cik2, excelFlag.get()]
-        edgarquery.main(guiReturn)     #Activate for error checking
+        edgarquery.main(guiReturn)
         
         # Offer to run new query or exit
         response = tk.messagebox.askokcancel(title="Complete", message="Query Complete, select OK for new query or press cancel to exit")
