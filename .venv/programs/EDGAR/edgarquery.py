@@ -6,6 +6,7 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 import pandas as pd
 import time
+import sys
 
 
 class StockData:
@@ -24,7 +25,7 @@ class StockData:
         self.cik = cik
 
 
-def getFilings(cik, period, limit):
+def getFilings(cik, period, limit, headers):
     # Base URL for SEC EDGAR browser
     endpoint = r"https://www.sec.gov/cgi-bin/browse-edgar"
 
@@ -39,7 +40,7 @@ def getFilings(cik, period, limit):
                 'count':'100'}
 
     # Get data
-    response = requests.get(url = endpoint, params = param_dict)
+    response = requests.get(url = endpoint, params = param_dict, headers=headers)
     soup = BeautifulSoup(response.content, 'html.parser')
     
     # Build document table
@@ -77,30 +78,14 @@ def getFilings(cik, period, limit):
                 if datetime.strptime(filing_date, '%Y-%m-%d').date() + pd.DateOffset(months=10) < limit:
                     break
             
-            # Grab links
+            # Grab link
             filing_doc_href = cols[1].find('a', {'href':True, 'id':'documentsbutton'})       
-            filing_int_href = cols[1].find('a', {'href':True, 'id':'interactiveDataBtn'})
-            filing_num_href = cols[4].find('a')
             
             # Grab first href
             if filing_doc_href != None:
                 filing_doc_link = base_url + filing_doc_href['href'] 
             else:
                 filing_doc_link = 'no link'
-            
-            '''
-            # Grab second href
-            if filing_int_href != None:
-                filing_int_link = base_url + filing_int_href['href'] 
-            else:
-                filing_int_link = 'no link'
-            
-            # Grab third href
-            if filing_num_href != None:
-                filing_num_link = base_url + filing_num_href['href'] 
-            else:
-                filing_num_link = 'no link'
-            '''    
 
             # Store data in dict
             file_dict = {}
@@ -108,137 +93,124 @@ def getFilings(cik, period, limit):
             file_dict['file_number'] = filing_numb
             file_dict['file_date'] = filing_date
             file_dict['documents'] = filing_doc_link[:-31].replace('-', '') + '/index.json'
-            
-            '''
-            file_dict['links'] = {}
-            file_dict['links']['documents'] = filing_doc_link[:-10] + '.txt'
-            file_dict['links']['interactive_data'] = filing_int_link
-            file_dict['links']['filing_number'] = filing_num_link
-            '''
-        
+
             # Add data to master list
             master_list.append(file_dict)
 
     return master_list    
 
 
-def quarterlyData(stock, max_attempts = 5):
+def quarterlyData(stock, headers, max_attempts = 5):
     # Get annual filings
     for i in range(max_attempts):
         try:
-            filings = getFilings(stock.cik, '10-k', 6)
+            filings = getFilings(stock.cik, '10-k', 6, headers)
         except:
-            time.sleep(1.1)
+            time.sleep(0.25)
             continue
         else:
             break
     else:
-        tk.messagebox.showerror(title="Error", message="Network Error. Please try again") 
+        tk.messagebox.showerror(title="Error", message="Network Error2. Please try again")
+        sys.exit() 
 
-    time.sleep(1.1)
-    
     for i in range(max_attempts):
         try:
-            filings.append(getFilings(stock.cik, '10-q', filings[-1]['file_date']))
+            filings.append(getFilings(stock.cik, '10-q', filings[-1]['file_date'], headers))
         except:
-            time.sleep(1.1)
+            time.sleep(0.25)
             continue
         else:
             break
     else:
-        tk.messagebox.showerror(title="Error", message="Network Error. Please try again")    
+        tk.messagebox.showerror(title="Error", message="Network Error3. Please try again")
+        sys.exit()    
     
     return filings
 
 
-def annualData(stock, max_attempts = 5):
+def annualData(stock, headers, max_attempts = 5):
     # Get filings
     for i in range(max_attempts):
         try:
-            filings = getFilings(stock.cik, '10-k', 11)
+            filings = getFilings(stock.cik, '10-k', 11, headers)
         except:
-            time.sleep(1.1)
+            time.sleep(0.25)
             continue
         else:
             break
     else:
-        tk.messagebox.showerror(title="Error", message="Network Error. Please try again")
+        tk.messagebox.showerror(title="Error", message="Network Error4. Please try again")
+        sys.exit()
     return filings
 
 
-def parse_filings(filings, stock, type, max_attempts = 5):
-    
+def parse_filings(filings, stock, type, headers, max_attempts = 5):
+
     # Base url for link building
-    base_url = r"https://www.sec.gov"
+    base_url_sec = r"https://www.sec.gov"
 
     for filing in filings:
-        time.sleep(.11)
         for i in range(max_attempts):
             try:
-                content = requests.get(filing['documents']).json()
+                content = requests.get(filing['documents'], headers=headers).json()
             except:
-                time.sleep(1.1)
+                time.sleep(0.25)
                 continue
             else:
                 break
         else:
-            tk.messagebox.showerror(title="Error", message="Network Error. Please try again")        
+            tk.messagebox.showerror(title="Error", message="Network Error5. Please try again")
+            sys.exit()
         
-        for file in content['directory']['item']:    
+        for file in content['directory']['item']:  
             # Grab the filing summary and create a new url leading to the file so we can download it.
             if file['name'] == 'FilingSummary.xml':
-                xml_summary = base_url + content['directory']['name'] + "/" + file['name']
+                xml_summary = base_url_sec + content['directory']['name'] + "/" + file['name']
 
                 # Define a new base url that represents the filing folder
                 base_url = xml_summary.replace('FilingSummary.xml', '')
 
-                time.sleep(.11)
                 # Request and parse the content
-                for i in range(max_attempts):
+                time.sleep(.125)
+                for j in range(max_attempts):
                     try:
-                        content = requests.get(xml_summary).content
+                        content = requests.get(xml_summary, headers=headers).content
                         soup = BeautifulSoup(content, 'lxml')
 
                         # Find the 'myreports' tag because this contains all the individual reports submitted.
                         reports = soup.find('myreports')
-                        temp  = reports.find_all
+                        temp = reports.find_all('report')[:-1]
                     except:
-                        time.sleep(1.1)
+                        time.sleep(.25)
                         continue
                     else:
                         break
                 else:
-                    tk.messagebox.showerror(title="Error", message="Network Error. Please try again")
+                    tk.messagebox.showerror(title="Error", message="Network Error6. Please try again")
+                    sys.exit()
 
                 master_reports = []
                 # Loop through each report in the 'myreports' tag but avoid the last one as this will cause an error.
                 for report in reports.find_all('report')[:-1]:
-
                     # Create a dictionary to store all the different parts we need.
                     report_dict = {}
                     report_dict['name_short'] = report.shortname.text
                     report_dict['name_long'] = report.longname.text
-                    report_dict['position'] = report.position.text
-                    report_dict['category'] = report.menucategory.text
-                    report_dict['url'] = base_url + report.htmlfilename.text
+                    try:
+                        report_dict['url'] = base_url + report.htmlfilename.text
+                    except:
+                        report_dict['url'] = base_url + report.xmlfilename.text[:-4] + '.htm'
 
                     # Append the dictionary to the master list.
                     master_reports.append(report_dict)
-
-                    # print the info to the user.
-                    print('-'*100)
-                    print(base_url + report.htmlfilename.text)
-                    print(report.longname.text)
-                    print(report.shortname.text)
-                    print(report.menucategory.text)
-                    print(report.position.text)
+                break
 
 
 
 
 
-
-def main(guiReturn):
+def main(guiReturn, headers):
     """ Runs two subprograms. Webscrapes ticker/CIK paires from SEC site, gets tickers from user and passes the CIK codes and a seperate flag to the edgarquery program
 
     Returns:
@@ -256,22 +228,20 @@ def main(guiReturn):
             stock2 = StockData(guiReturn[2], guiReturn[3])
             stock2Flag = True            
     excelFlag = guiReturn[4]
+    headers = headers
 
     # Get list of fillings
-    annual_filings = annualData(stock1)
-    
-    time.sleep(1.1)
-    
-    quarterly_filings = quarterlyData(stock1)   
+    annual_filings = annualData(stock1, headers)    
+    quarterly_filings = quarterlyData(stock1, headers)   
 
     # Pull data from filings
-    parse_filings(annual_filings, stock1, 'annual')
+    parse_filings(annual_filings, stock1, 'annual', headers)
 
 
     
 #guiReturn = []
 if __name__ == "__main__":
-    main(guiReturn)
+    main(guiReturn, header)
 
 
 '''TODO
