@@ -6,7 +6,9 @@ import requests
 import urllib
 import edgarquery
 import time
-        
+import json
+import os
+
 
 def get_CIK_list():
     """ Webscrape list of stock tickers and their CIK numbers, ouput into a dictionary
@@ -21,12 +23,13 @@ def get_CIK_list():
         try:
             cikData = urllib.request.urlopen("https://www.sec.gov/include/ticker.txt")    
         except:
-            time.sleep(0.1)
+            time.sleep(0.25)
             continue
         else:
             break
     else:
-        tk.messagebox.showerror(title="Error", message="Network Error. Please try again")
+        tk.messagebox.showerror(title="Error", message="Network Error1. Please try again")
+        sys.exit()
     
     # Parse into dict
     cikList = {}
@@ -61,6 +64,22 @@ def get_tickers(cikList):
     x = (screenWidth / 2) - (gui_width / 2)
     y = (screenHeight / 2) - (gui_height / 2)
     root.geometry(f'{gui_width}x{gui_height}+{int(x)}+{int(y)}')
+
+    def import_user_agent():
+        """Imports User-Agent to program to allow access to EDGAR
+
+        Returns:
+            header [dict]: User-Agent as specified at https://www.sec.gov/os/webmaster-faq
+        """
+        # Open file
+        try:
+            with open('.venv/programs/EDGAR/user_agent.txt') as f:
+                data = f.read()
+                header = json.loads(data)
+        except:
+            pass
+
+        return header
 
 
     # Function for exiting GUI
@@ -152,8 +171,8 @@ def get_tickers(cikList):
         submitText.set("Working...")
 
         # Assembles values and pass to edgarquery
-        guiReturn = [ticker1, cik1, ticker2, cik2, excelFlag.get()]
-        edgarquery.main(guiReturn)
+        gui_return = [ticker1, cik1, ticker2, cik2, excelFlag.get()]
+        edgarquery.main(gui_return, headers)
         
         # Offer to run new query or exit
         response = tk.messagebox.askokcancel(title="Complete", message="Query Complete, select OK for new query or press cancel to exit")
@@ -171,6 +190,9 @@ def get_tickers(cikList):
     # Background
     bg = ImageTk.PhotoImage(file=".venv/programs/EDGAR/bg.png")
     canvas.create_image(0,0, image=bg, anchor="nw")
+
+    # Pull User Agent
+    headers = import_user_agent()
 
     # Instructions
     canvas.create_text(335, 190, text="Input one ticker for DD. Input two tickers for a comparision", anchor="center", fill="white", font=("Helvetica", 15, "bold"))
@@ -228,10 +250,11 @@ def get_tickers(cikList):
 
 
 def main():
-    """ Runs two subprograms. Webscrapes ticker/CIK paires from SEC site, gets tickers from user and passes the CIK codes and a seperate flag to the edgarquery program
+    """ Runs two subprograms. Webscrapes ticker/CIK paires from SEC site,
+        and gets tickers from user and passes the CIK codes and a seperate flag to the edgarquery program
 
     Returns:
-    guiReturn (lst): first symbol, first CIK, second symbol, second CIK, excel export flag
+    gui_return (lst): first symbol, first CIK, second symbol, second CIK, excel export flag
     """
     # Run subprograms
     cikList = get_CIK_list()
