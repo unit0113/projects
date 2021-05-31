@@ -1,14 +1,16 @@
 import tkinter as tk
-from tkinter import messagebox
-from PIL import Image, ImageTk
+import tkinter.filedialog
+from PIL import ImageTk
 import sys
-import requests
 import urllib
 import edgarquery
 import time
 import json
-import os
+from shutil import copyfile
 
+
+global headers
+headers = {}
 
 def get_CIK_list():
     """ Webscrape list of stock tickers and their CIK numbers, ouput into a dictionary
@@ -65,21 +67,20 @@ def get_tickers(cikList):
     y = (screenHeight / 2) - (gui_height / 2)
     root.geometry(f'{gui_width}x{gui_height}+{int(x)}+{int(y)}')
 
+    # Imports User-Agent to program to allow access to EDGAR. Returns User-Agent as specified at https://www.sec.gov/os/webmaster-faq
     def import_user_agent():
-        """Imports User-Agent to program to allow access to EDGAR
-
-        Returns:
-            header [dict]: User-Agent as specified at https://www.sec.gov/os/webmaster-faq
-        """
+        global headers
+        canvas.delete("agent_tag")
         # Open file
         try:
-            with open('.venv/programs/EDGAR/user_agent.txt') as f:
+            with open(r'C:\Users\unit0\OneDrive\Desktop\EDGAR\user_agent.txt') as f:
                 data = f.read()
-                header = json.loads(data)
+                headers = json.loads(data)
+                canvas.create_text(335, 480, text='User Agent found', anchor="center", justify='center', fill="green2", tag="agent_tag", font=("Helvetica", 12, "bold"))
         except:
-            pass
+            canvas.create_text(335, 480, text="No User Agent found.\nPlease add or create a User Agent", anchor="center", justify='center', fill="red", tag="agent_tag", font=("Helvetica", 12, "bold"))
 
-        return header
+        return headers
 
 
     # Function for exiting GUI
@@ -89,10 +90,10 @@ def get_tickers(cikList):
 
     # Delete contents of entry boxes when clicked on
     def entry_clear(e):
-        if ticker1Entry.get() == "Ticker 1":
-            ticker1Entry.delete(0, tk.END)
-        if ticker2Entry.get() == "Ticker 2":
-            ticker2Entry.delete(0, tk.END)
+        if ticker1_entry.get() == "Ticker 1":
+            ticker1_entry.delete(0, tk.END)
+        if ticker2_entry.get() == "Ticker 2":
+            ticker2_entry.delete(0, tk.END)
     
 
     # Update autocomplete list box
@@ -126,37 +127,51 @@ def get_tickers(cikList):
         
         # Check if anything has been entered
         if typed == '':
-            data = tickerList
+            data = ticker_list
         
         # Update list
         else:
             data=[]
-            for item in tickerList:
+            for item in ticker_list:
                 if typed.lower() in item.lower()[0:len(typed)]:
                     data.append(item.upper())
         update(data, src)    
     
 
+    # Browse for User Agent
+    def browse():
+        global headers
+        file = (tkinter.filedialog.askopenfilename())
+        copyfile(file, r'C:\Users\unit0\OneDrive\Desktop\EDGAR\user_agent.txt')
+        headers = import_user_agent()
+
+
+    # Create new User Agent
+    def create():
+        pass
+    
+    
     # Pull ticker and execute rest of program
     def execute():
+        global headers
         
         # Pull tickers and initial ticker check
-        if not ticker1Entry.get() or ticker1Entry.get() == "Ticker 1":
+        if not ticker1_entry.get() or ticker1_entry.get() == "Ticker 1":
             ticker1 = ""
             cik1 = ""
         else:
             try:
-                ticker1 = ticker1Entry.get().lower()
+                ticker1 = ticker1_entry.get().lower()
                 cik1 = int(cikList[ticker1])
             except:
                 tk.messagebox.showwarning(title="Invalid Ticker", message="Ticker 1 is invalid, please enter a valid ticker")
                 return
-        if not ticker2Entry.get() or ticker2Entry.get() == "Ticker 2":
+        if not ticker2_entry.get() or ticker2_entry.get() == "Ticker 2":
             ticker2 = ""
             cik2 = ""
         else:
             try:
-                ticker2 = ticker2Entry.get().lower()
+                ticker2 = ticker2_entry.get().lower()
                 cik2 = int(cikList[ticker2])
             except:
                 tk.messagebox.showwarning(title="Invalid Ticker", message="Ticker 2 is invalid, please enter a valid ticker")
@@ -168,16 +183,17 @@ def get_tickers(cikList):
             return                  
         
         #Change text on execute button
-        submitText.set("Working...")
+        submit_text.set("Working...")
 
         # Assembles values and pass to edgarquery
-        gui_return = [ticker1, cik1, ticker2, cik2, excelFlag.get()]
+        gui_return = [ticker1, cik1, ticker2, cik2, excel_flag.get()]
+        print(headers)
         edgarquery.main(gui_return, headers)
         
         # Offer to run new query or exit
         response = tk.messagebox.askokcancel(title="Complete", message="Query Complete, select OK for new query or press cancel to exit")
         if response == True:
-            submitText.set("Execute Query")
+            submit_text.set("Execute Query")
         else:
             sys.exit()
 
@@ -198,52 +214,64 @@ def get_tickers(cikList):
     canvas.create_text(335, 190, text="Input one ticker for DD. Input two tickers for a comparision", anchor="center", fill="white", font=("Helvetica", 15, "bold"))
 
     # Execute button
-    submitText = tk.StringVar()
-    submitBtn = tk.Button(root, textvariable=submitText, command=execute, font = ("Helvetica", 13, "bold"))
-    submitText.set("Execute Query")
-    submitBtnPlace = canvas.create_window(335, 260, anchor="center", window=submitBtn)
+    submit_text = tk.StringVar()
+    submit_btn = tk.Button(root, textvariable=submit_text, command=execute, font = ("Helvetica", 13, "bold"))
+    submit_text.set("Execute Query")
+    canvas.create_window(335, 260, anchor="center", window=submit_btn)
 
     # Excel output checkbox
-    excelFlag = tk.BooleanVar()
-    cb = tk.Checkbutton(root, text="Dashboard Output", variable=excelFlag, onvalue=True, offvalue=False, font = ("Helvetica", 13, "bold"))
-    cbPlace = canvas.create_window(335, 330, anchor="center", window=cb)    
+    excel_flag = tk.BooleanVar()
+    cb = tk.Checkbutton(root, text="Dashboard Output", variable=excel_flag, onvalue=True, offvalue=False, font = ("Helvetica", 13, "bold"))
+    canvas.create_window(335, 330, anchor="center", window=cb)    
 
     # Quit button
-    quitBtn = tk.Button(root, text="Exit", command=clickExitButton, font = ("Helvetica", 13, "bold"))
-    quitBtnPlace = canvas.create_window(335, 400, anchor="center", window=quitBtn)
+    quit_btn = tk.Button(root, text="Exit", command=clickExitButton, font = ("Helvetica", 13, "bold"))
+    canvas.create_window(335, 400, anchor="center", window=quit_btn)
 
     # Ticker Boxes
-    ticker1Entry = tk.Entry(root, font=("Helvetica", 12), width=6)
-    ticker2Entry = tk.Entry(root, font=("Helvetica", 12), width=6)
-    ticker1Window = canvas.create_window(112, 300, anchor="center", window=ticker1Entry)
-    ticker1Window = canvas.create_window(558, 300, anchor="center", window=ticker2Entry)
-    ticker1Entry.insert(0, "Ticker 1")
-    ticker2Entry.insert(0, "Ticker 2")
+    ticker1_entry = tk.Entry(root, font=("Helvetica", 12), width=6)
+    ticker2_entry = tk.Entry(root, font=("Helvetica", 12), width=6)
+    canvas.create_window(112, 300, anchor="center", window=ticker1_entry)
+    canvas.create_window(558, 300, anchor="center", window=ticker2_entry)
+    ticker1_entry.insert(0, "Ticker 1")
+    ticker2_entry.insert(0, "Ticker 2")
 
     # List Boxes
     ticker1List = tk.Listbox(root, width=8)
-    ticker1ListWindow = canvas.create_window(112, 405, anchor="center", window=ticker1List)
+    canvas.create_window(112, 405, anchor="center", window=ticker1List)
     ticker2List = tk.Listbox(root, width=8)
-    ticker2ListWindow = canvas.create_window(558, 405, anchor="center", window=ticker2List)
-    tickerList = [*cikList]
-    update(tickerList, ticker1List)
-    update(tickerList, ticker2List)
+    canvas.create_window(558, 405, anchor="center", window=ticker2List)
+    ticker_list = [*cikList]
+    update(ticker_list, ticker1List)
+    update(ticker_list, ticker2List)
 
     # Label for entry boxes
     canvas.create_text(112, 260, text="First Ticker", anchor="center", fill="white", font=("Helvetica", 13, "bold"))
     canvas.create_text(558, 260, text="Second Ticker", anchor="center", fill="white", font=("Helvetica", 13, "bold"))
 
+    # Browse button for User Agent
+    browse_text = tk.StringVar()
+    browse_btn = tk.Button(root, textvariable=browse_text, command=browse, font = ("Helvetica", 11, "bold"))
+    browse_text.set("Browse")
+    canvas.create_window(280, 520, anchor="center", window=browse_btn)
+
+    # Create button for User Agent
+    create_text = tk.StringVar()
+    create_btn = tk.Button(root, textvariable=create_text, command=create, font = ("Helvetica", 11, "bold"))
+    create_text.set("Create")
+    canvas.create_window(390, 520, anchor="center", window=create_btn)
+
     # Bind entry boxes
-    ticker1Entry.bind("<Button-1>", entry_clear)
-    ticker2Entry.bind("<Button-1>", entry_clear)
+    ticker1_entry.bind("<Button-1>", entry_clear)
+    ticker2_entry.bind("<Button-1>", entry_clear)
 
     # Bind for clicking on list items
-    ticker1List.bind("<<ListboxSelect>>", lambda event, arg=ticker1Entry, arg2=ticker1List: fillout(event, arg, arg2))
-    ticker2List.bind("<<ListboxSelect>>", lambda event, arg=ticker2Entry, arg2=ticker2List: fillout(event, arg, arg2))
+    ticker1List.bind("<<ListboxSelect>>", lambda event, arg=ticker1_entry, arg2=ticker1List: fillout(event, arg, arg2))
+    ticker2List.bind("<<ListboxSelect>>", lambda event, arg=ticker2_entry, arg2=ticker2List: fillout(event, arg, arg2))
     
     # Bind for autocomplete
-    ticker1Entry.bind("<KeyRelease>", lambda event, arg=ticker1List, arg2=ticker1Entry: autocomplete(event, arg, arg2))
-    ticker2Entry.bind("<KeyRelease>", lambda event, arg=ticker2List, arg2=ticker2Entry: autocomplete(event, arg, arg2))
+    ticker1_entry.bind("<KeyRelease>", lambda event, arg=ticker1List, arg2=ticker1_entry: autocomplete(event, arg, arg2))
+    ticker2_entry.bind("<KeyRelease>", lambda event, arg=ticker2List, arg2=ticker2_entry: autocomplete(event, arg, arg2))
     
     # End GUI code
     root.mainloop()
