@@ -79,8 +79,12 @@ def get_tickers(cikList):
                 canvas.create_text(335, 480, text='User Agent found', anchor="center", justify='center', fill="green2", tag="agent_tag", font=("Helvetica", 12, "bold"))
         except:
             canvas.create_text(335, 480, text="No User Agent found.\nPlease add or create a User Agent", anchor="center", justify='center', fill="red", tag="agent_tag", font=("Helvetica", 12, "bold"))
+            return
 
-        return headers
+        # Check for Valid Agent
+        if headers["Accept-Encoding"] != "gzip, deflate" or headers["Host"] != "www.sec.gov":
+            canvas.delete("agent_tag")
+            canvas.create_text(335, 480, text="Invalid User agent", anchor="center", justify='center', fill="red", tag="agent_tag", font=("Helvetica", 12, "bold"))
 
 
     # Function for exiting GUI
@@ -140,21 +144,84 @@ def get_tickers(cikList):
 
     # Browse for User Agent
     def browse():
-        global headers
         file = (tkinter.filedialog.askopenfilename())
         copyfile(file, r'C:\Users\unit0\OneDrive\Desktop\EDGAR\user_agent.txt')
-        headers = import_user_agent()
+        import_user_agent()
 
 
     # Create new User Agent
     def create():
-        pass
+        
+        def create_new_agent():
+            # Pull data
+            name = name_entry.get()
+            email = email_entry.get()
+            agent = {"User-Agent": "For Personal Use of " + name + " " + email,
+                     "Accept-Encoding": "gzip, deflate",
+                     "Host": "www.sec.gov"}
+            
+            # Save User Agent
+            with open(r'C:\Users\unit0\OneDrive\Desktop\EDGAR\user_agent.txt', 'w') as f:
+                print(json.dumps(agent), file=f)
+
+            import_user_agent()
+            create_root.destroy()
+
+        
+        # Delete contents of entry boxes when clicked on
+        def create_entry_clear(e):
+            if name_entry.get() == "First Last":
+                name_entry.delete(0, tk.END)
+            if email_entry.get() == "Email Address":
+                email_entry.delete(0, tk.END)
+        
+
+        create_root = tk.Tk()
+        create_root.title("Create User Agent")
+
+        # Size of GUI
+        gui_width = 250
+        gui_height = 200
+
+        # Size of screen
+        screenWidth = root.winfo_screenwidth()
+        screenHeight = root.winfo_screenheight()
+
+        # Place GUI in middle of screen
+        x = (screenWidth / 2) - (gui_width / 2)
+        y = (screenHeight / 2) - (gui_height / 2)
+        create_root.geometry(f'{gui_width}x{gui_height}+{int(x)}+{int(y)}')
+
+        #Create Window
+        create_canvas = tk.Canvas(create_root, width=gui_width, height=gui_height)
+        create_canvas.pack(fill="both", expand="True")
+        create_root.resizable(width=False, height=False)
+
+        # Create Button
+        create_btn_2 = tk.Button(create_root, text='Create', command=create_new_agent, font = ("Helvetica", 13, "bold"))
+        create_canvas.create_window(125, 175, anchor="center", window=create_btn_2)
+
+        # Field Labels
+        create_canvas.create_text(25, 25, text="Name (First Last)", anchor="w", fill="black", font=("Helvetica", 13, "bold"))
+        create_canvas.create_text(25, 100, text="Email Address", anchor="w", fill="black", font=("Helvetica", 13, "bold"))
+
+        # Input Boxes
+        name_entry = tk.Entry(create_root, font=("Helvetica", 12), width=25)
+        email_entry = tk.Entry(create_root, font=("Helvetica", 12), width=25)
+        create_canvas.create_window(125, 50, anchor="center", window=name_entry)
+        create_canvas.create_window(125, 125, anchor="center", window=email_entry)
+        name_entry.insert(0, "First Last")
+        email_entry.insert(0, "Email Address")
+
+        # Bind entry boxes
+        name_entry.bind("<Button-1>", create_entry_clear)
+        email_entry.bind("<Button-1>", create_entry_clear)
     
     
     # Pull ticker and execute rest of program
     def execute():
         global headers
-        
+
         # Pull tickers and initial ticker check
         if not ticker1_entry.get() or ticker1_entry.get() == "Ticker 1":
             ticker1 = ""
@@ -187,7 +254,6 @@ def get_tickers(cikList):
 
         # Assembles values and pass to edgarquery
         gui_return = [ticker1, cik1, ticker2, cik2, excel_flag.get()]
-        print(headers)
         edgarquery.main(gui_return, headers)
         
         # Offer to run new query or exit
@@ -208,7 +274,7 @@ def get_tickers(cikList):
     canvas.create_image(0,0, image=bg, anchor="nw")
 
     # Pull User Agent
-    headers = import_user_agent()
+    import_user_agent()
 
     # Instructions
     canvas.create_text(335, 190, text="Input one ticker for DD. Input two tickers for a comparision", anchor="center", fill="white", font=("Helvetica", 15, "bold"))
@@ -293,22 +359,10 @@ if __name__ == "__main__":
     main()
 
 
-# TODO
 """
+TODO
 Make an executable using PyInstaller
-remove error checker for running edgarquery
-add network error checker
-
-for _ in range(MAX_RETRIES):
-    try:
-        # ... do stuff ...
-    except SomeTransientError:
-        time.sleep(1)
-        continue
-    else:
-        break
-else:
-    raise PermanentError()
-
-
+checker in execute for user agent
+finish create()
+make user agent file paths programitically
 """
