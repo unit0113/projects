@@ -12,43 +12,32 @@ from shutil import copyfile
 global headers
 headers = {}
 
+@edgarquery.network_check_decorator(1)
 def get_CIK_list():
-    """ Webscrape list of stock tickers and their CIK numbers, ouput into a dictionary
+    """ Webscrape list of stock tickers and their CIK numbers, ouputs into a dictionary
 
     Returns:
         cikList (dict): dictionary of pairs of stock tickers and CIK numbers
     """
-
-    # Initial CIK data pull
-    max_attempts = 5
-    for attempt in range(max_attempts):
-        try:
-            cikData = urllib.request.urlopen("https://www.sec.gov/include/ticker.txt")    
-        except:
-            time.sleep(0.25)
-            continue
-        else:
-            break
-    else:
-        tk.messagebox.showerror(title="Error", message="Network Error1. Please try again")
-        sys.exit()
-    
+    cikData = urllib.request.urlopen("https://www.sec.gov/include/ticker.txt") 
     # Parse into dict
-    cikList = {}
+    cik_list = {}
     for line in cikData:
         line = line.decode("utf-8")
         (key, val) = line.split()
-        cikList[key] = val
+        cik_list[key] = val
 
-    return cikList    
+    return cik_list   
 
 
 def get_tickers(cikList):
     """ Function to open up a GUI that allows the user to select options. Can input one ticker for single stock DD.
-    Can input two tickers for comparision. Can select a flag that will create a CSV for inport into excel dashboard. Also a quit option to abort execution of program
+    Can input two tickers for comparision. Can select a flag that will create a CSV for inport into excel dashboard. Functionality for creating a User Agent. 
+    Also a quit option to abort execution of program
 
     Returns:
         guiReturn (lst): first symbol, first CIK, second symbol, second CIK, excel export flag
+        headers (dict): Parameters for User Agent
     """    
     # GUI
     root = tk.Tk()
@@ -349,6 +338,7 @@ def main():
 
     Returns:
     gui_return (lst): first symbol, first CIK, second symbol, second CIK, excel export flag
+    headers (dict): Parameters for User Agent
     """
     # Run subprograms
     cikList = get_CIK_list()
@@ -362,7 +352,5 @@ if __name__ == "__main__":
 """
 TODO
 Make an executable using PyInstaller
-checker in execute for user agent
-finish create()
 make user agent file paths programitically
 """
