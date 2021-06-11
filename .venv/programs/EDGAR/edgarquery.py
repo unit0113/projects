@@ -25,6 +25,26 @@ class StockData:
         self.cik = cik
 
 
+def network_check_decorator(num, max_attempts=5):
+    def inner(func):
+        def wrapper(*args, **kwargs):
+            for attempt in range(max_attempts):
+                try:
+                    result = func(*args, **kwargs)
+                except:
+                    time.sleep(.25)
+                    continue
+                else:
+                    break
+            else:
+                error_message = f"Network Error{num}. Please try again"
+                tk.messagebox.showerror(title="Error", message=error_message)
+                sys.exit()
+            return result
+        return wrapper
+    return inner
+
+
 def getFilings(cik, period, limit, headers):
     # Base URL for SEC EDGAR browser
     endpoint = r"https://www.sec.gov/cgi-bin/browse-edgar"
@@ -104,7 +124,10 @@ def quarterlyData(stock, headers, max_attempts = 5):
     # Get annual filings
     for i in range(max_attempts):
         try:
-            filings = getFilings(stock.cik, '10-k', 6, headers)
+            try:
+                filings = getFilings(stock.cik, '10-k', 6, headers)
+            except:
+                filings = getFilings(stock.cik, '20-f', 6, headers)
         except:
             time.sleep(0.25)
             continue
@@ -116,7 +139,10 @@ def quarterlyData(stock, headers, max_attempts = 5):
 
     for i in range(max_attempts):
         try:
-            filings.append(getFilings(stock.cik, '10-q', filings[-1]['file_date'], headers))
+            try:
+                filings.append(getFilings(stock.cik, '10-q', filings[-1]['file_date'], headers))
+            except:
+                filings.append(getFilings(stock.cik, '20-f', filings[-1]['file_date'], headers))
         except:
             time.sleep(0.25)
             continue
@@ -133,7 +159,10 @@ def annualData(stock, headers, max_attempts = 5):
     # Get filings
     for i in range(max_attempts):
         try:
-            filings = getFilings(stock.cik, '10-k', 11, headers)
+            try:
+                filings = getFilings(stock.cik, '10-k', 11, headers)
+            except:
+                filings = getFilings(stock.cik, '20-f', 11, headers)
         except:
             time.sleep(0.25)
             continue
@@ -146,9 +175,30 @@ def annualData(stock, headers, max_attempts = 5):
 
 
 def parse_filings(filings, stock, type, headers, max_attempts = 5):
-
-    # Base url for link building
-    base_url_sec = r"https://www.sec.gov"
+    
+    # Define statements to Parse
+    item1 = r'INCOME STATEMENTS'
+    item2 = r'BALANCE SHEETS'
+    item3 = r'CASH FLOWS STATEMENTS'
+    item4 = r'CONSOLIDATED STATEMENT OF OPERATIONS'
+    item5 = r'DIVIDENDS DECLARED (DETAIL)'
+    item6 = r'BASIC AND DILUTED EARNINGS PER SHARE (DETAIL)'
+    item7 = r'CONSOLIDATED STATEMENTS OF CASH FLOWS'
+    item8 = r'CONSOLIDATED STATEMENTS OF OPERATIONS'
+    item9 = r'CONSOLIDATED BALANCE SHEETS'
+    item10 = r'STATEMENT OF CASH FLOWS INDIRECT'
+    item11 = r'STATEMENT OF INCOME'
+    item12 = r'STATEMENT OF FINANCIAL POSITION CLASSIFIED'
+    item13 = r'CONSOLIDATED BALANCE SHEET'
+    item14 = r'CONSOLIDATED STATEMENT OF CASH FLOWS'
+    item15 = r'CONSOLIDATED STATEMENTS OF EARNINGS'
+    item16 = r'CONSOLIDATED STATEMENT OF INCOME'
+    item17 = r'CONSOLIDATED STATEMENTS OF INCOME'
+    item18 = r'STATEMENTS OF CONSOLIDATED INCOME'
+    item19 = r'STATEMENTS OF CONSOLIDATED CASH FLOWS'
+    item20 = r'STATEMENT OF INCOME ALTERNATIVE'
+    report_list = [item1, item2, item3, item4, item5, item6, item7, item8, item9, item10, item11, item12, item13, item14, item15, item16, item17, item18, item19, item20]
+    statements_url = []
 
     for filing in filings:
         for i in range(max_attempts):
@@ -166,21 +216,21 @@ def parse_filings(filings, stock, type, headers, max_attempts = 5):
         for file in content['directory']['item']:  
             # Grab the filing summary and create a new url leading to the file so we can download it.
             if file['name'] == 'FilingSummary.xml':
-                xml_summary = base_url_sec + content['directory']['name'] + "/" + file['name']
-
+                xml_summary = r"https://www.sec.gov" + content['directory']['name'] + "/" + file['name']
+                
                 # Define a new base url that represents the filing folder
                 base_url = xml_summary.replace('FilingSummary.xml', '')
 
                 # Request and parse the content
-                time.sleep(.125)
-                for j in range(max_attempts):
+                time.sleep(.11)
+                for attempt in range(max_attempts):
                     try:
                         content = requests.get(xml_summary, headers=headers).content
                         soup = BeautifulSoup(content, 'lxml')
 
                         # Find the 'myreports' tag because this contains all the individual reports submitted.
                         reports = soup.find('myreports')
-                        temp = reports.find_all('report')[:-1]
+                        test = reports.find_all('report')[:-1]
                     except:
                         time.sleep(.25)
                         continue
@@ -189,22 +239,59 @@ def parse_filings(filings, stock, type, headers, max_attempts = 5):
                 else:
                     tk.messagebox.showerror(title="Error", message="Network Error6. Please try again")
                     sys.exit()
-
-                master_reports = []
-                # Loop through each report in the 'myreports' tag but avoid the last one as this will cause an error.
+               
+                # Loop through each report with the 'myreports' tag but avoid the last one as this will cause an error
                 for report in reports.find_all('report')[:-1]:
-                    # Create a dictionary to store all the different parts we need.
-                    report_dict = {}
-                    report_dict['name_short'] = report.shortname.text
-                    report_dict['name_long'] = report.longname.text
-                    try:
-                        report_dict['url'] = base_url + report.htmlfilename.text
-                    except:
-                        report_dict['url'] = base_url + report.xmlfilename.text[:-4] + '.htm'
-
-                    # Append the dictionary to the master list.
-                    master_reports.append(report_dict)
+                    if report.shortname.text.upper() in report_list:
+                        # Add Statement URL to List
+                        try:
+                            statements_url.append(base_url + report.htmlfilename.text)
+                        except:
+                            statements_url.append(base_url + report.xmlfilename.text)
                 break
+
+    # Create Data Set
+    statements_data = []
+
+    # Loop through statement URL's
+    for statement in statements_url:
+
+        # Dict to Store Statement
+        statement_data = {}
+        statement_data['headers'] = []
+        statement_data['sections'] = []
+        statement_data['data'] = []
+        
+        # Get Statement Data
+        content = requests.get(statement).content
+        report_soup = BeautifulSoup(content, 'html')
+
+        # Loop Through Rows in Content
+        for index, row in enumerate(report_soup.table.find_all('tr')):
+            
+            # Get All Elements
+            cols = row.find_all('td')
+            
+            # Check if Regular Row
+            if (len(row.find_all('th')) == 0 and len(row.find_all('strong')) == 0): 
+                reg_row = [ele.text.strip() for ele in cols]
+                statement_data['data'].append(reg_row)
+                
+            # Check if Section
+            elif (len(row.find_all('th')) == 0 and len(row.find_all('strong')) != 0):
+                sec_row = cols[0].text.strip()
+                statement_data['sections'].append(sec_row)
+                
+            # Check if Header
+            elif (len(row.find_all('th')) != 0):            
+                hed_row = [ele.text.strip() for ele in row.find_all('th')]
+                statement_data['headers'].append(hed_row)
+                
+            else:            
+                print('We encountered an error.')
+
+        # Append to Statements Data
+        statements_data.append(statement_data)
 
 
 
@@ -226,8 +313,8 @@ def main(guiReturn, headers):
         stock1 = StockData(guiReturn[0], guiReturn[1])
         if guiReturn[2] != "":
             stock2 = StockData(guiReturn[2], guiReturn[3])
-            stock2Flag = True            
-    excelFlag = guiReturn[4]
+            stock2_flag = True            
+    excel_flag = guiReturn[4]
     headers = headers
 
     # Get list of fillings
