@@ -15,7 +15,7 @@ class StockData:
     """ Class to store stock data for requested tickers, takes in initial input from edgargui
     """    
     
-    def __init__(self, symbol, cik):
+    def __init__(self, symbol, cik, headers):
         """ Takes in ticker and CIK, then initiates the class
 
         Args:
@@ -24,6 +24,13 @@ class StockData:
 
         self.symbol = symbol
         self.cik = cik
+        self.headers = headers
+        # Get list of fillings
+        self.annual_filings = annualData(self.cik, self.headers)   
+        #quarterly_filings = quarterlyData(self, headers)   
+
+        # Pull data from filings
+        parse_filings(self.annual_filings, 'annual', self.headers)
 
 
 def network_check_decorator(num, max_attempts=5):
@@ -121,73 +128,47 @@ def getFilings(cik, period, limit, headers):
     return master_list    
 
 
-def quarterlyData(stock, headers, max_attempts = 5):
+@network_check_decorator(2)
+def quarterlyData(cik, headers):
     # Get annual filings
-    for i in range(max_attempts):
-        try:
-            try:
-                filings = getFilings(stock.cik, '10-k', 6, headers)
-            except:
-                filings = getFilings(stock.cik, '20-f', 6, headers)
-        except:
-            time.sleep(0.25)
-            continue
-        else:
-            break
-    else:
-        tk.messagebox.showerror(title="Error", message="Network Error2. Please try again")
-        sys.exit() 
-
-    for i in range(max_attempts):
-        try:
-            try:
-                filings.append(getFilings(stock.cik, '10-q', filings[-1]['file_date'], headers))
-            except:
-                filings.append(getFilings(stock.cik, '20-f', filings[-1]['file_date'], headers))
-        except:
-            time.sleep(0.25)
-            continue
-        else:
-            break
-    else:
-        tk.messagebox.showerror(title="Error", message="Network Error3. Please try again")
-        sys.exit()    
+    try:
+        filings = getFilings(cik, '10-k', 6, headers)
+        filings.append(getFilings(cik, '10-q', filings[-1]['file_date'], headers))
+    except:
+        filings = getFilings(cik, '20-f', 6, headers)
+        filings.append(getFilings(cik, '20-f', filings[-1]['file_date'], headers))  
     
     return filings
 
-
-def annualData(stock, headers, max_attempts = 5):
+@network_check_decorator(3)
+def annualData(cik, headers):
     # Get filings
-    for i in range(max_attempts):
-        try:
-            try:
-                filings = getFilings(stock.cik, '10-k', 11, headers)
-            except:
-                filings = getFilings(stock.cik, '20-f', 11, headers)
-        except:
-            time.sleep(0.25)
-            continue
-        else:
-            break
-    else:
-        tk.messagebox.showerror(title="Error", message="Network Error4. Please try again")
-        sys.exit()
+    try:
+        filings = getFilings(cik, '10-k', 11, headers)
+    except:
+        filings = getFilings(cik, '20-f', 11, headers)    
+    
     return filings
 
 
-def parse_filings(filings, stock, type, headers, max_attempts = 5):
-    
+def parse_filings(filings, type, headers):    
     # Pull fiscal period from .htm
     def fy_html(soup):
-        fy = '---'
+        fy = period_end = '---'
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
             if 'DocumentFiscalYearFocus' in str(tds):
-                fy = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
-                return fy
+                fy = int(tds[1].text)
+            if 'this, \'defref_dei_DocumentPeriodEndDate\', window' in str(tds):
+                period_end_str = tds[1].text.strip()
+                period_end = datetime.strptime(period_end_str, '%b. %d,  %Y') 
+        
+            if fy != '---' and period_end != '---':
+                return fy, period_end
+        return fy, period_end
 
 
-    # Pull fiscal period from .htm
+    # Pull fiscal period from .xml
     def fy_xml(soup):
         fy = '---'
         rows = soup.find_all('Row')
@@ -217,7 +198,7 @@ def parse_filings(filings, stock, type, headers, max_attempts = 5):
             elif 'defref_us-gaap_NetIncomeLoss' in str(tds):
                 net = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
             elif 'EarningsPerShareDiluted' in str(tds):
-                eps = float(''.join(re.findall(r'\d+\.\d+', tds[1].text.strip())))
+                eps = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
             elif 'this, \'defref_us-gaap_CostOfRevenue\', window' in str(tds) and cost_check == 0 or 'this, \'defref_us-gaap_CostOfGoodsAndServicesSold\', window' in str(tds) and cost_check == 0:
                 cost = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
 
@@ -299,7 +280,55 @@ def parse_filings(filings, stock, type, headers, max_attempts = 5):
 
         return cash, assets, liabilities
 
-    # Pull cash flow data
+    # Pull balance sheet data
+    def bs_xml(soup):
+        cash = goodwill = assets = liabilities = '---'
+        rows = soup.find_all('Row')
+        for row in rows:
+            if 'us-gaap_CashCashEquivalentsAndShortTermInvestments' in str(row):
+                for cell in row:
+                    for line in str(cell).split('\n'):
+                        if 'RoundedNumericAmount' in str(line):
+                            cash = int(re.findall(r'\d+', line.strip())[0])
+                            break
+            elif 'us-gaap_Goodwill' in str(row):
+                for cell in row:
+                    for line in str(cell).split('\n'):
+                        if 'RoundedNumericAmount' in str(line):
+                            goodwill = int(re.findall(r'\d+', line.strip())[0])
+                            break                
+            elif r'<ElementName>us-gaap_Assets</ElementName>' in str(row):
+                for cell in row:
+                    for line in str(cell).split('\n'):
+                        if 'RoundedNumericAmount' in str(line):
+                            assets = int(re.findall(r'\d+', line.strip())[0])
+                            assets -= goodwill
+                            break      
+            elif r'<ElementName>us-gaap_LiabilitiesCurrent</ElementName>' in str(row):
+                for cell in row:
+                    for line in str(cell).split('\n'):
+                        if 'RoundedNumericAmount' in str(line):
+                            liabilities_current = int(re.findall(r'\d+', line.strip())[0])
+                            break
+            elif 'us-gaap_LongTermDebtNoncurrent' in str(row):
+                for cell in row:
+                    for line in str(cell).split('\n'):
+                        if 'RoundedNumericAmount' in str(line):
+                            long_term_debt = int(re.findall(r'\d+', line.strip())[0])
+                            break
+            elif 'us-gaap_OtherLiabilitiesNoncurrent' in str(row):
+                for cell in row:
+                    for line in str(cell).split('\n'):
+                        if 'RoundedNumericAmount' in str(line):
+                            liabilities_other = int(re.findall(r'\d+', line.strip())[0])
+                            break                   
+
+        liabilities = liabilities_current + long_term_debt + liabilities_other
+
+        return cash, assets, liabilities
+        
+        
+        # Pull cash flow data
     def cf_html(soup):
         cfo = capex = buyback = divpaid = '---'
         for row in soup.table.find_all('tr'):
@@ -312,6 +341,43 @@ def parse_filings(filings, stock, type, headers, max_attempts = 5):
                 buyback = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
             elif 'Common stock cash dividends paid' in str(tds):
                 divpaid = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
+        
+        # Calculate FCF
+        try:
+            fcf = cfo - capex
+        except:
+            fcf = '---'
+
+        return fcf, buyback, divpaid
+
+    def cf_xml(soup):
+        cfo = capex = buyback = divpaid = '---'
+        rows = soup.find_all('Row')
+        for row in rows:
+            if 'us-gaap_NetCashProvidedByUsedInOperatingActivities' in str(row):
+                for cell in row:
+                    for line in str(cell).split('\n'):
+                        if 'RoundedNumericAmount' in str(line):
+                            cfo = int(re.findall(r'\d+', line.strip())[0])
+                            break
+            elif 'us-gaap_PaymentsToAcquirePropertyPlantAndEquipment' in str(row):
+                for cell in row:
+                    for line in str(cell).split('\n'):
+                        if 'RoundedNumericAmount' in str(line):
+                            capex = int(re.findall(r'\d+', line.strip())[0])
+                            break                
+            elif 'us-gaap_PaymentsForRepurchaseOfCommonStock' in str(row):
+                for cell in row:
+                    for line in str(cell).split('\n'):
+                        if 'RoundedNumericAmount' in str(line):
+                            buyback = int(re.findall(r'\d+', line.strip())[0])
+                            break      
+            elif 'us-gaap_PaymentsOfDividendsCommonStock' in str(row):
+                for cell in row:
+                    for line in str(cell).split('\n'):
+                        if 'RoundedNumericAmount' in str(line):
+                            divpaid = int(re.findall(r'\d+', line.strip())[0])
+                            break
         
         # Calculate FCF
         try:
@@ -335,6 +401,32 @@ def parse_filings(filings, stock, type, headers, max_attempts = 5):
 
         return div
 
+
+    # Pull div data
+    def div_xml(soup):
+        div = '---'
+        
+        # Find which cell yearly data starts in
+        cols = soup.find_all('Column')
+        for index, col in enumerate(cols):
+            if '12 Months Ended' in str(col):
+                break
+        search_id = '<Id>' + str(index + 1) + r'</Id>'
+
+        rows = soup.find_all('Row')
+        for row in rows:
+            if '>us-gaap_CommonStockDividendsPerShareDeclared' in str(row):
+                cells = row.find_all('Cell')
+                for cell in cells:
+                    if search_id in str(cell):
+                        for line in str(cell).split('\n'):
+                            if 'NumericAmount' in str(line):
+                                div = float(re.findall(r'\d+\.\d+', line.strip())[0])
+                                break
+                        break
+
+        return div
+
     # Define statements to Parse
     intro_list = r'DOCUMENT AND ENTITY INFORMATION', 
     income_list = r'CONSOLIDATED STATEMENTS OF EARNINGS', r'STATEMENT OF INCOME ALTERNATIVE', r'CONSOLIDATED STATEMENT OF INCOME', r'INCOME STATEMENTS', r'STATEMENT OF INCOME', r'CONSOLIDATED STATEMENTS OF OPERATIONS', r'STATEMENTS OF CONSOLIDATED INCOME', r'CONSOLIDATED STATEMENTS OF INCOME', r'CONSOLIDATED STATEMENT OF OPERATIONS'
@@ -344,6 +436,7 @@ def parse_filings(filings, stock, type, headers, max_attempts = 5):
 
     # Lists for data frame
     Fiscal_Period = []
+    Period_End = []
     Revenue = []
     Gross_Profit = []
     Operating_Income = []
@@ -357,19 +450,25 @@ def parse_filings(filings, stock, type, headers, max_attempts = 5):
     Dividend_Payments = []
     Dividends = []
     
-    for filing in filings: 
-        for i in range(max_attempts):
-            try:
-                content = requests.get(filing['documents'], headers=headers).json()
-            except:
-                time.sleep(0.25)
-                continue
-            else:
-                break
-        else:
-            tk.messagebox.showerror(title="Error", message="Network Error5. Please try again")
-            sys.exit()
-        
+
+    @network_check_decorator(4)
+    def pull_filing(filing):
+        content = requests.get(filing['documents'], headers=headers).json()
+        return content
+
+    @network_check_decorator(5)
+    def pull_filing_2(xml_summary):
+        content = requests.get(xml_summary, headers=headers).content
+        soup = BeautifulSoup(content, 'lxml')
+
+        # Find the all of the individual reports submitted
+        reports = soup.find('myreports')
+        test = reports.find_all('report')[:-1]
+        return reports
+
+    for filing in filings:
+        content = pull_filing(filing)
+
         for file in content['directory']['item']:  
             # Grab the filing summary url
             if file['name'] == 'FilingSummary.xml':
@@ -380,24 +479,7 @@ def parse_filings(filings, stock, type, headers, max_attempts = 5):
                 base_url = xml_summary.replace('FilingSummary.xml', '')
                 break
 
-        # Request and parse the content
-        time.sleep(.11)
-        for attempt in range(max_attempts):
-            try:
-                content = requests.get(xml_summary, headers=headers).content
-                soup = BeautifulSoup(content, 'lxml')
-
-                # Find the all of the individual reports submitted
-                reports = soup.find('myreports')
-                test = reports.find_all('report')[:-1]
-            except:
-                time.sleep(.25)
-                continue
-            else:
-                break
-        else:
-            tk.messagebox.showerror(title="Error", message="Network Error6. Please try again")
-            sys.exit()
+        reports = pull_filing_2(xml_summary)
         
         # Loop through each report with the 'myreports' tag but avoid the last one as this will cause an error
         for report in reports.find_all('report')[:-1]:
@@ -409,7 +491,7 @@ def parse_filings(filings, stock, type, headers, max_attempts = 5):
                     intro_url = base_url + report.htmlfilename.text
                     content = requests.get(intro_url, headers=headers).content
                     soup = BeautifulSoup(content, 'html.parser')
-                    fy = fy_html(soup)
+                    fy, period_end = fy_html(soup)
                 except:
                     intro_url = base_url + report.xmlfilename.text
                     content = requests.get(intro_url, headers=headers).content
@@ -442,6 +524,7 @@ def parse_filings(filings, stock, type, headers, max_attempts = 5):
                     bs_url = base_url + report.xmlfilename.text
                     content = requests.get(bs_url, headers=headers).content
                     soup = BeautifulSoup(content, 'xml')
+                    cash, assets, liabilities = bs_xml(soup)
 
             # Cash flow
             if report.shortname.text.upper() in cf_list:
@@ -455,6 +538,7 @@ def parse_filings(filings, stock, type, headers, max_attempts = 5):
                     cf_url = base_url + report.xmlfilename.text
                     content = requests.get(cf_url, headers=headers).content
                     soup = BeautifulSoup(content, 'xml')
+                    fcf, buyback, divpaid = cf_xml(soup)
             
              # Dividends
             if report.shortname.text.upper() in div_list:
@@ -468,9 +552,11 @@ def parse_filings(filings, stock, type, headers, max_attempts = 5):
                     cf_url = base_url + report.xmlfilename.text
                     content = requests.get(cf_url, headers=headers).content
                     soup = BeautifulSoup(content, 'xml')
+                    div = div_xml(soup)
         
         # Add parsed data to lists for data frame
         Fiscal_Period.append(fy)
+        Period_End.append(period_end)
         Revenue.append(rev)
         Gross_Profit.append(gross)
         Operating_Income.append(oi)
@@ -484,7 +570,7 @@ def parse_filings(filings, stock, type, headers, max_attempts = 5):
         Dividend_Payments.append(divpaid)
         Dividends.append(div)
 
-        everything = [Fiscal_Period, Revenue, Gross_Profit, Operating_Income, Net_Profit, Earnings_Per_Share, Cash, Total_Assets, Total_Liabilities, Free_Cash_Flow, Share_Buybacks, Dividend_Payments, Dividends]
+        everything = [Fiscal_Period, Period_End, Revenue, Gross_Profit, Operating_Income, Net_Profit, Earnings_Per_Share, Cash, Total_Assets, Total_Liabilities, Free_Cash_Flow, Share_Buybacks, Dividend_Payments, Dividends]
         print(everything)
 
 
@@ -506,29 +592,29 @@ def main(guiReturn, headers):
         excelFlag (bool): excel export flag
     """
     # Pull data from GUI and initiate StockData class(es)
+    #headers = headers
     stock2Flag = False
     if guiReturn[0] == "":
-        stock1 = StockData(guiReturn[2], guiReturn[3])
+        stock1 = StockData(guiReturn[2], guiReturn[3], headers)
     else:
-        stock1 = StockData(guiReturn[0], guiReturn[1])
+        stock1 = StockData(guiReturn[0], guiReturn[1], headers)
         if guiReturn[2] != "":
-            stock2 = StockData(guiReturn[2], guiReturn[3])
+            stock2 = StockData(guiReturn[2], guiReturn[3], headers)
             stock2_flag = True            
     excel_flag = guiReturn[4]
-    headers = headers
 
-    # Get list of fillings
-    annual_filings = annualData(stock1, headers)    
-    quarterly_filings = quarterlyData(stock1, headers)   
+    '''# Get list of fillings
+    annual_filings = annualData(stock1.cik, headers)    
+    quarterly_filings = quarterlyData(stock1.cik, headers)   
 
     # Pull data from filings
-    parse_filings(annual_filings, stock1, 'annual', headers)
+    parse_filings(annual_filings, 'annual', headers)'''
 
 
     
 #guiReturn = []
 if __name__ == "__main__":
-    main(guiReturn, header)
+    main(guiReturn, headers)
 
 
 '''TODO
