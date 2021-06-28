@@ -592,7 +592,6 @@ def main(guiReturn, headers):
         excelFlag (bool): excel export flag
     """
     # Pull data from GUI and initiate StockData class(es)
-    #headers = headers
     stock2Flag = False
     if guiReturn[0] == "":
         stock1 = StockData(guiReturn[2], guiReturn[3], headers)
@@ -602,14 +601,6 @@ def main(guiReturn, headers):
             stock2 = StockData(guiReturn[2], guiReturn[3], headers)
             stock2_flag = True            
     excel_flag = guiReturn[4]
-
-    '''# Get list of fillings
-    annual_filings = annualData(stock1.cik, headers)    
-    quarterly_filings = quarterlyData(stock1.cik, headers)   
-
-    # Pull data from filings
-    parse_filings(annual_filings, 'annual', headers)'''
-
 
     
 #guiReturn = []
