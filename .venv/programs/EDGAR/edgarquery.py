@@ -201,12 +201,14 @@ def parse_filings(filings, type, headers):
                 eps = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
             elif 'this, \'defref_us-gaap_CostOfRevenue\', window' in str(tds) and cost_check == 0 or 'this, \'defref_us-gaap_CostOfGoodsAndServicesSold\', window' in str(tds) and cost_check == 0:
                 cost = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
+            elif 'this, \'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding\', window' in str(tds):
+                shares = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
 
         # Calculate gross if not found
         if gross == '---':
             gross = rev - cost
 
-        return rev, gross, oi, net, eps
+        return rev, gross, oi, net, eps, shares
     
 
     # Pull income data
@@ -245,8 +247,14 @@ def parse_filings(filings, type, headers):
                         if 'RoundedNumericAmount' in str(line):
                             eps = float(''.join(re.findall(r'\d+\.\d\d', line.strip())))
                             break
+            elif 'us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding' in str(row):
+                for cell in row:
+                    for line in str(cell).split('\n'):
+                        if 'RoundedNumericAmount' in str(line):
+                            shares = int(re.findall(r'\d+', line.strip())[0])
+                            break 
         
-        return rev, gross, oi, net, eps 
+        return rev, gross, oi, net, eps, shares 
 
 
     # Pull balance sheet data
@@ -327,8 +335,8 @@ def parse_filings(filings, type, headers):
 
         return cash, assets, liabilities
         
-        
-        # Pull cash flow data
+
+    # Pull cash flow data
     def cf_html(soup):
         cfo = capex = buyback = divpaid = '---'
         for row in soup.table.find_all('tr'):
@@ -428,11 +436,11 @@ def parse_filings(filings, type, headers):
         return div
 
     # Define statements to Parse
-    intro_list = r'DOCUMENT AND ENTITY INFORMATION', 
-    income_list = r'CONSOLIDATED STATEMENTS OF EARNINGS', r'STATEMENT OF INCOME ALTERNATIVE', r'CONSOLIDATED STATEMENT OF INCOME', r'INCOME STATEMENTS', r'STATEMENT OF INCOME', r'CONSOLIDATED STATEMENTS OF OPERATIONS', r'STATEMENTS OF CONSOLIDATED INCOME', r'CONSOLIDATED STATEMENTS OF INCOME', r'CONSOLIDATED STATEMENT OF OPERATIONS'
-    bs_list = r'BALANCE SHEETS', r'CONSOLIDATED BALANCE SHEETS', r'STATEMENT OF FINANCIAL POSITION CLASSIFIED', r'CONSOLIDATED BALANCE SHEET'
-    cf_list = r'CASH FLOWS STATEMENTS', r'CONSOLIDATED STATEMENTS OF CASH FLOWS', r'STATEMENT OF CASH FLOWS INDIRECT', r'CONSOLIDATED STATEMENT OF CASH FLOWS', r'STATEMENTS OF CONSOLIDATED CASH FLOWS'
-    div_list = r'DIVIDENDS DECLARED (DETAIL)', 
+    intro_list = 'DOCUMENT AND ENTITY INFORMATION', 'COVER PAGE'
+    income_list = 'CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF INCOME ALTERNATIVE', 'CONSOLIDATED STATEMENT OF INCOME', 'INCOME STATEMENTS', 'STATEMENT OF INCOME', 'CONSOLIDATED STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED INCOME', 'CONSOLIDATED STATEMENTS OF INCOME', 'CONSOLIDATED STATEMENT OF OPERATIONS'
+    bs_list = 'BALANCE SHEETS', 'CONSOLIDATED BALANCE SHEETS', 'STATEMENT OF FINANCIAL POSITION CLASSIFIED', 'CONSOLIDATED BALANCE SHEET'
+    cf_list = 'CASH FLOWS STATEMENTS', 'CONSOLIDATED STATEMENTS OF CASH FLOWS', 'STATEMENT OF CASH FLOWS INDIRECT', 'CONSOLIDATED STATEMENT OF CASH FLOWS', 'STATEMENTS OF CONSOLIDATED CASH FLOWS'
+    div_list = 'DIVIDENDS DECLARED (DETAIL)', 
 
     # Lists for data frame
     Fiscal_Period = []
@@ -445,6 +453,7 @@ def parse_filings(filings, type, headers):
     Cash = []
     Total_Assets = []
     Total_Liabilities = []
+    Shares_Outstanding = []
     Free_Cash_Flow = []
     Share_Buybacks = []
     Dividend_Payments = []
@@ -463,7 +472,8 @@ def parse_filings(filings, type, headers):
 
         # Find the all of the individual reports submitted
         reports = soup.find('myreports')
-        test = reports.find_all('report')[:-1]
+        assert reports != None
+        #test = reports.find_all('report')[:-1]
         return reports
 
     for filing in filings:
@@ -505,12 +515,12 @@ def parse_filings(filings, type, headers):
                     rev_url = base_url + report.htmlfilename.text
                     content = requests.get(rev_url, headers=headers).content
                     soup = BeautifulSoup(content, 'html.parser')
-                    rev, gross, oi, net, eps = rev_html(soup)
+                    rev, gross, oi, net, eps, shares = rev_html(soup)
                 except:
                     rev_url = base_url + report.xmlfilename.text
                     content = requests.get(rev_url, headers=headers).content
                     soup = BeautifulSoup(content, 'xml')
-                    rev, gross, oi, net, eps = rev_xml(soup)
+                    rev, gross, oi, net, eps, shares = rev_xml(soup)
 
             # Balance sheet
             if report.shortname.text.upper() in bs_list:
@@ -565,12 +575,13 @@ def parse_filings(filings, type, headers):
         Cash.append(cash)
         Total_Assets.append(assets)
         Total_Liabilities.append(liabilities)
+        Shares_Outstanding.append(shares)
         Free_Cash_Flow.append(fcf)
         Share_Buybacks.append(buyback)
         Dividend_Payments.append(divpaid)
         Dividends.append(div)
 
-        everything = [Fiscal_Period, Period_End, Revenue, Gross_Profit, Operating_Income, Net_Profit, Earnings_Per_Share, Cash, Total_Assets, Total_Liabilities, Free_Cash_Flow, Share_Buybacks, Dividend_Payments, Dividends]
+        everything = [Fiscal_Period, Period_End, Revenue, Gross_Profit, Operating_Income, Net_Profit, Earnings_Per_Share, Cash, Total_Assets, Total_Liabilities, Shares_Outstanding, Free_Cash_Flow, Share_Buybacks, Dividend_Payments, Dividends]
         print(everything)
 
 
