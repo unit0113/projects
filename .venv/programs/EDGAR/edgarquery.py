@@ -86,7 +86,7 @@ def getFilings(cik, period, limit, headers):
         limit = datetime.strptime(limit, '%Y-%m-%d').date()
 
     for row in doc_table[0].find_all('tr'):
-        
+
         # Find columns
         cols = row.find_all('td')
         
@@ -98,6 +98,10 @@ def getFilings(cik, period, limit, headers):
             filing_date = cols[3].text.strip()
             filing_numb = cols[4].text.strip()
 
+            # Check for amended filing
+            if 'A' in filing_type:
+                continue
+            
             # End loop if enough data has been captured (10 years for annuals, 5 full years plus current FY for quarterly)
             if type(limit) is int:
                 if (int(filing_date[:4]) + limit) < int(curYear):
@@ -130,7 +134,7 @@ def getFilings(cik, period, limit, headers):
 
 @network_check_decorator(2)
 def quarterlyData(cik, headers):
-    # Get annual filings
+    # Get quarterly filings
     try:
         filings = getFilings(cik, '10-k', 6, headers)
         filings.append(getFilings(cik, '10-q', filings[-1]['file_date'], headers))
@@ -178,7 +182,17 @@ def parse_filings(filings, type, headers):
                     for line in str(cell).split('\n'):
                         if 'NonNumbericText' in str(line):
                             fy = int(re.findall(r'\d\d\d\d', line.strip())[0])
-                            return fy
+                            break
+            if 'dei_DocumentPeriodEndDate' in str(row):
+                for cell in row:
+                    for line in str(cell).split('\n'):
+                        if 'NonNumbericText' in str(line):
+                            period_end_str = re.findall(r'<NonNumbericText>(.*?)</NonNumbericText>', line.strip())[0]
+                            print(period_end_str)
+                            period_end = datetime.strptime(period_end_str, '%Y-%m-%d') 
+                            break                  
+                
+        return fy, period_end
 
 
     # Pull income data
@@ -198,7 +212,7 @@ def parse_filings(filings, type, headers):
             elif 'defref_us-gaap_NetIncomeLoss' in str(tds):
                 net = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
             elif 'EarningsPerShareDiluted' in str(tds):
-                eps = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
+                eps = float(''.join(re.findall(r'\d+\.\d+', tds[1].text.strip())))
             elif 'this, \'defref_us-gaap_CostOfRevenue\', window' in str(tds) and cost_check == 0 or 'this, \'defref_us-gaap_CostOfGoodsAndServicesSold\', window' in str(tds) and cost_check == 0:
                 cost = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
             elif 'this, \'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding\', window' in str(tds):
@@ -216,43 +230,49 @@ def parse_filings(filings, type, headers):
         rev = gross = oi = net = eps = '---'
         rows = soup.find_all('Row')
         for row in rows:
-            if 'us-gaap_Revenues' in str(row):
+            if 'us-gaap_Revenues' in str(row) or 'us-gaap_SalesRevenueNet' in str(row):
                 for cell in row:
                     for line in str(cell).split('\n'):
                         if 'RoundedNumericAmount' in str(line):
-                            rev = int(re.findall(r'\d+', line.strip())[0])
+                            rev_str = re.findall(r'<RoundedNumericAmount>(.*?)</RoundedNumericAmount>', line.strip())[0]
+                            rev = int(re.findall(r'\d+', rev_str.strip())[0])
                             break
-            elif 'us-gaap_CostOfRevenue' in str(row):
+            elif 'us-gaap_CostOfRevenue' in str(row) or 'us-gaap_CostOfGoodsAndServicesSold' in str(row):
                 for cell in row:
                     for line in str(cell).split('\n'):
                         if 'RoundedNumericAmount' in str(line):
-                            cost = int(re.findall(r'\d+', line.strip())[0])
+                            cost_str = re.findall(r'<RoundedNumericAmount>(.*?)</RoundedNumericAmount>', line.strip())[0]
+                            cost = int(re.findall(r'\d+', cost_str.strip())[0])
                             break                
                 gross = rev - cost
             elif 'us-gaap_OperatingIncomeLoss' in str(row):
                 for cell in row:
                     for line in str(cell).split('\n'):
                         if 'RoundedNumericAmount' in str(line):
-                            oi = int(re.findall(r'\d+', line.strip())[0])
-                            break 
+                            oi_str = re.findall(r'<RoundedNumericAmount>(.*?)</RoundedNumericAmount>', line.strip())[0]
+                            oi = int(re.findall(r'\d+', oi_str.strip())[0])
+                            break      
             elif 'us-gaap_NetIncomeLoss' in str(row):
                 for cell in row:
                     for line in str(cell).split('\n'):
                         if 'RoundedNumericAmount' in str(line):
-                            net = int(re.findall(r'\d+', line.strip())[0])
+                            net_str = re.findall(r'<RoundedNumericAmount>(.*?)</RoundedNumericAmount>', line.strip())[0]
+                            net = int(re.findall(r'\d+', net_str.strip())[0])
                             break                
             elif 'us-gaap_EarningsPerShareDiluted' in str(row):
                 for cell in row:
                     for line in str(cell).split('\n'):
                         if 'RoundedNumericAmount' in str(line):
-                            eps = float(''.join(re.findall(r'\d+\.\d\d', line.strip())))
+                            eps_str = re.findall(r'<RoundedNumericAmount>(.*?)</RoundedNumericAmount>', line.strip())[0]
+                            eps = float(''.join(re.findall(r'\d+\.\d\d', eps_str.strip())))
                             break
             elif 'us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding' in str(row):
                 for cell in row:
                     for line in str(cell).split('\n'):
                         if 'RoundedNumericAmount' in str(line):
-                            shares = int(re.findall(r'\d+', line.strip())[0])
-                            break 
+                            shares_str = re.findall(r'<RoundedNumericAmount>(.*?)</RoundedNumericAmount>', line.strip())[0]
+                            shares = int(re.findall(r'\d+', shares_str.strip())[0])
+                            break
         
         return rev, gross, oi, net, eps, shares 
 
@@ -282,7 +302,20 @@ def parse_filings(filings, type, headers):
                     if 'nump' in str(td):
                         liabilities = int(''.join(re.findall(r'\d+', td.text.strip())))
                         break
-    
+            elif 'this, \'defref_us-gaap_LiabilitiesAndStockholdersEquity\', window' in str(tds):
+                for td in tds:
+                    if 'nump' in str(td):
+                        tot_liabilities = int(''.join(re.findall(r'\d+', td.text.strip())))
+                        break
+            elif 'this, \'defref_us-gaap_StockholdersEquity\', window' in str(tds):
+                for td in tds:
+                    if 'nump' in str(td):
+                        equity = int(''.join(re.findall(r'\d+', td.text.strip())))
+                        break            
+
+        if liabilities == '---':
+            liabilities = tot_liabilities - equity
+
         # Remove goodwill from assets
         assets -= goodwill
 
@@ -290,48 +323,57 @@ def parse_filings(filings, type, headers):
 
     # Pull balance sheet data
     def bs_xml(soup):
-        cash = goodwill = assets = liabilities = '---'
+        cash = goodwill = assets = '---'
         rows = soup.find_all('Row')
+        liabilities = 0 
+
         for row in rows:
-            if 'us-gaap_CashCashEquivalentsAndShortTermInvestments' in str(row):
+            if 'us-gaap_CashCashEquivalentsAndShortTermInvestments' in str(row) or 'us-gaap_CashAndCashEquivalentsAtCarryingValue' in str(row):
                 for cell in row:
                     for line in str(cell).split('\n'):
                         if 'RoundedNumericAmount' in str(line):
-                            cash = int(re.findall(r'\d+', line.strip())[0])
+                            cash_str = re.findall(r'<RoundedNumericAmount>(.*?)</RoundedNumericAmount>', line.strip())[0]
+                            cash = int(re.findall(r'\d+', cash_str.strip())[0])
                             break
             elif 'us-gaap_Goodwill' in str(row):
                 for cell in row:
                     for line in str(cell).split('\n'):
                         if 'RoundedNumericAmount' in str(line):
-                            goodwill = int(re.findall(r'\d+', line.strip())[0])
+                            goodwill_str = re.findall(r'<RoundedNumericAmount>(.*?)</RoundedNumericAmount>', line.strip())[0]
+                            goodwill = int(re.findall(r'\d+', goodwill_str.strip())[0])
                             break                
             elif r'<ElementName>us-gaap_Assets</ElementName>' in str(row):
                 for cell in row:
                     for line in str(cell).split('\n'):
                         if 'RoundedNumericAmount' in str(line):
-                            assets = int(re.findall(r'\d+', line.strip())[0])
+                            assets_str = re.findall(r'<RoundedNumericAmount>(.*?)</RoundedNumericAmount>', line.strip())[0]
+                            assets = int(re.findall(r'\d+', assets_str.strip())[0])
                             assets -= goodwill
                             break      
             elif r'<ElementName>us-gaap_LiabilitiesCurrent</ElementName>' in str(row):
                 for cell in row:
                     for line in str(cell).split('\n'):
                         if 'RoundedNumericAmount' in str(line):
-                            liabilities_current = int(re.findall(r'\d+', line.strip())[0])
+                            liabil_str = re.findall(r'<RoundedNumericAmount>(.*?)</RoundedNumericAmount>', line.strip())[0]
+                            liabilities_current = int(re.findall(r'\d+', liabil_str.strip())[0])
+                            liabilities += liabilities_current
                             break
             elif 'us-gaap_LongTermDebtNoncurrent' in str(row):
                 for cell in row:
                     for line in str(cell).split('\n'):
                         if 'RoundedNumericAmount' in str(line):
-                            long_term_debt = int(re.findall(r'\d+', line.strip())[0])
+                            debt_str = re.findall(r'<RoundedNumericAmount>(.*?)</RoundedNumericAmount>', line.strip())[0]
+                            long_term_debt = int(re.findall(r'\d+', debt_str.strip())[0])
+                            liabilities += long_term_debt
                             break
             elif 'us-gaap_OtherLiabilitiesNoncurrent' in str(row):
                 for cell in row:
                     for line in str(cell).split('\n'):
                         if 'RoundedNumericAmount' in str(line):
-                            liabilities_other = int(re.findall(r'\d+', line.strip())[0])
-                            break                   
-
-        liabilities = liabilities_current + long_term_debt + liabilities_other
+                            liabil2_str = re.findall(r'<RoundedNumericAmount>(.*?)</RoundedNumericAmount>', line.strip())[0]
+                            liabilities_other = int(re.findall(r'\d+', liabil2_str.strip())[0])
+                            liabilities += liabilities_other
+                            break
 
         return cash, assets, liabilities
         
@@ -339,12 +381,15 @@ def parse_filings(filings, type, headers):
     # Pull cash flow data
     def cf_html(soup):
         cfo = capex = buyback = divpaid = '---'
+        debt = 0
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
-            if 'Net cash from operations' in str(tds):
+            if 'Net cash from operations' in str(tds) or 'this, \'defref_us-gaap_NetCashProvidedByUsedInOperatingActivities\', window' in str(tds):
                 cfo = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
-            elif 'Additions to property and equipment' in str(tds):
+            elif 'Additions to property and equipment' in str(tds) or 'this, \'defref_us-gaap_PaymentsToAcquireProductiveAssets\', window' in str(tds) or'this, \'defref_us-gaap_PaymentsToAcquirePropertyPlantAndEquipment\', window' in str(tds) or 'this, \'defref_us-gaap_PaymentsForProceedsFromProductiveAssets\', window' in str(tds):
                 capex = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
+            elif 'this, \'defref_us-gaap_ProceedsFromRepaymentsOfShortTermDebtMaturingInThreeMonthsOrLess\', window' in str(tds) or 'this, \'defref_us-gaap_RepaymentsOfDebtMaturingInMoreThanThreeMonths\', window' in str(tds):
+                debt += int(''.join(re.findall(r'\d+', tds[1].text.strip())))
             elif 'Common stock repurchased' in str(tds):
                 buyback = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
             elif 'Common stock cash dividends paid' in str(tds):
@@ -352,7 +397,7 @@ def parse_filings(filings, type, headers):
         
         # Calculate FCF
         try:
-            fcf = cfo - capex
+            fcf = cfo - capex - debt
         except:
             fcf = '---'
 
@@ -360,36 +405,48 @@ def parse_filings(filings, type, headers):
 
     def cf_xml(soup):
         cfo = capex = buyback = divpaid = '---'
+        debt = 0
         rows = soup.find_all('Row')
         for row in rows:
             if 'us-gaap_NetCashProvidedByUsedInOperatingActivities' in str(row):
                 for cell in row:
                     for line in str(cell).split('\n'):
                         if 'RoundedNumericAmount' in str(line):
-                            cfo = int(re.findall(r'\d+', line.strip())[0])
+                            cfo_str = re.findall(r'<RoundedNumericAmount>(.*?)</RoundedNumericAmount>', line.strip())[0]
+                            cfo = int(re.findall(r'\d+', cfo_str.strip())[0])
                             break
             elif 'us-gaap_PaymentsToAcquirePropertyPlantAndEquipment' in str(row):
                 for cell in row:
                     for line in str(cell).split('\n'):
                         if 'RoundedNumericAmount' in str(line):
-                            capex = int(re.findall(r'\d+', line.strip())[0])
-                            break                
+                            capex_str = re.findall(r'<RoundedNumericAmount>(.*?)</RoundedNumericAmount>', line.strip())[0]
+                            capex = int(re.findall(r'\d+', capex_str.strip())[0])
+                            break
+            elif 'us-gaap_ProceedsFromRepaymentsOfShortTermDebtMaturingInThreeMonthsOrLess' in str(row) or 'RepaymentsOfShortTermAndLongTermBorrowings' in str(row) or 'us-gaap_RepaymentsOfLongTermDebtAndCapitalSecurities' in str(row):
+                for cell in row:
+                    for line in str(cell).split('\n'):
+                        if 'RoundedNumericAmount' in str(line):
+                            debt_str = re.findall(r'<RoundedNumericAmount>(.*?)</RoundedNumericAmount>', line.strip())[0]
+                            debt += int(re.findall(r'\d+', debt_str.strip())[0])
+                            break                                
             elif 'us-gaap_PaymentsForRepurchaseOfCommonStock' in str(row):
                 for cell in row:
                     for line in str(cell).split('\n'):
                         if 'RoundedNumericAmount' in str(line):
-                            buyback = int(re.findall(r'\d+', line.strip())[0])
+                            buyback_str = re.findall(r'<RoundedNumericAmount>(.*?)</RoundedNumericAmount>', line.strip())[0]
+                            buyback = int(re.findall(r'\d+', buyback_str.strip())[0])
                             break      
             elif 'us-gaap_PaymentsOfDividendsCommonStock' in str(row):
                 for cell in row:
                     for line in str(cell).split('\n'):
                         if 'RoundedNumericAmount' in str(line):
-                            divpaid = int(re.findall(r'\d+', line.strip())[0])
+                            divpaid_str = re.findall(r'<RoundedNumericAmount>(.*?)</RoundedNumericAmount>', line.strip())[0]
+                            divpaid = int(re.findall(r'\d+', divpaid_str.strip())[0])
                             break
         
         # Calculate FCF
         try:
-            fcf = cfo - capex
+            fcf = cfo - capex - debt
         except:
             fcf = '---'
 
@@ -429,35 +486,38 @@ def parse_filings(filings, type, headers):
                     if search_id in str(cell):
                         for line in str(cell).split('\n'):
                             if 'NumericAmount' in str(line):
-                                div = float(re.findall(r'\d+\.\d+', line.strip())[0])
+                                div_str = re.findall(r'<NumericAmount>(.*?)</NumericAmount>', line.strip())[0]
+                                div = float(re.findall(r'\d+\.\d+', div_str.strip())[0])
                                 break
                         break
 
         return div
 
     # Define statements to Parse
-    intro_list = 'DOCUMENT AND ENTITY INFORMATION', 'COVER PAGE'
-    income_list = 'CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF INCOME ALTERNATIVE', 'CONSOLIDATED STATEMENT OF INCOME', 'INCOME STATEMENTS', 'STATEMENT OF INCOME', 'CONSOLIDATED STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED INCOME', 'CONSOLIDATED STATEMENTS OF INCOME', 'CONSOLIDATED STATEMENT OF OPERATIONS'
-    bs_list = 'BALANCE SHEETS', 'CONSOLIDATED BALANCE SHEETS', 'STATEMENT OF FINANCIAL POSITION CLASSIFIED', 'CONSOLIDATED BALANCE SHEET'
-    cf_list = 'CASH FLOWS STATEMENTS', 'CONSOLIDATED STATEMENTS OF CASH FLOWS', 'STATEMENT OF CASH FLOWS INDIRECT', 'CONSOLIDATED STATEMENT OF CASH FLOWS', 'STATEMENTS OF CONSOLIDATED CASH FLOWS'
-    div_list = 'DIVIDENDS DECLARED (DETAIL)', 
+    intro_list = ['DOCUMENT AND ENTITY INFORMATION', 'COVER PAGE']
+    income_list = ['CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF INCOME ALTERNATIVE', 'CONSOLIDATED STATEMENT OF INCOME', 'INCOME STATEMENTS', 'STATEMENT OF INCOME',
+                   'CONSOLIDATED STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED INCOME', 'CONSOLIDATED STATEMENTS OF INCOME', 'CONSOLIDATED STATEMENT OF OPERATIONS']
+    bs_list = ['BALANCE SHEETS', 'CONSOLIDATED BALANCE SHEETS', 'STATEMENT OF FINANCIAL POSITION CLASSIFIED', 'CONSOLIDATED BALANCE SHEET']
+    cf_list = ['CASH FLOWS STATEMENTS', 'CONSOLIDATED STATEMENTS OF CASH FLOWS', 'STATEMENT OF CASH FLOWS INDIRECT', 'CONSOLIDATED STATEMENT OF CASH FLOWS',
+               'STATEMENTS OF CONSOLIDATED CASH FLOWS']
+    div_list = ['DIVIDENDS DECLARED (DETAIL)', ]
 
     # Lists for data frame
-    Fiscal_Period = []
-    Period_End = []
-    Revenue = []
-    Gross_Profit = []
-    Operating_Income = []
-    Net_Profit = []
-    Earnings_Per_Share = []
-    Cash = []
-    Total_Assets = []
-    Total_Liabilities = []
-    Shares_Outstanding = []
-    Free_Cash_Flow = []
-    Share_Buybacks = []
-    Dividend_Payments = []
-    Dividends = []
+    Fiscal_Period = ['FY']
+    Period_End = ['Per']
+    Revenue = ['Rev']
+    Gross_Profit = ['Gross']
+    Operating_Income = ['OI']
+    Net_Profit = ['Net']
+    Earnings_Per_Share = ['EPS']
+    Cash = ['Cash']
+    Total_Assets = ['Assets']
+    Total_Liabilities = ['Liabilities']
+    Shares_Outstanding = ['Shares']
+    Free_Cash_Flow = ['FCF']
+    Share_Buybacks = ['Buybacks']
+    Dividend_Payments = ['DivPay']
+    Dividends = ['Div']
     
 
     @network_check_decorator(4)
@@ -473,11 +533,11 @@ def parse_filings(filings, type, headers):
         # Find the all of the individual reports submitted
         reports = soup.find('myreports')
         assert reports != None
-        #test = reports.find_all('report')[:-1]
         return reports
 
     for filing in filings:
         content = pull_filing(filing)
+        print(filing)
 
         for file in content['directory']['item']:  
             # Grab the filing summary url
@@ -490,7 +550,8 @@ def parse_filings(filings, type, headers):
                 break
 
         reports = pull_filing_2(xml_summary)
-        
+        div = '---'
+
         # Loop through each report with the 'myreports' tag but avoid the last one as this will cause an error
         for report in reports.find_all('report')[:-1]:
             
@@ -506,7 +567,7 @@ def parse_filings(filings, type, headers):
                     intro_url = base_url + report.xmlfilename.text
                     content = requests.get(intro_url, headers=headers).content
                     soup = BeautifulSoup(content, 'xml')
-                    fy = fy_xml(soup)
+                    fy, period_end = fy_xml(soup)
         
             # Income Statement
             if report.shortname.text.upper() in income_list:
@@ -550,7 +611,7 @@ def parse_filings(filings, type, headers):
                     soup = BeautifulSoup(content, 'xml')
                     fcf, buyback, divpaid = cf_xml(soup)
             
-             # Dividends
+            # Dividends
             if report.shortname.text.upper() in div_list:
                 # Get URL and contents
                 try:
@@ -583,6 +644,7 @@ def parse_filings(filings, type, headers):
 
         everything = [Fiscal_Period, Period_End, Revenue, Gross_Profit, Operating_Income, Net_Profit, Earnings_Per_Share, Cash, Total_Assets, Total_Liabilities, Shares_Outstanding, Free_Cash_Flow, Share_Buybacks, Dividend_Payments, Dividends]
         print(everything)
+        print('-'*50)
 
 
 
