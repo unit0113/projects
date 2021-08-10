@@ -4,7 +4,6 @@ from PIL import ImageTk
 import sys
 import urllib
 import edgarquery
-import time
 import json
 from shutil import copyfile
 
@@ -210,6 +209,7 @@ def get_tickers(cikList):
     # Pull ticker and execute rest of program
     def execute():
         global headers
+        stocks = []
 
         # Pull tickers and initial ticker check
         if not ticker1_entry.get() or ticker1_entry.get() == "Ticker 1":
@@ -222,6 +222,10 @@ def get_tickers(cikList):
             except:
                 tk.messagebox.showwarning(title="Invalid Ticker", message="Ticker 1 is invalid, please enter a valid ticker")
                 return
+        if ticker1 != "":
+            stock1 = [ticker1, cik1]
+            stocks.append(stock1)
+
         if not ticker2_entry.get() or ticker2_entry.get() == "Ticker 2":
             ticker2 = ""
             cik2 = ""
@@ -232,6 +236,9 @@ def get_tickers(cikList):
             except:
                 tk.messagebox.showwarning(title="Invalid Ticker", message="Ticker 2 is invalid, please enter a valid ticker")
                 return
+        if ticker2 != "":
+            stock2 = [ticker2, cik2]
+            stocks.append(stock2)
 
         # If no tickers
         if ticker1 == "" and ticker2 == "":
@@ -242,7 +249,7 @@ def get_tickers(cikList):
         submit_text.set("Working...")
 
         # Assembles values and pass to edgarquery
-        gui_return = [ticker1, cik1, ticker2, cik2, excel_flag.get()]
+        gui_return = [stocks, excel_flag.get()]
         edgarquery.main(gui_return, headers)
         
         # Offer to run new query or exit

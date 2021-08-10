@@ -15,7 +15,7 @@ class StockData:
     """ Class to store stock data for requested tickers, takes in initial input from edgargui
     """    
     
-    def __init__(self, symbol, cik, headers):
+    def __init__(self, symbol, cik):
         """ Takes in ticker and CIK, then initiates the class
 
         Args:
@@ -24,13 +24,12 @@ class StockData:
 
         self.symbol = symbol
         self.cik = cik
-        self.headers = headers
         # Get list of fillings
-        self.annual_filings = annualData(self.cik, self.headers)   
+        self.annual_filings = annualData(self.cik, headers)   
         #quarterly_filings = quarterlyData(self, headers)   
 
         # Pull data from filings
-        parse_filings(self.annual_filings, 'annual', self.headers)
+        parse_filings(self.annual_filings, 'annual', headers)
 
 
 def network_check_decorator(num, max_attempts=5):
@@ -723,7 +722,7 @@ def parse_filings(filings, type, headers):
 
 
 
-def main(guiReturn, headers):
+def main(gui_return, header):
     """ Runs two subprograms. Webscrapes ticker/CIK paires from SEC site, gets tickers from user and passes the CIK codes and a seperate flag to the edgarquery program
 
     Returns:
@@ -732,27 +731,19 @@ def main(guiReturn, headers):
         excelFlag (bool): excel export flag
     """
     # Pull data from GUI and initiate StockData class(es)
-    stock2Flag = False
-    if guiReturn[0] == "":
-        stock1 = StockData(guiReturn[2], guiReturn[3], headers)
-    else:
-        stock1 = StockData(guiReturn[0], guiReturn[1], headers)
-        if guiReturn[2] != "":
-            stock2 = StockData(guiReturn[2], guiReturn[3], headers)
-            stock2_flag = True            
-    excel_flag = guiReturn[4]
+    excel_flag = gui_return[1]
+    global headers
+    headers = header
+    stocks = []
+    for item in gui_return[0]:
+        stocks.append(StockData(item[0], item[1]))
 
     
-#guiReturn = []
 if __name__ == "__main__":
-    main(guiReturn, headers)
+    main(gui_return, header)
 
 
 '''TODO
-if filing is /A, skip next
-if /A filing is last, skip
-skip next filing if previous is amended (period of report?)
 pull quarter data from 10-k
 complete comment strings
-put everything into the stock class
 '''
