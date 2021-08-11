@@ -25,7 +25,7 @@ class StockData:
         self.symbol = symbol
         self.cik = cik
         # Get list of fillings
-        self.annual_filings = annualData(self.cik, headers)   
+        self.annual_filings = annualData(self.cik, headers) 
         #quarterly_filings = quarterlyData(self, headers)   
 
         # Pull data from filings
@@ -195,7 +195,7 @@ def parse_filings(filings, type, headers):
 
     # Pull income data
     def rev_html(soup):
-        rev = gross = oi = net = eps = '---'
+        rev = gross = oi = net = eps = shares = '---'
         rev_check = 0
         cost_check = 0
         for row in soup.table.find_all('tr'):
@@ -207,10 +207,13 @@ def parse_filings(filings, type, headers):
                 gross = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
             elif 'defref_us-gaap_OperatingIncomeLoss' in str(tds):
                 oi = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
-            elif 'defref_us-gaap_NetIncomeLoss' in str(tds):
+            elif 'this, \'defref_us-gaap_NetIncomeLoss\', window' in str(tds):
                 net = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
             elif 'EarningsPerShareDiluted' in str(tds):
-                eps = float(''.join(re.findall(r'\d+\.\d+', tds[1].text.strip())))
+                try:
+                    eps = float(''.join(re.findall(r'\d+\.\d+', tds[1].text.strip())))
+                except:
+                    pass
             elif 'this, \'defref_us-gaap_CostOfRevenue\', window' in str(tds) and cost_check == 0 or 'this, \'defref_us-gaap_CostOfGoodsAndServicesSold\', window' in str(tds) and cost_check == 0:
                 cost = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
             elif 'this, \'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding\', window' in str(tds):
@@ -225,7 +228,7 @@ def parse_filings(filings, type, headers):
 
     # Pull income data
     def rev_xml(soup):
-        rev = gross = oi = net = eps = '---'
+        rev = gross = oi = net = eps = shares = '---'
         rows = soup.find_all('Row')
         for row in rows:
             if 'us-gaap_Revenues' in str(row) or 'us-gaap_SalesRevenueNet' in str(row):
@@ -532,6 +535,22 @@ def parse_filings(filings, type, headers):
 
         return div
 
+
+    # Pull share data if multiple classes of shares
+    def shares_html(soup, period_end):
+        tables = soup.find_all('table')[0] 
+        panda = pd.read_html(str(tables), match=period_end.strftime('%Y'))
+        pd.set_option("display.max_rows", None, "display.max_columns", None)
+
+        for table in panda:
+            if 'Number of shares used in per share computation' in table.values:
+                row = table.loc[table[0] == 'Number of shares used in per share computation']
+                shares_set = set(re.findall(r'\d+', str(row.values[1])))
+                shares = sum(set(map(int, shares_set)))
+
+        return shares
+
+
     # Define statements to Parse
     intro_list = ['DOCUMENT AND ENTITY INFORMATION', 'COVER PAGE']
     income_list = ['CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF INCOME ALTERNATIVE', 'CONSOLIDATED STATEMENT OF INCOME', 'INCOME STATEMENTS', 'STATEMENT OF INCOME',
@@ -542,6 +561,7 @@ def parse_filings(filings, type, headers):
     div_list = ['DIVIDENDS DECLARED (DETAIL)', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY (PARENTHETICAL)',
                 'SHAREHOLDERS\' EQUITY', 'SHAREHOLDERS\' EQUITY AND SHARE-BASED COMPENSATION - ADDITIONAL INFORMATION (DETAIL) (USD $)', 'SHAREHOLDERS\' EQUITY - ADDITIONAL INFORMATION (DETAIL)',
                 'SHAREHOLDERS\' EQUITY AND SHARE-BASED COMPENSATION - ADDITIONAL INFORMATION (DETAIL)']
+    shares_list = ['NET INCOME PER SHARE']
 
     # Lists for data frame
     Fiscal_Period = []
@@ -592,6 +612,7 @@ def parse_filings(filings, type, headers):
 
         reports = pull_filing_2(xml_summary)
         div = '---'
+        shares = '---'
 
         # Loop through each report with the 'myreports' tag but avoid the last one as this will cause an error
         for report in reports.find_all('report')[:-1]:
@@ -666,6 +687,15 @@ def parse_filings(filings, type, headers):
                     soup = BeautifulSoup(content, 'xml')
                     div = div_xml(soup)
 
+            # Share data if not in Income Statement
+            if report.shortname.text.upper() in shares_list and shares == '---':
+                try:
+                    intro_url = base_url + report.htmlfilename.text
+                    content = requests.get(intro_url, headers=headers).content
+                    soup = BeautifulSoup(content, 'html.parser')
+                    shares = shares_html(soup, period_end)
+                except:
+                    pass
 
         # Check if FY same as previous year
         if len(Fiscal_Period) > 0:
@@ -703,7 +733,7 @@ def parse_filings(filings, type, headers):
         share_ratio = round(Shares_Outstanding[i-1] / Shares_Outstanding[i])
         
         # If difference found, update split factor
-        if share_ratio >= 1.25 or share_ratio <= 0.75:
+        if share_ratio >= 1.45 or share_ratio <= 0.7:
             split_factor *= share_ratio
         
         # If there have been splits, adjust per share metrics
