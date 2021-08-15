@@ -195,35 +195,52 @@ def parse_filings(filings, type, headers):
 
     # Pull income data
     def rev_html(soup):
-        rev = gross = oi = net = eps = shares = '---'
-        rev_check = 0
-        cost_check = 0
+        rev = gross = oi = net = eps = cost = shares = '---'
+        share_sum = 0
+
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
-            if 'defref_us-gaap_Revenue' in str(tds) and rev_check == 0 or 'this, \'defref_us-gaap_SalesRevenueNet\', window' in str(tds) and rev_check == 0:
-                rev = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
-                rev_check = 1
+            if 'this, \'defref_us-gaap_Revenues\', window' in str(tds) and rev == '---' or 'this, \'defref_us-gaap_SalesRevenueNet\', window' in str(tds) and rev == '---' or 'defref_us-gaap_RevenueFromContractWithCustomerExcludingAssessedTax' in str(tds) and rev == '---':
+                for td in tds:
+                    if 'nump' in str(td):
+                        rev = int(''.join(re.findall(r'\d+', td.text.strip())))
+                        break
             elif 'defref_us-gaap_GrossProfit' in str(tds):
                 gross = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
-            elif 'defref_us-gaap_OperatingIncomeLoss' in str(tds):
-                oi = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
-            elif 'this, \'defref_us-gaap_NetIncomeLoss\', window' in str(tds):
-                net = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
-            elif 'EarningsPerShareDiluted' in str(tds):
-                try:
-                    eps = float(''.join(re.findall(r'\d+\.\d+', tds[1].text.strip())))
-                except:
-                    pass
-            elif 'this, \'defref_us-gaap_CostOfRevenue\', window' in str(tds) and cost_check == 0 or 'this, \'defref_us-gaap_CostOfGoodsAndServicesSold\', window' in str(tds) and cost_check == 0:
-                cost = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
+            elif 'this, \'defref_us-gaap_OperatingIncomeLoss\', window' in str(tds):
+                for td in tds:
+                    if 'nump' in str(td):
+                        oi = int(''.join(re.findall(r'\d+', td.text.strip())))
+                        break
+            elif 'this, \'defref_us-gaap_NetIncomeLoss\', window' in str(tds) or 'this, \'defref_us-gaap_ProfitLoss\', window );">Net income' in str(tds):
+                for td in tds:
+                    if 'nump' in str(td):
+                        net = int(''.join(re.findall(r'\d+', td.text.strip())))
+                        break
+            elif 'EarningsPerShareDiluted' in str(tds) and eps == '---':
+                for td in tds:
+                    if 'nump' in str(td):
+                        eps = float(''.join(re.findall(r'\d+\.\d+', td.text.strip())))
+                        break
+            elif 'this, \'defref_us-gaap_CostOfRevenue\', window' in str(tds) and cost == '---' or 'this, \'defref_us-gaap_CostOfGoodsAndServicesSold\', window' in str(tds) and cost == '---':
+                for td in tds:
+                    if 'nump' in str(td):
+                        cost = int(''.join(re.findall(r'\d+', td.text.strip())))
+                        break
             elif 'this, \'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding\', window' in str(tds):
-                shares = int(''.join(re.findall(r'\d+', tds[1].text.strip())))
-
-        # Calculate gross if not found
+                for td in tds:
+                    if 'nump' in str(td):
+                        shares = int(''.join(re.findall(r'\d+', td.text.strip())))
+                        break
+                share_sum += shares
+                
         if gross == '---':
-            gross = rev - cost
+            try:
+                gross = rev - cost
+            except:
+                gross = rev
 
-        return rev, gross, oi, net, eps, shares
+        return rev, gross, oi, net, eps, share_sum
     
 
     # Pull income data
@@ -471,40 +488,64 @@ def parse_filings(filings, type, headers):
 
         # If company is a jerk and burries it (like apple)
         else:
-            # Find row where 12 month data starts
-            index = 1
-            for header in soup.table.find_all('th'):
-                if 'Months Ended' in str(header) and 'colspan' in str(header) and '12 Months Ended' not in str(header):
-                    index_str = re.findall(r'\d', str(header))
-                    index += int(index_str[0])
-
-                if '12 Months Ended' in str(header):
-                    break
-
-            for row in soup.table.find_all('tr'):
-                tds = row.find_all('td')
-                if 'this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds):
-                    try:
-                        div = float(''.join(re.findall(r'\d+\.\d+', tds[index].text.strip())))
-                    except:
-                        for td in tds:
-                            if 'nump' in str(td):
-                                div = float(''.join(re.findall(r'\d+\.\d+', td.text.strip())))
-                                break
-                    break
+            # If no 12 month data
+            if '12 Months Ended' not in str(soup):
+                for row in soup.table.find_all('tr'):
+                    tds = row.find_all('td')
+                    if 'this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds):
+                        div = re.findall(r'\d+\.\d+', str(tds))[0:4]
+                        div = sum(list(map(float, div)))
             
-            if div == '---':
-                tables = soup.find_all('table')[0] 
-                panda = pd.read_html(str(tables))
-                for table in panda:
-                    if 'Dividends Per Share' in table.values or 'DividendsPer Share' in table.values:
-                        try:
-                            row = table.loc[table[0] == 'Total cash dividends declared and paid']
-                            div = float(re.findall(r'\d+\.\d\d', str(row))[0])
-                        except:
-                            row = table.loc[table[0] == 'Total']
-                            div = float(re.findall(r'\d+\.\d\d', str(row))[0])
+            else:
+                # Find row where 12 month data starts
+                index = 1
+                for header in soup.table.find_all('th'):
+                    if '9 Months Ended' in str(header):
+                        multiplier = 3
                         break
+
+                    elif '12 Months Ended' in str(header):
+                        multiplier = 4
+                        break
+
+                    if 'Months Ended' in str(header) and 'colspan' in str(header):
+                        index_str = re.findall(r'\d', str(header))
+                        index += int(index_str[0])
+
+                for row in soup.table.find_all('tr'):
+                    tds = row.find_all('td')
+                    if 'this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds) and 'quarterly' not in str(tds):
+                        try:
+                            div = float(''.join(re.findall(r'\d+\.\d+', tds[index].text.strip())))
+                        except:
+                            for td in tds:
+                                if 'nump' in str(td):
+                                    div = float(''.join(re.findall(r'\d+\.\d+', td.text.strip())))
+                                    break
+                        break
+                    elif 'this, \'defref_v_Cashdividendsdeclaredandpaidquarterlyperasconvertedshare\', window' in str(tds) or 'this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds) and 'quarterly' in str(tds):
+                        try:
+                            div = multiplier * float(''.join(re.findall(r'\d+\.\d+', tds[index].text.strip())))
+                        except:
+                            for td in tds:
+                                if 'nump' in str(td):
+                                    div = multiplier * float(''.join(re.findall(r'\d+\.\d+', td.text.strip())))
+                                    break
+                        if multiplier == 3:
+                            div += float(''.join(re.findall(r'\d+\.\d+', tds[1].text.strip())))
+                
+                if div == '---':
+                    tables = soup.find_all('table')[0] 
+                    panda = pd.read_html(str(tables))
+                    for table in panda:
+                        if 'Dividends Per Share' in table.values or 'DividendsPer Share' in table.values:
+                            try:
+                                row = table.loc[table[0] == 'Total cash dividends declared and paid']
+                                div = float(re.findall(r'\d+\.\d\d', str(row))[0])
+                            except:
+                                row = table.loc[table[0] == 'Total']
+                                div = float(re.findall(r'\d+\.\d\d', str(row))[0])
+                            break
 
         return div
 
@@ -552,7 +593,7 @@ def parse_filings(filings, type, headers):
 
 
     # Define statements to Parse
-    intro_list = ['DOCUMENT AND ENTITY INFORMATION', 'COVER PAGE']
+    intro_list = ['DOCUMENT AND ENTITY INFORMATION', 'COVER PAGE', 'COVER', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT']
     income_list = ['CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF INCOME ALTERNATIVE', 'CONSOLIDATED STATEMENT OF INCOME', 'INCOME STATEMENTS', 'STATEMENT OF INCOME',
                    'CONSOLIDATED STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED INCOME', 'CONSOLIDATED STATEMENTS OF INCOME', 'CONSOLIDATED STATEMENT OF OPERATIONS']
     bs_list = ['BALANCE SHEETS', 'CONSOLIDATED BALANCE SHEETS', 'STATEMENT OF FINANCIAL POSITION CLASSIFIED', 'CONSOLIDATED BALANCE SHEET']
@@ -560,7 +601,8 @@ def parse_filings(filings, type, headers):
                'STATEMENTS OF CONSOLIDATED CASH FLOWS']
     div_list = ['DIVIDENDS DECLARED (DETAIL)', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY (PARENTHETICAL)',
                 'SHAREHOLDERS\' EQUITY', 'SHAREHOLDERS\' EQUITY AND SHARE-BASED COMPENSATION - ADDITIONAL INFORMATION (DETAIL) (USD $)', 'SHAREHOLDERS\' EQUITY - ADDITIONAL INFORMATION (DETAIL)',
-                'SHAREHOLDERS\' EQUITY AND SHARE-BASED COMPENSATION - ADDITIONAL INFORMATION (DETAIL)']
+                'SHAREHOLDERS\' EQUITY AND SHARE-BASED COMPENSATION - ADDITIONAL INFORMATION (DETAIL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY (PARENTHETICAL)',
+                'CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY (PARENTHETICAL)']
     shares_list = ['NET INCOME PER SHARE']
 
     # Lists for data frame
@@ -616,7 +658,7 @@ def parse_filings(filings, type, headers):
 
         # Loop through each report with the 'myreports' tag but avoid the last one as this will cause an error
         for report in reports.find_all('report')[:-1]:
-            
+
             # Summary table
             if report.shortname.text.upper() in intro_list:
                 # Get URL and contents
@@ -742,6 +784,7 @@ def parse_filings(filings, type, headers):
             if Dividends[i] != '---':
                 Dividends[i] = round(Dividends[i] / split_factor, 2)
 
+    print(everything)
 
 
 
@@ -776,4 +819,5 @@ if __name__ == "__main__":
 '''TODO
 pull quarter data from 10-k
 complete comment strings
+corr() to find highest correlated with share price
 '''

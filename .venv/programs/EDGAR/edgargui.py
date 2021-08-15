@@ -360,4 +360,6 @@ if __name__ == "__main__":
 TODO
 Make an executable using PyInstaller
 make user agent file paths programitically
+figure out how to make work for ADR's
+email address checker
 """
