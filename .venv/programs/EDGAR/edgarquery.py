@@ -181,11 +181,18 @@ def parse_filings(filings, type, headers):
         '''
 
         # Pull numeric data from string
-        obj = re.search(r'(?:<td class=\"(?:num|nump)\">)(?:.*?\(?)(\d*,?\d*,?.?\d+)(?:\)?<span>)', string, re.M)
-        try:
-            result = obj.group(1).replace(',', '')
-        except:
-            return '---'
+        if 'toggleNextSibling(this)' not in string:
+            obj = re.search(r'(?:<td class=\"(?:num|nump)\">)(?:.*?\(?)(\d*,?\d*,?.?\d+)(?:\)?<span>)', string, re.M)
+            try:
+                result = obj.group(1).replace(',', '')
+            except:
+                return '---'
+        else:
+            obj = re.search(r'(?:\">)(?:\$? ?\(?)(\d*,?\d*,?.?\d+)(?:\)?</a>)', string, re.M)
+            try:
+                result = obj.group(1).replace(',', '')
+            except:
+                return '---'        
         
         # Looks for blank cell to ensure that correct data is returned
         empty = re.search(r'text', string, re.M)
