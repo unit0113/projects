@@ -49,6 +49,27 @@ def html_re(string):
         return int(result)
     
 
+# Check for possible negative number when not expected
+def check_neg_html(string, value):
+    ''' Checks for unexpected negative numbers
+
+    Args:
+        Target string (str), value that we're checking (int/float)
+    Return:
+        value (int/float)       
+    '''
+
+    # Create search string based on value, look for char before and after
+    re_str = str('.' + "{:,}".format(value) + '.')
+    obj = re.search(re_str, string, re.M)
+    
+    # Check if negative
+    if '(' in obj.group(0) and ')' in obj.group(0):
+        return (value * -1)
+    else:
+        return value
+
+
 url = r'https://www.sec.gov/Archives/edgar/data/789019/000156459020034944/FilingSummary.xml'
 sum_url = r'https://www.sec.gov/Archives/edgar/data/1403161/000140316117000044/R1.htm'
 
@@ -74,7 +95,7 @@ def sum_htm_test(sum_url):
         tds = row.find_all('td')
         if 'DocumentFiscalYearFocus' in str(tds):
             fy = int(tds[1].text)
-        if 'this, \'defref_dei_DocumentPeriodEndDate\', window' in str(tds):
+        if r"this, 'defref_dei_DocumentPeriodEndDate', window" in str(tds):
             period_end_str = tds[1].text.strip()
             period_end = datetime.strptime(period_end_str, '%b. %d,  %Y') 
 
@@ -105,7 +126,7 @@ rev_answers = [[168088, 115856, 20716, 69916, 61271, 8.05, 7608, '---'], [274515
                [110855, 65272, 16625, 26146, 12662, 18.0, 703, '---'], [83176, 28954, 0, 10469, 6345, 4.71, 1346, '---']]
 
 
-rev_url = r'https://www.sec.gov/Archives/edgar/data/354950/000035495015000008/R4.htm'
+rev_url = r'https://www.sec.gov/Archives/edgar/data/1403161/000140316117000044/R4.htm'
 
 
 def rev_htm_test(rev_url):
@@ -129,33 +150,41 @@ def rev_htm_test(rev_url):
     # Loop through rows, search for row of interest
     for row in soup.table.find_all('tr'):
         tds = row.find_all('td')
-        if ('this, \'defref_us-gaap_Revenues\', window' in str(tds) and rev == '---' or
-            'this, \'defref_us-gaap_SalesRevenueNet\', window' in str(tds) and rev == '---' or
-            'defref_us-gaap_RevenueFromContractWithCustomerExcludingAssessedTax' in str(tds) and rev == '---'
+        if (r"this, 'defref_us-gaap_Revenues', window" in str(tds) and rev == '---' or
+            r"this, 'defref_us-gaap_SalesRevenueNet', window" in str(tds) and rev == '---' or
+            r'defref_us-gaap_RevenueFromContractWithCustomerExcludingAssessedTax' in str(tds) and rev == '---'
             ):
             rev = html_re(str(tds))
-        elif 'defref_us-gaap_GrossProfit' in str(tds):
+        elif r'defref_us-gaap_GrossProfit' in str(tds):
             gross = html_re(str(tds))
-        elif ('this, \'defref_us-gaap_ResearchAndDevelopmentExpense\', window' in str(tds) or
-              'this, \'defref_amzn_TechnologyAndContentExpense\', window' in str(tds)
+            if gross != '---':
+                gross = check_neg_html(str(tds), gross)
+        elif (r"this, 'defref_us-gaap_ResearchAndDevelopmentExpense', window" in str(tds) or
+              r"this, 'defref_amzn_TechnologyAndContentExpense', window" in str(tds)
               ):
             research = html_re(str(tds))
-        elif 'this, \'defref_us-gaap_OperatingIncomeLoss\', window' in str(tds):
+        elif r"this, 'defref_us-gaap_OperatingIncomeLoss', window" in str(tds):
             oi = html_re(str(tds))
+            if oi != '---':
+                oi = check_neg_html(str(tds), oi)
         elif ('this, \'defref_us-gaap_NetIncomeLoss\', window' in str(tds) and net == '---' or
               'this, \'defref_us-gaap_ProfitLoss\', window );">Net income' in str(tds) and net == '---'
-              ):
+            ):
             net = html_re(str(tds))
+            if net != '---':
+                net = check_neg_html(str(tds), net)
         elif 'EarningsPerShareDiluted' in str(tds) and eps == '---':
             eps = html_re(str(tds))
-        elif ('this, \'defref_us-gaap_CostOfRevenue\', window' in str(tds) and cost == '---' or
-              'this, \'defref_us-gaap_CostOfGoodsAndServicesSold\', window' in str(tds) and cost == '---'
+            if eps != '---':
+                eps = check_neg_html(str(tds), eps)
+        elif (r"this, 'defref_us-gaap_CostOfRevenue', window" in str(tds) and cost == '---' or
+              r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(tds) and cost == '---'
               ):
             cost = html_re(str(tds))
-        elif 'this, \'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding\', window' in str(tds):
+        elif r"this, 'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding', window" in str(tds):
             shares = html_re(str(tds))
             share_sum += shares
-        elif 'this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds):
+        elif r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds):
             div = html_re(str(tds))
             
     # Calculate gross if not listed
@@ -180,22 +209,23 @@ def rev_htm_test(rev_url):
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
+# cash, assets, debt, liabilities, equity
 bs_url_list = [r'https://www.sec.gov/Archives/edgar/data/1403161/000140316120000070/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1403161/000140316118000055/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1403161/000140316116000058/R2.htm',
                r'https://www.sec.gov/Archives/edgar/data/1403161/000140316114000017/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1403161/000119312511315956/R2.htm', r'https://www.sec.gov/Archives/edgar/data/789019/000156459021039151/R4.htm', 
                r'https://www.sec.gov/Archives/edgar/data/789019/000156459019027952/R4.htm', r'https://www.sec.gov/Archives/edgar/data/789019/000156459017014900/R5.htm', r'https://www.sec.gov/Archives/edgar/data/789019/000119312515272806/R5.htm',
                r'https://www.sec.gov/Archives/edgar/data/789019/000119312513310206/R5.htm', r'https://www.sec.gov/Archives/edgar/data/789019/000119312512316848/R3.htm', r'https://www.sec.gov/Archives/edgar/data/320193/000032019320000096/R4.htm',
                r'https://www.sec.gov/Archives/edgar/data/320193/000032019317000070/R5.htm', r'https://www.sec.gov/Archives/edgar/data/320193/000119312514383437/R5.htm', r'https://www.sec.gov/Archives/edgar/data/320193/000119312511282113/R3.htm',
                r'https://www.sec.gov/Archives/edgar/data/1652044/000165204421000010/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1652044/000165204418000007/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1652044/000165204416000012/R2.htm',
-               r'https://www.sec.gov/Archives/edgar/data/354950/000035495017000005/R2.htm']
+               r'https://www.sec.gov/Archives/edgar/data/354950/000035495017000005/R2.htm', r'https://www.sec.gov/Archives/edgar/data/354950/000035495020000015/R2.htm']
 bs_answers = [[16289, 37201, 21071, 44709, 36210], [8162, 26473, 16630, 35219, 34006], [5619, 21735, 15882, 31123, 32912],
               [1971, 15405, 0, 11156, 27413], [2127, 11656, 0, 8323, 26437], [14224, 276268, 50074, 191791, 141988],
               [11356, 236780, 66662, 184226, 102330], [7663, 195858, 76073, 168692, 72394], [5595, 154449, 27808, 96140, 80083],
               [3804, 124693, 12601, 63487, 78944], [6938, 104649, 10713, 54908, 66363], [38016, 323888, 98667, 258549, 65339],
               [20289, 367304, 97207, 241272, 134047], [13844, 223081, 28987, 120292, 111547], [9815, 111939, 0, 39756, 76615],
               [26465, 296996, 13932, 97072, 222544], [10715, 177856, 3969, 44793, 152502], [16549, 127745, 1995, 27130, 120331],
-              [2538, 40873, 22349, 38633, 4333]]
+              [2538, 40873, 22349, 38633, 4333], [2133, 48982, 28670, 54352, -3116]]
 
-bs_url = r'https://www.sec.gov/Archives/edgar/data/354950/000035495017000005/R2.htm'
+bs_url = r'https://www.sec.gov/Archives/edgar/data/354950/000035495020000015/R2.htm'
 
 
 def bs_htm_test(bs_url):
@@ -245,18 +275,16 @@ def bs_htm_test(bs_url):
         elif ('this, \'defref_us-gaap_StockholdersEquity\', window' in str(tds) or
               'this, \'defref_us-gaap_StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest\', window' in str(tds)
               ):
-            equity = html_re(str(tds))           
+            equity = html_re(str(tds))
+            equity = check_neg_html(str(tds), equity)          
 
-    # Net out goodwill and intangible assets from assets
-    if assets != '---':
-        assets -= (goodwill + intangible_assets)
-    
     # Calculate liabilites from shareholder equity if not found
-    if liabilities == '---':
-        try:
-            liabilities = tot_liabilities - equity
-        except:
-            pass
+    if liabilities == '---' and tot_liabilities != '---' and equity != '---':
+        liabilities = tot_liabilities - equity
+
+    # Net out goodwill from assets
+    if assets != '---' and goodwill != '---':
+        assets -= (goodwill + intangible_assets)
     
     return cash, assets, debt, liabilities, equity
 
@@ -311,6 +339,7 @@ def cf_htm_test(cf_url):
             'this, \'defref_us-gaap_NetCashProvidedByUsedInOperatingActivitiesContinuingOperations\', window' in str(tds)
             ):       
             cfo = html_re(str(tds))
+            cfo = check_neg_html(str(tds), cfo)  
         elif ('Additions to property and equipment' in str(tds) or
               'this, \'defref_us-gaap_PaymentsToAcquireProductiveAssets\', window' in str(tds) or
               'this, \'defref_us-gaap_PaymentsToAcquirePropertyPlantAndEquipment\', window' in str(tds) or
@@ -369,15 +398,15 @@ div_url_list = [r'https://www.sec.gov/Archives/edgar/data/1403161/00014031612000
                 r'https://www.sec.gov/Archives/edgar/data/1403161/000140316116000058/R7.htm', r'https://www.sec.gov/Archives/edgar/data/789019/000156459021039151/R99.htm', r'https://www.sec.gov/Archives/edgar/data/789019/000156459019027952/R107.htm',
                 r'https://www.sec.gov/Archives/edgar/data/789019/000156459017014900/R110.htm', r'https://www.sec.gov/Archives/edgar/data/789019/000119312515272806/R112.htm', r'https://www.sec.gov/Archives/edgar/data/789019/000119312513310206/R102.htm',
                 r'https://www.sec.gov/Archives/edgar/data/789019/000119312512316848/R104.htm', r'https://www.sec.gov/Archives/edgar/data/320193/000032019320000096/R6.htm', r'https://www.sec.gov/Archives/edgar/data/320193/000032019318000145/R8.htm',
-                r'https://www.sec.gov/Archives/edgar/data/354950/000035495021000089/R13.htm', r'https://www.sec.gov/Archives/edgar/data/354950/000035495017000005/R7.htm']
+                r'https://www.sec.gov/Archives/edgar/data/354950/000035495021000089/R13.htm', r'https://www.sec.gov/Archives/edgar/data/354950/000035495017000005/R7.htm', r'https://www.sec.gov/Archives/edgar/data/354950/000035495013000008/R7.htm']
 div_answers = [1.2, 1.0, 0.825,
                0.48, 0.88, 1.6,
                0.56, 2.24, 1.84,
                1.56, 1.24, 0.92,
                0.8, 0.795, 2.72,
-               6.0, 2.76]
+               6.0, 2.76, 1.16]
 
-div_url = r'https://www.sec.gov/Archives/edgar/data/354950/000035495017000005/R7.htm'
+div_url = r'https://www.sec.gov/Archives/edgar/data/354950/000035495012000003/R6.htm'
 
 def div_htm_test(div_url):
     
