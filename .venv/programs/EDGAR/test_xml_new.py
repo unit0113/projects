@@ -41,10 +41,29 @@ def xml_re(string):
     else:
         return int(result)
 
-'''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
-# Saving for negative numbers
-#(?:<Cell>\n<Id>1</Id>\n)(?:.*\n){4}(?:<RoundedNumericAmount>)(.*)(?:</RoundedNumericAmount>)
+# Check for possible negative number when not expected
+def check_neg(string, value, type='htm'):
+    ''' Checks for unexpected negative numbers
+
+    Args:
+        Target string (str), value that we're checking (int/float)
+    Return:
+        value (int/float)       
+    '''
+    # Create search string based on value, look for char before and after
+    if type == 'htm':
+        re_str = '.' + "{:,}".format(value) + '.'
+    else:
+        re_str = '.' + str(value) + '.'
+    obj = re.search(re_str, string, re.M)
+    
+    # Check if negative
+    if '(' in obj.group(0) and ')' in obj.group(0):
+        return (value * -1)
+    else:
+        return value
+
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
@@ -113,7 +132,9 @@ def rev_xml_test(rev_url):
             ):
             rev = xml_re(str(row))
         elif r'us-gaap_GrossProfit' in str(row):
-            gross = xml_re(str(row))        
+            gross = xml_re(str(row))
+            if gross != '---':
+                gross = check_neg(str(row), gross, 'xml')        
         elif (r'us-gaap_CostOfRevenue' in str(row) and gross == '---' or
               r'us-gaap_CostOfGoodsAndServicesSold' in str(row) and gross == '---'
               ):
@@ -121,11 +142,17 @@ def rev_xml_test(rev_url):
         elif r'us-gaap_ResearchAndDevelopmentExpense' in str(row):
             research = xml_re(str(row))           
         elif r'us-gaap_OperatingIncomeLoss' in str(row):
-            oi = xml_re(str(row))      
+            oi = xml_re(str(row))
+            if oi != '---':
+                oi = check_neg(str(row), oi, 'xml')      
         elif r'>us-gaap_NetIncomeLoss<' in str(row) and net == '---':
-            net = xml_re(str(row))                
+            net = xml_re(str(row))
+            if net != '---':
+                net = check_neg(str(row), net, 'xml')                
         elif r'us-gaap_EarningsPerShareDiluted' in str(row) and eps == '---':
             eps = xml_re(str(row))
+            if eps != '---':
+                eps = check_neg(str(row), eps, 'xml')
         elif r'us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding' in str(row):
             shares = xml_re(str(row))
             share_sum += shares  
@@ -198,7 +225,9 @@ def bs_xml_test(bs_url):
         elif r'us-gaap_LiabilitiesAndStockholdersEquity' in str(row) and liabilities == '---':
             tot_liabilities = xml_re(str(row))
         elif r'<ElementName>us-gaap_StockholdersEquity</ElementName>' in str(row):
-            equity = xml_re(str(row))                                                 
+            equity = xml_re(str(row))
+            if equity != '---':
+                equity = check_neg(str(row), equity, 'xml')                                                 
 
     # Calculate liabilites from shareholder equity if not found
     if liabilities == '---' and tot_liabilities != '---' and equity != '---':
@@ -218,7 +247,7 @@ cf_url_list = [r'https://www.sec.gov/Archives/edgar/data/1403161/000119312510265
 cf_answers = [[2450, 16, 944, 368, 131], [16590, 0, -912, 0, 879]]
 
 
-cf_url = r'https://www.sec.gov/Archives/edgar/data/320193/000119312510238044/R6.xml'
+cf_url = r'https://www.sec.gov/Archives/edgar/data/1403161/000119312510265236/R8.xml'
 
 def cf_xml_test(cf_url):
     
@@ -243,6 +272,8 @@ def cf_xml_test(cf_url):
     for row in rows:
         if r'<ElementName>us-gaap_NetCashProvidedByUsedInOperatingActivities</ElementName>' in str(row):
             cfo = xml_re(str(row))
+            if cfo != '---':
+                cfo = check_neg(str(row), cfo, 'xml')
         elif (r'us-gaap_PaymentsToAcquirePropertyPlantAndEquipment' in str(row) or
               r'us-gaap_PaymentsToAcquireProductiveAssets' in str(row)
               ):
@@ -277,7 +308,7 @@ def cf_xml_test(cf_url):
     return fcf, debt_pay, buyback, divpaid, sbc
 
 # CF Test
-#print(cf_xml_test(cf_url))
+print(cf_xml_test(cf_url))
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 

@@ -208,7 +208,7 @@ def parse_filings(filings, type, headers):
 
 
     # Check for possible negative number when not expected
-    def check_neg_html(string, value):
+    def check_neg(string, value, type='htm'):
         ''' Checks for unexpected negative numbers
 
         Args:
@@ -216,9 +216,11 @@ def parse_filings(filings, type, headers):
         Return:
             value (int/float)       
         '''
-
         # Create search string based on value, look for char before and after
-        re_str = str('.' + "{:,}".format(value) + '.')
+        if type == 'htm':
+            re_str = '.' + "{:,}".format(value) + '.'
+        else:
+            re_str = '.' + str(value) + '.'
         obj = re.search(re_str, string, re.M)
         
         # Check if negative
@@ -334,7 +336,7 @@ def parse_filings(filings, type, headers):
             elif r'defref_us-gaap_GrossProfit' in str(tds):
                 gross = html_re(str(tds))
                 if gross != '---':
-                    gross = check_neg_html(str(tds), gross)
+                    gross = check_neg(str(tds), gross)
             elif (r"this, 'defref_us-gaap_ResearchAndDevelopmentExpense', window" in str(tds) or
                 r"this, 'defref_amzn_TechnologyAndContentExpense', window" in str(tds)
                 ):
@@ -342,17 +344,17 @@ def parse_filings(filings, type, headers):
             elif r"this, 'defref_us-gaap_OperatingIncomeLoss', window" in str(tds):
                 oi = html_re(str(tds))
                 if oi != '---':
-                    oi = check_neg_html(str(tds), oi)
+                    oi = check_neg(str(tds), oi)
             elif ('this, \'defref_us-gaap_NetIncomeLoss\', window' in str(tds) and net == '---' or
                 'this, \'defref_us-gaap_ProfitLoss\', window );">Net income' in str(tds) and net == '---'
                 ):
                 net = html_re(str(tds))
                 if net != '---':
-                    net = check_neg_html(str(tds), net)
+                    net = check_neg(str(tds), net)
             elif 'EarningsPerShareDiluted' in str(tds) and eps == '---':
                 eps = html_re(str(tds))
                 if eps != '---':
-                    eps = check_neg_html(str(tds), eps)
+                    eps = check_neg(str(tds), eps)
             elif (r"this, 'defref_us-gaap_CostOfRevenue', window" in str(tds) and cost == '---' or
                 r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(tds) and cost == '---'
                 ):
@@ -398,25 +400,33 @@ def parse_filings(filings, type, headers):
         # Loop through rows, search for row of interest
         rows = soup.find_all('Row')
         for row in rows:
-            if ('<ElementName>us-gaap_Revenues</ElementName>' in str(row) or
-                'us-gaap_SalesRevenueNet' in str(row)
+            if (r'<ElementName>us-gaap_Revenues</ElementName>' in str(row) or
+                r'us-gaap_SalesRevenueNet' in str(row)
                 ):
                 rev = xml_re(str(row))
-            elif 'us-gaap_GrossProfit' in str(row):
-                gross = xml_re(str(row))        
-            elif ('us-gaap_CostOfRevenue' in str(row) and gross == '---' or
-                'us-gaap_CostOfGoodsAndServicesSold' in str(row) and gross == '---'
+            elif r'us-gaap_GrossProfit' in str(row):
+                gross = xml_re(str(row))
+                if gross != '---':
+                    gross = check_neg(str(row), gross, 'xml')        
+            elif (r'us-gaap_CostOfRevenue' in str(row) and gross == '---' or
+                r'us-gaap_CostOfGoodsAndServicesSold' in str(row) and gross == '---'
                 ):
                 cost = xml_re(str(row))                
-            elif 'us-gaap_ResearchAndDevelopmentExpense' in str(row):
+            elif r'us-gaap_ResearchAndDevelopmentExpense' in str(row):
                 research = xml_re(str(row))           
-            elif 'us-gaap_OperatingIncomeLoss' in str(row):
-                oi = xml_re(str(row))      
-            elif '>us-gaap_NetIncomeLoss<' in str(row) and net == '---':
-                net = xml_re(str(row))                
-            elif 'us-gaap_EarningsPerShareDiluted' in str(row) and eps == '---':
+            elif r'us-gaap_OperatingIncomeLoss' in str(row):
+                oi = xml_re(str(row))
+                if oi != '---':
+                    oi = check_neg(str(row), oi, 'xml')      
+            elif r'>us-gaap_NetIncomeLoss<' in str(row) and net == '---':
+                net = xml_re(str(row))
+                if net != '---':
+                    net = check_neg(str(row), net, 'xml')                
+            elif r'us-gaap_EarningsPerShareDiluted' in str(row) and eps == '---':
                 eps = xml_re(str(row))
-            elif 'us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding' in str(row):
+                if eps != '---':
+                    eps = check_neg(str(row), eps, 'xml')
+            elif r'us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding' in str(row):
                 shares = xml_re(str(row))
                 share_sum += shares  
 
@@ -482,7 +492,8 @@ def parse_filings(filings, type, headers):
                 'this, \'defref_us-gaap_StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest\', window' in str(tds)
                 ):
                 equity = html_re(str(tds))
-                equity = check_neg_html(str(tds), equity)          
+                if equity != '---':
+                    equity = check_neg(str(tds), equity)          
 
         # Calculate liabilites from shareholder equity if not found
         if liabilities == '---' and tot_liabilities != '---' and equity != '---':
@@ -531,25 +542,18 @@ def parse_filings(filings, type, headers):
             elif r'us-gaap_LiabilitiesAndStockholdersEquity' in str(row) and liabilities == '---':
                 tot_liabilities = xml_re(str(row))
             elif r'<ElementName>us-gaap_StockholdersEquity</ElementName>' in str(row):
-                equity = xml_re(str(row))                                                  
+                equity = xml_re(str(row))
+                if equity != '---':
+                    equity = check_neg(str(row), equity, 'xml')                                                 
 
         # Calculate liabilites from shareholder equity if not found
-        if liabilities == '---':
-            try:
-                liabilities = tot_liabilities - equity
-            except:
-                pass
-        else:
-            try:
-                print(assets, liabilities)
-                equity = assets - liabilities
-            except:
-                equity = tot_liabilities - liabilities
+        if liabilities == '---' and tot_liabilities != '---' and equity != '---':
+            liabilities = tot_liabilities - equity
 
         # Net out goodwill from assets
         if assets != '---' and goodwill != '---':
             assets -= (goodwill + intangible_assets)
-
+        
         return cash, assets, debt, liabilities, equity
         
 
@@ -576,7 +580,8 @@ def parse_filings(filings, type, headers):
                 'this, \'defref_us-gaap_NetCashProvidedByUsedInOperatingActivitiesContinuingOperations\', window' in str(tds)
                 ):       
                 cfo = html_re(str(tds))
-                cfo = check_neg_html(str(tds), cfo)  
+                if cfo != '---':
+                    cfo = check_neg(str(tds), cfo)  
             elif ('Additions to property and equipment' in str(tds) or
                 'this, \'defref_us-gaap_PaymentsToAcquireProductiveAssets\', window' in str(tds) or
                 'this, \'defref_us-gaap_PaymentsToAcquirePropertyPlantAndEquipment\', window' in str(tds) or
@@ -640,31 +645,33 @@ def parse_filings(filings, type, headers):
         # Loop through rows, search for row of interest
         rows = soup.find_all('Row')
         for row in rows:
-            if '<ElementName>us-gaap_NetCashProvidedByUsedInOperatingActivities</ElementName>' in str(row):
+            if r'<ElementName>us-gaap_NetCashProvidedByUsedInOperatingActivities</ElementName>' in str(row):
                 cfo = xml_re(str(row))
-            elif ('us-gaap_PaymentsToAcquirePropertyPlantAndEquipment' in str(row) or
-                'us-gaap_PaymentsToAcquireProductiveAssets' in str(row)
+                if cfo != '---':
+                    cfo = check_neg(str(row), cfo, 'xml')
+            elif (r'us-gaap_PaymentsToAcquirePropertyPlantAndEquipment' in str(row) or
+                r'us-gaap_PaymentsToAcquireProductiveAssets' in str(row)
                 ):
                 capex = xml_re(str(row))
-            elif ('us-gaap_ProceedsFromRepaymentsOfShortTermDebtMaturingInThreeMonthsOrLess' in str(row) or
-                'RepaymentsOfShortTermAndLongTermBorrowings' in str(row) or
-                'us-gaap_RepaymentsOfLongTermDebtAndCapitalSecurities' in str(row) or
-                'us-gaap_RepaymentsOfShortTermDebt' in str(row) or
-                'us-gaap_InterestPaid' in str(row) or
-                'us-gaap_RepaymentsOfLongTermDebt' in str(row)
+            elif (r'us-gaap_ProceedsFromRepaymentsOfShortTermDebtMaturingInThreeMonthsOrLess' in str(row) or
+                r'RepaymentsOfShortTermAndLongTermBorrowings' in str(row) or
+                r'us-gaap_RepaymentsOfLongTermDebtAndCapitalSecurities' in str(row) or
+                r'us-gaap_RepaymentsOfShortTermDebt' in str(row) or
+                r'us-gaap_InterestPaid' in str(row) or
+                r'us-gaap_RepaymentsOfLongTermDebt' in str(row)
                 ):
                 debt_pay += xml_re(str(row))                             
-            elif 'us-gaap_PaymentsForRepurchaseOfCommonStock' in str(row):
+            elif r'us-gaap_PaymentsForRepurchaseOfCommonStock' in str(row):
                 buyback += xml_re(str(row))     
-            elif ('us-gaap_ProceedsFromStockOptionsExercised' in str(row)or
-                'us-gaap_ProceedsFromIssuanceOfCommonStock' in str(row)
+            elif (r'us-gaap_ProceedsFromStockOptionsExercised' in str(row)or
+                r'us-gaap_ProceedsFromIssuanceOfCommonStock' in str(row)
                 ):
                 share_issue = xml_re(str(row))     
-            elif ('us-gaap_PaymentsOfDividendsCommonStock' in str(row) or
-                'us-gaap_PaymentsOfDividends' in str(row)
+            elif (r'us-gaap_PaymentsOfDividendsCommonStock' in str(row) or
+                r'us-gaap_PaymentsOfDividends' in str(row)
                 ):
                 divpaid = xml_re(str(row))            
-            elif 'us-gaap_ShareBasedCompensation' in str(row):
+            elif r'us-gaap_ShareBasedCompensation' in str(row):
                 sbc = xml_re(str(row)) 
         
         # Calculate Free Cash Flow
@@ -674,6 +681,7 @@ def parse_filings(filings, type, headers):
         buyback -= share_issue
 
         return fcf, debt_pay, buyback, divpaid, sbc
+
 
     # Pull div data
     def div_html(soup):

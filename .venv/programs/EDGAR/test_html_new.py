@@ -50,7 +50,7 @@ def html_re(string):
     
 
 # Check for possible negative number when not expected
-def check_neg_html(string, value):
+def check_neg(string, value, type='htm'):
     ''' Checks for unexpected negative numbers
 
     Args:
@@ -58,9 +58,11 @@ def check_neg_html(string, value):
     Return:
         value (int/float)       
     '''
-
     # Create search string based on value, look for char before and after
-    re_str = str('.' + "{:,}".format(value) + '.')
+    if type == 'htm':
+        re_str = '.' + "{:,}".format(value) + '.'
+    else:
+        re_str = '.' + str(value) + '.'
     obj = re.search(re_str, string, re.M)
     
     # Check if negative
@@ -158,7 +160,7 @@ def rev_htm_test(rev_url):
         elif r'defref_us-gaap_GrossProfit' in str(tds):
             gross = html_re(str(tds))
             if gross != '---':
-                gross = check_neg_html(str(tds), gross)
+                gross = check_neg(str(tds), gross)
         elif (r"this, 'defref_us-gaap_ResearchAndDevelopmentExpense', window" in str(tds) or
               r"this, 'defref_amzn_TechnologyAndContentExpense', window" in str(tds)
               ):
@@ -166,17 +168,17 @@ def rev_htm_test(rev_url):
         elif r"this, 'defref_us-gaap_OperatingIncomeLoss', window" in str(tds):
             oi = html_re(str(tds))
             if oi != '---':
-                oi = check_neg_html(str(tds), oi)
+                oi = check_neg(str(tds), oi)
         elif ('this, \'defref_us-gaap_NetIncomeLoss\', window' in str(tds) and net == '---' or
               'this, \'defref_us-gaap_ProfitLoss\', window );">Net income' in str(tds) and net == '---'
             ):
             net = html_re(str(tds))
             if net != '---':
-                net = check_neg_html(str(tds), net)
+                net = check_neg(str(tds), net)
         elif 'EarningsPerShareDiluted' in str(tds) and eps == '---':
             eps = html_re(str(tds))
             if eps != '---':
-                eps = check_neg_html(str(tds), eps)
+                eps = check_neg(str(tds), eps)
         elif (r"this, 'defref_us-gaap_CostOfRevenue', window" in str(tds) and cost == '---' or
               r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(tds) and cost == '---'
               ):
@@ -276,7 +278,8 @@ def bs_htm_test(bs_url):
               'this, \'defref_us-gaap_StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest\', window' in str(tds)
               ):
             equity = html_re(str(tds))
-            equity = check_neg_html(str(tds), equity)          
+            if equity != '---':
+                equity = check_neg(str(tds), equity)          
 
     # Calculate liabilites from shareholder equity if not found
     if liabilities == '---' and tot_liabilities != '---' and equity != '---':
@@ -339,7 +342,8 @@ def cf_htm_test(cf_url):
             'this, \'defref_us-gaap_NetCashProvidedByUsedInOperatingActivitiesContinuingOperations\', window' in str(tds)
             ):       
             cfo = html_re(str(tds))
-            cfo = check_neg_html(str(tds), cfo)  
+            if cfo != '---':
+                cfo = check_neg(str(tds), cfo)  
         elif ('Additions to property and equipment' in str(tds) or
               'this, \'defref_us-gaap_PaymentsToAcquireProductiveAssets\', window' in str(tds) or
               'this, \'defref_us-gaap_PaymentsToAcquirePropertyPlantAndEquipment\', window' in str(tds) or
