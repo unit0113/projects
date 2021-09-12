@@ -65,6 +65,27 @@ def check_neg(string, value, type='htm'):
         return value
 
 
+# Find correct column for data
+def column_finder_annual_xml(soup):
+    ''' Determine which column of data contains desired data for xml pages
+
+    Args:
+        soup (soup data of sub filings)
+    Returns:
+        column number (int)        
+    '''
+
+    # Check if needed to calculate
+    if '12 Months Ended' in str(soup):        
+        # Find correct column
+        colm = re.search(r'(?:<Id>(\d\d?)</Id>\n)(?:<Labels>\n<Label Id=\"1\" Label=\"12 Months Ended\"/>)', str(soup), re.M)
+        try:
+            return int(colm.group(1)) - 1
+        except:
+            return 0
+    else:
+        return 0
+
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
 sum_url = r'https://www.sec.gov/Archives/edgar/data/1018724/000119312511016253/R1.xml'
@@ -100,10 +121,10 @@ def sum_xml_test(sum_url):
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
-rev_url_list = [r'https://www.sec.gov/Archives/edgar/data/1403161/000119312510265236/R4.xml', r'https://www.sec.gov/Archives/edgar/data/320193/000119312510238044/R2.xml']
-rev_answers = [[8065, 8065, 0, 4589, 2966, 4.01, 1096, '---'], [65225, 25684, 1782, 18385, 14013, 15.15, 924712, '---']]
+rev_url_list = [r'https://www.sec.gov/Archives/edgar/data/1403161/000119312510265236/R4.xml', r'https://www.sec.gov/Archives/edgar/data/320193/000119312510238044/R2.xml', r'https://www.sec.gov/Archives/edgar/data/909832/000119312510230379/R4.xml']
+rev_answers = [[8065, 8065, 0, 4589, 2966, 4.01, 1096, '---'], [65225, 25684, 1782, 18385, 14013, 15.15, 924712, '---'], [77946, 9951, 0, 2077, 1303, 2.92, 445970, 0.77]]
 
-rev_url = r'https://www.sec.gov/Archives/edgar/data/320193/000119312510238044/R2.xml'
+rev_url = r'https://www.sec.gov/Archives/edgar/data/909832/000119312510230379/R4.xml'
 
 
 def rev_xml_test(rev_url):
@@ -124,38 +145,45 @@ def rev_xml_test(rev_url):
     rev = gross = oi = net = eps = cost = shares = div = '---'
     share_sum = research = 0
 
+    # Find which column has 12 month data
+    colm = column_finder_annual_xml(soup)
+
     # Loop through rows, search for row of interest
     rows = soup.find_all('Row')
     for row in rows:
+        cells = row.find_all('Cell')
         if (r'<ElementName>us-gaap_Revenues</ElementName>' in str(row) or
             r'us-gaap_SalesRevenueNet' in str(row)
             ):
-            rev = xml_re(str(row))
+            rev = xml_re(str(cells[colm]))
         elif r'us-gaap_GrossProfit' in str(row):
-            gross = xml_re(str(row))
+            gross = xml_re(str(cells[colm]))
             if gross != '---':
                 gross = check_neg(str(row), gross, 'xml')        
         elif (r'us-gaap_CostOfRevenue' in str(row) and gross == '---' or
-              r'us-gaap_CostOfGoodsAndServicesSold' in str(row) and gross == '---'
+              r'us-gaap_CostOfGoodsAndServicesSold' in str(row) and gross == '---' or
+              r'us-gaap_CostOfGoodsSold' in str(row) and gross == '---'
               ):
-            cost = xml_re(str(row))                
+            cost = xml_re(str(cells[colm]))              
         elif r'us-gaap_ResearchAndDevelopmentExpense' in str(row):
-            research = xml_re(str(row))           
+            research = xml_re(str(cells[colm]))         
         elif r'us-gaap_OperatingIncomeLoss' in str(row):
-            oi = xml_re(str(row))
+            oi = xml_re(str(cells[colm]))
             if oi != '---':
                 oi = check_neg(str(row), oi, 'xml')      
         elif r'>us-gaap_NetIncomeLoss<' in str(row) and net == '---':
-            net = xml_re(str(row))
+            net = xml_re(str(cells[colm]))
             if net != '---':
                 net = check_neg(str(row), net, 'xml')                
         elif r'us-gaap_EarningsPerShareDiluted' in str(row) and eps == '---':
-            eps = xml_re(str(row))
+            eps = xml_re(str(cells[colm]))
             if eps != '---':
                 eps = check_neg(str(row), eps, 'xml')
         elif r'us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding' in str(row):
-            shares = xml_re(str(row))
-            share_sum += shares  
+            shares = xml_re(str(cells[colm]))
+            share_sum += shares
+        elif r'us-gaap_CommonStockDividendsPerShareCashPaid' in str(row):
+            div = xml_re(str(cells[colm])) 
 
     # Calculate gross if not listed
     if gross == '---':
@@ -179,11 +207,11 @@ def rev_xml_test(rev_url):
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
 bs_url_list = [r'https://www.sec.gov/Archives/edgar/data/1403161/000119312510265236/R2.xml', r'https://www.sec.gov/Archives/edgar/data/1018724/000119312511016253/R5.xml', r'https://www.sec.gov/Archives/edgar/data/320193/000119312510238044/R3.xml',
-               r'https://www.sec.gov/Archives/edgar/data/354950/000119312511076501/R3.xml']
+               r'https://www.sec.gov/Archives/edgar/data/354950/000119312511076501/R3.xml', r'https://www.sec.gov/Archives/edgar/data/909832/000119312510230379/R2.xml']
 bs_answers = [[3867, 10483, 32, 8394, 25011], [3777, 17448, 0, 11933, 6864], [11261, 74100, 0, 27392, 47791],
-              [545, 38938, 8707, 21236, 18889]]
+              [545, 38938, 8707, 21236, 18889], [3214, 23815, 2141, 12885, 10829]]
 
-bs_url = r'https://www.sec.gov/Archives/edgar/data/1403161/000119312510265236/R2.xml'
+bs_url = r'https://www.sec.gov/Archives/edgar/data/1018724/000119312511016253/R5.xml'
 
 def bs_xml_test(bs_url):
     
@@ -200,32 +228,36 @@ def bs_xml_test(bs_url):
     '''   
 
     # Initial values
-    cash = assets = liabilities = '---'
+    equity = cash = assets = liabilities = '---'
     intangible_assets = goodwill = debt = 0
+
+    # Find which column has 12 month data
+    colm = column_finder_annual_xml(soup)
 
     # Loop through rows, search for row of interest
     rows = soup.find_all('Row')
     for row in rows:
+        cells = row.find_all('Cell')
         if ('us-gaap_CashCashEquivalentsAndShortTermInvestments' in str(row) or
             'us-gaap_CashAndCashEquivalentsAtCarryingValue' in str(row)
             ):
-            cash = xml_re(str(row))
+            cash = xml_re(str(cells[colm])) 
         elif 'us-gaap_Goodwill' in str(row):
-            goodwill = xml_re(str(row))               
+            goodwill = xml_re(str(cells[colm]))                
         elif r'us-gaap_IntangibleAssetsNetExcludingGoodwill' in str(row):
-            intangible_assets = xml_re(str(row))
+            intangible_assets = xml_re(str(cells[colm])) 
         elif r'<ElementName>us-gaap_Assets</ElementName>' in str(row):
-            assets = xml_re(str(row))      
+            assets = xml_re(str(cells[colm]))       
         elif (r'us-gaap_LongTermDebtNoncurrent' in str(row) or
               r'us-gaap_LongTermDebtAndCapitalLeaseObligations' in str(row)
               ):
-            debt = xml_re(str(row))
+            debt = xml_re(str(cells[colm])) 
         elif r'<ElementName>us-gaap_Liabilities</ElementName>' in str(row):
-            liabilities = xml_re(str(row))
+            liabilities = xml_re(str(cells[colm])) 
         elif r'us-gaap_LiabilitiesAndStockholdersEquity' in str(row) and liabilities == '---':
-            tot_liabilities = xml_re(str(row))
+            tot_liabilities = xml_re(str(cells[colm])) 
         elif r'<ElementName>us-gaap_StockholdersEquity</ElementName>' in str(row):
-            equity = xml_re(str(row))
+            equity = xml_re(str(cells[colm])) 
             if equity != '---':
                 equity = check_neg(str(row), equity, 'xml')                                                 
 
@@ -243,11 +275,11 @@ def bs_xml_test(bs_url):
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
-cf_url_list = [r'https://www.sec.gov/Archives/edgar/data/1403161/000119312510265236/R8.xml', r'https://www.sec.gov/Archives/edgar/data/320193/000119312510238044/R6.xml']
-cf_answers = [[2450, 16, 944, 368, 131], [16590, 0, -912, 0, 879]]
+cf_url_list = [r'https://www.sec.gov/Archives/edgar/data/1403161/000119312510265236/R8.xml', r'https://www.sec.gov/Archives/edgar/data/320193/000119312510238044/R6.xml', r'https://www.sec.gov/Archives/edgar/data/909832/000119312510230379/R7.xml']
+cf_answers = [[2450, 16, 944, 368, 131], [16590, 0, -912, 0, 879], [1725, 194, 358, 338, 190]]
 
 
-cf_url = r'https://www.sec.gov/Archives/edgar/data/1403161/000119312510265236/R8.xml'
+cf_url = r'https://www.sec.gov/Archives/edgar/data/909832/000119312510230379/R7.xml'
 
 def cf_xml_test(cf_url):
     
@@ -267,37 +299,41 @@ def cf_xml_test(cf_url):
     debt_pay = share_issue = buyback = divpaid = sbc = 0
     cfo = capex = fcf = '---'
 
+    # Find which column has 12 month data
+    colm = column_finder_annual_xml(soup)
+
     # Loop through rows, search for row of interest
     rows = soup.find_all('Row')
     for row in rows:
+        cells = row.find_all('Cell')
         if r'<ElementName>us-gaap_NetCashProvidedByUsedInOperatingActivities</ElementName>' in str(row):
-            cfo = xml_re(str(row))
+            cfo = xml_re(str(cells[colm]))
             if cfo != '---':
                 cfo = check_neg(str(row), cfo, 'xml')
         elif (r'us-gaap_PaymentsToAcquirePropertyPlantAndEquipment' in str(row) or
               r'us-gaap_PaymentsToAcquireProductiveAssets' in str(row)
               ):
-            capex = xml_re(str(row))
+            capex = xml_re(str(cells[colm]))
         elif (r'us-gaap_ProceedsFromRepaymentsOfShortTermDebtMaturingInThreeMonthsOrLess' in str(row) or
               r'RepaymentsOfShortTermAndLongTermBorrowings' in str(row) or
               r'us-gaap_RepaymentsOfLongTermDebtAndCapitalSecurities' in str(row) or
-              r'us-gaap_RepaymentsOfShortTermDebt' in str(row) or
               r'us-gaap_InterestPaid' in str(row) or
               r'us-gaap_RepaymentsOfLongTermDebt' in str(row)
               ):
-            debt_pay += xml_re(str(row))                             
+            debt_pay += xml_re(str(cells[colm]))                             
         elif r'us-gaap_PaymentsForRepurchaseOfCommonStock' in str(row):
-            buyback += xml_re(str(row))     
-        elif (r'us-gaap_ProceedsFromStockOptionsExercised' in str(row)or
-              r'us-gaap_ProceedsFromIssuanceOfCommonStock' in str(row)
+            buyback += xml_re(str(cells[colm]))     
+        elif (r'us-gaap_ProceedsFromStockOptionsExercised' in str(row) or
+              r'us-gaap_ProceedsFromIssuanceOfCommonStock' in str(row) or
+              r'cost_ProceedsFromStockbasedAwardsNet' in str(row)
               ):
-            share_issue = xml_re(str(row))     
+            share_issue = xml_re(str(cells[colm]))   
         elif (r'us-gaap_PaymentsOfDividendsCommonStock' in str(row) or
               r'us-gaap_PaymentsOfDividends' in str(row)
               ):
-            divpaid = xml_re(str(row))            
+            divpaid = xml_re(str(cells[colm]))            
         elif r'us-gaap_ShareBasedCompensation' in str(row):
-            sbc = xml_re(str(row)) 
+            sbc = xml_re(str(cells[colm]))
     
     # Calculate Free Cash Flow
     fcf = cfo - capex

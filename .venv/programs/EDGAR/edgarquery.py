@@ -171,7 +171,7 @@ def parse_filings(filings, type, headers):
     '''
     
     # RE for .htm filings
-    def html_re(string):
+    def html_re(string, colm=1):
         ''' RE syntax and error checking for pulling numeric information from data cell on .htm filings
 
         Args:
@@ -180,15 +180,18 @@ def parse_filings(filings, type, headers):
             results (int/float)       
         '''
 
+        # adjust column number for 0 index
+        index = colm - 1
+
         # Pull numeric data from string
         if 'toggleNextSibling(this)' not in string:
-            obj = re.search(r'(?:<td class=\"(?:num|nump)\">)(?:.*?\(?)(\d*,?\d*,?.?\d+)(?:\)?<span>)', string, re.M)
+            obj = re.findall(r'(?:<td class=\"(?:num|nump)\">)(?:.*?\(?)(\d*,?\d*,?,?\d*.?\d+)(?:\)?<span>)', string, re.M)
             try:
-                result = obj.group(1).replace(',', '')
+                result = obj[index].replace(',', '')
             except:
                 return '---'
         else:
-            obj = re.search(r'(?:\">)(?:\$? ?\(?)(\d*,?\d*,?.?\d+)(?:\)?</a>)', string, re.M)
+            obj = re.search(r'(?:\">)(?:\$? ?\(?)(\d*,?\d*,?,?\d*.?\d+)(?:\)?</a>)', string, re.M)
             try:
                 result = obj.group(1).replace(',', '')
             except:
@@ -197,7 +200,11 @@ def parse_filings(filings, type, headers):
         # Looks for blank cell to ensure that correct data is returned
         empty = re.search(r'text', string, re.M)
         if empty is not None:
-            if empty.span()[0] < obj.span()[0]:
+            if 'toggleNextSibling(this)' not in string:        
+                obj_search = re.search(r'(?:<td class=\"(?:num|nump)\">)(?:.*?\(?)(\d*,?\d*,?.?\d+)(?:\)?<span>)', string, re.M)
+            else:
+                obj_search = obj
+            if empty.span()[0] < obj_search.span()[0]:
                 return '---'
         
         # Check if return value is float or int
@@ -230,6 +237,27 @@ def parse_filings(filings, type, headers):
             return value
 
 
+    # Find correct column for data
+    def column_finder_annual_htm(soup):
+        ''' Determine which column of data contains desired data
+
+        Args:
+            soup (soup data of sub filings)
+        Returns:
+            column number (int)        
+        '''
+        
+        # Check if needed to calculate
+        if '12 Months Ended' in str(soup):
+            head = soup.table.find_all('tr')[0]
+            
+            # Find correct column
+            colm = re.findall(r'(?:colspan=\"(\d\d?)\")(?!>12 Months Ended)', str(head), re.M)
+            return sum(map(int, colm))
+        else:
+            return 1
+
+
     # RE for .xml filings
     def xml_re(string):
         ''' RE syntax and error checking for pulling numeric information from data cell on .xml filings
@@ -258,6 +286,28 @@ def parse_filings(filings, type, headers):
             return float(result)
         else:
             return int(result)
+    
+    
+    # Find correct column for data
+    def column_finder_annual_xml(soup):
+        ''' Determine which column of data contains desired data for xml pages
+
+        Args:
+            soup (soup data of sub filings)
+        Returns:
+            column number (int)        
+        '''
+
+        # Check if needed to calculate
+        if '12 Months Ended' in str(soup):        
+            # Find correct column
+            colm = re.search(r'(?:<Id>(\d\d?)</Id>\n)(?:<Labels>\n<Label Id=\"1\" Label=\"12 Months Ended\"/>)', str(soup), re.M)
+            try:
+                return int(colm.group(1)) - 1
+            except:
+                return 0
+        else:
+            return 0
     
     
     # Pull fiscal period from .htm
@@ -323,47 +373,66 @@ def parse_filings(filings, type, headers):
 
         # Initial values
         rev = gross = oi = net = eps = cost = shares = div = '---'
-        share_sum = research = 0
+        share_sum = research = non_attributable_net = 0
 
+        # Find which column has 12 month data
+        colm = column_finder_annual_htm(soup)
+    
         # Loop through rows, search for row of interest
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
-            if (r"this, 'defref_us-gaap_Revenues', window" in str(tds) and rev == '---' or
+            if (r"this, 'defref_us-gaap_Revenues', window" in str(tds) or
                 r"this, 'defref_us-gaap_SalesRevenueNet', window" in str(tds) and rev == '---' or
                 r'defref_us-gaap_RevenueFromContractWithCustomerExcludingAssessedTax' in str(tds) and rev == '---'
                 ):
-                rev = html_re(str(tds))
+                rev = html_re(str(tds[colm]))
             elif r'defref_us-gaap_GrossProfit' in str(tds):
-                gross = html_re(str(tds))
+                gross = html_re(str(tds[colm]))
                 if gross != '---':
                     gross = check_neg(str(tds), gross)
             elif (r"this, 'defref_us-gaap_ResearchAndDevelopmentExpense', window" in str(tds) or
                 r"this, 'defref_amzn_TechnologyAndContentExpense', window" in str(tds)
                 ):
-                research = html_re(str(tds))
+                research = html_re(str(tds[colm]))
             elif r"this, 'defref_us-gaap_OperatingIncomeLoss', window" in str(tds):
-                oi = html_re(str(tds))
+                oi = html_re(str(tds[colm]))
                 if oi != '---':
                     oi = check_neg(str(tds), oi)
             elif ('this, \'defref_us-gaap_NetIncomeLoss\', window' in str(tds) and net == '---' or
-                'this, \'defref_us-gaap_ProfitLoss\', window );">Net income' in str(tds) and net == '---'
+                'this, \'defref_us-gaap_ProfitLoss\', window' in str(tds) and net == '---'
                 ):
-                net = html_re(str(tds))
+                net = html_re(str(tds[colm]))
                 if net != '---':
                     net = check_neg(str(tds), net)
-            elif 'EarningsPerShareDiluted' in str(tds) and eps == '---':
-                eps = html_re(str(tds))
+            elif r"this, 'defref_us-gaap_NetIncomeLossAttributableToNoncontrollingInterest', window" in str(tds):
+                non_attributable_net = html_re(str(tds[colm]))
+                if net != '---':
+                    if net > 0:
+                        net -= non_attributable_net
+                    else:
+                        net += non_attributable_net
+            elif ('EarningsPerShareDiluted' in str(tds) and eps == '---' or
+                'this, \'defref_us-gaap_EarningsPerShareBasicAndDiluted\', window' in str(tds) and eps == '---' or
+                r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsPerBasicAndDilutedShare', window" in str(tds) and eps == '---'
+                ):
+                eps = html_re(str(tds[colm]))
                 if eps != '---':
                     eps = check_neg(str(tds), eps)
             elif (r"this, 'defref_us-gaap_CostOfRevenue', window" in str(tds) and cost == '---' or
+                r"this, 'defref_us-gaap_CostOfGoodsSold', window" in str(tds) and cost == '---' or
                 r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(tds) and cost == '---'
                 ):
-                cost = html_re(str(tds))
-            elif r"this, 'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding', window" in str(tds):
-                shares = html_re(str(tds))
+                cost = html_re(str(tds[colm]))
+            elif (r"this, 'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding', window" in str(tds) or
+                r"this, 'defref_us-gaap_WeightedAverageNumberOfShareOutstandingBasicAndDiluted', window" in str(tds) or
+                r"this, 'defref_tsla_WeightedAverageNumberOfSharesOutstandingBasicAndDilutedOne', window" in str(tds)
+                ):
+                shares = html_re(str(tds[colm]))
                 share_sum += shares
-            elif r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds):
-                div = html_re(str(tds))
+            elif (r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds) or
+                r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds)
+                ):
+                div = html_re(str(tds[colm]))
                 
         # Calculate gross if not listed
         if gross == '---':
@@ -397,38 +466,45 @@ def parse_filings(filings, type, headers):
         rev = gross = oi = net = eps = cost = shares = div = '---'
         share_sum = research = 0
 
+        # Find which column has 12 month data
+        colm = column_finder_annual_xml(soup)
+
         # Loop through rows, search for row of interest
         rows = soup.find_all('Row')
         for row in rows:
+            cells = row.find_all('Cell')
             if (r'<ElementName>us-gaap_Revenues</ElementName>' in str(row) or
                 r'us-gaap_SalesRevenueNet' in str(row)
                 ):
-                rev = xml_re(str(row))
+                rev = xml_re(str(cells[colm]))
             elif r'us-gaap_GrossProfit' in str(row):
-                gross = xml_re(str(row))
+                gross = xml_re(str(cells[colm]))
                 if gross != '---':
                     gross = check_neg(str(row), gross, 'xml')        
             elif (r'us-gaap_CostOfRevenue' in str(row) and gross == '---' or
-                r'us-gaap_CostOfGoodsAndServicesSold' in str(row) and gross == '---'
+                r'us-gaap_CostOfGoodsAndServicesSold' in str(row) and gross == '---' or
+                r'us-gaap_CostOfGoodsSold' in str(row) and gross == '---'
                 ):
-                cost = xml_re(str(row))                
+                cost = xml_re(str(cells[colm]))              
             elif r'us-gaap_ResearchAndDevelopmentExpense' in str(row):
-                research = xml_re(str(row))           
+                research = xml_re(str(cells[colm]))         
             elif r'us-gaap_OperatingIncomeLoss' in str(row):
-                oi = xml_re(str(row))
+                oi = xml_re(str(cells[colm]))
                 if oi != '---':
                     oi = check_neg(str(row), oi, 'xml')      
             elif r'>us-gaap_NetIncomeLoss<' in str(row) and net == '---':
-                net = xml_re(str(row))
+                net = xml_re(str(cells[colm]))
                 if net != '---':
                     net = check_neg(str(row), net, 'xml')                
             elif r'us-gaap_EarningsPerShareDiluted' in str(row) and eps == '---':
-                eps = xml_re(str(row))
+                eps = xml_re(str(cells[colm]))
                 if eps != '---':
                     eps = check_neg(str(row), eps, 'xml')
             elif r'us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding' in str(row):
-                shares = xml_re(str(row))
-                share_sum += shares  
+                shares = xml_re(str(cells[colm]))
+                share_sum += shares
+            elif r'us-gaap_CommonStockDividendsPerShareCashPaid' in str(row):
+                div = xml_re(str(cells[colm])) 
 
         # Calculate gross if not listed
         if gross == '---':
@@ -459,39 +535,43 @@ def parse_filings(filings, type, headers):
         '''
         
         # Initial values
-        cash = assets = liabilities = '---'
+        equity = cash = assets = liabilities = '---'
         intangible_assets = goodwill = debt = 0
+
+        # Find which column has 12 month data
+        colm = column_finder_annual_htm(soup)
 
         # Loop through rows, search for row of interest
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
             if 'this, \'defref_us-gaap_CashAndCashEquivalentsAtCarryingValue\', window' in str(tds):
-                cash = html_re(str(tds))
+                cash = html_re(str(tds[colm]))
             elif 'defref_us-gaap_Goodwill' in str(tds):
-                goodwill = html_re(str(tds))
+                goodwill = html_re(str(tds[colm]))
             elif ('this, \'defref_us-gaap_FiniteLivedIntangibleAssetsNet\', window' in str(tds) or
                 'this, \'defref_us-gaap_IntangibleAssetsNetExcludingGoodwill\', window' in str(tds)
                 ):
-                intangible_assets = html_re(str(tds))
+                intangible_assets = html_re(str(tds[colm]))
             elif ('Total assets' in str(tds) or
-                'Total Assets' in str(tds)
+                'Total Assets' in str(tds) or
+                r"this, 'defref_us-gaap_Assets', window" in str(tds)
                 ):
-                assets = html_re(str(tds))
+                assets = html_re(str(tds[colm]))
             elif 'onclick="top.Show.showAR( this, \'defref_us-gaap_Liabilities\', window )' in str(tds):
-                liabilities = html_re(str(tds))
+                liabilities = html_re(str(tds[colm]))
             elif ('this, \'defref_us-gaap_LongTermDebtNoncurrent\', window' in str(tds) or
                 'this, \'defref_us-gaap_LongTermDebt\', window' in str(tds) or
                 'this, \'defref_us-gaap_LongTermDebtAndCapitalLeaseObligations\', window' in str(tds)
                 ):
-                debt = html_re(str(tds))
+                debt = html_re(str(tds[colm]))
                 if debt == '---':
                     debt = 0
             elif 'this, \'defref_us-gaap_LiabilitiesAndStockholdersEquity\', window' in str(tds):
-                tot_liabilities = html_re(str(tds))
+                tot_liabilities = html_re(str(tds[colm]))
             elif ('this, \'defref_us-gaap_StockholdersEquity\', window' in str(tds) or
-                'this, \'defref_us-gaap_StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest\', window' in str(tds)
+                'this, \'defref_us-gaap_StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest\', window' in str(tds) and equity == '---'
                 ):
-                equity = html_re(str(tds))
+                equity = html_re(str(tds[colm]))
                 if equity != '---':
                     equity = check_neg(str(tds), equity)          
 
@@ -517,32 +597,36 @@ def parse_filings(filings, type, headers):
         '''   
 
         # Initial values
-        cash = assets = liabilities = '---'
+        equity = cash = assets = liabilities = '---'
         intangible_assets = goodwill = debt = 0
+
+        # Find which column has 12 month data
+        colm = column_finder_annual_xml(soup)
 
         # Loop through rows, search for row of interest
         rows = soup.find_all('Row')
         for row in rows:
+            cells = row.find_all('Cell')
             if ('us-gaap_CashCashEquivalentsAndShortTermInvestments' in str(row) or
                 'us-gaap_CashAndCashEquivalentsAtCarryingValue' in str(row)
                 ):
-                cash = xml_re(str(row))
+                cash = xml_re(str(cells[colm])) 
             elif 'us-gaap_Goodwill' in str(row):
-                goodwill = xml_re(str(row))               
+                goodwill = xml_re(str(cells[colm]))                
             elif r'us-gaap_IntangibleAssetsNetExcludingGoodwill' in str(row):
-                intangible_assets = xml_re(str(row))
+                intangible_assets = xml_re(str(cells[colm])) 
             elif r'<ElementName>us-gaap_Assets</ElementName>' in str(row):
-                assets = xml_re(str(row))      
+                assets = xml_re(str(cells[colm]))       
             elif (r'us-gaap_LongTermDebtNoncurrent' in str(row) or
                 r'us-gaap_LongTermDebtAndCapitalLeaseObligations' in str(row)
                 ):
-                debt = xml_re(str(row))
+                debt = xml_re(str(cells[colm])) 
             elif r'<ElementName>us-gaap_Liabilities</ElementName>' in str(row):
-                liabilities = xml_re(str(row))
+                liabilities = xml_re(str(cells[colm])) 
             elif r'us-gaap_LiabilitiesAndStockholdersEquity' in str(row) and liabilities == '---':
-                tot_liabilities = xml_re(str(row))
+                tot_liabilities = xml_re(str(cells[colm])) 
             elif r'<ElementName>us-gaap_StockholdersEquity</ElementName>' in str(row):
-                equity = xml_re(str(row))
+                equity = xml_re(str(cells[colm])) 
                 if equity != '---':
                     equity = check_neg(str(row), equity, 'xml')                                                 
 
@@ -569,8 +653,11 @@ def parse_filings(filings, type, headers):
 
         # Initial values
         share_issue = buyback = divpaid = sbc = 0
-        cfo = capex = fcf = '---'
+        cfo = capex = fcf = debt_payment = '---'
         debt_pay = []
+
+        # Find which column has 12 month data
+        colm = column_finder_annual_htm(soup)
 
         # Loop through rows, search for row of interest
         for row in soup.table.find_all('tr'):
@@ -579,7 +666,7 @@ def parse_filings(filings, type, headers):
                 'this, \'defref_us-gaap_NetCashProvidedByUsedInOperatingActivities\', window' in str(tds) or
                 'this, \'defref_us-gaap_NetCashProvidedByUsedInOperatingActivitiesContinuingOperations\', window' in str(tds)
                 ):       
-                cfo = html_re(str(tds))
+                cfo = html_re(str(tds[colm]))
                 if cfo != '---':
                     cfo = check_neg(str(tds), cfo)  
             elif ('Additions to property and equipment' in str(tds) or
@@ -587,7 +674,7 @@ def parse_filings(filings, type, headers):
                 'this, \'defref_us-gaap_PaymentsToAcquirePropertyPlantAndEquipment\', window' in str(tds) or
                 'this, \'defref_us-gaap_PaymentsForProceedsFromProductiveAssets\', window' in str(tds)
                 ):
-                capex = html_re(str(tds))
+                capex = html_re(str(tds[colm]))
             elif ('this, \'defref_us-gaap_RepaymentsOfDebtMaturingInMoreThanThreeMonths\', window' in str(tds) or
                 'this, \'defref_us-gaap_RepaymentsOfLongTermDebt\', window' in str(tds) or
                 'this, \'defref_us-gaap_RepaymentsOfDebtAndCapitalLeaseObligations\', window' in str(tds) or
@@ -597,25 +684,30 @@ def parse_filings(filings, type, headers):
                 'this, \'defref_us-gaap_RepaymentsOfLongTermDebtAndCapitalSecurities\', window' in str(tds) or
                 'this, \'defref_us-gaap_InterestPaidNet\', window' in str(tds)
                 ):
-                debt_pay.append(html_re(str(tds)))
+                debt_payment = html_re(str(tds[colm]))
+                if debt_payment != '---':
+                    debt_pay.append(debt_payment)
             elif ('Common stock repurchased' in str(tds) or
                 'this, \'defref_us-gaap_PaymentsForRepurchaseOfCommonStock\', window' in str(tds)
                 ):
-                buyback += html_re(str(tds))
+                buyback += html_re(str(tds[colm]))
             elif ('this, \'defref_us-gaap_ProceedsFromStockOptionsExercised\', window' in str(tds) or
-                'this, \'defref_us-gaap_ProceedsFromIssuanceOfCommonStock\', window' in str(tds)
+                'this, \'defref_us-gaap_ProceedsFromIssuanceOfCommonStock\', window' in str(tds) or
+                'this, \'defref_us-gaap_ProceedsFromIssuanceOfSharesUnderIncentiveAndShareBasedCompensationPlansIncludingStockOptions\', window' in str(tds)
                 ):
-                share_issue += html_re(str(tds))
+                share_issue_rtn = html_re(str(tds[colm]))
+                if share_issue_rtn != '---':
+                    share_issue += share_issue_rtn
             elif ('Common stock cash dividends paid' in str(tds) or
                 'this, \'defref_us-gaap_PaymentsOfDividends\', window' in str(tds) or
                 'PaymentsOfDividendsAndDividendEquivalentsOnCommonStockAndRestrictedStockUnits\', window' in str(tds) or
                 'this, \'defref_us-gaap_PaymentsOfDividendsCommonStock\', window' in str(tds)
                 ):
-                divpaid = html_re(str(tds))
+                divpaid = html_re(str(tds[colm]))
             elif ('this, \'defref_us-gaap_ShareBasedCompensation\', window' in str(tds) or
                 'this, \'defref_us-gaap_AllocatedShareBasedCompensationExpense\', window' in str(tds)
                 ):
-                sbc = html_re(str(tds))
+                sbc = html_re(str(tds[colm]))
 
         # Calculate Free Cash Flow
         fcf = cfo - capex
@@ -642,37 +734,41 @@ def parse_filings(filings, type, headers):
         debt_pay = share_issue = buyback = divpaid = sbc = 0
         cfo = capex = fcf = '---'
 
+        # Find which column has 12 month data
+        colm = column_finder_annual_xml(soup)
+
         # Loop through rows, search for row of interest
         rows = soup.find_all('Row')
         for row in rows:
+            cells = row.find_all('Cell')
             if r'<ElementName>us-gaap_NetCashProvidedByUsedInOperatingActivities</ElementName>' in str(row):
-                cfo = xml_re(str(row))
+                cfo = xml_re(str(cells[colm]))
                 if cfo != '---':
                     cfo = check_neg(str(row), cfo, 'xml')
             elif (r'us-gaap_PaymentsToAcquirePropertyPlantAndEquipment' in str(row) or
                 r'us-gaap_PaymentsToAcquireProductiveAssets' in str(row)
                 ):
-                capex = xml_re(str(row))
+                capex = xml_re(str(cells[colm]))
             elif (r'us-gaap_ProceedsFromRepaymentsOfShortTermDebtMaturingInThreeMonthsOrLess' in str(row) or
                 r'RepaymentsOfShortTermAndLongTermBorrowings' in str(row) or
                 r'us-gaap_RepaymentsOfLongTermDebtAndCapitalSecurities' in str(row) or
-                r'us-gaap_RepaymentsOfShortTermDebt' in str(row) or
                 r'us-gaap_InterestPaid' in str(row) or
                 r'us-gaap_RepaymentsOfLongTermDebt' in str(row)
                 ):
-                debt_pay += xml_re(str(row))                             
+                debt_pay += xml_re(str(cells[colm]))                             
             elif r'us-gaap_PaymentsForRepurchaseOfCommonStock' in str(row):
-                buyback += xml_re(str(row))     
-            elif (r'us-gaap_ProceedsFromStockOptionsExercised' in str(row)or
-                r'us-gaap_ProceedsFromIssuanceOfCommonStock' in str(row)
+                buyback += xml_re(str(cells[colm]))     
+            elif (r'us-gaap_ProceedsFromStockOptionsExercised' in str(row) or
+                r'us-gaap_ProceedsFromIssuanceOfCommonStock' in str(row) or
+                r'cost_ProceedsFromStockbasedAwardsNet' in str(row)
                 ):
-                share_issue = xml_re(str(row))     
+                share_issue = xml_re(str(cells[colm]))   
             elif (r'us-gaap_PaymentsOfDividendsCommonStock' in str(row) or
                 r'us-gaap_PaymentsOfDividends' in str(row)
                 ):
-                divpaid = xml_re(str(row))            
+                divpaid = xml_re(str(cells[colm]))            
             elif r'us-gaap_ShareBasedCompensation' in str(row):
-                sbc = xml_re(str(row)) 
+                sbc = xml_re(str(cells[colm]))
         
         # Calculate Free Cash Flow
         fcf = cfo - capex
@@ -730,12 +826,27 @@ def parse_filings(filings, type, headers):
 
             # If data is not quarterly
             elif 'QUARTERLY' not in soup.text.upper() and div == '---':
+                colm = 1
+                # Check for three month data prior to 12 month data
+                if '4 Months Ended' in str(soup):
+                    head = soup.table.find_all('tr')[0]
+                    
+                    # Check if 3 month data appears earlier
+                    four_mon = re.search(r'4 Months Ended', str(head), re.M)
+                    twelve_mon = re.search(r'12 Months Ended', str(head), re.M)
+                    if four_mon is not None and twelve_mon is not None:
+                        if four_mon.span()[0] < twelve_mon.span()[0]:
+                            # Find column where 12 month data starts
+                            colm = re.findall(r'(?:colspan=\"(\d)\")(?!>12 Months Ended)', str(head), re.M)
+                            colm = sum(map(int, colm))
+                
+                
                 for row in soup.table.find_all('tr'):
                     tds = row.find_all('td')
                     if ('this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds) or
                         'this, \'defref_us-gaap_CommonStockDividendsPerShareCashPaid\', window' in str(tds)
                         ):
-                        div = html_re(str(tds))
+                        div = html_re(str(tds), colm)
                         return div
             
             else:
@@ -851,7 +962,8 @@ def parse_filings(filings, type, headers):
                 'SHAREHOLDERS\' EQUITY', 'SHAREHOLDERS\' EQUITY AND SHARE-BASED COMPENSATION - ADDITIONAL INFORMATION (DETAIL) (USD $)', 'SHAREHOLDERS\' EQUITY - ADDITIONAL INFORMATION (DETAIL)',
                 'SHAREHOLDERS\' EQUITY AND SHARE-BASED COMPENSATION - ADDITIONAL INFORMATION (DETAIL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY (PARENTHETICAL)',
                 'CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY (PARENTHETICAL)', 'STOCKHOLDERS\' EQUITY', 'CONSOLIDATED STATEMENTS OF STOCKHOLDERS\' EQUITY (PARENTHETICAL)',
-                'CONDENSED STATEMENTS OF STOCKHOLDERS\' EQUITY (PARENTHETICAL)', 'CONDENSED STATEMENTS OF STOCKHOLDERS\' EQUITY AND COMPREHENSIVE INCOME (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF STOCKHOLDERS\' EQUITY AND COMPREHENSIVE INCOME (PARENTHETICAL)']
+                'CONDENSED STATEMENTS OF STOCKHOLDERS\' EQUITY (PARENTHETICAL)', 'CONDENSED STATEMENTS OF STOCKHOLDERS\' EQUITY AND COMPREHENSIVE INCOME (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF STOCKHOLDERS\' EQUITY AND COMPREHENSIVE INCOME (PARENTHETICAL)',
+                'STOCKHOLDERS\' EQUITY - ADDITIONAL INFORMATION (DETAILS)']
     shares_list = ['NET INCOME PER SHARE', 'CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)']
 
     # Lists for data frame
@@ -1021,30 +1133,105 @@ def parse_filings(filings, type, headers):
         print(everything)
         print('-'*100)
     
-    # Determine if share split occured, and adjust per share metrics
-    split_factor = 1
-    adjusted_shares = [Shares_Outstanding[0]]
-    print('-'*100)
-    
-    # Loop through share count and look for major differences
-    for i in range(1, len(Shares_Outstanding)):
-        share_ratio = (Shares_Outstanding[i-1] / Shares_Outstanding[i])
-        
-        # If difference found, update split factor
-        if share_ratio >= 1.45 or share_ratio <= 0.7:
-            split_factor *= math.ceil(share_ratio)
-        
-        # If there have been splits, adjust per share metrics
-        if split_factor != 1:
-            Earnings_Per_Share[i] = round(Earnings_Per_Share[i] / split_factor, 2)
-            if Dividends[i] != '---':
-                Dividends[i] = round(Dividends[i] / split_factor, 3)
+    def split_test(Earnings_Per_Share, Shares_Outstanding, Dividends):
+        ''' Adjust share and per share metrics based on stock splits and mutltiples changes
 
-        # Append shares to adjusted shares
-        adjusted_shares.append(Shares_Outstanding[i] * split_factor)
+        Args:
+            EPS (list), shares outstanding (list), dividends (list)
+        Returns:
+            split adjusted EPS (list), adjusted shares outstanding (list), split adjusted dividends (list)
+        '''
+        # Determine if share split occured, and adjust per share metrics
+        split_factor = 1
+        adjusted_shares = [Shares_Outstanding[0]]
 
-    Shares_Outstanding = adjusted_shares
+        # Loop through share count and look for major differences
+        for i in range(1, len(Shares_Outstanding)):
+            share_ratio = (Shares_Outstanding[i-1] / Shares_Outstanding[i])
+            
+            # If difference found, update split factor
+            if share_ratio >= 1.45 or share_ratio <= 0.70:
+                split_factor *= math.ceil(share_ratio)
+            
+            # If there have been splits, adjust per share metrics
+            if split_factor != 1:
+                Earnings_Per_Share[i] = round(Earnings_Per_Share[i] / split_factor, 2)
+                if Dividends[i] != '---':
+                    Dividends[i] = round(Dividends[i] / split_factor, 3)
+        
+            # Append shares to adjusted shares
+            adjusted_shares.append(Shares_Outstanding[i] * split_factor)    
+        
+        return Earnings_Per_Share, adjusted_shares, Dividends
+
+
+    def multiplier_test(values):
+        ''' Adjust numbers based on multplier change
+
+        Args:
+            values (list)
+        Returns:
+            results (list)
+        '''
+
+        multiplier_change = False
+        # Loop through share count and look for major differences
+        for i in range(1, len(values)):
+            if values[i] != 0:
+                ratio = (values[i-1] / values[i])
+            
+                # Check if multiplier (thousands, millions) was changed
+                if ratio >= 900 or ratio <= .0015:
+                    multiplier_change = True
+                    break
+
+        # Adjust for multiplier change
+        if multiplier_change == True:
+            multi_factor = 1
+            results = [values[0]]
+            
+            # Determine where there is a multiplier change
+            for i in range(1, len(values)):
+                if values[i] != 0 and values[i-1] != 0:
+                    ratio = abs(values[i-1] / values[i])
+                    if ratio > 800_000:
+                        multi_factor *= 1_000_000
+                    elif ratio >= 800 and ratio < 1200:
+                        multi_factor *= 1000
+                    elif ratio <= 0.0015 and ratio > 0.00001:
+                        multi_factor /= 1000
+                    elif ratio < .000005:
+                        multi_factor /= 1_000_000
+
+                # Adjust for multiplier
+                results.append(int(values[i] * multi_factor))
+
+            return results
+
+        return values
+
+    # Adjust share and per share data for stock splits
+    Earnings_Per_Share, Shares_Outstanding, Dividends = split_test(Earnings_Per_Share, Shares_Outstanding, Dividends)
     
+    # Adjut values for multiplier changes
+    Revenue = multiplier_test(Revenue)
+    Gross_Profit = multiplier_test(Gross_Profit)
+    Research = multiplier_test(Research)
+    Operating_Income = multiplier_test(Operating_Income)
+    Net_Profit = multiplier_test(Net_Profit)
+    Shares_Outstanding = multiplier_test(Shares_Outstanding)
+    Cash = multiplier_test(Cash)
+    Total_Assets = multiplier_test(Total_Assets)
+    Total_Debt = multiplier_test(Total_Debt)
+    Total_Liabilities = multiplier_test(Total_Liabilities)
+    SH_Equity = multiplier_test(SH_Equity)
+    Free_Cash_Flow = multiplier_test(Free_Cash_Flow)
+    Debt_Repayment = multiplier_test(Debt_Repayment)
+    Share_Buybacks = multiplier_test(Share_Buybacks)
+    Dividend_Payments = multiplier_test(Dividend_Payments)
+    Share_Based_Comp = multiplier_test(Share_Based_Comp)
+    
+
     everything = {'FY': Fiscal_Period, 'Per': Period_End, 'Rev': Revenue, 'Gross': Gross_Profit, 'R&D': Research, 'OI': Operating_Income, 'Net': Net_Profit, 'EPS': Earnings_Per_Share,
                     'Shares': Shares_Outstanding, 'Cash': Cash, 'Assets': Total_Assets, 'Debt': Total_Debt, 'Liabilities': Total_Liabilities, 'SH_Equity': SH_Equity, 'FCF': Free_Cash_Flow,
                     'Debt_Repayment': Debt_Repayment, 'Buybacks': Share_Buybacks, 'Div_Paid': Dividend_Payments, 'SBC': Share_Based_Comp, 'Div': Dividends}    
