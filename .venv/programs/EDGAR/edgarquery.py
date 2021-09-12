@@ -239,23 +239,25 @@ def parse_filings(filings, type, headers):
 
     # Find correct column for data
     def column_finder_annual_htm(soup):
-        ''' Determine which column of data contains desired data
+        ''' Determine which column of data contains desired data for htm pages
 
         Args:
             soup (soup data of sub filings)
         Returns:
             column number (int)        
         '''
+
+        # Extract colmn header string
+        head = soup.table.find_all('tr')[0]
         
-        # Check if needed to calculate
-        if '12 Months Ended' in str(soup):
-            head = soup.table.find_all('tr')[0]
-            
-            # Find correct column
+        if '12 Months Ended' in str(soup):        
+            # Find correct column if multiple things before 12 months data
             colm = re.findall(r'(?:colspan=\"(\d\d?)\")(?!>12 Months Ended)', str(head), re.M)
             return sum(map(int, colm))
         else:
-            return 1
+            # Find correct column accounting for empties prior to data
+            colm = re.search(r'(?:colspan=\"(\d\d?)\")', str(head), re.M)
+            return int(colm.group(1))
 
 
     # RE for .xml filings
@@ -503,8 +505,9 @@ def parse_filings(filings, type, headers):
             elif r'us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding' in str(row):
                 shares = xml_re(str(cells[colm]))
                 share_sum += shares
-            elif r'us-gaap_CommonStockDividendsPerShareCashPaid' in str(row):
-                div = xml_re(str(cells[colm])) 
+            elif (r'us-gaap_CommonStockDividendsPerShareCashPaid' in str(row) or
+                  r'us-gaap_CommonStockDividendsPerShareDeclared' in str(row)):
+                div = xml_re(str(cells[colm]))
 
         # Calculate gross if not listed
         if gross == '---':
@@ -537,6 +540,7 @@ def parse_filings(filings, type, headers):
         # Initial values
         equity = cash = assets = liabilities = '---'
         intangible_assets = goodwill = debt = 0
+        intangible_assets_set = set()
 
         # Find which column has 12 month data
         colm = column_finder_annual_htm(soup)
@@ -549,9 +553,12 @@ def parse_filings(filings, type, headers):
             elif 'defref_us-gaap_Goodwill' in str(tds):
                 goodwill = html_re(str(tds[colm]))
             elif ('this, \'defref_us-gaap_FiniteLivedIntangibleAssetsNet\', window' in str(tds) or
-                'this, \'defref_us-gaap_IntangibleAssetsNetExcludingGoodwill\', window' in str(tds)
+                'this, \'defref_us-gaap_IntangibleAssetsNetExcludingGoodwill\', window' in str(tds) or
+                r"this, 'defref_us-gaap_IndefiniteLivedIntangibleAssetsExcludingGoodwill', window" in str(tds)
                 ):
                 intangible_assets = html_re(str(tds[colm]))
+                if intangible_assets != '---':
+                    intangible_assets_set.add(intangible_assets)
             elif ('Total assets' in str(tds) or
                 'Total Assets' in str(tds) or
                 r"this, 'defref_us-gaap_Assets', window" in str(tds)
@@ -568,7 +575,7 @@ def parse_filings(filings, type, headers):
                     debt = 0
             elif 'this, \'defref_us-gaap_LiabilitiesAndStockholdersEquity\', window' in str(tds):
                 tot_liabilities = html_re(str(tds[colm]))
-            elif ('this, \'defref_us-gaap_StockholdersEquity\', window' in str(tds) or
+            elif ('this, \'defref_us-gaap_StockholdersEquity\', window' in str(tds) and equity =='---' or
                 'this, \'defref_us-gaap_StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest\', window' in str(tds) and equity == '---'
                 ):
                 equity = html_re(str(tds[colm]))
@@ -581,7 +588,7 @@ def parse_filings(filings, type, headers):
 
         # Net out goodwill from assets
         if assets != '---' and goodwill != '---':
-            assets -= (goodwill + intangible_assets)
+            assets -= (goodwill + sum(intangible_assets_set))
         
         return cash, assets, debt, liabilities, equity
 
@@ -963,7 +970,7 @@ def parse_filings(filings, type, headers):
                 'SHAREHOLDERS\' EQUITY AND SHARE-BASED COMPENSATION - ADDITIONAL INFORMATION (DETAIL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY (PARENTHETICAL)',
                 'CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY (PARENTHETICAL)', 'STOCKHOLDERS\' EQUITY', 'CONSOLIDATED STATEMENTS OF STOCKHOLDERS\' EQUITY (PARENTHETICAL)',
                 'CONDENSED STATEMENTS OF STOCKHOLDERS\' EQUITY (PARENTHETICAL)', 'CONDENSED STATEMENTS OF STOCKHOLDERS\' EQUITY AND COMPREHENSIVE INCOME (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF STOCKHOLDERS\' EQUITY AND COMPREHENSIVE INCOME (PARENTHETICAL)',
-                'STOCKHOLDERS\' EQUITY - ADDITIONAL INFORMATION (DETAILS)']
+                'STOCKHOLDERS\' EQUITY - ADDITIONAL INFORMATION (DETAILS)', 'CONSOLIDATED STATEMENT OF EQUITY']
     shares_list = ['NET INCOME PER SHARE', 'CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)']
 
     # Lists for data frame

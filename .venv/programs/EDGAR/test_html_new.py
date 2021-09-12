@@ -82,15 +82,17 @@ def column_finder_annual_htm(soup):
         column number (int)        
     '''
 
-    # Check if needed to calculate
-    if '12 Months Ended' in str(soup):
-        head = soup.table.find_all('tr')[0]
-        
-        # Find correct column
+    # Extract colmn header string
+    head = soup.table.find_all('tr')[0]
+    
+    if '12 Months Ended' in str(soup):        
+        # Find correct column if multiple things before 12 months data
         colm = re.findall(r'(?:colspan=\"(\d\d?)\")(?!>12 Months Ended)', str(head), re.M)
         return sum(map(int, colm))
     else:
-        return 1
+        # Find correct column accounting for empties prior to data
+        colm = re.search(r'(?:colspan=\"(\d\d?)\")', str(head), re.M)
+        return int(colm.group(1))
 
 
 url = r'https://www.sec.gov/Archives/edgar/data/789019/000156459020034944/FilingSummary.xml'
@@ -263,7 +265,7 @@ bs_url_list = [r'https://www.sec.gov/Archives/edgar/data/1403161/000140316120000
                r'https://www.sec.gov/Archives/edgar/data/320193/000032019317000070/R5.htm', r'https://www.sec.gov/Archives/edgar/data/320193/000119312514383437/R5.htm', r'https://www.sec.gov/Archives/edgar/data/320193/000119312511282113/R3.htm',
                r'https://www.sec.gov/Archives/edgar/data/1652044/000165204421000010/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1652044/000165204418000007/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1652044/000165204416000012/R2.htm',
                r'https://www.sec.gov/Archives/edgar/data/354950/000035495017000005/R2.htm', r'https://www.sec.gov/Archives/edgar/data/354950/000035495020000015/R2.htm', r'https://www.sec.gov/Archives/edgar/data/909832/000090983220000017/R4.htm',
-               r'https://www.sec.gov/Archives/edgar/data/909832/000090983218000013/R2.htm']
+               r'https://www.sec.gov/Archives/edgar/data/909832/000090983218000013/R2.htm', r'https://www.sec.gov/Archives/edgar/data/77476/000007747621000007/R5.htm']
 bs_answers = [[16289, 37201, 21071, 44709, 36210], [8162, 26473, 16630, 35219, 34006], [5619, 21735, 15882, 31123, 32912],
               [1971, 15405, 0, 11156, 27413], [2127, 11656, 0, 8323, 26437], [14224, 276268, 50074, 191791, 141988],
               [11356, 236780, 66662, 184226, 102330], [7663, 195858, 76073, 168692, 72394], [5595, 154449, 27808, 96140, 80083],
@@ -271,9 +273,9 @@ bs_answers = [[16289, 37201, 21071, 44709, 36210], [8162, 26473, 16630, 35219, 3
               [20289, 367304, 97207, 241272, 134047], [13844, 223081, 28987, 120292, 111547], [9815, 111939, 0, 39756, 76615],
               [26465, 296996, 13932, 97072, 222544], [10715, 177856, 3969, 44793, 152502], [16549, 127745, 1995, 27130, 120331],
               [2538, 40873, 22349, 38633, 4333], [2133, 48982, 28670, 54352, -3116], [12277, 55556, 7514, 36851, 18284],
-              [6055000000, 40830000000, 6487000000, 27727000000, 12799000000]]
+              [6055000000, 40830000000, 6487000000, 27727000000, 12799000000], [8185, 54846, 40370, 79366, 13454]]
 
-bs_url = r'https://www.sec.gov/Archives/edgar/data/909832/000090983218000013/R2.htm'
+bs_url = r'https://www.sec.gov/Archives/edgar/data/1652044/000165204416000012/R2.htm'
 
 
 def bs_htm_test(bs_url):
@@ -293,6 +295,7 @@ def bs_htm_test(bs_url):
     # Initial values
     equity = cash = assets = liabilities = '---'
     intangible_assets = goodwill = debt = 0
+    intangible_assets_set = set()
 
     # Find which column has 12 month data
     colm = column_finder_annual_htm(soup)
@@ -305,9 +308,12 @@ def bs_htm_test(bs_url):
         elif 'defref_us-gaap_Goodwill' in str(tds):
             goodwill = html_re(str(tds[colm]))
         elif ('this, \'defref_us-gaap_FiniteLivedIntangibleAssetsNet\', window' in str(tds) or
-              'this, \'defref_us-gaap_IntangibleAssetsNetExcludingGoodwill\', window' in str(tds)
+              'this, \'defref_us-gaap_IntangibleAssetsNetExcludingGoodwill\', window' in str(tds) or
+              r"this, 'defref_us-gaap_IndefiniteLivedIntangibleAssetsExcludingGoodwill', window" in str(tds)
               ):
             intangible_assets = html_re(str(tds[colm]))
+            if intangible_assets != '---':
+                intangible_assets_set.add(intangible_assets)
         elif ('Total assets' in str(tds) or
               'Total Assets' in str(tds) or
               r"this, 'defref_us-gaap_Assets', window" in str(tds)
@@ -324,7 +330,7 @@ def bs_htm_test(bs_url):
                 debt = 0
         elif 'this, \'defref_us-gaap_LiabilitiesAndStockholdersEquity\', window' in str(tds):
             tot_liabilities = html_re(str(tds[colm]))
-        elif ('this, \'defref_us-gaap_StockholdersEquity\', window' in str(tds) or
+        elif ('this, \'defref_us-gaap_StockholdersEquity\', window' in str(tds) and equity =='---' or
               'this, \'defref_us-gaap_StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest\', window' in str(tds) and equity == '---'
               ):
             equity = html_re(str(tds[colm]))
@@ -337,7 +343,7 @@ def bs_htm_test(bs_url):
 
     # Net out goodwill from assets
     if assets != '---' and goodwill != '---':
-        assets -= (goodwill + intangible_assets)
+        assets -= (goodwill + sum(intangible_assets_set))
     
     return cash, assets, debt, liabilities, equity
 
@@ -355,7 +361,8 @@ cf_url_list = [r'https://www.sec.gov/Archives/edgar/data/1652044/000165204418000
                r'https://www.sec.gov/Archives/edgar/data/320193/000032019320000096/R7.htm', r'https://www.sec.gov/Archives/edgar/data/320193/000032019317000070/R8.htm', r'https://www.sec.gov/Archives/edgar/data/320193/000119312514383437/R8.htm',
                r'https://www.sec.gov/Archives/edgar/data/320193/000119312511282113/R6.htm', r'https://www.sec.gov/Archives/edgar/data/1652044/000165204421000010/R8.htm', r'https://www.sec.gov/Archives/edgar/data/1652044/000165204416000012/R8.htm',
                r'https://www.sec.gov/Archives/edgar/data/789019/000119312511200680/R5.htm', r'https://www.sec.gov/Archives/edgar/data/354950/000035495021000089/R7.htm', r'https://www.sec.gov/Archives/edgar/data/354950/000035495015000008/R8.htm',
-               r'https://www.sec.gov/Archives/edgar/data/1318605/000156459019003165/R8.htm', r'https://www.sec.gov/Archives/edgar/data/1318605/000156459016013195/R8.htm', r'https://www.sec.gov/Archives/edgar/data/909832/000144530513002422/R7.htm']
+               r'https://www.sec.gov/Archives/edgar/data/1318605/000156459019003165/R8.htm', r'https://www.sec.gov/Archives/edgar/data/1318605/000156459016013195/R8.htm', r'https://www.sec.gov/Archives/edgar/data/909832/000144530513002422/R7.htm',
+               r'https://www.sec.gov/Archives/edgar/data/1538990/000155837021002003/R8.htm']
 cf_answers = [[23907, 4461, 4846, 0, 7679], [9704, 537, 7924, 2664, 416], [11995, 2295, 7028, 1918, 327],
               [5051, 244, 7062, 1350, 221], [6652, 0, 4027, 1006, 172], [4633, 0, 536, 595, 147],
               [56118, 3750, 25692, 16521, 6118], [38260, 4000, 18401, 13811, 4652], [31378, 7922, 11016, 11845, 3266],
@@ -363,9 +370,10 @@ cf_answers = [[23907, 4461, 4846, 0, 7679], [9704, 537, 7924, 2664, 416], [11995
               [73365, 15631, 71478, 14081, 6829], [51147, 5592, 32345, 12769, 4840], [50142, 339, 44270, 11126, 2863],
               [33269, 0, -831, 0, 1168], [42843, 2100, 31149, 0, 12991], [16109, 13824, 1780, 47, 5203],
               [24639, 814, 9133, 5180, 2166], [16376, 4113, 465, 6451, 310], [6800, 821, 6748, 2530, 225],
-              [-2922, 380836, -295722, 0, 749024],[-2159349, 32060, -836611, 0, 197999], [1354, 86, -16, 3560, 285]]
+              [-2922, 380836, -295722, 0, 749024],[-2159349, 32060, -836611, 0, 197999], [1354, 86, -16, 3560, 285],
+              []]
 
-cf_url = r'https://www.sec.gov/Archives/edgar/data/909832/000144530513002422/R7.htm'
+cf_url = r'https://www.sec.gov/Archives/edgar/data/1538990/000155837021002003/R8.htm'
 
 def cf_htm_test(cf_url):
     
@@ -451,7 +459,7 @@ def cf_htm_test(cf_url):
     return fcf, debt_pay, buyback, divpaid, sbc
 
 # CF Test
-print(cf_htm_test(cf_url))
+#print(cf_htm_test(cf_url))
 
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
@@ -472,7 +480,7 @@ div_answers = [1.2, 1.0, 0.825,
                6.0, 2.76, 1.16,
                2.7]
 
-div_url = r'https://www.sec.gov/Archives/edgar/data/909832/000090983220000017/R43.htm'
+div_url = r'https://www.sec.gov/Archives/edgar/data/77476/000007747621000007/R6.htm'
 
 def div_htm_test(div_url):
     

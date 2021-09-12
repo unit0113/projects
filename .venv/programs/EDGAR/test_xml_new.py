@@ -121,10 +121,13 @@ def sum_xml_test(sum_url):
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
-rev_url_list = [r'https://www.sec.gov/Archives/edgar/data/1403161/000119312510265236/R4.xml', r'https://www.sec.gov/Archives/edgar/data/320193/000119312510238044/R2.xml', r'https://www.sec.gov/Archives/edgar/data/909832/000119312510230379/R4.xml']
-rev_answers = [[8065, 8065, 0, 4589, 2966, 4.01, 1096, '---'], [65225, 25684, 1782, 18385, 14013, 15.15, 924712, '---'], [77946, 9951, 0, 2077, 1303, 2.92, 445970, 0.77]]
+# rev, gross, research, oi, net, eps, share_sum, div
+rev_url_list = [r'https://www.sec.gov/Archives/edgar/data/1403161/000119312510265236/R4.xml', r'https://www.sec.gov/Archives/edgar/data/320193/000119312510238044/R2.xml', r'https://www.sec.gov/Archives/edgar/data/909832/000119312510230379/R4.xml',
+                r'https://www.sec.gov/Archives/edgar/data/77476/000119312511040427/R2.xml']
+rev_answers = [[8065, 8065, 0, 4589, 2966, 4.01, 1096, '---'], [65225, 25684, 1782, 18385, 14013, 15.15, 924712, '---'], [77946, 9951, 0, 2077, 1303, 2.92, 445970, 0.77],
+               [57838, 31263, 0, 8332, 6320, 3.91, 1614, 1.89]]
 
-rev_url = r'https://www.sec.gov/Archives/edgar/data/909832/000119312510230379/R4.xml'
+rev_url = r'https://www.sec.gov/Archives/edgar/data/77476/000119312511040427/R2.xml'
 
 
 def rev_xml_test(rev_url):
@@ -182,7 +185,8 @@ def rev_xml_test(rev_url):
         elif r'us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding' in str(row):
             shares = xml_re(str(cells[colm]))
             share_sum += shares
-        elif r'us-gaap_CommonStockDividendsPerShareCashPaid' in str(row):
+        elif (r'us-gaap_CommonStockDividendsPerShareCashPaid' in str(row) or
+              r'us-gaap_CommonStockDividendsPerShareDeclared' in str(row)):
             div = xml_re(str(cells[colm])) 
 
     # Calculate gross if not listed
@@ -344,7 +348,7 @@ def cf_xml_test(cf_url):
     return fcf, debt_pay, buyback, divpaid, sbc
 
 # CF Test
-print(cf_xml_test(cf_url))
+#print(cf_xml_test(cf_url))
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
