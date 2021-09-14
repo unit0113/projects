@@ -1,6 +1,8 @@
 import final_answers as ans
 import test_html_new as htest
 import test_xml_new as xtest
+import statement_parser as sp
+import statement_tests as st
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -10,14 +12,19 @@ from datetime import datetime
 import pandas as pd
 
 
+# Header data for data pull
+with open(r'C:\Users\unit0\OneDrive\Desktop\EDGAR\user_agent.txt') as f:
+    data = f.read()
+    headers = json.loads(data)
+
 fails = 0
 
 def rev_test():
     global fails
     # HTML test
-    for i, url in enumerate(htest.rev_url_list):
-        result = list(htest.rev_htm_test(url))
-        answer = htest.rev_answers[i]
+    for i, url in enumerate(st.rev_url_list_htm):
+        result = list(sp.rev_htm(url, headers))
+        answer = st.rev_answers_htm[i]
         print(result)
         print(answer)
         if result != answer:
@@ -26,9 +33,9 @@ def rev_test():
         print('-'*100)
     
     # XML Test
-    for i, url in enumerate(xtest.rev_url_list):
-        result = list(xtest.rev_xml_test(url))
-        answer = xtest.rev_answers[i]
+    for i, url in enumerate(st.rev_url_list_xml):
+        result = list(sp.rev_xml(url, headers))
+        answer = st.rev_answers_xml[i]
         print(result)
         print(answer)
         if result != answer:
@@ -41,9 +48,9 @@ def rev_test():
 def bs_test():
     global fails
     # HTML test
-    for i, url in enumerate(htest.bs_url_list):
-        result = list(htest.bs_htm_test(url))
-        answer = htest.bs_answers[i]
+    for i, url in enumerate(st.bs_url_list_htm):
+        result = list(sp.bs_htm(url, headers))
+        answer = st.bs_answers_htm[i]
         print(result)
         print(answer)
         if result != answer:
@@ -52,9 +59,9 @@ def bs_test():
         print('-'*100)
     
     # XML Test
-    for i, url in enumerate(xtest.bs_url_list):
-        result = list(xtest.bs_xml_test(url))
-        answer = xtest.bs_answers[i]
+    for i, url in enumerate(st.bs_url_list_xml):
+        result = list(sp.bs_xml(url, headers))
+        answer = st.bs_answers_xml[i]
         print(result)
         print(answer)
         if result != answer:
@@ -67,9 +74,9 @@ def bs_test():
 def cf_test():
     global fails
     # HTML test
-    for i, url in enumerate(htest.cf_url_list):
-        result = list(htest.cf_htm_test(url))
-        answer = htest.cf_answers[i]
+    for i, url in enumerate(st.cf_url_list_htm):
+        result = list(sp.cf_htm(url, headers))
+        answer = st.cf_answers_htm[i]
         print(result)
         print(answer)
         if result != answer:
@@ -78,9 +85,9 @@ def cf_test():
         print('-'*100)
     
     # XML Test
-    for i, url in enumerate(xtest.cf_url_list):
-        result = list(xtest.cf_xml_test(url))
-        answer = xtest.cf_answers[i]
+    for i, url in enumerate(st.cf_url_list_xml):
+        result = list(sp.cf_xml(url, headers))
+        answer = st.cf_answers_xml[i]
         print(result)
         print(answer)
         if result != answer:
@@ -93,9 +100,9 @@ def cf_test():
 def div_test():
     global fails
     # HTML test
-    for i, url in enumerate(htest.div_url_list):
-        result = htest.div_htm_test(url)
-        answer = htest.div_answers[i]
+    for i, url in enumerate(st.div_url_list_htm):
+        result = sp.div_htm(url, headers)
+        answer = st.div_answers_htm[i]
         print(result)
         print(answer)
         if result != answer:
@@ -104,9 +111,9 @@ def div_test():
         print('-'*100)
     
     # XML Test
-    for i, url in enumerate(xtest.div_url_list):
-        result = xtest.div_xml_test(url)
-        answer = xtest.div_answers[i]
+    for i, url in enumerate(st.div_url_list_xml):
+        result = sp.div_xml(url, headers)
+        answer = st.div_answers_xml[i]
         print(result)
         print(answer)
         if result != answer:
@@ -117,10 +124,10 @@ def div_test():
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
 # TESTS!!!!!
-rev_test()
+#rev_test()
 #bs_test()
 #cf_test()
-#div_test()
+div_test()
 
 # Print number of failures
 if fails == 1:
