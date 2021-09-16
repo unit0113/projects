@@ -9,6 +9,8 @@ import time
 import sys
 import re
 import math
+import yfinance as yf
+import numpy as np
 
 
 class StockData:
@@ -19,20 +21,34 @@ class StockData:
         """ Takes in ticker and CIK, then initiates the class
 
         Args:
-            symbol (str): Stocker ticker
+            Stocker ticker (str)
+            CIK number (int)
         """ 
 
-        self.symbol = symbol
+        self.symbol = symbol.upper()
         self.cik = cik
+
+        # Get yahoo data, and initiate split factor list
+        self.yahoo_stock_class = yahoo_pull(self.symbol)
+        #self.split_list = split_factor_calc(self.yahoo_stock_class.splits, self.annual_data['Per'])
+
         # Get list of fillings
         self.annual_filings = annualData(self.cik, headers) 
         #quarterly_filings = quarterlyData(self, headers)   
 
         # Pull data from filings
-        parse_filings(self.annual_filings, 'annual', headers)
+        self.annual_data = parse_filings(self.annual_filings, 'annual', headers, self.yahoo_stock_class.splits)
 
 
 def network_check_decorator(num, max_attempts=5):
+    ''' Retries failed network connections
+
+    Args:
+        Failure identifier (int)
+        *optional* max number of reattempts, default = 5
+    Returns:
+        N/A
+    '''
     def inner(func):
         def wrapper(*args, **kwargs):
             for attempt in range(max_attempts):
@@ -52,7 +68,109 @@ def network_check_decorator(num, max_attempts=5):
     return inner
 
 
+def yahoo_pull(ticker):
+    ''' Pull yahoo finance data
+
+    Args:
+        Ticker (str)
+    Returns:
+        Stock info (dict)
+    '''
+    # pull data using yfinance
+    stock = yf.Ticker(ticker)
+
+    return stock
+
+
+def split_factor_calc(splits, per):
+    ''' Calculate a list of stock split factors
+
+    Args:
+        Dataframe of dates and splits (datafram)
+        List of report end dates (datetime object)
+
+    Returns:
+        split factors by year (list)
+    '''
+
+    # Pull and adjust split data from yf
+    split_list_date = splits.index.values.tolist()
+    split_list_date = list(pd.to_datetime(split_list_date))
+    split_list_date.reverse()
+    split_list_splits = list(splits)
+    split_list_splits.reverse()
+
+    # Check if there are any relevant splits
+    if per[-1] > split_list_date[0]:
+        return False
+    else:
+        split_return = [1]
+        split_factor = 1
+        split_index = 0
+        
+        # Check if splits more recent than last annual report
+        for split_date in split_list_date:
+            if split_date > per[0]:
+                split_index += 1
+            else:
+                break
+        
+        # Create list of split factors
+        for i in range(1, len(per)):
+            if split_list_date[split_index] < per[i-1] and split_list_date[split_index] > per[i]:
+                split_factor *= split_list_splits[split_index]
+                split_index += 1
+            split_return.append(split_factor)
+
+            # If end of relevant splits
+            if split_list_date[split_index] < per[-1]:
+                end_list = [split_factor] * ((len(per) - i) - 1)
+                split_return.extend(end_list)
+                break
+
+        return split_return
+
+
+def split_adjuster(split_factor, values, shares=False):
+    ''' Adjust data pulls for stock splits
+
+    Args:
+        Split factors (list)
+        Values to adjust (list)
+        If values are shares (bool), optional, default is False
+    Returns:
+        Adjusted values (list)
+    '''    
+
+    # Adjust values in case of empty
+    values = [0 if elem == '---' else elem for elem in values]
+
+    # Adjust values based on split factor
+    if shares == False:
+        adj_values = np.divide(values, split_factor)
+        adj_values = list(np.around(np.array(adj_values),3))
+    else:
+        adj_values = np.multiply(values, split_factor)
+        adj_values = list(map(int, adj_values))
+
+    # Unadjust div values in case of empty
+    adj_values = ['---' if elem == 0 else elem for elem in adj_values]
+
+    return adj_values
+
+
 def getFilings(cik, period, limit, headers):
+    ''' Get list of filings from Edgar
+
+    Args:
+        CIK number (int)
+        Type of fillings (str), ex. '10-k', '10-q'
+        How many filings to grab (int)
+        User agent for SEC
+    Returns:
+        Filings (list of dicts)
+    '''
+
     # Base URL for SEC EDGAR browser
     endpoint = r"https://www.sec.gov/cgi-bin/browse-edgar"
 
@@ -140,6 +258,15 @@ def getFilings(cik, period, limit, headers):
 
 @network_check_decorator(2)
 def quarterlyData(cik, headers):
+    ''' Get quarterly data from Edgar
+
+    Args:
+        CIK number (int)
+        User agent for SEC
+    Returns:
+        Quarterly filings (list of dicts)
+    '''
+
     # Get quarterly filings
     try:
         filings = getFilings(cik, '10-k', 6, headers)
@@ -152,6 +279,15 @@ def quarterlyData(cik, headers):
 
 @network_check_decorator(3)
 def annualData(cik, headers):
+    ''' Get annual data from Edgar
+
+    Args:
+        CIK number (int)
+        User agent for SEC
+    Returns:
+        Annual filings (list of dicts)
+    '''
+
     # Get filings
     try:
         filings = getFilings(cik, '10-k', 11, headers)
@@ -161,7 +297,7 @@ def annualData(cik, headers):
     return filings
 
 
-def parse_filings(filings, type, headers):    
+def parse_filings(filings, type, headers, splits):    
     ''' Parse filings and create datafram from the data
 
     Args:
@@ -321,6 +457,7 @@ def parse_filings(filings, type, headers):
         print(everything)
         print('-'*100)
     
+
     def split_test(Earnings_Per_Share, Shares_Outstanding, Dividends):
         ''' Adjust share and per share metrics based on stock splits and mutltiples changes
 
@@ -399,8 +536,15 @@ def parse_filings(filings, type, headers):
         return values
 
     # Adjust share and per share data for stock splits
-    Earnings_Per_Share, Shares_Outstanding, Dividends = split_test(Earnings_Per_Share, Shares_Outstanding, Dividends)
+    #Earnings_Per_Share, Shares_Outstanding, Dividends = split_test(Earnings_Per_Share, Shares_Outstanding, Dividends)
     
+    # Adjust share and per share data for stock splits
+    split_list = split_factor_calc(splits, Period_End)
+    if split_list is not False:
+        Earnings_Per_Share = split_adjuster(split_list, Earnings_Per_Share)
+        Dividends = split_adjuster(split_list, Dividends)
+        Shares_Outstanding = split_adjuster(split_list, Shares_Outstanding, shares=True)
+
     # Adjut values for multiplier changes
     Revenue = multiplier_test(Revenue)
     Gross_Profit = multiplier_test(Gross_Profit)
@@ -425,7 +569,7 @@ def parse_filings(filings, type, headers):
                     'Debt_Repayment': Debt_Repayment, 'Buybacks': Share_Buybacks, 'Div_Paid': Dividend_Payments, 'SBC': Share_Based_Comp, 'Div': Dividends}    
     print(everything)
 
-
+    return everything
 
 
 
