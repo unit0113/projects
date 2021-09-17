@@ -10,6 +10,7 @@ import re
 from datetime import date
 from datetime import datetime
 import pandas as pd
+import timeit
 
 
 # Header data for data pull
@@ -18,6 +19,9 @@ with open(r'C:\Users\unit0\OneDrive\Desktop\EDGAR\user_agent.txt') as f:
     headers = json.loads(data)
 
 fails = 0
+
+# Start timer
+starttime = timeit.default_timer()
 
 def rev_test():
     global fails
@@ -126,8 +130,11 @@ def div_test():
 # TESTS!!!!!
 #rev_test()
 #bs_test()
-#cf_test()
-div_test()
+cf_test()
+#div_test()
+
+# Calculate duration of tests
+delta_time = timeit.default_timer() - starttime
 
 # Print number of failures
 if fails == 1:
@@ -136,3 +143,6 @@ elif fails > 1:
     print(f"There were {fails} failures")
 else:
     print("Tests successful. Huzzah")
+
+# Print time
+print(f'Duration of test: {delta_time} seconds')
