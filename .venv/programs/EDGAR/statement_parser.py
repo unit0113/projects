@@ -1,3 +1,4 @@
+from pandas.io.pytables import Table
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -133,7 +134,10 @@ def multiple_extractor(head, shares=False, xml=False):
         else:
             return 1_000_000
     elif result in multiplier_list_6:
-        return 1_000    
+        if shares == True:
+            return 1_000, 1
+        else:
+            return 1_000    
     else:
         if shares == True:
             return 1, 1
@@ -197,7 +201,7 @@ def rev_htm(rev_url, headers):
 
     # Initial values
     rev = gross = oi = net = eps = cost = shares = div = '---'
-    share_sum = research = non_attributable_net = 0
+    share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = 0
 
     # Find which column has 12 month data
     colm = column_finder_annual_htm(soup)
@@ -261,6 +265,15 @@ def rev_htm(rev_url, headers):
               r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds)
               ):
             div = html_re(str(tds[colm]))
+        elif r"this, 'defref_us-gaap_DepreciationAndAmortization', window" in str(tds):
+            dep_am = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
+        elif r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(tds):
+            impairment = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))   
+
+        elif r"this, 'defref_us-gaap_GainsLossesOnSalesOfInvestmentRealEstate', window" in str(tds):
+            disposition = html_re(str(tds[colm]))
+            if disposition != '---':
+                disposition = round(check_neg(str(tds), disposition) * (dollar_multiplier / 1_000_000))          
             
     # Calculate gross if not listed
     if gross == '---':
@@ -277,7 +290,11 @@ def rev_htm(rev_url, headers):
     if eps == '---' and net != '---':
         eps = net / share_sum
 
-    return rev, gross, research, oi, net, eps, share_sum, div
+    # Calculate FFO for REITS
+    if net != '---':
+        ffo = net + dep_am + impairment - disposition
+
+    return rev, gross, research, oi, net, eps, share_sum, div, ffo
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
@@ -381,8 +398,8 @@ def cf_htm(cf_url, headers):
     soup = BeautifulSoup(content, 'html.parser')
 
     # Initial values
-    share_issue = buyback = divpaid = sbc = 0
-    cfo = capex = fcf = debt_payment = '---'
+    capex = share_issue = buyback = divpaid = sbc = 0
+    cfo = fcf = debt_payment = '---'
     debt_pay = []
 
     # Find which column has 12 month data
@@ -421,7 +438,8 @@ def cf_htm(cf_url, headers):
             if debt_payment != '---':
                 debt_pay.append(round(debt_payment * (dollar_multiplier / 1_000_000)))
         elif ('Common stock repurchased' in str(tds) or
-              'this, \'defref_us-gaap_PaymentsForRepurchaseOfCommonStock\', window' in str(tds)
+              'this, \'defref_us-gaap_PaymentsForRepurchaseOfCommonStock\', window' in str(tds) or
+              'Shares repurchased under stock compensation plans' in str(tds)
               ):
             buyback += round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
         elif ('this, \'defref_us-gaap_ProceedsFromStockOptionsExercised\', window' in str(tds) or
@@ -434,7 +452,8 @@ def cf_htm(cf_url, headers):
         elif ('Common stock cash dividends paid' in str(tds) or
               'this, \'defref_us-gaap_PaymentsOfDividends\', window' in str(tds) or
               'PaymentsOfDividendsAndDividendEquivalentsOnCommonStockAndRestrictedStockUnits\', window' in str(tds) or
-              'this, \'defref_us-gaap_PaymentsOfDividendsCommonStock\', window' in str(tds)
+              'this, \'defref_us-gaap_PaymentsOfDividendsCommonStock\', window' in str(tds) or
+              r"this, 'defref_us-gaap_Dividends', window" in str(tds)
               ):
             divpaid = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
         elif ('this, \'defref_us-gaap_ShareBasedCompensation\', window' in str(tds) or
@@ -473,7 +492,7 @@ def div_htm(div_url, headers):
     div = '---'
 
     # If company has seperate div table
-    if 'EQUITY' not in soup.find('th').text.upper():
+    if 'EQUITY' not in soup.find('th').text.upper() and 'Quarterly Financial Information' not in soup.find('th').text:
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
             
@@ -485,6 +504,33 @@ def div_htm(div_url, headers):
             elif 'onclick="top.Show.showAR( this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window )' in str(tds):
                 div = html_re(str(tds[index]))
                 return div
+
+    elif 'Quarterly Financial Information' in soup.find('th').text:
+        # Find column with total data        
+        head = soup.table.find_all('tr')[5]
+        tds = head.find_all('td')
+        td_count = -1
+        for td in tds:
+            if 'colspan' in str(td):
+                obj = re.search(r'(?:colspan=\")(\d)', str(td))
+                td_count += int(obj.group(1))
+            else:
+                td_count += 1
+            if 'Total' in str(td):
+                break
+
+        # Pull div data from table
+        row_list = ['Dividends declared per common share', 'Cash dividends declared per common share']
+
+        for title in row_list:
+            try:
+                table = pd.read_html(content, match=title)[1]
+                row = table.loc[table[0] == title]
+                break
+            except:
+                pass
+        div = float(row[td_count])
+        return div
 
     # If company is a jerk and burries it (like apple)
     else:
@@ -577,6 +623,49 @@ def div_htm(div_url, headers):
                     break
 
     return div
+
+
+def eps_catch_htm(catch_url, headers):
+    ''' Parse EPS and div info if not listed elsewhere
+
+    Args:
+        URL of statement
+        User agent for SEC
+    Returns:
+        EPS (float)
+        Dividend (float)
+    '''
+
+    # Get data from site
+    content = requests.get(catch_url, headers=headers).content
+    soup = BeautifulSoup(content, 'html.parser')
+
+    # Find table
+    table = pd.read_html(content)[1]
+
+    # Pull eps data
+    row = table.loc[table[0] == 'Diluted']
+    eps = float(row[2])
+
+    # Pull div data
+    row = table.loc[table[0] == 'Class A']
+    if row.empty:
+        
+        # Look for row with div data
+        for index in range(table.shape[0]):
+            if 'Less Dividends:' in str(table.iloc[index]):
+                index += 1
+                break
+        
+        # Pull div from row header
+        search_str = table.iloc[index][0]
+        obj = re.search(r'(?:\(\$)(\d?\d\.\d\d)(?:/share\))', search_str)
+        div = float(obj.group(1).strip())
+    else:
+        div = float(row[2])
+
+    return eps, div
+
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
@@ -688,7 +777,7 @@ def rev_xml(rev_url, headers):
     
     # Initial values
     rev = gross = oi = net = eps = cost = shares = div = '---'
-    share_sum = research = 0
+    share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = 0
 
     # Find which column has 12 month data
     colm = column_finder_annual_xml(soup)
@@ -750,7 +839,7 @@ def rev_xml(rev_url, headers):
     if eps == '---' and net != '---':
         eps = net / share_sum
 
-    return rev, gross, research, oi, net, eps, share_sum, div
+    return rev, gross, research, oi, net, eps, share_sum, div, ffo
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
@@ -845,8 +934,8 @@ def cf_xml(cf_url, headers):
     soup = BeautifulSoup(content, 'xml')
 
     # Initial values
-    debt_pay = share_issue = buyback = divpaid = sbc = 0
-    cfo = capex = fcf = '---'
+    capex = debt_pay = share_issue = buyback = divpaid = sbc = 0
+    cfo = fcf = '---'
 
     # Find which column has 12 month data
     colm = column_finder_annual_xml(soup)

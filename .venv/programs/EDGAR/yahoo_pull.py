@@ -11,7 +11,7 @@ import numpy as np
 
 
 # Ticker to lookup
-ticker = 'AAPL'
+ticker = 'STOR'
 stock = yf.Ticker(ticker)
 
 def yahoo_data_pull(stock):
@@ -54,6 +54,8 @@ def yahoo_data_pull(stock):
 
 # Yahoo test
 splits = yahoo_data_pull(stock)
+print(splits)
+print(splits.empty)
 
 
 
@@ -142,6 +144,10 @@ def split_calculator(per, splits, eps, div, shares):
         dividend (float)
     '''
 
+    # Check if there are any splits, if none, return False
+    if splits.empty:
+        return False
+
     # Pull and adjust split data from yf
     split_list_date = splits.index.values.tolist()
     split_list_date = list(pd.to_datetime(split_list_date))
@@ -209,6 +215,10 @@ def split_factor_calc(splits, per):
     Returns:
         split factors by year (list)
     '''
+    
+    # Check if there are any splits, if none, return False
+    if splits.empty:
+        return False
 
     # Pull and adjust split data from yf
     split_list_date = splits.index.values.tolist()

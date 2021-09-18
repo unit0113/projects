@@ -13,7 +13,7 @@ with open(r'C:\Users\unit0\OneDrive\Desktop\EDGAR\user_agent.txt') as f:
 
 
 # RE for .htm filings
-def html_re(string, colm=1):
+def html_re(string):
     ''' RE syntax and error checking for pulling numeric information from data cell on .htm filings
 
     Args:

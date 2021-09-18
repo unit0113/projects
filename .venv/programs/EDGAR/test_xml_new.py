@@ -116,7 +116,8 @@ def sum_xml_test(sum_url):
             obj = re.search(r'(?:<NonNumbericText>)(.*?)(?:</NonNumbericText>)', str(row), re.M)
             period_end = datetime.strptime(obj.group(1), '%Y-%m-%d')  
 
-    return fy, period_end     
+    return fy, period_end  
+       
 #print(sum_xml_test(sum_url))
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''

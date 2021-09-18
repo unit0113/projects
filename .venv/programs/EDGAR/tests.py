@@ -130,7 +130,7 @@ def div_test():
 # TESTS!!!!!
 #rev_test()
 #bs_test()
-cf_test()
+#cf_test()
 #div_test()
 
 # Calculate duration of tests

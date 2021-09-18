@@ -93,6 +93,10 @@ def split_factor_calc(splits, per):
         split factors by year (list)
     '''
 
+    # Check if there are any splits, if none, return False
+    if splits.empty:
+        return False
+
     # Pull and adjust split data from yf
     split_list_date = splits.index.values.tolist()
     split_list_date = list(pd.to_datetime(split_list_date))
@@ -318,7 +322,9 @@ def parse_filings(filings, type, headers, splits):
                 'SHAREHOLDERS\' EQUITY AND SHARE-BASED COMPENSATION - ADDITIONAL INFORMATION (DETAIL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY (PARENTHETICAL)',
                 'CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY (PARENTHETICAL)', 'STOCKHOLDERS\' EQUITY', 'CONSOLIDATED STATEMENTS OF STOCKHOLDERS\' EQUITY (PARENTHETICAL)',
                 'CONDENSED STATEMENTS OF STOCKHOLDERS\' EQUITY (PARENTHETICAL)', 'CONDENSED STATEMENTS OF STOCKHOLDERS\' EQUITY AND COMPREHENSIVE INCOME (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF STOCKHOLDERS\' EQUITY AND COMPREHENSIVE INCOME (PARENTHETICAL)',
-                'STOCKHOLDERS\' EQUITY - ADDITIONAL INFORMATION (DETAILS)', 'CONSOLIDATED STATEMENT OF EQUITY']
+                'STOCKHOLDERS\' EQUITY - ADDITIONAL INFORMATION (DETAILS)', 'CONSOLIDATED STATEMENT OF EQUITY', 'CONSOLIDATED STATEMENTS OF STOCKHOLDERS EQUITY (PARENTHETICAL)', 'QUARTERLY FINANCIAL INFORMATION (UNAUDITED)']
+    eps_catch_list = ['EARNINGS PER SHARE']
+
 
     # Lists for data frame
     Fiscal_Period = []
@@ -330,6 +336,7 @@ def parse_filings(filings, type, headers, splits):
     Net_Profit = []
     Earnings_Per_Share = []
     Shares_Outstanding = []
+    Funds_From_Operations = []
     Cash = []
     Total_Assets = []
     Total_Debt = []
@@ -381,7 +388,7 @@ def parse_filings(filings, type, headers, splits):
 
             # Summary table
             if report.shortname.text.upper() in intro_list:
-                # Get URL and contents
+                # Create URL and call parser function
                 try:
                     intro_url = base_url + report.htmlfilename.text
                     fy, period_end = sp.sum_htm(intro_url, headers)
@@ -391,17 +398,17 @@ def parse_filings(filings, type, headers, splits):
         
             # Income Statement
             if report.shortname.text.upper() in income_list:
-                # Get URL and contents
+                # Create URL and call parser function
                 try:
                     rev_url = base_url + report.htmlfilename.text
-                    rev, gross, research, oi, net, eps, shares, div = sp.rev_htm(rev_url, headers)
+                    rev, gross, research, oi, net, eps, shares, div, ffo = sp.rev_htm(rev_url, headers)
                 except:
                     rev_url = base_url + report.xmlfilename.text
-                    rev, gross, research, oi, net, eps, shares, div = sp.rev_xml(rev_url, headers)
+                    rev, gross, research, oi, net, eps, shares, div, ffo = sp.rev_xml(rev_url, headers)
 
             # Balance sheet
             if report.shortname.text.upper() in bs_list:
-                # Get URL and contents
+                # Create URL and call parser function
                 try:
                     bs_url = base_url + report.htmlfilename.text
                     cash, assets, debt, liabilities, equity = sp.bs_htm(bs_url, headers)
@@ -411,7 +418,7 @@ def parse_filings(filings, type, headers, splits):
 
             # Cash flow
             if report.shortname.text.upper() in cf_list:
-                # Get URL and contents
+                # Create URL and call parser function
                 try:
                     cf_url = base_url + report.htmlfilename.text
                     fcf, debt_pay, buyback, divpaid, sbc = sp.cf_htm(cf_url, headers)
@@ -421,13 +428,24 @@ def parse_filings(filings, type, headers, splits):
             
             # Dividends
             if report.shortname.text.upper() in div_list and div == '---':
-                # Get URL and contents
+                # Create URL and call parser function
                 try:
                     div_url = base_url + report.htmlfilename.text
                     div = sp.div_htm(div_url, headers)
                 except:
                     div_url = base_url + report.xmlfilename.text
                     div = sp.div_xml(div_url, headers)
+
+            # EPS/div catcher
+            if report.shortname.text.upper() in eps_catch_list and div == '---':
+                # Create URL and call parser function
+                    catch_url = base_url + report.htmlfilename.text
+                    eps, div = sp.eps_catch_htm(catch_url, headers)
+
+        # Check for repeat data
+        if len(Fiscal_Period) != 0:
+            if fy == Fiscal_Period[-1]:
+                continue
 
         # Add parsed data to lists for data frame
         Fiscal_Period.append(fy)
@@ -438,7 +456,8 @@ def parse_filings(filings, type, headers, splits):
         Operating_Income.append(oi)
         Net_Profit.append(net)
         Earnings_Per_Share.append(eps)
-        Shares_Outstanding.append(shares)     
+        Shares_Outstanding.append(shares)
+        Funds_From_Operations.append(ffo)     
         Cash.append(cash)
         Total_Assets.append(assets)
         Total_Debt.append(debt)
@@ -452,120 +471,20 @@ def parse_filings(filings, type, headers, splits):
         Dividends.append(div)
 
         everything = {'FY': Fiscal_Period, 'Per': Period_End, 'Rev': Revenue, 'Gross': Gross_Profit, 'R&D': Research, 'OI': Operating_Income, 'Net': Net_Profit, 'EPS': Earnings_Per_Share,
-                      'Shares': Shares_Outstanding, 'Cash': Cash, 'Assets': Total_Assets, 'Debt': Total_Debt, 'Liabilities': Total_Liabilities, 'SH_Equity': SH_Equity, 'FCF': Free_Cash_Flow,
+                      'Shares': Shares_Outstanding, 'FFO': Funds_From_Operations, 'Cash': Cash, 'Assets': Total_Assets, 'Debt': Total_Debt, 'Liabilities': Total_Liabilities, 'SH_Equity': SH_Equity, 'FCF': Free_Cash_Flow,
                       'Debt_Repayment': Debt_Repayment, 'Buybacks': Share_Buybacks, 'Div_Paid': Dividend_Payments, 'SBC': Share_Based_Comp, 'Div': Dividends}
         print(everything)
         print('-'*100)
-    
-
-    def split_test(Earnings_Per_Share, Shares_Outstanding, Dividends):
-        ''' Adjust share and per share metrics based on stock splits and mutltiples changes
-
-        Args:
-            EPS (list), shares outstanding (list), dividends (list)
-        Returns:
-            split adjusted EPS (list), adjusted shares outstanding (list), split adjusted dividends (list)
-        '''
-        # Determine if share split occured, and adjust per share metrics
-        split_factor = 1
-        adjusted_shares = [Shares_Outstanding[0]]
-
-        # Loop through share count and look for major differences
-        for i in range(1, len(Shares_Outstanding)):
-            share_ratio = (Shares_Outstanding[i-1] / Shares_Outstanding[i])
-            
-            # If difference found, update split factor
-            if share_ratio >= 1.45 or share_ratio <= 0.70:
-                split_factor *= math.ceil(share_ratio)
-            
-            # If there have been splits, adjust per share metrics
-            if split_factor != 1:
-                Earnings_Per_Share[i] = round(Earnings_Per_Share[i] / split_factor, 2)
-                if Dividends[i] != '---':
-                    Dividends[i] = round(Dividends[i] / split_factor, 3)
-        
-            # Append shares to adjusted shares
-            adjusted_shares.append(Shares_Outstanding[i] * split_factor)    
-        
-        return Earnings_Per_Share, adjusted_shares, Dividends
-
-
-    def multiplier_test(values):
-        ''' Adjust numbers based on multplier change
-
-        Args:
-            values (list)
-        Returns:
-            results (list)
-        '''
-
-        multiplier_change = False
-        # Loop through share count and look for major differences
-        for i in range(1, len(values)):
-            if values[i] != 0:
-                ratio = (values[i-1] / values[i])
-            
-                # Check if multiplier (thousands, millions) was changed
-                if ratio >= 900 or ratio <= .0015:
-                    multiplier_change = True
-                    break
-
-        # Adjust for multiplier change
-        if multiplier_change == True:
-            multi_factor = 1
-            results = [values[0]]
-            
-            # Determine where there is a multiplier change
-            for i in range(1, len(values)):
-                if values[i] != 0 and values[i-1] != 0:
-                    ratio = abs(values[i-1] / values[i])
-                    if ratio > 800_000:
-                        multi_factor *= 1_000_000
-                    elif ratio >= 800 and ratio < 1200:
-                        multi_factor *= 1000
-                    elif ratio <= 0.0015 and ratio > 0.00001:
-                        multi_factor /= 1000
-                    elif ratio < .000005:
-                        multi_factor /= 1_000_000
-
-                # Adjust for multiplier
-                results.append(int(values[i] * multi_factor))
-
-            return results
-
-        return values
-
-    # Adjust share and per share data for stock splits
-    #Earnings_Per_Share, Shares_Outstanding, Dividends = split_test(Earnings_Per_Share, Shares_Outstanding, Dividends)
     
     # Adjust share and per share data for stock splits
     split_list = split_factor_calc(splits, Period_End)
     if split_list is not False:
         Earnings_Per_Share = split_adjuster(split_list, Earnings_Per_Share)
         Dividends = split_adjuster(split_list, Dividends)
-        Shares_Outstanding = split_adjuster(split_list, Shares_Outstanding, shares=True)
-
-    # Adjut values for multiplier changes
-    Revenue = multiplier_test(Revenue)
-    Gross_Profit = multiplier_test(Gross_Profit)
-    Research = multiplier_test(Research)
-    Operating_Income = multiplier_test(Operating_Income)
-    Net_Profit = multiplier_test(Net_Profit)
-    Shares_Outstanding = multiplier_test(Shares_Outstanding)
-    Cash = multiplier_test(Cash)
-    Total_Assets = multiplier_test(Total_Assets)
-    Total_Debt = multiplier_test(Total_Debt)
-    Total_Liabilities = multiplier_test(Total_Liabilities)
-    SH_Equity = multiplier_test(SH_Equity)
-    Free_Cash_Flow = multiplier_test(Free_Cash_Flow)
-    Debt_Repayment = multiplier_test(Debt_Repayment)
-    Share_Buybacks = multiplier_test(Share_Buybacks)
-    Dividend_Payments = multiplier_test(Dividend_Payments)
-    Share_Based_Comp = multiplier_test(Share_Based_Comp)
-    
+        Shares_Outstanding = split_adjuster(split_list, Shares_Outstanding, shares=True)    
 
     everything = {'FY': Fiscal_Period, 'Per': Period_End, 'Rev': Revenue, 'Gross': Gross_Profit, 'R&D': Research, 'OI': Operating_Income, 'Net': Net_Profit, 'EPS': Earnings_Per_Share,
-                    'Shares': Shares_Outstanding, 'Cash': Cash, 'Assets': Total_Assets, 'Debt': Total_Debt, 'Liabilities': Total_Liabilities, 'SH_Equity': SH_Equity, 'FCF': Free_Cash_Flow,
+                    'Shares': Shares_Outstanding, 'FFO': Funds_From_Operations, 'Cash': Cash, 'Assets': Total_Assets, 'Debt': Total_Debt, 'Liabilities': Total_Liabilities, 'SH_Equity': SH_Equity, 'FCF': Free_Cash_Flow,
                     'Debt_Repayment': Debt_Repayment, 'Buybacks': Share_Buybacks, 'Div_Paid': Dividend_Payments, 'SBC': Share_Based_Comp, 'Div': Dividends}    
     print(everything)
 
