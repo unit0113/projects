@@ -58,7 +58,10 @@ def check_neg(string, value, type='htm'):
     '''
     # Create search string based on value, look for char before and after
     if type == 'htm':
-        re_str = '.' + "{:,}".format(value) + '.'
+        if isinstance(value, int):
+            re_str = '.' + "{:,}".format(value) + '.'
+        else:
+            re_str = '.' + format(value, '.2f') + '.'
     else:
         re_str = '.' + str(value) + '.'
     obj = re.search(re_str, string, re.M)
@@ -82,11 +85,18 @@ def column_finder_annual_htm(soup):
 
     # Extract colmn header string
     head = soup.table.find_all('tr')[0]
-    
+
     if '12 Months Ended' in str(soup):        
         # Find correct column if multiple things before 12 months data
-        colm = re.findall(r'(?:colspan=\"(\d\d?)\")(?!>12 Months Ended)', str(head), re.M)
-        return sum(map(int, colm))
+        colm = 0
+        rows = soup.find_all('th')
+        for row in rows:
+            if '12 Months Ended' in str(row):
+                break
+            if 'colspan' in str(row):
+                colm_part = re.search(r'(?:colspan=\"(\d\d?)\")', str(row), re.M)
+                colm += int(colm_part.group(1))
+        return colm
     else:
         # Find correct column accounting for empties prior to data
         colm = re.search(r'(?:colspan=\"(\d\d?)\")', str(head), re.M)
@@ -97,13 +107,15 @@ multiplier_list_1 = ['shares in Millions, $ in Millions', 'In Millions, except P
 
 multiplier_list_2 = ['shares in Thousands, $ in Millions', 'In Millions, except Share data in Thousands, unless otherwise specified']
 
-multiplier_list_3 = ['shares in Thousands, $ in Thousands']
+multiplier_list_3 = ['shares in Thousands, $ in Thousands', 'In Thousands, except Per Share data, unless otherwise specified', 'In Thousands, except Per Share data']
 
-multiplier_list_4 = ['In Thousands, except Share data, unless otherwise specified']
+multiplier_list_4 = ['In Thousands, except Share data, unless otherwise specified', 'In Thousands, except Share data']
 
 multiplier_list_5 = ['$ in Millions', 'In Millions, unless otherwise specified', 'In Millions']
 
-multiplier_list_6 = ['$ in Thousands']
+multiplier_list_6 = ['$ in Thousands', 'In Thousands, unless otherwise specified', 'In Thousands']
+
+multiplier_list_7 = ['shares in Thousands']
 
 
 def multiple_extractor(head, shares=False, xml=False):
@@ -124,8 +136,11 @@ def multiple_extractor(head, shares=False, xml=False):
             return 1_000_000
     elif result in multiplier_list_2 and shares == True:
         return 1_000_000, 1_000
-    elif result in multiplier_list_3 and shares == True:
-        return 1_000, 1_000
+    elif result in multiplier_list_3:
+        if shares == True:
+            return 1_000, 1_000
+        else:
+            return 1_000
     elif result in multiplier_list_4 and shares == True:
         return 1_000, 1
     elif result in multiplier_list_5:
@@ -138,6 +153,8 @@ def multiple_extractor(head, shares=False, xml=False):
             return 1_000, 1
         else:
             return 1_000    
+    elif result in multiplier_list_7 and shares == True:
+        return 1, 1_000
     else:
         if shares == True:
             return 1, 1
@@ -214,8 +231,9 @@ def rev_htm(rev_url, headers):
     for row in soup.table.find_all('tr'):
         tds = row.find_all('td')
         if (r"this, 'defref_us-gaap_Revenues', window" in str(tds) or
-            r"this, 'defref_us-gaap_SalesRevenueNet', window" in str(tds) and rev == '---' or
-            r'defref_us-gaap_RevenueFromContractWithCustomerExcludingAssessedTax' in str(tds) and rev == '---'
+            r"this, 'defref_us-gaap_SalesRevenueNet', window" in str(tds) or
+            r'defref_us-gaap_RevenueFromContractWithCustomerExcludingAssessedTax' in str(tds) and rev == '---' or
+            r"this, 'defref_us-gaap_SalesRevenueGoodsNet', window" in str(tds) and rev == '---'
             ):
             rev = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
         elif r'defref_us-gaap_GrossProfit' in str(tds):
@@ -284,7 +302,7 @@ def rev_htm(rev_url, headers):
 
     # Calculate shares if not listed
     if share_sum == 0 and net != '---' and eps != '---':
-        share_sum = round(net * 1000 / eps)
+        share_sum = abs(round(net * 1000 / eps))
 
     # Calculate EPS if not listed
     if eps == '---' and net != '---':
@@ -331,9 +349,13 @@ def bs_htm(bs_url, headers):
     # Loop through rows, search for row of interest
     for row in soup.table.find_all('tr'):
         tds = row.find_all('td')
-        if 'this, \'defref_us-gaap_CashAndCashEquivalentsAtCarryingValue\', window' in str(tds):
+        if ('this, \'defref_us-gaap_CashAndCashEquivalentsAtCarryingValue\', window' in str(tds) or
+            r"this, 'defref_us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents', window" in str(tds)
+            ):
             cash = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
-        elif 'defref_us-gaap_Goodwill' in str(tds):
+        elif ('defref_us-gaap_Goodwill' in str(tds) or
+              r"this, 'defref_us-gaap_IntangibleAssetsNetIncludingGoodwill', window" in str(tds)
+              ):
             goodwill = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
         elif ('this, \'defref_us-gaap_FiniteLivedIntangibleAssetsNet\', window' in str(tds) or
               'this, \'defref_us-gaap_IntangibleAssetsNetExcludingGoodwill\', window' in str(tds) or
@@ -351,7 +373,9 @@ def bs_htm(bs_url, headers):
             liabilities = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
         elif ('this, \'defref_us-gaap_LongTermDebtNoncurrent\', window' in str(tds) or
               'this, \'defref_us-gaap_LongTermDebt\', window' in str(tds) or
-              'this, \'defref_us-gaap_LongTermDebtAndCapitalLeaseObligations\', window' in str(tds)
+              'this, \'defref_us-gaap_LongTermDebtAndCapitalLeaseObligations\', window' in str(tds) or
+              r"this, 'defref_us-gaap_LineOfCredit', window" in str(tds) or
+              r"this, 'defref_us-gaap_UnsecuredLongTermDebt', window" in str(tds)
               ):
             debt = html_re(str(tds[colm]))
             if debt == '---':
@@ -553,7 +577,8 @@ def div_htm(div_url, headers):
 
         # If data is not quarterly
         elif 'QUARTERLY' not in soup.text.upper() and div == '---':
-            colm = 1
+            colm = column_finder_annual_htm(soup)
+
             # Check for three month data prior to 12 month data
             if '4 Months Ended' in str(soup):
                 head = soup.table.find_all('tr')[0]
@@ -645,12 +670,17 @@ def eps_catch_htm(catch_url, headers):
 
     # Pull eps data
     row = table.loc[table[0] == 'Diluted']
-    eps = float(row[2])
+    for i in range(row.shape[1]):
+        try:
+            obj = re.search(r'(\d?\d\.\d\d)', str(row[i]))
+            eps = float(obj.group(1).strip())
+            break
+        except:
+            continue
 
     # Pull div data
     row = table.loc[table[0] == 'Class A']
     if row.empty:
-        
         # Look for row with div data
         for index in range(table.shape[0]):
             if 'Less Dividends:' in str(table.iloc[index]):
@@ -813,7 +843,7 @@ def rev_xml(rev_url, headers):
             net = xml_re(str(cells[colm]))
             if net != '---':
                 net = round(check_neg(str(row), net, 'xml') * (dollar_multiplier / 1_000_000))                
-        elif r'us-gaap_EarningsPerShareDiluted' in str(row) and eps == '---':
+        elif r'<ElementName>us-gaap_EarningsPerShareDiluted</ElementName>' in str(row) and eps == '---':
             eps = xml_re(str(cells[colm]))
             if eps != '---':
                 eps = check_neg(str(row), eps, 'xml')
@@ -833,7 +863,7 @@ def rev_xml(rev_url, headers):
 
     # Calculate shares if not listed
     if share_sum == 0 and net != '---' and eps != '---':
-        share_sum = round(net * 1000 / eps)
+        share_sum = abs(round(net * 1000 / eps))
 
     # Calculate EPS if not listed
     if eps == '---' and net != '---':
@@ -948,7 +978,9 @@ def cf_xml(cf_url, headers):
     rows = soup.find_all('Row')
     for row in rows:
         cells = row.find_all('Cell')
-        if r'<ElementName>us-gaap_NetCashProvidedByUsedInOperatingActivities</ElementName>' in str(row):
+        if (r'<ElementName>us-gaap_NetCashProvidedByUsedInOperatingActivities</ElementName>' in str(row) or
+            r'<ElementName>us-gaap_NetCashProvidedByUsedInOperatingActivitiesContinuingOperations</ElementName>' in str(row)
+            ):
             cfo = xml_re(str(cells[colm]))
             if cfo != '---':
                 cfo = round(check_neg(str(row), cfo, 'xml') * (dollar_multiplier / 1_000_000)) 
@@ -963,7 +995,9 @@ def cf_xml(cf_url, headers):
               r'us-gaap_RepaymentsOfLongTermDebt' in str(row)
               ):
             debt_pay += round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))                            
-        elif r'us-gaap_PaymentsForRepurchaseOfCommonStock' in str(row):
+        elif (r'us-gaap_PaymentsForRepurchaseOfCommonStock' in str(row) or
+              r'<ElementName>us-gaap_PaymentsForRepurchaseOfEquity</ElementName>' in str(row)
+              ):
             buyback += round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))    
         elif (r'us-gaap_ProceedsFromStockOptionsExercised' in str(row) or
               r'us-gaap_ProceedsFromIssuanceOfCommonStock' in str(row) or
@@ -997,7 +1031,7 @@ def div_xml(div_url, headers):
         Dividend (float)
     '''
 
-    # Remove for query use
+    # Get data from site
     content = requests.get(div_url, headers=headers).content
     soup = BeautifulSoup(content, 'xml')
 
@@ -1028,3 +1062,35 @@ def div_xml(div_url, headers):
         div *= 4
 
     return div
+
+
+def eps_catch_xml(catch_url, headers):
+    ''' Parse EPS and div info if not listed elsewhere
+
+    Args:
+        URL of statement
+        User agent for SEC
+    Returns:
+        EPS (float)
+        Dividend (float)
+    '''
+
+    # Get data from site
+    content = requests.get(catch_url, headers=headers).content
+    soup = BeautifulSoup(content, 'xml')
+
+    # Find table
+    rows = soup.find_all('Row')
+    for row in rows:
+        if r'<ElementName>us-gaap_EarningsPerShareTextBlock</ElementName>' in str(row):
+            cells = row.find_all('Cell')
+            
+            # Find eps
+            obj = re.search(r'(?:Diluted)(?:.|\n)*?(?:\$)(\d?\d.\d\d)', str(cells[0]))
+            eps = float(obj.group(1))
+
+            # Find div
+            obj = re.search(r'(?:Less Dividends)(?:.|\n)*?(\d?\d.\d\d)', str(cells[0]))
+            div = float(obj.group(1))
+
+    return eps, div
