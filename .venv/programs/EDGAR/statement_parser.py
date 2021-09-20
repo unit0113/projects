@@ -117,6 +117,8 @@ multiplier_list_6 = ['$ in Thousands', 'In Thousands, unless otherwise specified
 
 multiplier_list_7 = ['shares in Thousands']
 
+multiplier_list_8 = ['shares in Millions']
+
 
 def multiple_extractor(head, shares=False, xml=False):
     
@@ -155,6 +157,8 @@ def multiple_extractor(head, shares=False, xml=False):
             return 1_000    
     elif result in multiplier_list_7 and shares == True:
         return 1, 1_000
+    elif result in multiplier_list_8 and shares == True:
+        return 1, 1_000_000
     else:
         if shares == True:
             return 1, 1
@@ -241,7 +245,8 @@ def rev_htm(rev_url, headers):
             if gross != '---':
                 gross = round(check_neg(str(tds), gross) * (dollar_multiplier / 1_000_000))
         elif (r"this, 'defref_us-gaap_ResearchAndDevelopmentExpense', window" in str(tds) or
-              r"this, 'defref_amzn_TechnologyAndContentExpense', window" in str(tds)
+              r"this, 'defref_amzn_TechnologyAndContentExpense', window" in str(tds) or
+              r"this, 'defref_us-gaap_ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost', window" in str(tds)
               ):
             research = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
         elif r"this, 'defref_us-gaap_OperatingIncomeLoss', window" in str(tds):
@@ -249,7 +254,8 @@ def rev_htm(rev_url, headers):
             if oi != '---':
                 oi = round(check_neg(str(tds), oi) * (dollar_multiplier / 1_000_000))
         elif ('this, \'defref_us-gaap_NetIncomeLoss\', window' in str(tds) and net == '---' or
-              'this, \'defref_us-gaap_ProfitLoss\', window' in str(tds) and net == '---'
+              'this, \'defref_us-gaap_ProfitLoss\', window' in str(tds) and net == '---' or
+              r"this, 'defref_us-gaap_NetIncomeLossAvailableToCommonStockholdersBasic', window" in str(tds) and net == '---'
             ):
             net = html_re(str(tds[colm]))
             if net != '---':
@@ -477,7 +483,8 @@ def cf_htm(cf_url, headers):
               'this, \'defref_us-gaap_PaymentsOfDividends\', window' in str(tds) or
               'PaymentsOfDividendsAndDividendEquivalentsOnCommonStockAndRestrictedStockUnits\', window' in str(tds) or
               'this, \'defref_us-gaap_PaymentsOfDividendsCommonStock\', window' in str(tds) or
-              r"this, 'defref_us-gaap_Dividends', window" in str(tds)
+              r"this, 'defref_us-gaap_Dividends', window" in str(tds) or
+              r"this, 'defref_us-gaap_PaymentsOfOrdinaryDividends', window" in str(tds)
               ):
             divpaid = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
         elif ('this, \'defref_us-gaap_ShareBasedCompensation\', window' in str(tds) or
@@ -650,7 +657,7 @@ def div_htm(div_url, headers):
     return div
 
 
-def eps_catch_htm(catch_url, headers):
+def eps_catch_htm(catch_url, headers, eps):
     ''' Parse EPS and div info if not listed elsewhere
 
     Args:
@@ -689,10 +696,25 @@ def eps_catch_htm(catch_url, headers):
         
         # Pull div from row header
         search_str = table.iloc[index][0]
-        obj = re.search(r'(?:\(\$)(\d?\d\.\d\d)(?:/share\))', search_str)
-        div = float(obj.group(1).strip())
+        try:
+            obj = re.search(r'(?:\(\$)(\d?\d\.\d\d)(?:/share\))', search_str)
+            div = float(obj.group(1).strip())
+        except:
+            div = '---'
     else:
         div = float(row[2])
+
+    # Catch for div being randomly written on equity statement
+    if 'Equity' in str(soup):
+        if 'Board of Directors declared quarterly dividends per share of' in str(soup):
+            obj = re.search(r'(?:Board of Directors declared quarterly dividends per share of)(?:.)*?(?:\$)(\d?\d.\d\d)', str(soup))
+            div = float(obj.group(1).strip()) * 4
+        elif 'the Board of Directors declared quarterly cash dividends of' in str(soup):
+            obj = re.findall(r'(?:the Board of Directors declared quarterly cash dividends of)(?:.|\n)*?(\d?\d\.\d\d)', str(soup))
+            div = float(obj[-1]) * 4
+        elif 'the Board of Directors declared quarterly cash\n   dividends of' in str(soup):
+            obj = re.search(r'(?:the Board of Directors declared quarterly cash\n\s{3}dividends of)(?:.)*?(?:\$)(\d?\d.\d\d)', str(soup))
+            div = float(obj.group(1).strip()) * 4
 
     return eps, div
 
@@ -808,6 +830,7 @@ def rev_xml(rev_url, headers):
     # Initial values
     rev = gross = oi = net = eps = cost = shares = div = '---'
     share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = 0
+    net_check = False
 
     # Find which column has 12 month data
     colm = column_finder_annual_xml(soup)
@@ -821,7 +844,8 @@ def rev_xml(rev_url, headers):
     for row in rows:
         cells = row.find_all('Cell')
         if (r'<ElementName>us-gaap_Revenues</ElementName>' in str(row) or
-            r'us-gaap_SalesRevenueNet' in str(row)
+            r'us-gaap_SalesRevenueNet' in str(row) or
+            r'<ElementName>us-gaap_SalesRevenueGoodsNet</ElementName>' in str(row)
             ):
             rev = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))
         elif r'us-gaap_GrossProfit' in str(row):
@@ -839,10 +863,14 @@ def rev_xml(rev_url, headers):
             oi = xml_re(str(cells[colm]))
             if oi != '---':
                 oi = round(check_neg(str(row), oi, 'xml') * (dollar_multiplier / 1_000_000))      
-        elif r'>us-gaap_NetIncomeLoss<' in str(row) and net == '---':
+        elif (r'>us-gaap_NetIncomeLoss<' in str(row) and net_check == False or
+              r'<ElementName>us-gaap_ProfitLoss</ElementName>' in str(row) and net == '---' and 'including non-controlling interest' not in str(row) and 'including noncontrolling interests' not in str(row)
+              ):
             net = xml_re(str(cells[colm]))
             if net != '---':
-                net = round(check_neg(str(row), net, 'xml') * (dollar_multiplier / 1_000_000))                
+                net = round(check_neg(str(row), net, 'xml') * (dollar_multiplier / 1_000_000))    
+            if r'>us-gaap_NetIncomeLoss<' in str(row):
+                net_check = True
         elif r'<ElementName>us-gaap_EarningsPerShareDiluted</ElementName>' in str(row) and eps == '---':
             eps = xml_re(str(cells[colm]))
             if eps != '---':
@@ -1064,7 +1092,7 @@ def div_xml(div_url, headers):
     return div
 
 
-def eps_catch_xml(catch_url, headers):
+def eps_catch_xml(catch_url, headers, eps):
     ''' Parse EPS and div info if not listed elsewhere
 
     Args:
