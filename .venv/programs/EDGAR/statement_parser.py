@@ -221,8 +221,8 @@ def rev_htm(rev_url, headers):
     soup = BeautifulSoup(content, 'html.parser')
 
     # Initial values
-    rev = gross = oi = net = eps = cost = shares = div = '---'
-    share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = 0
+    gross = oi = net = eps = cost = shares = div = '---'
+    rev = share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = 0
 
     # Find which column has 12 month data
     colm = column_finder_annual_htm(soup)
@@ -236,10 +236,12 @@ def rev_htm(rev_url, headers):
         tds = row.find_all('td')
         if (r"this, 'defref_us-gaap_Revenues', window" in str(tds) or
             r"this, 'defref_us-gaap_SalesRevenueNet', window" in str(tds) or
-            r'defref_us-gaap_RevenueFromContractWithCustomerExcludingAssessedTax' in str(tds) and rev == '---' or
-            r"this, 'defref_us-gaap_SalesRevenueGoodsNet', window" in str(tds) and rev == '---'
+            r'defref_us-gaap_RevenueFromContractWithCustomerExcludingAssessedTax' in str(tds) or
+            r"this, 'defref_us-gaap_SalesRevenueGoodsNet', window" in str(tds)
             ):
-            rev = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
+            rev_calc = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
+            if rev_calc > rev:
+                rev = rev_calc
         elif r'defref_us-gaap_GrossProfit' in str(tds):
             gross = html_re(str(tds[colm]))
             if gross != '---':
@@ -276,7 +278,8 @@ def rev_htm(rev_url, headers):
                 eps = check_neg(str(tds), eps)
         elif (r"this, 'defref_us-gaap_CostOfRevenue', window" in str(tds) and cost == '---' or
               r"this, 'defref_us-gaap_CostOfGoodsSold', window" in str(tds) and cost == '---' or
-              r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(tds) and cost == '---'
+              r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(tds) and cost == '---' or
+              r"this, 'defref_amgn_CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets', window" in str(tds) and cost == '---'
               ):
             cost = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
         elif (r"this, 'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding', window" in str(tds) or
@@ -381,7 +384,8 @@ def bs_htm(bs_url, headers):
               'this, \'defref_us-gaap_LongTermDebt\', window' in str(tds) or
               'this, \'defref_us-gaap_LongTermDebtAndCapitalLeaseObligations\', window' in str(tds) or
               r"this, 'defref_us-gaap_LineOfCredit', window" in str(tds) or
-              r"this, 'defref_us-gaap_UnsecuredLongTermDebt', window" in str(tds)
+              r"this, 'defref_us-gaap_UnsecuredLongTermDebt', window" in str(tds) or
+              r"this, 'defref_us-gaap_LongTermNotesPayable', window" in str(tds)
               ):
             debt = html_re(str(tds[colm]))
             if debt == '---':
@@ -668,6 +672,9 @@ def eps_catch_htm(catch_url, headers, eps):
         Dividend (float)
     '''
 
+    # Initial value
+    div = '---'
+
     # Get data from site
     content = requests.get(catch_url, headers=headers).content
     soup = BeautifulSoup(content, 'html.parser')
@@ -854,7 +861,8 @@ def rev_xml(rev_url, headers):
                 gross = round(check_neg(str(row), gross, 'xml')    * (dollar_multiplier / 1_000_000))     
         elif (r'us-gaap_CostOfRevenue' in str(row) and gross == '---' or
               r'us-gaap_CostOfGoodsAndServicesSold' in str(row) and gross == '---' or
-              r'us-gaap_CostOfGoodsSold' in str(row) and gross == '---'
+              r'us-gaap_CostOfGoodsSold' in str(row) and gross == '---' or
+              r'CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets' in str(row) and gross == '---'
               ):
             cost = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))             
         elif r'us-gaap_ResearchAndDevelopmentExpense' in str(row):
@@ -1103,6 +1111,9 @@ def eps_catch_xml(catch_url, headers, eps):
         Dividend (float)
     '''
 
+    # Initial value
+    div = '---'
+
     # Get data from site
     content = requests.get(catch_url, headers=headers).content
     soup = BeautifulSoup(content, 'xml')
@@ -1115,10 +1126,12 @@ def eps_catch_xml(catch_url, headers, eps):
             
             # Find eps
             obj = re.search(r'(?:Diluted)(?:.|\n)*?(?:\$)(\d?\d.\d\d)', str(cells[0]))
-            eps = float(obj.group(1))
+            if obj is not None:
+                eps = float(obj.group(1))
 
             # Find div
             obj = re.search(r'(?:Less Dividends)(?:.|\n)*?(\d?\d.\d\d)', str(cells[0]))
-            div = float(obj.group(1))
+            if obj is not None:
+                div = float(obj.group(1))
 
     return eps, div
