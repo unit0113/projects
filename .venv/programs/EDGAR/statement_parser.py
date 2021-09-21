@@ -60,6 +60,8 @@ def check_neg(string, value, type='htm'):
     if type == 'htm':
         if isinstance(value, int):
             re_str = '.' + "{:,}".format(value) + '.'
+        elif value > 1_000:
+            re_str = '.' + "{:,}".format(value) + '.'
         else:
             re_str = '.' + format(value, '.2f') + '.'
     else:
@@ -385,7 +387,8 @@ def bs_htm(bs_url, headers):
               'this, \'defref_us-gaap_LongTermDebtAndCapitalLeaseObligations\', window' in str(tds) or
               r"this, 'defref_us-gaap_LineOfCredit', window" in str(tds) or
               r"this, 'defref_us-gaap_UnsecuredLongTermDebt', window" in str(tds) or
-              r"this, 'defref_us-gaap_LongTermNotesPayable', window" in str(tds)
+              r"this, 'defref_us-gaap_LongTermNotesPayable', window" in str(tds) or
+              r"this, 'defref_stor_NonRecourseDebtNet', window" in str(tds)
               ):
             debt = html_re(str(tds[colm]))
             if debt == '---':
@@ -475,7 +478,9 @@ def cf_htm(cf_url, headers):
               'this, \'defref_us-gaap_PaymentsForRepurchaseOfCommonStock\', window' in str(tds) or
               'Shares repurchased under stock compensation plans' in str(tds)
               ):
-            buyback += round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
+            buyback_calc = html_re(str(tds[colm]))
+            if buyback_calc != '---':
+                buyback += (round(buyback_calc * (dollar_multiplier / 1_000_000)))
         elif ('this, \'defref_us-gaap_ProceedsFromStockOptionsExercised\', window' in str(tds) or
               'this, \'defref_us-gaap_ProceedsFromIssuanceOfCommonStock\', window' in str(tds) or
               'this, \'defref_us-gaap_ProceedsFromIssuanceOfSharesUnderIncentiveAndShareBasedCompensationPlansIncludingStockOptions\', window' in str(tds)
@@ -641,21 +646,38 @@ def div_htm(div_url, headers):
             
         # If data source is in one big line
         if div == '---':
-            
             # Create tables with Pandas
             tables = soup.find_all('table')[0] 
             panda = pd.read_html(str(tables))
-            
+            pd.set_option('display.max_columns', None)
             # Look for table with div data
             for table in panda:
                 if ('Dividends Per Share' in table.values or
                     'DividendsPer Share' in table.values or
                     'Cash dividends per share'in table.values
                     ):                    
-                    
                     # Find row with div data and pull
                     row = table.loc[table[0] == 'Cash dividends per share']
                     div = float(re.findall(r'\d+\.\d\d', str(row))[0])
+                    break
+                
+                elif 'Distributionper share' in table.values:
+                    # For REITS
+                    # Get bool dataframe with True at positions where the given value exists
+                    result = table.isin(['Distributionper share'])
+                    # Get list of columns that contains the value
+                    series_obj = result.any()
+                    column_number = list(series_obj[series_obj == True].index)
+                    # Iterate over list of columns and fetch the rows indexes where value exists
+                    for col in column_number:
+                        row = list(result[col][result[col] == True].index)
+                        row[0] += 1
+                        answer = table.at[row[0], col]
+                        try:
+                            div = float(answer)
+                            break
+                        except:
+                            continue
                     break
 
     return div
@@ -866,7 +888,7 @@ def rev_xml(rev_url, headers):
               ):
             cost = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))             
         elif r'us-gaap_ResearchAndDevelopmentExpense' in str(row):
-            research = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))        
+            research = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))                    
         elif r'us-gaap_OperatingIncomeLoss' in str(row):
             oi = xml_re(str(cells[colm]))
             if oi != '---':
@@ -889,6 +911,14 @@ def rev_xml(rev_url, headers):
         elif (r'us-gaap_CommonStockDividendsPerShareCashPaid' in str(row) or
               r'us-gaap_CommonStockDividendsPerShareDeclared' in str(row)):
             div = xml_re(str(cells[colm])) 
+        elif r'<ElementName>us-gaap_DepreciationAmortizationAndAccretionNet</ElementName>' in str(row):
+            dep_am = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))  
+        elif r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(row):              # Need to change
+            impairment = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))    
+        elif r"this, 'defref_us-gaap_GainsLossesOnSalesOfInvestmentRealEstate', window" in str(row):              # Need to change
+            disposition = xml_re(str(cells[colm]))
+            if disposition != '---':
+                disposition = round(check_neg(str(row), oi, 'xml') * (dollar_multiplier / 1_000_000))  
 
     # Calculate gross if not listed
     if gross == '---':
@@ -904,6 +934,10 @@ def rev_xml(rev_url, headers):
     # Calculate EPS if not listed
     if eps == '---' and net != '---':
         eps = net / share_sum
+
+    # Calculate FFO for REITS
+    if net != '---':
+        ffo = net + dep_am + impairment - disposition
 
     return rev, gross, research, oi, net, eps, share_sum, div, ffo
 
