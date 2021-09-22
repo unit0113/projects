@@ -56,18 +56,23 @@ def check_neg(string, value, type='htm'):
     Return:
         Adjusted value (int/float)       
     '''
+
     # Create search string based on value, look for char before and after
     if type == 'htm':
         if isinstance(value, int):
-            re_str = '.' + "{:,}".format(value) + '.'
-        elif value > 1_000:
             re_str = '.' + "{:,}".format(value) + '.'
         else:
             re_str = '.' + format(value, '.2f') + '.'
     else:
         re_str = '.' + str(value) + '.'
+    
     obj = re.search(re_str, string, re.M)
     
+    # Check for weird float
+    if obj == None:
+        re_str = '.' + "{:,}".format(value, '.1f') + '.'
+        obj = re.search(re_str, string, re.M)
+
     # Check if negative
     if '(' in obj.group(0) and ')' in obj.group(0):
         return (value * -1)
@@ -224,7 +229,8 @@ def rev_htm(rev_url, headers):
 
     # Initial values
     gross = oi = net = eps = cost = shares = div = '---'
-    rev = share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = 0
+    rev = share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = operating_exp = 0
+    share_set = set()
 
     # Find which column has 12 month data
     colm = column_finder_annual_htm(soup)
@@ -288,8 +294,9 @@ def rev_htm(rev_url, headers):
               r"this, 'defref_us-gaap_WeightedAverageNumberOfShareOutstandingBasicAndDiluted', window" in str(tds) or
               r"this, 'defref_tsla_WeightedAverageNumberOfSharesOutstandingBasicAndDilutedOne', window" in str(tds)
               ):
-            shares = round(html_re(str(tds[colm])) * (share_multiplier / 1_000))
-            share_sum += shares
+            shares = html_re(str(tds[colm]))
+            if shares != '---':
+                share_set.add(round(shares * (share_multiplier / 1_000)))
         elif (r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds) or
               r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds)
               ):
@@ -297,13 +304,21 @@ def rev_htm(rev_url, headers):
         elif r"this, 'defref_us-gaap_DepreciationAndAmortization', window" in str(tds):
             dep_am = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
         elif r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(tds):
-            impairment = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))   
-
+            result = html_re(str(tds[colm]))
+            if result != '---':
+                impairment = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000)) 
         elif r"this, 'defref_us-gaap_GainsLossesOnSalesOfInvestmentRealEstate', window" in str(tds):
             disposition = html_re(str(tds[colm]))
             if disposition != '---':
-                disposition = round(check_neg(str(tds), disposition) * (dollar_multiplier / 1_000_000))          
-            
+                disposition = round(check_neg(str(tds), disposition) * (dollar_multiplier / 1_000_000))  
+        elif r"this, 'defref_us-gaap_CostsAndExpenses', window" in str(tds):
+            operating_exp_res = html_re(str(tds[colm]))
+            if operating_exp != '---':
+                operating_exp = round(check_neg(str(tds), operating_exp_res) * (dollar_multiplier / 1_000_000))         
+
+    # Calculate share total
+    share_sum = sum(share_set)
+
     # Calculate gross if not listed
     if gross == '---':
         try:
@@ -322,6 +337,10 @@ def rev_htm(rev_url, headers):
     # Calculate FFO for REITS
     if net != '---':
         ffo = net + dep_am + impairment - disposition
+
+    # Calculate OI if not listed
+    if oi == '---' and operating_exp != 0:
+        oi = rev - operating_exp
 
     return rev, gross, research, oi, net, eps, share_sum, div, ffo
 
@@ -388,7 +407,8 @@ def bs_htm(bs_url, headers):
               r"this, 'defref_us-gaap_LineOfCredit', window" in str(tds) or
               r"this, 'defref_us-gaap_UnsecuredLongTermDebt', window" in str(tds) or
               r"this, 'defref_us-gaap_LongTermNotesPayable', window" in str(tds) or
-              r"this, 'defref_stor_NonRecourseDebtNet', window" in str(tds)
+              r"this, 'defref_stor_NonRecourseDebtNet', window" in str(tds) or
+              r"this, 'defref_us-gaap_DebtInstrumentCarryingAmount', window" in str(tds)
               ):
             debt = html_re(str(tds[colm]))
             if debt == '---':
@@ -566,10 +586,11 @@ def div_htm(div_url, headers):
             try:
                 table = pd.read_html(content, match=title)[1]
                 row = table.loc[table[0] == title]
+                div = float(row[td_count])
                 break
             except:
                 pass
-        div = float(row[td_count])
+        
         return div
 
     # If company is a jerk and burries it (like apple)
@@ -673,6 +694,42 @@ def div_htm(div_url, headers):
                         row = list(result[col][result[col] == True].index)
                         row[0] += 1
                         answer = table.at[row[0], col]
+                        try:
+                            div = float(answer)
+                            break
+                        except:
+                            continue
+                    break
+                
+                elif 'Capital gains distribution' in table.values:
+                    # For REITS
+                    # Get bool dataframe with True at positions where the given value exists
+                    result = table.isin(['Capital gains distribution'])
+                    # Get list of columns that contains the value
+                    series_obj = result.any()
+                    column_number = list(series_obj[series_obj == True].index)
+                    # Iterate over list of columns and fetch the rows indexes where value exists
+                    for col in column_number:
+                        row = list(result[col][result[col] == True].index)
+                        answer = table.at[row[0] + 1, col + 2]
+                        try:
+                            div = float(answer)
+                            break
+                        except:
+                            continue
+                    break
+
+                elif 'Return of capital' in table.values and 'Common Stock' in table.values:
+                    # For REITS
+                    # Get bool dataframe with True at positions where the given value exists
+                    result = table.isin(['Return of capital'])
+                    # Get list of columns that contains the value
+                    series_obj = result.any()
+                    column_number = list(series_obj[series_obj == True].index)
+                    # Iterate over list of columns and fetch the rows indexes where value exists
+                    for col in column_number:
+                        row = list(result[col][result[col] == True].index)
+                        answer = table.at[row[0] + 1, col + 2]
                         try:
                             div = float(answer)
                             break
