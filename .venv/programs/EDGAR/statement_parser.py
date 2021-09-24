@@ -81,7 +81,7 @@ def check_neg(string, value, type='htm'):
 
 
 # Find correct column for data
-def column_finder_annual_htm(soup):
+def column_finder_annual_htm(soup, per):
     ''' Determine which column of data contains desired data for htm pages
 
     Args:
@@ -92,18 +92,27 @@ def column_finder_annual_htm(soup):
 
     # Extract colmn header string
     head = soup.table.find_all('tr')[0]
+    head2 = soup.table.find_all('tr')[1]
 
-    if '12 Months Ended' in str(soup):        
-        # Find correct column if multiple things before 12 months data
-        colm = 0
-        rows = soup.find_all('th')
-        for row in rows:
-            if '12 Months Ended' in str(row):
-                break
-            if 'colspan' in str(row):
-                colm_part = re.search(r'(?:colspan=\"(\d\d?)\")', str(row), re.M)
-                colm += int(colm_part.group(1))
-        return colm
+    # Find index for period end
+    if per in str(head2):
+        rows = head2.find_all('th')
+        for index, row in enumerate(rows):
+            if per in str(row) and '3 Months Ended' not in str(row) and '4 Months Ended' not in str(row):
+                # Find correct column if multiple things before 12 months data
+                col_index = 0
+                colm = 0
+                rows2 = head.find_all('th')
+                for row in rows2:
+                    if col_index > index:
+                        if '3 Months Ended' in str(row) or '4 Months Ended' in str(row):
+                            break 
+                        else:
+                            return colm           
+                    if 'colspan' in str(row):
+                        colm_part = re.search(r'(?:colspan=\"(\d\d?)\")', str(row), re.M)
+                        colm += int(colm_part.group(1))
+                        col_index += int(colm_part.group(1))
     else:
         # Find correct column accounting for empties prior to data
         colm = re.search(r'(?:colspan=\"(\d\d?)\")', str(head), re.M)
@@ -198,7 +207,7 @@ def sum_htm(sum_url, headers):
             fy = int(tds[1].text)
         if r"this, 'defref_dei_DocumentPeriodEndDate', window" in str(tds):
             period_end_str = tds[1].text.strip()
-            period_end = datetime.strptime(period_end_str, '%b. %d,  %Y') 
+            period_end = period_end_str.replace('  ', ' ')
 
     return fy, period_end
 
@@ -206,7 +215,7 @@ def sum_htm(sum_url, headers):
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
 
-def rev_htm(rev_url, headers):    
+def rev_htm(rev_url, headers, per):    
     ''' Parse .htm income statement
 
     Args:
@@ -231,10 +240,11 @@ def rev_htm(rev_url, headers):
     gross = oi = net = eps = cost = shares = div = '---'
     rev = share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = operating_exp = 0
     share_set = set()
+    net_actual = False
 
     # Find which column has 12 month data
-    colm = column_finder_annual_htm(soup)
-    
+    colm = column_finder_annual_htm(soup, per)
+
     # Determine multiplier
     head = soup.find('th')
     dollar_multiplier, share_multiplier = multiple_extractor(str(head), shares=True)
@@ -245,11 +255,15 @@ def rev_htm(rev_url, headers):
         if (r"this, 'defref_us-gaap_Revenues', window" in str(tds) or
             r"this, 'defref_us-gaap_SalesRevenueNet', window" in str(tds) or
             r'defref_us-gaap_RevenueFromContractWithCustomerExcludingAssessedTax' in str(tds) or
-            r"this, 'defref_us-gaap_SalesRevenueGoodsNet', window" in str(tds)
+            r"this, 'defref_us-gaap_SalesRevenueGoodsNet', window" in str(tds) or
+            r"this, 'defref_us-gaap_RealEstateRevenueNet', window" in str(tds) or
+            r"this, 'defref_us-gaap_RevenueFromContractWithCustomerIncludingAssessedTax', window" in str(tds)
             ):
-            rev_calc = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
-            if rev_calc > rev:
-                rev = rev_calc
+            rev_calc = html_re(str(tds[colm]))
+            if rev_calc != '---':
+                rev_calc = round(rev_calc * (dollar_multiplier / 1_000_000))
+                if rev_calc > rev:
+                    rev = rev_calc
         elif r'defref_us-gaap_GrossProfit' in str(tds):
             gross = html_re(str(tds[colm]))
             if gross != '---':
@@ -270,13 +284,16 @@ def rev_htm(rev_url, headers):
             net = html_re(str(tds[colm]))
             if net != '---':
                 net = round(check_neg(str(tds), net) * (dollar_multiplier / 1_000_000))
-        elif r"this, 'defref_us-gaap_NetIncomeLossAttributableToNoncontrollingInterest', window" in str(tds):
-            non_attributable_net = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
-            if net != '---':
-                if net > 0:
-                    net -= non_attributable_net
-                else:
-                    net += non_attributable_net
+                if r"this, 'defref_us-gaap_NetIncomeLossAvailableToCommonStockholdersBasic', window" in str(tds):
+                    net_actual = True
+        elif (r"this, 'defref_us-gaap_NetIncomeLossAttributableToNoncontrollingInterest', window" in str(tds) or
+              r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsAttributableToNoncontrollingEntity', window" in str(tds) or
+              r"this, 'defref_us-gaap_IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToNoncontrollingInterest', window" in str(tds)
+              ):
+            non_attributable_net = html_re(str(tds[colm]))
+            if net != '---' and net_actual == False and non_attributable_net != '---':
+                non_attributable_net = check_neg(str(tds), non_attributable_net)
+                net -= round(non_attributable_net * (dollar_multiplier / 1_000_000))
         elif ('EarningsPerShareDiluted' in str(tds) and eps == '---' or
               'this, \'defref_us-gaap_EarningsPerShareBasicAndDiluted\', window' in str(tds) and eps == '---' or
               r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsPerBasicAndDilutedShare', window" in str(tds) and eps == '---'
@@ -289,7 +306,9 @@ def rev_htm(rev_url, headers):
               r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(tds) and cost == '---' or
               r"this, 'defref_amgn_CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets', window" in str(tds) and cost == '---'
               ):
-            cost = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
+            result = html_re(str(tds[colm]))
+            if result != '---':
+                cost = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000)) 
         elif (r"this, 'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding', window" in str(tds) or
               r"this, 'defref_us-gaap_WeightedAverageNumberOfShareOutstandingBasicAndDiluted', window" in str(tds) or
               r"this, 'defref_tsla_WeightedAverageNumberOfSharesOutstandingBasicAndDilutedOne', window" in str(tds)
@@ -301,8 +320,12 @@ def rev_htm(rev_url, headers):
               r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds)
               ):
             div = html_re(str(tds[colm]))
-        elif r"this, 'defref_us-gaap_DepreciationAndAmortization', window" in str(tds):
-            dep_am = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
+        elif (r"this, 'defref_us-gaap_DepreciationAndAmortization', window" in str(tds) or
+              r"this, 'defref_us-gaap_DepreciationDepletionAndAmortization', window" in str(tds)
+              ):
+            result = html_re(str(tds[colm]))
+            if result != '---':
+                dep_am = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000)) 
         elif r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(tds):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -313,7 +336,7 @@ def rev_htm(rev_url, headers):
                 disposition = round(check_neg(str(tds), disposition) * (dollar_multiplier / 1_000_000))  
         elif r"this, 'defref_us-gaap_CostsAndExpenses', window" in str(tds):
             operating_exp_res = html_re(str(tds[colm]))
-            if operating_exp != '---':
+            if operating_exp_res != '---':
                 operating_exp = round(check_neg(str(tds), operating_exp_res) * (dollar_multiplier / 1_000_000))         
 
     # Calculate share total
@@ -331,7 +354,7 @@ def rev_htm(rev_url, headers):
         share_sum = abs(round(net * 1000 / eps))
 
     # Calculate EPS if not listed
-    if eps == '---' and net != '---':
+    if eps == '---' and net != '---' and share_sum != 0:
         eps = net / share_sum
 
     # Calculate FFO for REITS
@@ -382,25 +405,34 @@ def bs_htm(bs_url, headers):
         if ('this, \'defref_us-gaap_CashAndCashEquivalentsAtCarryingValue\', window' in str(tds) or
             r"this, 'defref_us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents', window" in str(tds)
             ):
-            cash = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
+            cash_calc = html_re(str(tds[colm]))
+            if cash_calc != '---':
+                cash = round(check_neg(str(tds), cash_calc) * (dollar_multiplier / 1_000_000))
         elif ('defref_us-gaap_Goodwill' in str(tds) or
               r"this, 'defref_us-gaap_IntangibleAssetsNetIncludingGoodwill', window" in str(tds)
               ):
-            goodwill = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
+            goodwill_calc = html_re(str(tds[colm]))
+            if goodwill_calc != '---':
+                goodwill = round(check_neg(str(tds), goodwill_calc) * (dollar_multiplier / 1_000_000))
         elif ('this, \'defref_us-gaap_FiniteLivedIntangibleAssetsNet\', window' in str(tds) or
               'this, \'defref_us-gaap_IntangibleAssetsNetExcludingGoodwill\', window' in str(tds) or
               r"this, 'defref_us-gaap_IndefiniteLivedIntangibleAssetsExcludingGoodwill', window" in str(tds)
               ):
-            intangible_assets = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
-            if intangible_assets != '---':
+            intangible_assets_calc = html_re(str(tds[colm]))
+            if intangible_assets_calc != '---':
+                intangible_assets = (round(intangible_assets_calc * (dollar_multiplier / 1_000_000)))
                 intangible_assets_set.add(intangible_assets)
         elif ('Total assets' in str(tds) or
               'Total Assets' in str(tds) or
               r"this, 'defref_us-gaap_Assets', window" in str(tds)
               ):
-            assets = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
+            assets_calc = html_re(str(tds[colm]))
+            if assets_calc != '---':
+                assets = round(check_neg(str(tds), assets_calc) * (dollar_multiplier / 1_000_000))
         elif 'onclick="top.Show.showAR( this, \'defref_us-gaap_Liabilities\', window )' in str(tds):
-            liabilities = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
+            liabilities_calc = html_re(str(tds[colm]))
+            if liabilities_calc != '---':
+                liabilities = round(check_neg(str(tds), liabilities_calc) * (dollar_multiplier / 1_000_000))
         elif ('this, \'defref_us-gaap_LongTermDebtNoncurrent\', window' in str(tds) or
               'this, \'defref_us-gaap_LongTermDebt\', window' in str(tds) or
               'this, \'defref_us-gaap_LongTermDebtAndCapitalLeaseObligations\', window' in str(tds) or
@@ -416,7 +448,9 @@ def bs_htm(bs_url, headers):
             else:
                 debt = round(debt * (dollar_multiplier / 1_000_000))
         elif 'this, \'defref_us-gaap_LiabilitiesAndStockholdersEquity\', window' in str(tds):
-            tot_liabilities = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
+            tot_liabilities_calc = html_re(str(tds[colm]))
+            if tot_liabilities_calc != '---':
+                tot_liabilities = round(check_neg(str(tds), tot_liabilities_calc) * (dollar_multiplier / 1_000_000))
         elif ('this, \'defref_us-gaap_StockholdersEquity\', window' in str(tds) and equity =='---' or
               'this, \'defref_us-gaap_StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest\', window' in str(tds) and equity == '---'
               ):
@@ -458,6 +492,7 @@ def cf_htm(cf_url, headers):
     capex = share_issue = buyback = divpaid = sbc = 0
     cfo = fcf = debt_payment = '---'
     debt_pay = []
+    capex_set = set()
 
     # Find which column has 12 month data
     colm = column_finder_annual_htm(soup)
@@ -472,16 +507,21 @@ def cf_htm(cf_url, headers):
         if ('Net cash from operations' in str(tds) or
             'this, \'defref_us-gaap_NetCashProvidedByUsedInOperatingActivities\', window' in str(tds) or
             'this, \'defref_us-gaap_NetCashProvidedByUsedInOperatingActivitiesContinuingOperations\', window' in str(tds)
-            ):       
-            cfo = html_re(str(tds[colm]))
-            if cfo != '---':
-                cfo = round(check_neg(str(tds), cfo) * (dollar_multiplier / 1_000_000))
+            ): 
+            cfo_calc = html_re(str(tds[colm]))
+            if cfo_calc != '---':
+                cfo = round(check_neg(str(tds), cfo_calc) * (dollar_multiplier / 1_000_000))
         elif ('Additions to property and equipment' in str(tds) or
               'this, \'defref_us-gaap_PaymentsToAcquireProductiveAssets\', window' in str(tds) or
               'this, \'defref_us-gaap_PaymentsToAcquirePropertyPlantAndEquipment\', window' in str(tds) or
-              'this, \'defref_us-gaap_PaymentsForProceedsFromProductiveAssets\', window' in str(tds)
+              'this, \'defref_us-gaap_PaymentsForProceedsFromProductiveAssets\', window' in str(tds) or
+              r"this, 'defref_us-gaap_PaymentsToAcquireRealEstateHeldForInvestment', window" in str(tds) or
+              r"this, 'defref_us-gaap_PaymentsToAcquireOtherPropertyPlantAndEquipment', window" in str(tds)
               ):
-            capex = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
+            capex_calc = html_re(str(tds[colm]))
+            if capex_calc != '---':
+                capex = (round(capex_calc * (dollar_multiplier / 1_000_000)))
+                capex_set.add(capex)
         elif ('this, \'defref_us-gaap_RepaymentsOfDebtMaturingInMoreThanThreeMonths\', window' in str(tds) or
               'this, \'defref_us-gaap_RepaymentsOfLongTermDebt\', window' in str(tds) or
               'this, \'defref_us-gaap_RepaymentsOfDebtAndCapitalLeaseObligations\', window' in str(tds) or
@@ -515,14 +555,18 @@ def cf_htm(cf_url, headers):
               r"this, 'defref_us-gaap_Dividends', window" in str(tds) or
               r"this, 'defref_us-gaap_PaymentsOfOrdinaryDividends', window" in str(tds)
               ):
-            divpaid = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
+            divpaid_calc = html_re(str(tds[colm]))
+            if divpaid_calc != '---':
+                divpaid = (round(divpaid_calc * (dollar_multiplier / 1_000_000)))
         elif ('this, \'defref_us-gaap_ShareBasedCompensation\', window' in str(tds) or
               'this, \'defref_us-gaap_AllocatedShareBasedCompensationExpense\', window' in str(tds)
               ):
-            sbc = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
+            sbc_calc = html_re(str(tds[colm]))
+            if sbc_calc != '---':
+                sbc = (round(sbc_calc * (dollar_multiplier / 1_000_000)))
 
     # Calculate Free Cash Flow
-    fcf = cfo - capex
+    fcf = cfo - sum(capex_set)
 
     # Net out share issuance
     buyback -= share_issue
@@ -564,6 +608,11 @@ def div_htm(div_url, headers):
             elif 'onclick="top.Show.showAR( this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window )' in str(tds):
                 div = html_re(str(tds[index]))
                 return div
+
+        if div == '---':
+            obj = re.findall(r'(?:\$)(\d\.\d\d)(?:</font>)', str(soup))
+            div = sum(list(map(float, obj[-4:])))
+            return div
 
     elif 'Quarterly Financial Information' in soup.find('th').text:
         # Find column with total data        

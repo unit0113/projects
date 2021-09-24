@@ -27,7 +27,7 @@ def rev_test():
     global fails
     # HTML test
     for i, url in enumerate(st.rev_url_list_htm):
-        result = list(sp.rev_htm(url, headers))
+        result = list(sp.rev_htm(url, headers, st.get_sum_per(url)))
         answer = st.rev_answers_htm[i]
         print(result)
         print(answer)
@@ -127,11 +127,38 @@ def div_test():
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
+def eps_catch_test():
+    global fails
+    # HTML test
+    for i, url in enumerate(st.catch_url_list_htm):
+        result = list(sp.eps_catch_htm(url, headers, st.eps_list_htm[i]))
+        answer = st.catch_answers_htm[i]
+        print(result)
+        print(answer)
+        if result != answer:
+            print(url)
+            fails += 1
+        print('-'*100)
+
+    # XML test
+    for i, url in enumerate(st.catch_url_list_xml):
+        result = list(sp.eps_catch_xml(url, headers, st.eps_list_xml[i]))
+        answer = st.catch_answers_xml[i]
+        print(result)
+        print(answer)
+        if result != answer:
+            print(url)
+            fails += 1
+        print('-'*100)
+
+'''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
+
 # TESTS!!!!!
-#rev_test()
+rev_test()
 #bs_test()
 #cf_test()
 #div_test()
+#eps_catch_test()
 
 # Calculate duration of tests
 delta_time = timeit.default_timer() - starttime
