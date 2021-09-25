@@ -311,14 +311,14 @@ def parse_filings(filings, type, headers, splits):
     '''
     
     # Define statements to Parse
-    intro_list = ['DOCUMENT AND ENTITY INFORMATION', 'COVER PAGE', 'COVER', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT', 'COVER PAGE COVER PAGE', 'DEI DOCUMENT', 'COVER DOCUMENT']
+    intro_list = ['DOCUMENT AND ENTITY INFORMATION', 'COVER PAGE', 'COVER', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT', 'COVER PAGE COVER PAGE', 'DEI DOCUMENT', 'COVER DOCUMENT', 'DOCUMENT INFORMATION STATEMENT']
     income_list = ['CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF INCOME ALTERNATIVE', 'CONSOLIDATED STATEMENT OF INCOME', 'INCOME STATEMENTS', 'STATEMENT OF INCOME',
                    'CONSOLIDATED STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED INCOME', 'CONSOLIDATED STATEMENTS OF INCOME', 'CONSOLIDATED STATEMENT OF OPERATIONS', 
                    'CONSOLIDATED STATEMENTS OF EARNINGS (LOSSES)', 'CONSOLIDATED INCOME STATEMENTS', 'CONSOLIDATED STATEMENTS OF OPERATIONS CONSOLIDATED STATEMENTS OF OPERATIONS',
-                   'CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS', 'CONSOLIDATED STATEMENTS OF NET INCOME']
-    bs_list = ['BALANCE SHEETS', 'CONSOLIDATED BALANCE SHEETS', 'STATEMENT OF FINANCIAL POSITION CLASSIFIED', 'CONSOLIDATED BALANCE SHEET', 'CONDENSED CONSOLIDATED BALANCE SHEETS']
+                   'CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS', 'CONSOLIDATED STATEMENTS OF NET INCOME', 'CONSOLIDATED AND COMBINED STATEMENTS OF OPERATIONS']
+    bs_list = ['BALANCE SHEETS', 'CONSOLIDATED BALANCE SHEETS', 'STATEMENT OF FINANCIAL POSITION CLASSIFIED', 'CONSOLIDATED BALANCE SHEET', 'CONDENSED CONSOLIDATED BALANCE SHEETS', 'CONSOLIDATED AND COMBINED BALANCE SHEETS']
     cf_list = ['CASH FLOWS STATEMENTS', 'CONSOLIDATED STATEMENTS OF CASH FLOWS', 'STATEMENT OF CASH FLOWS INDIRECT', 'CONSOLIDATED STATEMENT OF CASH FLOWS',
-               'STATEMENTS OF CONSOLIDATED CASH FLOWS', 'CONSOLIDATED CASH FLOWS STATEMENTS', 'CONDENSED CONSOLIDATED STATEMENTS OF CASH FLOWS']
+               'STATEMENTS OF CONSOLIDATED CASH FLOWS', 'CONSOLIDATED CASH FLOWS STATEMENTS', 'CONDENSED CONSOLIDATED STATEMENTS OF CASH FLOWS', 'CONSOLIDATED AND COMBINED STATEMENTS OF CASH FLOWS']
     div_list = ['DIVIDENDS DECLARED (DETAIL)', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY (PARENTHETICAL)',
                 'SHAREHOLDERS\' EQUITY', 'SHAREHOLDERS\' EQUITY AND SHARE-BASED COMPENSATION - ADDITIONAL INFORMATION (DETAIL) (USD $)', 'SHAREHOLDERS\' EQUITY - ADDITIONAL INFORMATION (DETAIL)',
                 'SHAREHOLDERS\' EQUITY AND SHARE-BASED COMPENSATION - ADDITIONAL INFORMATION (DETAIL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY (PARENTHETICAL)',
@@ -328,7 +328,8 @@ def parse_filings(filings, type, headers, splits):
                 'STOCKHOLDERS\' EQUITY (DIVIDENDS AND DISTRIBUTIONS) (DETAILS)', 'STOCKHOLDERS\' EQUITY (DIVIDENDS) (DETAILS)', 'CONSOLIDATED STATEMENTS OF STOCKHOLDERS\' EQUITY (PARENTHETICALS)',
                 'CONSOLIDATED STATEMENTS OF EQUITY (PARENTHETICAL)', 'EQUITY - CASH DIVIDENDS (DETAILS)', 'SHAREHOLDERS\' EQUITY DIVIDENDS (DETAILS)', 'CONSOLIDATED STATEMENT OF CHANGES IN EQUITY (PARENTHETICALS)',
                 'CONSOLIDATED STATEMENT OF EQUITY (PARENTHETICAL)', 'EQUITY (CHANGES IN EQUITY) (DETAILS)', 'EQUITY (TABLES)', 'CONSOLIDATED STATEMENTS OF EQUITY / CAPITAL (PARENTHETICAL)',
-                'CONSOLIDATED STATEMENTS OF EQUITY/CAPITAL (PARENTHETICAL)']
+                'CONSOLIDATED STATEMENTS OF EQUITY/CAPITAL (PARENTHETICAL)', 'CONSOLIDATED AND COMBINED STATEMENTS OF EQUITY (PARENTHETICAL)', 'DIVIDENDS', 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS\' EQUITY (PARENTHETICAL)',
+                'CONSOLIDATED AND COMBINED STATEMENTS OF EQUITY AND PARTNERSHIP CAPITAL (PARENTHETICAL)']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY']
 
 
@@ -407,7 +408,7 @@ def parse_filings(filings, type, headers, splits):
                 # Create URL and call parser function
                 try:
                     rev_url = base_url + report.htmlfilename.text
-                    rev, gross, research, oi, net, eps, shares, div, ffo = sp.rev_htm(rev_url, headers)
+                    rev, gross, research, oi, net, eps, shares, div, ffo = sp.rev_htm(rev_url, headers, period_end)
                 except:
                     rev_url = base_url + report.xmlfilename.text
                     rev, gross, research, oi, net, eps, shares, div, ffo = sp.rev_xml(rev_url, headers)
@@ -417,7 +418,7 @@ def parse_filings(filings, type, headers, splits):
                 # Create URL and call parser function
                 try:
                     bs_url = base_url + report.htmlfilename.text
-                    cash, assets, debt, liabilities, equity = sp.bs_htm(bs_url, headers)
+                    cash, assets, debt, liabilities, equity = sp.bs_htm(bs_url, headers, period_end)
                 except:
                     bs_url = base_url + report.xmlfilename.text
                     cash, assets, debt, liabilities, equity = sp.bs_xml(bs_url, headers)
@@ -427,7 +428,7 @@ def parse_filings(filings, type, headers, splits):
                 # Create URL and call parser function
                 try:
                     cf_url = base_url + report.htmlfilename.text
-                    fcf, debt_pay, buyback, divpaid, sbc = sp.cf_htm(cf_url, headers)
+                    fcf, debt_pay, buyback, divpaid, sbc = sp.cf_htm(cf_url, headers, period_end)
                 except:
                     cf_url = base_url + report.xmlfilename.text
                     fcf, debt_pay, buyback, divpaid, sbc = sp.cf_xml(cf_url, headers)
@@ -437,7 +438,7 @@ def parse_filings(filings, type, headers, splits):
                 # Create URL and call parser function
                 try:
                     div_url = base_url + report.htmlfilename.text
-                    div = sp.div_htm(div_url, headers)
+                    div = sp.div_htm(div_url, headers, period_end)
                 except:
                     div_url = base_url + report.xmlfilename.text
                     div = sp.div_xml(div_url, headers)

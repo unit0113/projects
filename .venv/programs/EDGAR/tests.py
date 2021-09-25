@@ -53,7 +53,7 @@ def bs_test():
     global fails
     # HTML test
     for i, url in enumerate(st.bs_url_list_htm):
-        result = list(sp.bs_htm(url, headers))
+        result = list(sp.bs_htm(url, headers, st.get_sum_per(url)))
         answer = st.bs_answers_htm[i]
         print(result)
         print(answer)
@@ -79,7 +79,7 @@ def cf_test():
     global fails
     # HTML test
     for i, url in enumerate(st.cf_url_list_htm):
-        result = list(sp.cf_htm(url, headers))
+        result = list(sp.cf_htm(url, headers, st.get_sum_per(url)))
         answer = st.cf_answers_htm[i]
         print(result)
         print(answer)
@@ -105,7 +105,7 @@ def div_test():
     global fails
     # HTML test
     for i, url in enumerate(st.div_url_list_htm):
-        result = sp.div_htm(url, headers)
+        result = sp.div_htm(url, headers, st.get_sum_per_div(url))
         answer = st.div_answers_htm[i]
         print(result)
         print(answer)
@@ -154,7 +154,7 @@ def eps_catch_test():
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
 # TESTS!!!!!
-rev_test()
+#rev_test()
 #bs_test()
 #cf_test()
 #div_test()

@@ -97,22 +97,37 @@ def column_finder_annual_htm(soup, per):
     # Find index for period end
     if per in str(head2):
         rows = head2.find_all('th')
-        for index, row in enumerate(rows):
-            if per in str(row) and '3 Months Ended' not in str(row) and '4 Months Ended' not in str(row):
+        index = 0
+        for row1 in rows:
+            if per in str(row1):
                 # Find correct column if multiple things before 12 months data
                 col_index = 0
                 colm = 0
                 rows2 = head.find_all('th')
-                for row in rows2:
+                
+                # Go through colms and check if index lines up with 12 month data
+                for row2 in rows2:
+                    # Restart loop if data ends on 3 or 4 month data, else, get new index and start loop over
                     if col_index > index:
-                        if '3 Months Ended' in str(row) or '4 Months Ended' in str(row):
+                        if '3 Months Ended' in str(row2) or '4 Months Ended' in str(row2):
                             break 
                         else:
                             return colm           
-                    if 'colspan' in str(row):
-                        colm_part = re.search(r'(?:colspan=\"(\d\d?)\")', str(row), re.M)
+                    if 'colspan' in str(row2):
+                        colm_part = re.search(r'(?:colspan=\"(\d\d?)\")', str(row2), re.M)
                         colm += int(colm_part.group(1))
                         col_index += int(colm_part.group(1))
+                        col_last = int(colm_part.group(1))
+            
+            # Check for wide date columns
+            if 'colspan' in str(row1):
+                index_part = re.search(r'(?:colspan=\"(\d\d?)\")', str(row1), re.M)
+                index += int(index_part.group(1))
+            else:
+                index += 1
+
+        return (colm - col_last)
+
     else:
         # Find correct column accounting for empties prior to data
         colm = re.search(r'(?:colspan=\"(\d\d?)\")', str(head), re.M)
@@ -209,6 +224,9 @@ def sum_htm(sum_url, headers):
             period_end_str = tds[1].text.strip()
             period_end = period_end_str.replace('  ', ' ')
 
+    # Remove extra spaces and line breaks from date
+    period_end = " ".join(period_end.split())
+
     return fy, period_end
 
 
@@ -293,7 +311,15 @@ def rev_htm(rev_url, headers, per):
             non_attributable_net = html_re(str(tds[colm]))
             if net != '---' and net_actual == False and non_attributable_net != '---':
                 non_attributable_net = check_neg(str(tds), non_attributable_net)
-                net -= round(non_attributable_net * (dollar_multiplier / 1_000_000))
+                if ('Net income attributable to noncontrolling interests' in str(tds) or
+                    'Net earnings from continuing operations attributable to noncontrolling interests' in str(tds) or
+                    'Net loss from discontinued operations attributable to noncontrolling interests' in str(tds) or
+                    'Net income attributable to non-controlling interests' in str(tds) or
+                    'Net (earnings) losses attributable to noncontrolling interests' in str(tds)
+                    ):
+                    net += round(non_attributable_net * (dollar_multiplier / 1_000_000))
+                else:
+                    net -= round(non_attributable_net * (dollar_multiplier / 1_000_000))
         elif ('EarningsPerShareDiluted' in str(tds) and eps == '---' or
               'this, \'defref_us-gaap_EarningsPerShareBasicAndDiluted\', window' in str(tds) and eps == '---' or
               r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsPerBasicAndDilutedShare', window" in str(tds) and eps == '---'
@@ -369,7 +395,7 @@ def rev_htm(rev_url, headers, per):
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
-def bs_htm(bs_url, headers):    
+def bs_htm(bs_url, headers, per):    
     ''' Parse .htm balance sheet statement
 
     Args:
@@ -393,7 +419,7 @@ def bs_htm(bs_url, headers):
     intangible_assets_set = set()
 
     # Find which column has 12 month data
-    colm = column_finder_annual_htm(soup)
+    colm = column_finder_annual_htm(soup, per)
 
     # Determine multiplier
     head = soup.find('th')
@@ -470,7 +496,7 @@ def bs_htm(bs_url, headers):
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
-def cf_htm(cf_url, headers):
+def cf_htm(cf_url, headers, per):
     ''' Parse .htm cash flow statement
 
     Args:
@@ -491,11 +517,12 @@ def cf_htm(cf_url, headers):
     # Initial values
     capex = share_issue = buyback = divpaid = sbc = 0
     cfo = fcf = debt_payment = '---'
-    debt_pay = []
+    debt_pay_set = set()
     capex_set = set()
+    buyback_set = set()
 
     # Find which column has 12 month data
-    colm = column_finder_annual_htm(soup)
+    colm = column_finder_annual_htm(soup, per)
 
     # Determine multiplier
     head = soup.find('th')
@@ -529,18 +556,23 @@ def cf_htm(cf_url, headers):
               'this, \'defref_us-gaap_RepaymentsOfDebt\', window' in str(tds) or
               'RepaymentsOfShortTermAndLongTermBorrowings\', window' in str(tds) or
               'this, \'defref_us-gaap_RepaymentsOfLongTermDebtAndCapitalSecurities\', window' in str(tds) or
-              'this, \'defref_us-gaap_InterestPaidNet\', window' in str(tds)
+              'this, \'defref_us-gaap_InterestPaidNet\', window' in str(tds) or
+              r"this, 'defref_pld_RepurchaseOfAndRepaymentsOnDebtExcludingLineOfCredit', window" in str(tds)
               ):
             debt_payment = html_re(str(tds[colm]))
             if debt_payment != '---':
-                debt_pay.append(round(debt_payment * (dollar_multiplier / 1_000_000)))
+                debt_pay_set.add(round(debt_payment * (dollar_multiplier / 1_000_000)))
         elif ('Common stock repurchased' in str(tds) or
-              'this, \'defref_us-gaap_PaymentsForRepurchaseOfCommonStock\', window' in str(tds) or
-              'Shares repurchased under stock compensation plans' in str(tds)
+              'this, \'defref_us-gaap_PaymentsForRepurchaseOfCommonStock\', window' in str(tds) and 'Redemption of common limited partnership units' not in str(tds) or
+              'Shares repurchased under stock compensation plans' in str(tds) or
+              r"this, 'defref_us-gaap_PaymentsForRepurchaseOfEquity', window" in str(tds) or
+              r"this, 'defref_pld_PaymentsForRepurchaseOfPreferredStock', window" in str(tds) or
+              r"this, 'defref_us-gaap_ProceedsFromIssuanceOrSaleOfEquity', window" in str(tds)
               ):
             buyback_calc = html_re(str(tds[colm]))
             if buyback_calc != '---':
-                buyback += (round(buyback_calc * (dollar_multiplier / 1_000_000)))
+                buyback = (round(buyback_calc * (dollar_multiplier / 1_000_000)))
+                buyback_set.add(buyback)
         elif ('this, \'defref_us-gaap_ProceedsFromStockOptionsExercised\', window' in str(tds) or
               'this, \'defref_us-gaap_ProceedsFromIssuanceOfCommonStock\', window' in str(tds) or
               'this, \'defref_us-gaap_ProceedsFromIssuanceOfSharesUnderIncentiveAndShareBasedCompensationPlansIncludingStockOptions\', window' in str(tds)
@@ -571,14 +603,15 @@ def cf_htm(cf_url, headers):
     # Net out share issuance
     buyback -= share_issue
 
-    # Sum debt payments, get rid of duplicates
-    debt_pay = sum(set(debt_pay))
+    # Sum debt payments and buybacks (seperately), get rid of duplicates
+    debt_pay = sum(debt_pay_set)
+    buyback = sum(buyback_set)
 
     return fcf, debt_pay, buyback, divpaid, sbc
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
-def div_htm(div_url, headers):
+def div_htm(div_url, headers, per):
     ''' Parse various .htm docs for div data
 
     Args:
@@ -663,7 +696,7 @@ def div_htm(div_url, headers):
 
         # If data is not quarterly
         elif 'QUARTERLY' not in soup.text.upper() and div == '---':
-            colm = column_finder_annual_htm(soup)
+            colm = column_finder_annual_htm(soup, per)
 
             # Check for three month data prior to 12 month data
             if '4 Months Ended' in str(soup):
