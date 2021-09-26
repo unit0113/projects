@@ -11,6 +11,7 @@ import re
 import math
 import yfinance as yf
 import numpy as np
+from fuzzywuzzy import fuzz
 
 
 class StockData:
@@ -96,6 +97,9 @@ def split_factor_calc(splits, per):
     # Check if there are any splits, if none, return False
     if splits.empty:
         return False
+
+    # Convert strings to datetime objects
+    per = [datetime.strptime(period.replace('.', ''), '%b %d, %Y').date() for period in per]
 
     # Pull and adjust split data from yf
     split_list_date = splits.index.values.tolist()
@@ -329,9 +333,8 @@ def parse_filings(filings, type, headers, splits):
                 'CONSOLIDATED STATEMENTS OF EQUITY (PARENTHETICAL)', 'EQUITY - CASH DIVIDENDS (DETAILS)', 'SHAREHOLDERS\' EQUITY DIVIDENDS (DETAILS)', 'CONSOLIDATED STATEMENT OF CHANGES IN EQUITY (PARENTHETICALS)',
                 'CONSOLIDATED STATEMENT OF EQUITY (PARENTHETICAL)', 'EQUITY (CHANGES IN EQUITY) (DETAILS)', 'EQUITY (TABLES)', 'CONSOLIDATED STATEMENTS OF EQUITY / CAPITAL (PARENTHETICAL)',
                 'CONSOLIDATED STATEMENTS OF EQUITY/CAPITAL (PARENTHETICAL)', 'CONSOLIDATED AND COMBINED STATEMENTS OF EQUITY (PARENTHETICAL)', 'DIVIDENDS', 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS\' EQUITY (PARENTHETICAL)',
-                'CONSOLIDATED AND COMBINED STATEMENTS OF EQUITY AND PARTNERSHIP CAPITAL (PARENTHETICAL)']
+                'CONSOLIDATED AND COMBINED STATEMENTS OF EQUITY AND PARTNERSHIP CAPITAL (PARENTHETICAL)', 'EQUITY', 'DISTRIBUTIONS (DETAILS)', 'DISTRIBUTIONS']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY']
-
 
     # Lists for data frame
     Fiscal_Period = []
@@ -355,6 +358,7 @@ def parse_filings(filings, type, headers, splits):
     Dividend_Payments = []
     Share_Based_Comp = []
     Dividends = []
+    names = []
     
 
     @network_check_decorator(4)
@@ -372,6 +376,7 @@ def parse_filings(filings, type, headers, splits):
         assert reports != None
         return reports
 
+
     for filing in filings:
         content = pull_filing(filing)
         print(filing)
@@ -387,8 +392,10 @@ def parse_filings(filings, type, headers, splits):
                 break
 
         reports = pull_filing_2(xml_summary)
-        div = '---'
-        shares = '---'
+        
+        # Initial values
+        fy = period_end = name = rev = gross = research = oi = net = eps = shares = div = ffo = cash = assets = debt = liabilities = equity = fcf = debt_pay = buyback = divpaid = sbc = '---'
+        diff_comp_flag = False
 
         # Loop through each report with the 'myreports' tag but avoid the last one as this will cause an error
         for report in reports.find_all('report')[:-1]:
@@ -398,11 +405,19 @@ def parse_filings(filings, type, headers, splits):
                 # Create URL and call parser function
                 try:
                     intro_url = base_url + report.htmlfilename.text
-                    fy, period_end = sp.sum_htm(intro_url, headers)
+                    fy, period_end, name = sp.sum_htm(intro_url, headers)
                 except:
                     intro_url = base_url + report.xmlfilename.text
-                    fy, period_end = sp.sum_xml(intro_url, headers)
+                    fy, period_end, name= sp.sum_xml(intro_url, headers)
         
+                # Check if different company than earlier (mergers)
+                if len(names) != 0:
+                    name_diff = fuzz.token_set_ratio(name,names[-1])
+                    if name_diff < 75 and name != '---':
+                        diff_comp_flag = True
+                        print(f'Name comparision between {name} and {names[-1]} failed with a ratio of {name_diff}')
+                        break
+
             # Income Statement
             if report.shortname.text.upper() in income_list:
                 # Create URL and call parser function
@@ -455,8 +470,12 @@ def parse_filings(filings, type, headers, splits):
         
         # Check for repeat data
         if len(Fiscal_Period) != 0:
-            if fy == Fiscal_Period[-1]:
+            if fy == Fiscal_Period[-1] or fy == '---':
                 continue
+
+        # Check for name/company difference
+        if diff_comp_flag == True:
+            break
 
         # Add parsed data to lists for data frame
         Fiscal_Period.append(fy)
@@ -480,6 +499,7 @@ def parse_filings(filings, type, headers, splits):
         Dividend_Payments.append(divpaid)
         Share_Based_Comp.append(sbc)
         Dividends.append(div)
+        names.append(name)
 
         everything = {'FY': Fiscal_Period, 'Per': Period_End, 'Rev': Revenue, 'Gross': Gross_Profit, 'R&D': Research, 'OI': Operating_Income, 'Net': Net_Profit, 'EPS': Earnings_Per_Share,
                       'Shares': Shares_Outstanding, 'FFO': Funds_From_Operations, 'Cash': Cash, 'Assets': Total_Assets, 'Debt': Total_Debt, 'Liabilities': Total_Liabilities, 'SH_Equity': SH_Equity, 'FCF': Free_Cash_Flow,

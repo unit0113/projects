@@ -205,7 +205,8 @@ def sum_htm(sum_url, headers):
         User agent for SEC
     Returns:
         Fiscal year (int)
-        Fiscal period end date (datetime object)        
+        Fiscal period end date
+        Name of company      
     '''
 
     # Get data from site
@@ -213,21 +214,23 @@ def sum_htm(sum_url, headers):
     soup = BeautifulSoup(content, 'html.parser')
 
     # Initial values
-    fy = period_end = '---'
+    fy = period_end = name = '---'
 
     # Loop through rows, search for FY and period end date
     for row in soup.table.find_all('tr'):
         tds = row.find_all('td')
         if r"this, 'defref_dei_DocumentFiscalYearFocus', window" in str(tds):
             fy = int(tds[1].text)
-        if r"this, 'defref_dei_DocumentPeriodEndDate', window" in str(tds):
+        elif r"this, 'defref_dei_DocumentPeriodEndDate', window" in str(tds):
             period_end_str = tds[1].text.strip()
             period_end = period_end_str.replace('  ', ' ')
+        elif r"this, 'defref_dei_EntityRegistrantName', window" in str(tds):
+            name = str(tds[1].text.strip())
 
     # Remove extra spaces and line breaks from date
     period_end = " ".join(period_end.split())
 
-    return fy, period_end
+    return fy, period_end, name
 
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
@@ -256,7 +259,7 @@ def rev_htm(rev_url, headers, per):
 
     # Initial values
     gross = oi = net = eps = cost = shares = div = '---'
-    rev = share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = operating_exp = 0
+    rev = share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = operating_exp = int_rev = oth_rev = 0
     share_set = set()
     net_actual = False
 
@@ -282,6 +285,17 @@ def rev_htm(rev_url, headers, per):
                 rev_calc = round(rev_calc * (dollar_multiplier / 1_000_000))
                 if rev_calc > rev:
                     rev = rev_calc
+        elif (r"this, 'defref_us-gaap_InterestIncomeExpenseNet', window" in str(tds)
+              ):
+            int_rev_calc = html_re(str(tds[colm]))
+            if int_rev_calc != '---':
+                int_rev = round(int_rev_calc * (dollar_multiplier / 1_000_000))
+        elif (r"this, 'defref_us-gaap_NoninterestIncome', window" in str(tds) or
+              r"this, 'defref_us-gaap_OtherIncome', window" in str(tds)
+              ):
+            oth_rev_calc = html_re(str(tds[colm]))
+            if oth_rev_calc != '---':
+                oth_rev = round(oth_rev_calc * (dollar_multiplier / 1_000_000))
         elif r'defref_us-gaap_GrossProfit' in str(tds):
             gross = html_re(str(tds[colm]))
             if gross != '---':
@@ -357,16 +371,20 @@ def rev_htm(rev_url, headers, per):
             if result != '---':
                 impairment = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000)) 
         elif r"this, 'defref_us-gaap_GainsLossesOnSalesOfInvestmentRealEstate', window" in str(tds):
-            disposition = html_re(str(tds[colm]))
-            if disposition != '---':
-                disposition = round(check_neg(str(tds), disposition) * (dollar_multiplier / 1_000_000))  
+            result = html_re(str(tds[colm]))
+            if result != '---':
+                disposition = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000))  
         elif r"this, 'defref_us-gaap_CostsAndExpenses', window" in str(tds):
-            operating_exp_res = html_re(str(tds[colm]))
-            if operating_exp_res != '---':
-                operating_exp = round(check_neg(str(tds), operating_exp_res) * (dollar_multiplier / 1_000_000))         
+            result = html_re(str(tds[colm]))
+            if result != '---':
+                operating_exp = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000))         
 
     # Calculate share total
     share_sum = sum(share_set)
+
+    # Calculate rev for REITs if total not given
+    if rev < int_rev and 'Other income, net' in str(soup) and int_rev != 0 and oth_rev != 0:
+        rev = int_rev + oth_rev
 
     # Calculate gross if not listed
     if gross == '---':
@@ -466,13 +484,18 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_us-gaap_UnsecuredLongTermDebt', window" in str(tds) or
               r"this, 'defref_us-gaap_LongTermNotesPayable', window" in str(tds) or
               r"this, 'defref_stor_NonRecourseDebtNet', window" in str(tds) or
-              r"this, 'defref_us-gaap_DebtInstrumentCarryingAmount', window" in str(tds)
+              r"this, 'defref_us-gaap_DebtInstrumentCarryingAmount', window" in str(tds) or
+              r"this, 'defref_us-gaap_DebtAndCapitalLeaseObligations', window" in str(tds) or
+              r"this, 'defref_us-gaap_ConvertibleDebt', window" in str(tds) or
+              r"this, 'defref_us-gaap_SecuredDebt', window" in str(tds) or
+              r"this, 'defref_us-gaap_SeniorNotes', window" in str(tds) or
+              r"this, 'defref_us-gaap_JuniorSubordinatedDebentureOwedToUnconsolidatedSubsidiaryTrust', window" in str(tds)
               ):
-            debt = html_re(str(tds[colm]))
-            if debt == '---':
+            result = html_re(str(tds[colm]))
+            if result == '---':
                 debt = 0
             else:
-                debt = round(debt * (dollar_multiplier / 1_000_000))
+                debt += round(result * (dollar_multiplier / 1_000_000))
         elif 'this, \'defref_us-gaap_LiabilitiesAndStockholdersEquity\', window' in str(tds):
             tot_liabilities_calc = html_re(str(tds[colm]))
             if tot_liabilities_calc != '---':
@@ -557,7 +580,8 @@ def cf_htm(cf_url, headers, per):
               'RepaymentsOfShortTermAndLongTermBorrowings\', window' in str(tds) or
               'this, \'defref_us-gaap_RepaymentsOfLongTermDebtAndCapitalSecurities\', window' in str(tds) or
               'this, \'defref_us-gaap_InterestPaidNet\', window' in str(tds) or
-              r"this, 'defref_pld_RepurchaseOfAndRepaymentsOnDebtExcludingLineOfCredit', window" in str(tds)
+              r"this, 'defref_pld_RepurchaseOfAndRepaymentsOnDebtExcludingLineOfCredit', window" in str(tds) or
+              r"this, 'defref_us-gaap_ProceedsFromRepaymentsOfDebt', window" in str(tds)
               ):
             debt_payment = html_re(str(tds[colm]))
             if debt_payment != '---':
@@ -575,7 +599,8 @@ def cf_htm(cf_url, headers, per):
                 buyback_set.add(buyback)
         elif ('this, \'defref_us-gaap_ProceedsFromStockOptionsExercised\', window' in str(tds) or
               'this, \'defref_us-gaap_ProceedsFromIssuanceOfCommonStock\', window' in str(tds) or
-              'this, \'defref_us-gaap_ProceedsFromIssuanceOfSharesUnderIncentiveAndShareBasedCompensationPlansIncludingStockOptions\', window' in str(tds)
+              'this, \'defref_us-gaap_ProceedsFromIssuanceOfSharesUnderIncentiveAndShareBasedCompensationPlansIncludingStockOptions\', window' in str(tds) or
+              r"this, 'defref_us-gaap_ProceedsFromIssuanceOfCommonStock', window" in str(tds)
               ):
             share_issue_rtn = html_re(str(tds[colm]))
             if share_issue_rtn != '---':
@@ -600,12 +625,12 @@ def cf_htm(cf_url, headers, per):
     # Calculate Free Cash Flow
     fcf = cfo - sum(capex_set)
 
-    # Net out share issuance
-    buyback -= share_issue
-
     # Sum debt payments and buybacks (seperately), get rid of duplicates
     debt_pay = sum(debt_pay_set)
     buyback = sum(buyback_set)
+
+    # Net out share issuance
+    buyback -= share_issue
 
     return fcf, debt_pay, buyback, divpaid, sbc
 
@@ -620,7 +645,7 @@ def div_htm(div_url, headers, per):
     Returns:
         Dividend (float)
     '''
-
+    pd.set_option('display.max_columns', None)
     # Get data from site
     content = requests.get(div_url, headers=headers).content
     soup = BeautifulSoup(content, 'html.parser')
@@ -638,14 +663,57 @@ def div_htm(div_url, headers, per):
                 for index, row in enumerate(tds):
                     if not re.findall(r'\d', str(row)):
                         break
-            elif 'onclick="top.Show.showAR( this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window )' in str(tds):
+            elif 'onclick="top.Show.showAR( this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window )' in str(tds) and 'Distributions (Details)' not in str(soup):
                 div = html_re(str(tds[index]))
                 return div
 
+        if 'onclick="top.Show.showAR( this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window )' in str(soup) and 'Distributions (Details) (USD $)' in str(soup):
+            # Find index for yearly div data
+            cells = soup.find_all('div')
+            stock_flag = False
+            div_index = 0
+            for index in range(len(cells)):
+                if 'Common Stock' in str(cells[index]):
+                    stock_flag = True                
+                else:
+                    if stock_flag == True and per in str(cells[index]):
+                        break
+                    else:
+                        stock_flag = False
+                    div_index += 1
+
+            # Find row with div data
+            for row in soup.table.find_all('tr'):
+                tds = row.find_all('td')
+                if r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds):
+                    div = html_re(str(tds[div_index]))
+                    return div
+
         if div == '---':
             obj = re.findall(r'(?:\$)(\d\.\d\d)(?:</font>)', str(soup))
-            div = sum(list(map(float, obj[-4:])))
-            return div
+            if obj != []:
+                div = sum(list(map(float, obj[-4:])))
+                return div
+        
+        # For large dive table with preferred shares (IIPR)
+        if div == '---':
+            try:
+                table = pd.read_html(content, match='Declaration Date')[1]
+                table_filtered = table[table[2] == 'Common stock']
+                div_list = list(table_filtered[5][-4:])
+                div = sum(map(float, div_list))
+                return div
+            except:
+                pass
+        
+        # For really weird html table
+        if div =='---':
+            obj = re.findall(r'(?:size=\"2\">)(\d\.\d\d\d?)(?:</font></td>)', str(soup), re.M)
+            if obj != []:
+                if 'For Quarter' in str(soup):
+                    div = sum(map(float, obj[0:4]))
+                else:
+                    div = float(obj[0])
 
     elif 'Quarterly Financial Information' in soup.find('th').text:
         # Find column with total data        
@@ -752,7 +820,7 @@ def div_htm(div_url, headers, per):
             # Create tables with Pandas
             tables = soup.find_all('table')[0] 
             panda = pd.read_html(str(tables))
-            pd.set_option('display.max_columns', None)
+
             # Look for table with div data
             for table in panda:
                 if ('Dividends Per Share' in table.values or
@@ -818,6 +886,14 @@ def div_htm(div_url, headers, per):
                         except:
                             continue
                     break
+
+            if div == '---':
+                try:
+                    table = pd.read_html(content, match='Dividend')[1]
+                    div_list = list(table[3][-4:])
+                    div = round(sum(map(float, div_list)), 2)
+                except:
+                    pass
 
     return div
 
@@ -950,7 +1026,8 @@ def sum_xml(sum_url, headers):
         User agent for SEC
     Returns:
         Fiscal year (int)
-        Fiscal period end date (datetime object)        
+        Fiscal period end date
+        Name of company       
     '''
 
     # Get data from site
@@ -958,7 +1035,7 @@ def sum_xml(sum_url, headers):
     soup = BeautifulSoup(content, 'xml')
 
     # Initial values
-    fy = period_end = '---'
+    fy = period_end = name = '---'
 
     # Loop through rows, search for FY and period end date
     rows = soup.find_all('Row')
@@ -968,9 +1045,17 @@ def sum_xml(sum_url, headers):
             fy = int(obj.group(1))
         elif r'dei_DocumentPeriodEndDate' in str(row):
             obj = re.search(r'(?:<NonNumbericText>)(.*?)(?:</NonNumbericText>)', str(row), re.M)
-            period_end = datetime.strptime(obj.group(1), '%Y-%m-%d')  
+            period_end = datetime.strptime(obj.group(1), '%Y-%m-%d')
+            period_end = period_end.strftime('%b. %d, %Y')
+            if 'May' in period_end:
+                period_end = period_end.replace('May.', 'May')
+            if ', 0' in period_end:
+                period_end = period_end.replace(', 0.', ', ')
+        if r'dei_EntityRegistrantName' in str(row):
+            obj = re.search(r'(?:<NonNumbericText>)(.*)(?:</NonNumbericText>)', str(row), re.M)
+            name = str(obj.group(1).strip())
 
-    return fy, period_end
+    return fy, period_end, name
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
@@ -1126,7 +1211,8 @@ def bs_xml(bs_url, headers):
         elif r'<ElementName>us-gaap_Assets</ElementName>' in str(row):
             assets = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))       
         elif (r'us-gaap_LongTermDebtNoncurrent' in str(row) or
-              r'us-gaap_LongTermDebtAndCapitalLeaseObligations' in str(row)
+              r'us-gaap_LongTermDebtAndCapitalLeaseObligations' in str(row) or
+              r'<ElementName>us-gaap_LongTermDebt</ElementName>' in str(row)
               ):
             debt = xml_re(str(cells[colm]))
             if debt == '---':

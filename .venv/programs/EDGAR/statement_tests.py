@@ -1,7 +1,9 @@
 import json
 import statement_parser as sp
+import edgarquery as eq
 import math
 import re
+import yfinance as yf
 
 # Header data for data pull
 with open(r'C:\Users\unit0\OneDrive\Desktop\EDGAR\user_agent.txt') as f:
@@ -9,7 +11,7 @@ with open(r'C:\Users\unit0\OneDrive\Desktop\EDGAR\user_agent.txt') as f:
     headers = json.loads(data)
 
 
-sum_url = r'https://www.sec.gov/Archives/edgar/data/1553023/000155302321000012/R1.htm'
+sum_url = r'https://www.sec.gov/Archives/edgar/data/320193/000032019320000096/R1.htm'
 
 # Sum Test
 #print(sp.sum_htm(sum_url, headers))
@@ -18,7 +20,7 @@ sum_url = r'https://www.sec.gov/Archives/edgar/data/1553023/000155302321000012/R
 
 def get_sum_per(url):
     sum_url = url[:-6] + 'R1.htm'
-    fy, per = sp.sum_htm(sum_url, headers)
+    fy, per, name = sp.sum_htm(sum_url, headers)
     return per
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
@@ -37,7 +39,7 @@ rev_url_list_htm = [r'https://www.sec.gov/Archives/edgar/data/789019/00015645902
                     r'https://www.sec.gov/Archives/edgar/data/916365/000091636519000035/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1551152/000104746916010239/R2.htm', r'https://www.sec.gov/Archives/edgar/data/318154/000031815420000017/R2.htm',
                     r'https://www.sec.gov/Archives/edgar/data/318154/000119312512086670/R3.htm', r'https://www.sec.gov/Archives/edgar/data/1287865/000119312518067584/R4.htm', r'https://www.sec.gov/Archives/edgar/data/1287865/000156459021009901/R4.htm',
                     r'https://www.sec.gov/Archives/edgar/data/1553023/000155302321000012/R4.htm', r'https://www.sec.gov/Archives/edgar/data/1553023/000155302318000029/R4.htm', r'https://www.sec.gov/Archives/edgar/data/1553023/000155302316000152/R4.htm',
-                    r'https://www.sec.gov/Archives/edgar/data/764478/000076447813000014/R4.htm']
+                    r'https://www.sec.gov/Archives/edgar/data/764478/000076447813000014/R4.htm', r'https://www.sec.gov/Archives/edgar/data/1253986/000110465921025551/R4.htm']
 
 rev_answers_htm = [[168088, 115856, 20716, 69916, 61271, 8.05, 7608000, '---', 61271], [274515, 104956, 18752, 66288, 57411, 3.28, 17528214, '---', 57411], [215639, 84263, 10045, 60024, 45687, 8.31, 5500281, 2.18, 45687],
                    [170910, 64304, 4475, 48999, 37037, 39.75, 931662, 11.4, 37037], [89950, 55689, 13037, 22326, 21204, 2.71, 7832000, 1.56, 21204], [77849, 57600, 10411, 26764, 21863, 2.58, 8470000, 0.92, 21863],
@@ -52,12 +54,12 @@ rev_answers_htm = [[168088, 115856, 20716, 69916, 61271, 8.05, 7608000, '---', 6
                    [7911, 2703, 0, 702, 532, 4.31, 123471, 1.2, 709], [22859, 18359, 4285, 7537, 5144, 3.13, 1637000, 2.1, 5144], [23362, 19006, 4116, 9674, 7842, 12.88, 609000, '---', 7842],
                    [15582, 13155, 3167, 4312, 3683, 4.04, 912000, '---', 3683], [705, 705, 0, 486, 289, 0.82, 350441, '---', 407], [1249, 1249, 0, 499, 430, 0.81, 530461, '---', 678],
                    [1034, 622, 0, 40, 41, 0.35, 117600, '---', 490], [672, 672, 0, 24, -84, -0.95, 88900, '---', 235], [399, 399, 0, 23, -10, -0.3, 54300, '---', 146],
-                   [45085, 10649, 0, -125, -441, -1.3, 338600, '---', -441]]
+                   [45085, 10649, 0, -125, -441, -1.3, 338600, '---', -441], [434, 434, 0, '---', 171, 1.41, 133969, '---', 179]]
 
-rev_url = r'https://www.sec.gov/Archives/edgar/data/764180/000076418020000018/R4.htm'
+rev_url = r'https://www.sec.gov/Archives/edgar/data/1253986/000104746916010477/R4.htm'
 
 # Rev Test
-#print(sp.rev_htm(rev_url, headers, get_sum_per(rev_url)))
+print(sp.rev_htm(rev_url, headers, get_sum_per(rev_url)))
 
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
@@ -73,20 +75,22 @@ bs_url_list_htm = [r'https://www.sec.gov/Archives/edgar/data/1403161/00014031612
                    r'https://www.sec.gov/Archives/edgar/data/354950/000035495017000005/R2.htm', r'https://www.sec.gov/Archives/edgar/data/354950/000035495020000015/R2.htm', r'https://www.sec.gov/Archives/edgar/data/909832/000090983220000017/R4.htm',
                    r'https://www.sec.gov/Archives/edgar/data/909832/000090983218000013/R2.htm', r'https://www.sec.gov/Archives/edgar/data/77476/000007747621000007/R5.htm', r'https://www.sec.gov/Archives/edgar/data/916365/000091636520000050/R5.htm',
                    r'https://www.sec.gov/Archives/edgar/data/916365/000091636516000140/R3.htm', r'https://www.sec.gov/Archives/edgar/data/319201/000031920120000047/R2.htm', r'https://www.sec.gov/Archives/edgar/data/318154/000031815414000004/R5.htm',
-                   r'https://www.sec.gov/Archives/edgar/data/1538990/000155837021002003/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1053507/000105350721000026/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1287865/000119312517065943/R2.htm']
+                   r'https://www.sec.gov/Archives/edgar/data/1538990/000155837021002003/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1053507/000105350721000026/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1287865/000119312517065943/R2.htm',
+                   r'https://www.sec.gov/Archives/edgar/data/1045609/000119312515062622/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1253986/000110465921025551/R2.htm']
 
 bs_answers_htm = [[16289, 37201, 21071, 44709, 36210], [8162, 26473, 16630, 35219, 34006], [5619, 21735, 15882, 31123, 32912],
                   [1971, 15405, 0, 11156, 27413], [2127, 11656, 0, 8323, 26437], [14224, 276268, 50074, 191791, 141988],
                   [11356, 236780, 66662, 184226, 102330], [7663, 195858, 76073, 168692, 72394], [5595, 154449, 27808, 96140, 80083],
                   [3804, 124693, 12601, 63487, 78944], [6938, 104649, 10713, 54908, 66363], [38016, 323888, 98667, 258549, 65339],
                   [20289, 367304, 97207, 241272, 134047], [13844, 223081, 28987, 120292, 111547], [9815, 111939, 0, 39756, 76615],
-                  [26465, 296996, 13932, 97072, 222544], [10715, 177856, 3969, 44793, 152502], [16549, 127745, 1995, 27130, 120331],
+                  [26465, 296996, 13932, 97072, 222544], [10715, 177856, 3969, 44793, 152502], [16549, 127745, 3990, 27130, 120331],
                   [2538, 40873, 22349, 38633, 4333], [2133, 48982, 28670, 54352, -3116], [12277, 55556, 7514, 36851, 18284],
                   [6055, 40830, 6487, 27727, 12799], [8185, 54846, 40370, 79366, 13454], [84, 5165, 366, 3722, 1567],
                   [64, 2361, 150, 978, 1393], [1234, 5844, 3470, 6599, 2665], [3805, 37895, 29623, 44029, 22096],
-                  [166, 9004, 2213, 3989, 5016], [1746, 26111, 28498, 42453, 4094], [83, 6419, 2909, 3165, 3248]]
+                  [166, 9004, 2213, 3989, 5016], [1746, 26111, 28498, 42453, 4094], [83, 6419, 5818, 3165, 3248],
+                  [351, 25818, 18760, 10635, 13976], [340, 7556, 3322, 6178, 1344]]
 
-bs_url = r'https://www.sec.gov/Archives/edgar/data/1553023/000155302314000037/R2.htm'
+bs_url = r'https://www.sec.gov/Archives/edgar/data/1253986/000110465921025551/R2.htm'
 
 
 # BS Test
@@ -104,7 +108,8 @@ cf_url_list_htm = [r'https://www.sec.gov/Archives/edgar/data/1652044/00016520441
                    r'https://www.sec.gov/Archives/edgar/data/789019/000119312511200680/R5.htm', r'https://www.sec.gov/Archives/edgar/data/354950/000035495021000089/R7.htm', r'https://www.sec.gov/Archives/edgar/data/354950/000035495015000008/R8.htm',
                    r'https://www.sec.gov/Archives/edgar/data/1318605/000156459019003165/R8.htm', r'https://www.sec.gov/Archives/edgar/data/1318605/000156459016013195/R8.htm', r'https://www.sec.gov/Archives/edgar/data/909832/000144530513002422/R7.htm',
                    r'https://www.sec.gov/Archives/edgar/data/1538990/000155837021002003/R8.htm', r'https://www.sec.gov/Archives/edgar/data/1538990/000155837017001015/R8.htm', r'https://www.sec.gov/Archives/edgar/data/764180/000076418021000037/R6.htm',
-                   r'https://www.sec.gov/Archives/edgar/data/14272/000001427216000288/R6.htm', r'https://www.sec.gov/Archives/edgar/data/1553023/000155302316000152/R8.htm']
+                   r'https://www.sec.gov/Archives/edgar/data/14272/000001427216000288/R6.htm', r'https://www.sec.gov/Archives/edgar/data/1553023/000155302316000152/R8.htm', r'https://www.sec.gov/Archives/edgar/data/1045609/000156459021005312/R8.htm',
+                   r'https://www.sec.gov/Archives/edgar/data/1045609/000156459019002872/R7.htm']
 
 cf_answers_htm = [[23907, 4461, 4846, 0, 7679], [9704, 537, 7924, 2664, 416], [11995, 2295, 7028, 1918, 327],
                   [5051, 244, 7062, 1350, 221], [6652, 0, 4027, 1006, 172], [4633, 0, 536, 595, 147],
@@ -115,9 +120,10 @@ cf_answers_htm = [[23907, 4461, 4846, 0, 7679], [9704, 537, 7924, 2664, 416], [1
                   [24639, 814, 9133, 5180, 2166], [16376, 4113, 465, 6451, 310], [6800, 821, 6748, 2530, 225],
                   [-3, 381, -296, 0, 749],[-2159, 32, -837, 0, 198], [1354, 86, -16, 3560, 285],
                   [432, 160, -691, 353, 5], [246, 96, -477, 163, 7], [8154, 2246, 0, 6290, 0],
-                  [1012, 1957, -266, 2477, 235], [-492, 47, -1599, 81, 14], [2937, 6782, 44, 1781, 110]]
+                  [1012, 1957, -266, 2477, 235], [-492, 47, -1599, 81, 14], [2937, 6782, 44, 1781, 110],
+                  [1804, 4166, 7, 1168, 76]]
 
-cf_url = r'https://www.sec.gov/Archives/edgar/data/1045609/000156459021005312/R8.htm'
+cf_url = r'https://www.sec.gov/Archives/edgar/data/1677576/000155837021001890/R6.htm'
 
 # CF Test
 #print(sp.cf_htm(cf_url, headers, get_sum_per(rev_url)))
@@ -133,7 +139,8 @@ div_url_list_htm = [r'https://www.sec.gov/Archives/edgar/data/1403161/0001403161
                     r'https://www.sec.gov/Archives/edgar/data/909832/000090983220000017/R43.htm', r'https://www.sec.gov/Archives/edgar/data/1538990/000155837018001020/R18.htm', r'https://www.sec.gov/Archives/edgar/data/1538990/000155837017001015/R19.htm',
                     r'https://www.sec.gov/Archives/edgar/data/319201/000031920121000029/R7.htm', r'https://www.sec.gov/Archives/edgar/data/319201/000031920119000031/R7.htm', r'https://www.sec.gov/Archives/edgar/data/1053507/000105350721000026/R50.htm',
                     r'https://www.sec.gov/Archives/edgar/data/1053507/000105350716000018/R47.htm', r'https://www.sec.gov/Archives/edgar/data/1053507/000119312515059026/R51.htm', r'https://www.sec.gov/Archives/edgar/data/1287865/000156459021009901/R7.htm',
-                    r'https://www.sec.gov/Archives/edgar/data/1553023/000155302315000039/R19.htm']
+                    r'https://www.sec.gov/Archives/edgar/data/1553023/000155302315000039/R19.htm', r'https://www.sec.gov/Archives/edgar/data/1677576/000155837021001890/R11.htm', r'https://www.sec.gov/Archives/edgar/data/1253986/000110465921025551/R25.htm',
+                    r'https://www.sec.gov/Archives/edgar/data/1253986/000104746914000903/R25.htm', r'https://www.sec.gov/Archives/edgar/data/1253986/000104746913001165/R23.htm', r'https://www.sec.gov/Archives/edgar/data/1253986/000104746912002036/R23.htm']
 
 div_answers_htm = [1.2, 1.0, 0.825,
                    0.48, 0.88, 1.6,
@@ -144,16 +151,17 @@ div_answers_htm = [1.2, 1.0, 0.825,
                    2.7, 1.2, 1.12,
                    3.6, 3.0, 4.53,
                    1.81, 1.4, 1.08,
-                   0.84]
+                   0.84, 4.47, 1.23,
+                   0.5, 0.285, '---']
 
-div_url = r'https://www.sec.gov/Archives/edgar/data/1553023/000155302314000037/R7.htm'
+div_url = r'https://www.sec.gov/Archives/edgar/data/1253986/000104746912002036/R23.htm'
 
 def get_sum_per_div(url):
     obj = re.search(r'(/R\d?\d?\d\.htm)', str(url))
     result = obj.group(1)
     length = len(result) * -1
     sum_url = url[:length] + '/R1.htm'
-    fy, per = sp.sum_htm(sum_url, headers)
+    fy, per, name = sp.sum_htm(sum_url, headers)
     return per
 
 # Div Test
@@ -174,7 +182,7 @@ catch_url = r'https://www.sec.gov/Archives/edgar/data/318154/000119312512086670/
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
-sum_url = r'https://www.sec.gov/Archives/edgar/data/1018724/000119312511016253/R1.xml'
+sum_url = r'https://www.sec.gov/Archives/edgar/data/1045609/000095012311015736/R1.xml'
 
 # XML sum test
 #print(sp.sum_xml(sum_url, headers))
@@ -184,13 +192,13 @@ sum_url = r'https://www.sec.gov/Archives/edgar/data/1018724/000119312511016253/R
 # rev, gross, research, oi, net, eps, share_sum, div, ffo
 rev_url_list_xml = [r'https://www.sec.gov/Archives/edgar/data/1403161/000119312510265236/R4.xml', r'https://www.sec.gov/Archives/edgar/data/320193/000119312510238044/R2.xml', r'https://www.sec.gov/Archives/edgar/data/909832/000119312510230379/R4.xml',
                     r'https://www.sec.gov/Archives/edgar/data/77476/000119312511040427/R2.xml', r'https://www.sec.gov/Archives/edgar/data/764180/000119312511045778/R2.xml', r'https://www.sec.gov/Archives/edgar/data/200406/000095012311018128/R4.xml',
-                    r'https://www.sec.gov/Archives/edgar/data/318154/000095012311018800/R3.xml', r'https://www.sec.gov/Archives/edgar/data/1053507/000119312511050129/R4.xml']
+                    r'https://www.sec.gov/Archives/edgar/data/318154/000095012311018800/R3.xml', r'https://www.sec.gov/Archives/edgar/data/1053507/000119312511050129/R4.xml', r'https://www.sec.gov/Archives/edgar/data/1045609/000095012311015736/R4.xml']
 
 rev_answers_xml = [[8065, 8065, 0, 4589, 2966, 4.01, 1096000, '---', 2966], [65225, 25684, 1782, 18385, 14013, 15.15, 924712, '---', 14013], [77946, 9951, 0, 2077, 1303, 2.92, 445970, 0.77, 1303],
                    [57838, 31263, 0, 8332, 6320, 3.91, 1616368, 1.89, 6320], [24363, 9188, 0, 6228, 3905, 1.87, 2088235, '---', 3905], [61587, 42795, 6844, '---', 13334, 4.78, 2788800, 2.11, 13334],
-                   [15053, 12833, 2894, 5545, 4627, 4.79, 965000, '---', 4627], [1985, 1985, 0, 784, 373, 0.92, 404072, '---', 834]]
+                   [15053, 12833, 2894, 5545, 4627, 4.79, 965000, '---', 4627], [1985, 1985, 0, 784, 373, 0.92, 404072, '---', 834], []]
 
-rev_url = r'https://www.sec.gov/Archives/edgar/data/1053507/000119312511050129/R4.xml'
+rev_url = r'https://www.sec.gov/Archives/edgar/data/1045609/000095012311015736/R4.xml'
 
 # XML rev test
 #print(sp.rev_xml(rev_url, headers))
@@ -199,12 +207,12 @@ rev_url = r'https://www.sec.gov/Archives/edgar/data/1053507/000119312511050129/R
 
 # cash, assets, debt, liabilities, equity
 bs_url_list_xml = [r'https://www.sec.gov/Archives/edgar/data/1403161/000119312510265236/R2.xml', r'https://www.sec.gov/Archives/edgar/data/1018724/000119312511016253/R5.xml', r'https://www.sec.gov/Archives/edgar/data/320193/000119312510238044/R3.xml',
-                   r'https://www.sec.gov/Archives/edgar/data/354950/000119312511076501/R3.xml', r'https://www.sec.gov/Archives/edgar/data/909832/000119312510230379/R2.xml']
+                   r'https://www.sec.gov/Archives/edgar/data/354950/000119312511076501/R3.xml', r'https://www.sec.gov/Archives/edgar/data/909832/000119312510230379/R2.xml', r'https://www.sec.gov/Archives/edgar/data/1045609/000095012311015736/R2.xml']
 
 bs_answers_xml = [[3867, 10483, 32, 8394, 25011], [3777, 17448, 0, 11933, 6864], [11261, 74100, 0, 27392, 47791],
-                  [545, 38938, 8707, 21236, 18889], [3214, 23815, 2141, 12885, 10829]]
+                  [545, 38938, 8707, 21236, 18889], [3214, 23815, 2141, 12885, 10829], [198, 7373, 3331, 3671, 3321]]
 
-bs_url = r'https://www.sec.gov/Archives/edgar/data/1018724/000119312511016253/R5.xml'
+bs_url = r'https://www.sec.gov/Archives/edgar/data/1045609/000095012311015736/R2.xml'
 
 # XML bs test
 #print(sp.bs_xml(bs_url, headers))
@@ -247,109 +255,16 @@ catch_url = r'https://www.sec.gov/Archives/edgar/data/318154/000095012311018800/
 #print(sp.eps_catch_xml(catch_url_list_xml[index], headers, eps_list_xml[index]))
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
+tickers = ['AAPL']
 
-Earnings_Per_Share = [[3.28, 11.89, 11.91, 9.21, 8.31, 9.22, 6.45, 39.75, 44.15, 27.68, 15.15], [4.89, 5.32, 4.42, 2.8, 2.48, 2.58, 8.62, 7.59, 3.16, 5.16, 4.01],
-                      [0.64, -0.7, -0.82, -1.69, -0.67, -0.99, -0.34, -0.09, -0.53, -0.0, -0.0]]
-Shares_Outstanding = [[17528214, 4648913, 5000109, 5251692, 5500281, 5793069, 6122663, 931662, 945355, 936645, 924712], [2479, 2529, 2586, 2654, 2678, 2724, 902, 929, 964, 1022, 1096],
-                      [1083, 1239, 1193675, 1160306, 1009484, 897414, 871775401, 835949898, 751444316, 751771608, 751771608]]
-Dividends = [[0.68, 3.0, 2.72, 2.4, 2.18, 1.98, 1.82, 11.4, 2.65, '---', '---'], [1.2, 1.0, 0.825, 0.66, 0.56, 0.48, 1.6, 1.32, 0.88, 0.6, 0.5],
-             ['---', '---', '---', '---', '---', '---', '---', '---', '---', '---', '---']]
-index = 2           # Change me!
-eps = Earnings_Per_Share[index]
-shares = Shares_Outstanding[index]
-div = Dividends[index]
+per = [['Sep. 26, 2020', 'Sep. 28, 2019', 'Sep. 29, 2018', 'Sep. 30, 2017', 'Sep. 24, 2016', 'Sep. 26, 2015', 'Sep. 27, 2014', 'Sep. 28, 2013', 'Sep. 29, 2012', 'Sep. 24, 2011', 'Sep. 25, 2010']]
 
-def split_test(Earnings_Per_Share, Shares_Outstanding, Dividends):
-    ''' Adjust share and per share metrics based on stock splits and mutltiples changes
+index = 0    # Change me!
 
-    Args:
-        EPS (list), shares outstanding (list), dividends (list)
-    Returns:
-        split adjusted EPS (list), adjusted shares outstanding (list), split adjusted dividends (list)
-    '''
-    # Determine if share split occured, and adjust per share metrics
-    split_factor = 1
-    adjusted_shares = [Shares_Outstanding[0]]
+def get_splits(ticker):
+    stock = yf.Ticker(ticker)
+    splits = stock.splits
+    return splits
 
-    # Loop through share count and look for major differences
-    for i in range(1, len(Shares_Outstanding)):
-        share_ratio = (Shares_Outstanding[i-1] / Shares_Outstanding[i])
-        
-        # If difference found, update split factor
-        if share_ratio >= 1.45 or share_ratio <= 0.70:
-            split_factor *= math.ceil(share_ratio)
-        
-        # If there have been splits, adjust per share metrics
-        if split_factor != 1:
-            Earnings_Per_Share[i] = round(Earnings_Per_Share[i] / split_factor, 2)
-            if Dividends[i] != '---':
-                Dividends[i] = round(Dividends[i] / split_factor, 3)
-    
-        # Append shares to adjusted shares
-        adjusted_shares.append(Shares_Outstanding[i] * split_factor)    
-    
-    return Earnings_Per_Share, adjusted_shares, Dividends
-
-
-
-multi_values = [[51628, 33772, 29388963, 28233633, 22287931, 8092460, 5849251, 2416930, 1114190, 713448, 713448], [31536, 24578, 21461268, 11758751, 7000132, 4046025, 3198356, 2013496, 413256, 204242, 204242],
-                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 9403672, 9415700, 5860049, 2040375, 0, 0, 401495, 268335, 268335], [55556, 45400, 40830000000, 36347000000, 33163, 33440, 33024, 30283, 27140, 26761, 23815],
-                [196, 247, 328, 469, 486, 481, 296, -16, 523, 400, 358]]
-multi_answers = []
-
-multi_index = 5
-values = multi_values[multi_index]
-
-def multiplier_test(values):
-    ''' Adjust numbers based on multplier change
-
-    Args:
-        values (list)
-    Returns:
-        results (list)
-    '''
-
-    multiplier_change = False
-    # Loop through share count and look for major differences
-    for i in range(1, len(values)):
-        if values[i] != 0:
-            ratio = (values[i-1] / values[i])
-        
-            # Check if multiplier (thousands, millions) was changed
-            if ratio >= 900 or ratio <= .0015:
-                multiplier_change = True
-                break
-
-    # Adjust for multiplier change
-    if multiplier_change == True:
-        multi_factor = 1
-        results = [values[0]]
-        
-        # Determine where there is a multiplier change
-        for i in range(1, len(values)):
-            if values[i] != 0 and values[i-1] != 0:
-                ratio = abs(values[i-1] / values[i])
-                if ratio > 800_000:
-                    multi_factor *= 1_000_000
-                elif ratio >= 800 and ratio < 1200:
-                    multi_factor *= 1000
-                elif ratio <= 0.0015 and ratio > 0.00001:
-                    multi_factor /= 1000
-                elif ratio < .000005:
-                    multi_factor /= 1_000_000
-            
-            # Adjust for multiplier
-            results.append(int(values[i] * multi_factor))
-
-        return results
-
-    return values
-
-
-# Split Test
-#Earnings_Per_Share, Adjusted_Shares, Dividends = split_test(eps, shares, div)
-#Adjusted_Shares = multiplier_test(Adjusted_Shares)
-#print(Earnings_Per_Share)
-#print(Dividends)
-#print(Adjusted_Shares)
-#print(multiplier_test(values))
+# Split Factor Test
+#print(eq.split_factor_calc(get_splits(tickers[index]), per[index]))

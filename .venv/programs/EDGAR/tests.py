@@ -1,6 +1,3 @@
-import final_answers as ans
-import test_html_new as htest
-import test_xml_new as xtest
 import statement_parser as sp
 import statement_tests as st
 import requests
@@ -157,7 +154,7 @@ def eps_catch_test():
 #rev_test()
 #bs_test()
 #cf_test()
-#div_test()
+div_test()
 #eps_catch_test()
 
 # Calculate duration of tests

@@ -11,6 +11,7 @@ from shutil import copyfile
 global headers
 headers = {}
 
+
 @edgarquery.network_check_decorator(1)
 def get_CIK_list():
     """ Webscrape list of stock tickers and their CIK numbers, ouputs into a dictionary
@@ -362,4 +363,5 @@ Make an executable using PyInstaller
 make user agent file paths programitically
 figure out how to make work for ADR's
 email address checker
+progress bar
 """
