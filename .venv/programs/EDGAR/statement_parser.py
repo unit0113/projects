@@ -338,11 +338,12 @@ def rev_htm(rev_url, headers, per):
                     net -= round(non_attributable_net * (dollar_multiplier / 1_000_000))
         elif ('EarningsPerShareDiluted' in str(tds) and eps == '---' or
               'this, \'defref_us-gaap_EarningsPerShareBasicAndDiluted\', window' in str(tds) and eps == '---' or
-              r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsPerBasicAndDilutedShare', window" in str(tds) and eps == '---'
+              r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsPerBasicAndDilutedShare', window" in str(tds) and eps == '---' or
+              r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsPerDilutedShare', window" in str(tds) and eps == '---'
               ):
-            eps = html_re(str(tds[colm]))
-            if eps != '---':
-                eps = check_neg(str(tds), eps)
+            result = html_re(str(tds[colm]))
+            if result != '---':
+                eps = check_neg(str(tds), result)
         elif (r"this, 'defref_us-gaap_CostOfRevenue', window" in str(tds) and cost == '---' or
               r"this, 'defref_us-gaap_CostOfGoodsSold', window" in str(tds) and cost == '---' or
               r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(tds) and cost == '---' or
@@ -382,6 +383,8 @@ def rev_htm(rev_url, headers, per):
             result = html_re(str(tds[colm]))
             if result != '---':
                 operating_exp = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000))         
+        elif '[Member]' in str(row) and rev != 0:
+            break   
 
     # Calculate share total
     share_sum = sum(share_set)
@@ -451,7 +454,8 @@ def bs_htm(bs_url, headers, per):
     for row in soup.table.find_all('tr'):
         tds = row.find_all('td')
         if ('this, \'defref_us-gaap_CashAndCashEquivalentsAtCarryingValue\', window' in str(tds) or
-            r"this, 'defref_us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents', window" in str(tds)
+            r"this, 'defref_us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents', window" in str(tds) or
+            r"this, 'defref_us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations', window" in str(tds)
             ):
             cash_calc = html_re(str(tds[colm]))
             if cash_calc != '---':
@@ -629,6 +633,8 @@ def cf_htm(cf_url, headers, per):
             sbc_calc = html_re(str(tds[colm]))
             if sbc_calc != '---':
                 sbc = (round(sbc_calc * (dollar_multiplier / 1_000_000)))
+        elif '[Member]' in str(row) and cfo != '---':
+            break    
 
     # Calculate Free Cash Flow
     fcf = cfo - sum(capex_set)
@@ -758,18 +764,31 @@ def div_htm(div_url, headers, per):
         if 'defref_us-gaap_IncreaseDecreaseInStockholdersEquityRollForward' in str(soup):
             for row in soup.table.find_all('tr'):
                 tds = row.find_all('td')
-                if 'this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds):
+                if ('this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds) or
+                    r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds)
+                    ):
                     div = float(re.findall(r'\d+\.\d+', str(tds))[0])
             return div
         
         # If no 12 month data, for divs broken out by quarter
         elif '12 Months Ended' not in str(soup) and 'ABSTRACT' not in soup.find('th').text.upper():
-            for row in soup.table.find_all('tr'):
-                tds = row.find_all('td')
-                if 'this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds):
-                    div = re.findall(r'\d+\.\d+', str(tds))[0:4]
-                    div = sum(list(map(float, div)))
-                    return div
+            if 'this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(soup):
+                for row in soup.table.find_all('tr'):
+                    tds = row.find_all('td')
+                    if 'this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds):
+                        div = re.findall(r'\d+\.\d+', str(tds))[0:4]
+                        div = sum(list(map(float, div)))
+                        return div
+            elif '>CONSOLIDATED STATEMENT OF SHAREOWNERS EQUITY - USD ($)' in str(soup):
+                period_found = False
+                for row in soup.table.find_all('tr'):
+                    if per in str(row):
+                        period_found = True
+                    elif r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(row) and period_found == True:
+                        tds = row.find_all('td')
+                        result = re.search(r'\d+\.\d+', str(tds[1]))
+                        div = float(result.group(0))
+                        return div
 
         # If data is not quarterly
         elif 'QUARTERLY' not in soup.text.upper() and div == '---':
@@ -1310,10 +1329,10 @@ def cf_xml(cf_url, headers):
               r'cost_ProceedsFromStockbasedAwardsNet' in str(row)
               ):
             share_issue = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))   
-        elif (r'us-gaap_PaymentsOfDividendsCommonStock' in str(row) or
-              r'us-gaap_PaymentsOfDividends' in str(row)
+        elif (r'us-gaap_PaymentsOfDividendsCommonStock' in str(row) and divpaid == 0 or
+              r'us-gaap_PaymentsOfDividends' in str(row) and divpaid == 0 
               ):
-            divpaid = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))            
+            divpaid = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))       
         elif r'us-gaap_ShareBasedCompensation' in str(row):
             sbc = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000)) 
     

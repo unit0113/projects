@@ -333,7 +333,9 @@ def parse_filings(filings, type, headers, splits):
                 'CONSOLIDATED STATEMENTS OF EQUITY (PARENTHETICAL)', 'EQUITY - CASH DIVIDENDS (DETAILS)', 'SHAREHOLDERS\' EQUITY DIVIDENDS (DETAILS)', 'CONSOLIDATED STATEMENT OF CHANGES IN EQUITY (PARENTHETICALS)',
                 'CONSOLIDATED STATEMENT OF EQUITY (PARENTHETICAL)', 'EQUITY (CHANGES IN EQUITY) (DETAILS)', 'EQUITY (TABLES)', 'CONSOLIDATED STATEMENTS OF EQUITY / CAPITAL (PARENTHETICAL)',
                 'CONSOLIDATED STATEMENTS OF EQUITY/CAPITAL (PARENTHETICAL)', 'CONSOLIDATED AND COMBINED STATEMENTS OF EQUITY (PARENTHETICAL)', 'DIVIDENDS', 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS\' EQUITY (PARENTHETICAL)',
-                'CONSOLIDATED AND COMBINED STATEMENTS OF EQUITY AND PARTNERSHIP CAPITAL (PARENTHETICAL)', 'EQUITY', 'DISTRIBUTIONS (DETAILS)', 'DISTRIBUTIONS']
+                'CONSOLIDATED AND COMBINED STATEMENTS OF EQUITY AND PARTNERSHIP CAPITAL (PARENTHETICAL)', 'EQUITY', 'DISTRIBUTIONS (DETAILS)', 'DISTRIBUTIONS', 'CONSOLIDATED STATEMENTS OF COMMON SHAREHOLDERS\' EQUITY',
+                'CONSOLIDATED STATEMENTS OF COMMON SHAREHOLDERS\' EQUITY (PARENTHETICAL)', 'SUPPLEMENTAL EQUITY AND COMPREHENSIVE INCOME INFORMATION - DIVIDENDS AND TRANSFER OF OWNERSHIP INTEREST (DETAILS)',
+                'CONSOLIDATED STATEMENT OF SHAREOWNERS EQUITY']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY']
 
     # Lists for data frame
@@ -413,7 +415,7 @@ def parse_filings(filings, type, headers, splits):
                 # Check if different company than earlier (mergers)
                 if len(names) != 0:
                     name_diff = fuzz.token_set_ratio(name,names[-1])
-                    if name_diff < 75 and name != '---':
+                    if name_diff < 60 and name != '---':
                         diff_comp_flag = True
                         print(f'Name comparision between {name} and {names[-1]} failed with a ratio of {name_diff}')
                         break
