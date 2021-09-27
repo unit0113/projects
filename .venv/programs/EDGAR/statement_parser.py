@@ -278,7 +278,8 @@ def rev_htm(rev_url, headers, per):
             r'defref_us-gaap_RevenueFromContractWithCustomerExcludingAssessedTax' in str(tds) or
             r"this, 'defref_us-gaap_SalesRevenueGoodsNet', window" in str(tds) or
             r"this, 'defref_us-gaap_RealEstateRevenueNet', window" in str(tds) or
-            r"this, 'defref_us-gaap_RevenueFromContractWithCustomerIncludingAssessedTax', window" in str(tds)
+            r"this, 'defref_us-gaap_RevenueFromContractWithCustomerIncludingAssessedTax', window" in str(tds) or
+            r"this, 'defref_us-gaap_RegulatedAndUnregulatedOperatingRevenue', window" in str(tds)
             ):
             rev_calc = html_re(str(tds[colm]))
             if rev_calc != '---':
@@ -305,17 +306,17 @@ def rev_htm(rev_url, headers, per):
               r"this, 'defref_us-gaap_ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost', window" in str(tds)
               ):
             research = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
-        elif r"this, 'defref_us-gaap_OperatingIncomeLoss', window" in str(tds):
-            oi = html_re(str(tds[colm]))
-            if oi != '---':
-                oi = round(check_neg(str(tds), oi) * (dollar_multiplier / 1_000_000))
+        elif r"this, 'defref_us-gaap_OperatingIncomeLoss', window" in str(tds) and oi == '---':
+            oi_calc = html_re(str(tds[colm]))
+            if oi_calc != '---':
+                oi = round(check_neg(str(tds), oi_calc) * (dollar_multiplier / 1_000_000))
         elif ('this, \'defref_us-gaap_NetIncomeLoss\', window' in str(tds) and net == '---' or
               'this, \'defref_us-gaap_ProfitLoss\', window' in str(tds) and net == '---' or
               r"this, 'defref_us-gaap_NetIncomeLossAvailableToCommonStockholdersBasic', window" in str(tds) and net == '---'
             ):
-            net = html_re(str(tds[colm]))
-            if net != '---':
-                net = round(check_neg(str(tds), net) * (dollar_multiplier / 1_000_000))
+            net_calc = html_re(str(tds[colm]))
+            if net_calc != '---':
+                net = round(check_neg(str(tds), net_calc) * (dollar_multiplier / 1_000_000))
                 if r"this, 'defref_us-gaap_NetIncomeLossAvailableToCommonStockholdersBasic', window" in str(tds):
                     net_actual = True
         elif (r"this, 'defref_us-gaap_NetIncomeLossAttributableToNoncontrollingInterest', window" in str(tds) or
@@ -329,7 +330,8 @@ def rev_htm(rev_url, headers, per):
                     'Net earnings from continuing operations attributable to noncontrolling interests' in str(tds) or
                     'Net loss from discontinued operations attributable to noncontrolling interests' in str(tds) or
                     'Net income attributable to non-controlling interests' in str(tds) or
-                    'Net (earnings) losses attributable to noncontrolling interests' in str(tds)
+                    'Net (earnings) losses attributable to noncontrolling interests' in str(tds) or
+                    'NET LOSS ATTRIBUTABLE TO NONCONTROLLING INTERESTS' in str(tds)
                     ):
                     net += round(non_attributable_net * (dollar_multiplier / 1_000_000))
                 else:
@@ -374,7 +376,9 @@ def rev_htm(rev_url, headers, per):
             result = html_re(str(tds[colm]))
             if result != '---':
                 disposition = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000))  
-        elif r"this, 'defref_us-gaap_CostsAndExpenses', window" in str(tds):
+        elif (r"this, 'defref_us-gaap_CostsAndExpenses', window" in str(tds) or
+              r"this, 'defref_us-gaap_OperatingExpenses', window" in str(tds)
+              ):
             result = html_re(str(tds[colm]))
             if result != '---':
                 operating_exp = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000))         
@@ -383,7 +387,7 @@ def rev_htm(rev_url, headers, per):
     share_sum = sum(share_set)
 
     # Calculate rev for REITs if total not given
-    if rev < int_rev and 'Other income, net' in str(soup) and int_rev != 0 and oth_rev != 0:
+    if rev < int_rev + oth_rev and 'Other income' in str(soup) and int_rev != 0 and oth_rev != 0:
         rev = int_rev + oth_rev
 
     # Calculate gross if not listed
@@ -432,7 +436,7 @@ def bs_htm(bs_url, headers, per):
     soup = BeautifulSoup(content, 'html.parser')
 
     # Initial values
-    equity = cash = assets = liabilities = '---'
+    equity = cash = assets = liabilities = tot_liabilities = '---'
     intangible_assets = goodwill = debt = 0
     intangible_assets_set = set()
 
@@ -466,9 +470,9 @@ def bs_htm(bs_url, headers, per):
             if intangible_assets_calc != '---':
                 intangible_assets = (round(intangible_assets_calc * (dollar_multiplier / 1_000_000)))
                 intangible_assets_set.add(intangible_assets)
-        elif ('Total assets' in str(tds) or
-              'Total Assets' in str(tds) or
-              r"this, 'defref_us-gaap_Assets', window" in str(tds)
+        elif ('Total assets' in str(tds) and assets == '---' or
+              'Total Assets' in str(tds) and assets == '---' or
+              r"this, 'defref_us-gaap_Assets', window" in str(tds) and assets == '---'
               ):
             assets_calc = html_re(str(tds[colm]))
             if assets_calc != '---':
@@ -496,16 +500,19 @@ def bs_htm(bs_url, headers, per):
                 debt = 0
             else:
                 debt += round(result * (dollar_multiplier / 1_000_000))
-        elif 'this, \'defref_us-gaap_LiabilitiesAndStockholdersEquity\', window' in str(tds):
+        elif 'this, \'defref_us-gaap_LiabilitiesAndStockholdersEquity\', window' in str(tds) and tot_liabilities == '---':
             tot_liabilities_calc = html_re(str(tds[colm]))
             if tot_liabilities_calc != '---':
                 tot_liabilities = round(check_neg(str(tds), tot_liabilities_calc) * (dollar_multiplier / 1_000_000))
         elif ('this, \'defref_us-gaap_StockholdersEquity\', window' in str(tds) and equity =='---' or
-              'this, \'defref_us-gaap_StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest\', window' in str(tds) and equity == '---'
+              'this, \'defref_us-gaap_StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest\', window' in str(tds) and equity == '---' or
+              r"this, 'defref_us-gaap_CommonStockholdersEquity', window" in str(tds) and equity =='---'
               ):
             equity = html_re(str(tds[colm]))
             if equity != '---':
-                equity = round(check_neg(str(tds), equity) * (dollar_multiplier / 1_000_000))          
+                equity = round(check_neg(str(tds), equity) * (dollar_multiplier / 1_000_000))    
+        elif '[Member]' in str(row) and cash != '---':
+            break     
 
     # Calculate liabilites from shareholder equity if not found
     if liabilities == '---' and tot_liabilities != '---' and equity != '---':
@@ -581,7 +588,8 @@ def cf_htm(cf_url, headers, per):
               'this, \'defref_us-gaap_RepaymentsOfLongTermDebtAndCapitalSecurities\', window' in str(tds) or
               'this, \'defref_us-gaap_InterestPaidNet\', window' in str(tds) or
               r"this, 'defref_pld_RepurchaseOfAndRepaymentsOnDebtExcludingLineOfCredit', window" in str(tds) or
-              r"this, 'defref_us-gaap_ProceedsFromRepaymentsOfDebt', window" in str(tds)
+              r"this, 'defref_us-gaap_ProceedsFromRepaymentsOfDebt', window" in str(tds) or
+              'Repayment of debt and commercial paper borrowings' in str(tds)
               ):
             debt_payment = html_re(str(tds[colm]))
             if debt_payment != '---':
@@ -645,6 +653,7 @@ def div_htm(div_url, headers, per):
     Returns:
         Dividend (float)
     '''
+    
     pd.set_option('display.max_columns', None)
     # Get data from site
     content = requests.get(div_url, headers=headers).content
@@ -814,7 +823,7 @@ def div_htm(div_url, headers, per):
                     div = multiplier * html_re(str(tds[index]))
                     if multiplier == 3:
                         div += float(''.join(re.findall(r'\d+\.\d+', tds[1].text.strip())))
-            
+
         # If data source is in one big line
         if div == '---':
             # Create tables with Pandas
@@ -892,6 +901,8 @@ def div_htm(div_url, headers, per):
                     table = pd.read_html(content, match='Dividend')[1]
                     div_list = list(table[3][-4:])
                     div = round(sum(map(float, div_list)), 2)
+                    if math.isnan(div):
+                        div = '---'
                 except:
                     pass
 
@@ -1082,7 +1093,7 @@ def rev_xml(rev_url, headers):
     
     # Initial values
     rev = gross = oi = net = eps = cost = shares = div = '---'
-    share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = 0
+    share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = int_rev = oth_rev = 0
     net_check = False
 
     # Find which column has 12 month data
