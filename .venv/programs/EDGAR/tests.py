@@ -128,7 +128,7 @@ def eps_catch_test():
     global fails
     # HTML test
     for i, url in enumerate(st.catch_url_list_htm):
-        result = list(sp.eps_catch_htm(url, headers, st.eps_list_htm[i]))
+        result = list(sp.eps_catch_htm(url, headers, st.get_sum_per_div(url)))
         answer = st.catch_answers_htm[i]
         print(result)
         print(answer)
@@ -153,8 +153,8 @@ def eps_catch_test():
 # TESTS!!!!!
 #rev_test()
 #bs_test()
-#cf_test()
-div_test()
+cf_test()
+#div_test()
 #eps_catch_test()
 
 # Calculate duration of tests

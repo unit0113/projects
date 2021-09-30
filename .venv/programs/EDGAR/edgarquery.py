@@ -313,14 +313,17 @@ def parse_filings(filings, type, headers, splits):
     Return:
         results (dataframe)       
     '''
-    
+
     # Define statements to Parse
-    intro_list = ['DOCUMENT AND ENTITY INFORMATION', 'COVER PAGE', 'COVER', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT', 'COVER PAGE COVER PAGE', 'DEI DOCUMENT', 'COVER DOCUMENT', 'DOCUMENT INFORMATION STATEMENT']
+    intro_list = ['DOCUMENT AND ENTITY INFORMATION', 'COVER PAGE', 'COVER', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT', 'COVER PAGE COVER PAGE', 'DEI DOCUMENT', 'COVER DOCUMENT', 'DOCUMENT INFORMATION STATEMENT',
+                  'DOCUMENT ENTITY INFORMATION']
     income_list = ['CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF INCOME ALTERNATIVE', 'CONSOLIDATED STATEMENT OF INCOME', 'INCOME STATEMENTS', 'STATEMENT OF INCOME',
                    'CONSOLIDATED STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED INCOME', 'CONSOLIDATED STATEMENTS OF INCOME', 'CONSOLIDATED STATEMENT OF OPERATIONS', 
                    'CONSOLIDATED STATEMENTS OF EARNINGS (LOSSES)', 'CONSOLIDATED INCOME STATEMENTS', 'CONSOLIDATED STATEMENTS OF OPERATIONS CONSOLIDATED STATEMENTS OF OPERATIONS',
-                   'CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS', 'CONSOLIDATED STATEMENTS OF NET INCOME', 'CONSOLIDATED AND COMBINED STATEMENTS OF OPERATIONS']
-    bs_list = ['BALANCE SHEETS', 'CONSOLIDATED BALANCE SHEETS', 'STATEMENT OF FINANCIAL POSITION CLASSIFIED', 'CONSOLIDATED BALANCE SHEET', 'CONDENSED CONSOLIDATED BALANCE SHEETS', 'CONSOLIDATED AND COMBINED BALANCE SHEETS']
+                   'CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS', 'CONSOLIDATED STATEMENTS OF NET INCOME', 'CONSOLIDATED AND COMBINED STATEMENTS OF OPERATIONS',
+                   'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS)', 'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME']
+    bs_list = ['BALANCE SHEETS', 'CONSOLIDATED BALANCE SHEETS', 'STATEMENT OF FINANCIAL POSITION CLASSIFIED', 'CONSOLIDATED BALANCE SHEET', 'CONDENSED CONSOLIDATED BALANCE SHEETS',
+               'CONSOLIDATED AND COMBINED BALANCE SHEETS', 'CONSOLIDATED STATEMENTS OF FINANCIAL POSITION']
     cf_list = ['CASH FLOWS STATEMENTS', 'CONSOLIDATED STATEMENTS OF CASH FLOWS', 'STATEMENT OF CASH FLOWS INDIRECT', 'CONSOLIDATED STATEMENT OF CASH FLOWS',
                'STATEMENTS OF CONSOLIDATED CASH FLOWS', 'CONSOLIDATED CASH FLOWS STATEMENTS', 'CONDENSED CONSOLIDATED STATEMENTS OF CASH FLOWS', 'CONSOLIDATED AND COMBINED STATEMENTS OF CASH FLOWS']
     div_list = ['DIVIDENDS DECLARED (DETAIL)', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY (PARENTHETICAL)',
@@ -335,8 +338,10 @@ def parse_filings(filings, type, headers, splits):
                 'CONSOLIDATED STATEMENTS OF EQUITY/CAPITAL (PARENTHETICAL)', 'CONSOLIDATED AND COMBINED STATEMENTS OF EQUITY (PARENTHETICAL)', 'DIVIDENDS', 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS\' EQUITY (PARENTHETICAL)',
                 'CONSOLIDATED AND COMBINED STATEMENTS OF EQUITY AND PARTNERSHIP CAPITAL (PARENTHETICAL)', 'EQUITY', 'DISTRIBUTIONS (DETAILS)', 'DISTRIBUTIONS', 'CONSOLIDATED STATEMENTS OF COMMON SHAREHOLDERS\' EQUITY',
                 'CONSOLIDATED STATEMENTS OF COMMON SHAREHOLDERS\' EQUITY (PARENTHETICAL)', 'SUPPLEMENTAL EQUITY AND COMPREHENSIVE INCOME INFORMATION - DIVIDENDS AND TRANSFER OF OWNERSHIP INTEREST (DETAILS)',
-                'CONSOLIDATED STATEMENT OF SHAREOWNERS EQUITY']
-    eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY']
+                'CONSOLIDATED STATEMENT OF SHAREOWNERS EQUITY', 'UNAUDITED QUARTERLY FINANCIAL INFORMATION (DETAILS)', 'UNAUDITED SELECTED QUARTERLY DATA (DETAILS)', 'STATEMENTS OF CONSOLIDATED SHAREHOLDERS\' EQUITY (PARENTHETICAL)',
+                'STATEMENTS OF CONSOLIDATED SHAREHOLDERS\' EQUITY AND COMPREHENSIVE INCOME (PARENTHETICAL)', 'SUMMARY BY QUARTER (SCHEDULE OF UNAUDITED OPERATING RESULTS BY QUARTER) (DETAILS)',
+                'CONSOLIDATED STATEMENTS OF CHANGES IN STOCKHOLDERS\' EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENT OF CHANGES IN EQUITY', 'QUARTERLY FINANCIAL INFORMATION']
+    eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)']
 
     # Lists for data frame
     Fiscal_Period = []
@@ -461,14 +466,25 @@ def parse_filings(filings, type, headers, splits):
                     div = sp.div_xml(div_url, headers)
 
             # EPS/div catcher
-            if report.shortname.text.upper() in eps_catch_list and div == '---':
+            if report.shortname.text.upper() in eps_catch_list and div == '---' or report.shortname.text.upper() in eps_catch_list and eps == '---':
                 # Create URL and call parser function
                     try:
                         catch_url = base_url + report.htmlfilename.text
-                        eps, div = sp.eps_catch_htm(catch_url, headers, eps)
+                        eps_result, div_result, share_result = sp.eps_catch_htm(catch_url, headers, period_end)
+                        if shares == 0 and share_result != '---':
+                            shares = share_result
                     except:
                         catch_url = base_url + report.xmlfilename.text
-                        eps, div = sp.eps_catch_xml(catch_url, headers, eps)
+                        eps_result, div_result = sp.eps_catch_xml(catch_url, headers, period_end)
+                    # Update EPS or div if result found/needed
+                    if eps == '---' and eps_result != '---':
+                        eps = eps_result
+                        # Calc shares if not found previously
+                        if shares == 0 and net != '---':
+                            shares = abs(round(net * 1000 / eps))
+                    if div == '---' and div_result != '---':
+                        div = div_result
+                
         
         # Check for repeat data
         if len(Fiscal_Period) != 0:
