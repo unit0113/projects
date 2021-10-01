@@ -153,8 +153,8 @@ def eps_catch_test():
 # TESTS!!!!!
 #rev_test()
 #bs_test()
-cf_test()
-#div_test()
+#cf_test()
+div_test()
 #eps_catch_test()
 
 # Calculate duration of tests

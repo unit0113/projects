@@ -94,6 +94,7 @@ def column_finder_annual_htm(soup, per):
     # Extract colmn header string
     head = soup.table.find_all('tr')[0]
     head2 = soup.table.find_all('tr')[1]
+    first_cell = soup.table.find_all('tr')[2]
 
     # Find index for period end
     if per in str(head2):
@@ -113,7 +114,20 @@ def column_finder_annual_htm(soup, per):
                         if '3 Months Ended' in str(row2) or '4 Months Ended' in str(row2) or '1 Months Ended' in str(row2) and '11 Months Ended' not in str(row2):
                             break 
                         else:
-                            return colm           
+                            # Check if data cells have wide cells
+                            if 'colspan' in str(first_cell):
+                                tds = first_cell.find_all('td')
+                                col_index = 0
+                                for cell_index, td in enumerate(tds):
+                                    colm_part = re.search(r'(?:colspan=\"(\d\d?)\")', str(td), re.M)
+                                    if colm_part == None:
+                                        col_index += 1
+                                    else:
+                                        col_index += int(colm_part.group(1))
+                                    if col_index > colm:
+                                        return cell_index
+                            else:
+                                return colm           
                     if 'colspan' in str(row2):
                         colm_part = re.search(r'(?:colspan=\"(\d\d?)\")', str(row2), re.M)
                         colm += int(colm_part.group(1))
@@ -159,8 +173,13 @@ def multiple_extractor(head, shares=False, xml=False):
         obj = re.search(r'(?:<RoundingOption>)(.*)(?:</RoundingOption>)', head)
     else: 
         obj = re.search(r'(?:<br/?>)(.*)(?:</strong>)', head)
-    
-    result = obj.group(1).strip()
+    if obj != None:
+        result = obj.group(1).strip()
+    else:
+        if shares == True:
+            return 1, 1
+        else:
+            return 1
 
     # Determine multiplier
     if result in multiplier_list_1:
@@ -282,7 +301,8 @@ def rev_htm(rev_url, headers, per):
             r"this, 'defref_us-gaap_SalesRevenueGoodsNet', window" in str(tds) or
             r"this, 'defref_us-gaap_RealEstateRevenueNet', window" in str(tds) or
             r"this, 'defref_us-gaap_RevenueFromContractWithCustomerIncludingAssessedTax', window" in str(tds) or
-            r"this, 'defref_us-gaap_RegulatedAndUnregulatedOperatingRevenue', window" in str(tds)
+            r"this, 'defref_us-gaap_RegulatedAndUnregulatedOperatingRevenue', window" in str(tds) or
+            r"this, 'defref_us-gaap_SalesRevenueServicesNet', window" in str(tds)
             ):
             rev_calc = html_re(str(tds[colm]))
             if rev_calc != '---':
@@ -306,9 +326,12 @@ def rev_htm(rev_url, headers, per):
                 gross = round(check_neg(str(tds), gross) * (dollar_multiplier / 1_000_000))
         elif (r"this, 'defref_us-gaap_ResearchAndDevelopmentExpense', window" in str(tds) or
               r"this, 'defref_amzn_TechnologyAndContentExpense', window" in str(tds) or
-              r"this, 'defref_us-gaap_ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost', window" in str(tds)
+              r"this, 'defref_us-gaap_ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost', window" in str(tds) or
+              r"this, 'defref_us-gaap_ResearchAndDevelopmentExpenseSoftwareExcludingAcquiredInProcessCost', window" in str(tds)
               ):
-            research = round(html_re(str(tds[colm])) * (dollar_multiplier / 1_000_000))
+            research_calc = html_re(str(tds[colm]))
+            if research_calc != '---':
+                research = round(research_calc * (dollar_multiplier / 1_000_000))
         elif r"this, 'defref_us-gaap_OperatingIncomeLoss', window" in str(tds) and oi == '---':
             oi_calc = html_re(str(tds[colm]))
             if oi_calc != '---':
@@ -461,7 +484,8 @@ def bs_htm(bs_url, headers, per):
         tds = row.find_all('td')
         if ('this, \'defref_us-gaap_CashAndCashEquivalentsAtCarryingValue\', window' in str(tds) or
             r"this, 'defref_us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents', window" in str(tds) or
-            r"this, 'defref_us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations', window" in str(tds)
+            r"this, 'defref_us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations', window" in str(tds) or
+            r"this, 'defref_us-gaap_CashEquivalentsAtCarryingValue', window" in str(tds)
             ):
             cash_calc = html_re(str(tds[colm]))
             if cash_calc != '---':
@@ -503,7 +527,10 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_us-gaap_ConvertibleDebt', window" in str(tds) or
               r"this, 'defref_us-gaap_SecuredDebt', window" in str(tds) or
               r"this, 'defref_us-gaap_SeniorNotes', window" in str(tds) or
-              r"this, 'defref_us-gaap_JuniorSubordinatedDebentureOwedToUnconsolidatedSubsidiaryTrust', window" in str(tds)
+              r"this, 'defref_us-gaap_JuniorSubordinatedDebentureOwedToUnconsolidatedSubsidiaryTrust', window" in str(tds) or
+              r"this, 'defref_us-gaap_ConvertibleDebtNoncurrent', window" in str(tds) or
+              r"this, 'defref_us-gaap_ConvertibleLongTermNotesPayable', window" in str(tds) or
+              r"this, 'defref_us-gaap_LongTermLoansPayable', window" in str(tds)
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -619,7 +646,8 @@ def cf_htm(cf_url, headers, per):
         elif ('this, \'defref_us-gaap_ProceedsFromStockOptionsExercised\', window' in str(tds) or
               'this, \'defref_us-gaap_ProceedsFromIssuanceOfCommonStock\', window' in str(tds) or
               'this, \'defref_us-gaap_ProceedsFromIssuanceOfSharesUnderIncentiveAndShareBasedCompensationPlansIncludingStockOptions\', window' in str(tds) or
-              r"this, 'defref_us-gaap_ProceedsFromIssuanceOfCommonStock', window" in str(tds)
+              r"this, 'defref_us-gaap_ProceedsFromIssuanceOfCommonStock', window" in str(tds) or
+              r"this, 'defref_us-gaap_ProceedsFromStockPlans', window" in str(tds)
               ):
             share_issue_rtn = html_re(str(tds[colm]))
             if share_issue_rtn != '---':
@@ -779,15 +807,7 @@ def div_htm(div_url, headers, per):
                 colm_index = table.columns.get_loc('Total Year')
                 div = float(table.iloc[rows[0], colm_index])
                 if div != '---':
-                    return div
-            
-
-
-
-
-
-
-
+                    return div     
 
         # For different table style
         # Find which column has 12 month data
@@ -806,27 +826,13 @@ def div_htm(div_url, headers, per):
     elif "Consolidated Statements Of Changes In Stockholders' Equity (Parenthetical)" in str(soup) and '12 Months Ended' in str(soup):
         # Find which column has 12 month data
         colm = column_finder_annual_htm(soup, per)
-        
+
         # Find row with div data
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
             if r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds):
-                # Find correct td account for colm with width greater than 1
-                colm_tot = 0
-                for index, td in enumerate(tds):
-                    # End if td found
-                    if colm_tot >= colm:
-                        break
-                    
-                    # find colm that corresponds to calculated colm
-                    if 'colspan' in str(td):
-                        colm_part = re.search(r'(?:colspan=\"(\d\d?)\")', str(td), re.M)
-                        colm_tot += int(colm_part.group(1))
-                    else:
-                        colm_tot += 1
-
                 # Pull div
-                div = html_re(str(tds[index]))
+                div = html_re(str(tds[colm]))
                 if div is not None:
                     return div
 
@@ -1010,9 +1016,9 @@ def eps_catch_htm(catch_url, headers, per):
         EPS (float)
         Dividend (float)
     '''
-
+    
     # Initial values
-    div = eps = net = shares = '---'
+    div = eps = shares = '---'
 
     # Get data from site
     content = requests.get(catch_url, headers=headers).content
@@ -1321,6 +1327,7 @@ def bs_xml(bs_url, headers):
     # Initial values
     equity = cash = assets = liabilities = '---'
     intangible_assets = goodwill = debt = 0
+    debt_set = set()
 
     # Find which column has 12 month data
     colm = column_finder_annual_xml(soup)
@@ -1345,13 +1352,12 @@ def bs_xml(bs_url, headers):
             assets = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))       
         elif (r'us-gaap_LongTermDebtNoncurrent' in str(row) or
               r'us-gaap_LongTermDebtAndCapitalLeaseObligations' in str(row) or
-              r'<ElementName>us-gaap_LongTermDebt</ElementName>' in str(row)
+              r'<ElementName>us-gaap_LongTermDebt</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_LongTermLoansPayable</ElementName>' in str(row)
               ):
-            debt = xml_re(str(cells[colm]))
-            if debt == '---':
-                debt = 0
-            else:
-                debt = round(debt * (dollar_multiplier / 1_000_000))
+            debt_calc = xml_re(str(cells[colm]))
+            if debt_calc != '---':
+                debt_set.add(round(debt_calc * (dollar_multiplier / 1_000_000)))
         elif r'<ElementName>us-gaap_Liabilities</ElementName>' in str(row):
             liabilities = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))
         elif r'us-gaap_LiabilitiesAndStockholdersEquity' in str(row) and liabilities == '---':
@@ -1362,6 +1368,9 @@ def bs_xml(bs_url, headers):
             equity = xml_re(str(cells[colm])) 
             if equity != '---':
                 equity = round(check_neg(str(row), equity, 'xml') * (dollar_multiplier / 1_000_000))                                                 
+
+    # Calculate debt total
+    debt = sum(debt_set)
 
     # Calculate liabilites from shareholder equity if not found
     if liabilities == '---' and tot_liabilities != '---' and equity != '---':

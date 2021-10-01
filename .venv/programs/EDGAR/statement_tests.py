@@ -40,7 +40,8 @@ rev_url_list_htm = [r'https://www.sec.gov/Archives/edgar/data/789019/00015645902
                     r'https://www.sec.gov/Archives/edgar/data/318154/000119312512086670/R3.htm', r'https://www.sec.gov/Archives/edgar/data/1287865/000119312518067584/R4.htm', r'https://www.sec.gov/Archives/edgar/data/1287865/000156459021009901/R4.htm',
                     r'https://www.sec.gov/Archives/edgar/data/1553023/000155302321000012/R4.htm', r'https://www.sec.gov/Archives/edgar/data/1553023/000155302318000029/R4.htm', r'https://www.sec.gov/Archives/edgar/data/1553023/000155302316000152/R4.htm',
                     r'https://www.sec.gov/Archives/edgar/data/764478/000076447813000014/R4.htm', r'https://www.sec.gov/Archives/edgar/data/1253986/000110465921025551/R4.htm', r'https://www.sec.gov/Archives/edgar/data/753308/000075330821000014/R2.htm',
-                    r'https://www.sec.gov/Archives/edgar/data/753308/000075330817000060/R2.htm', r'https://www.sec.gov/Archives/edgar/data/202058/000020205821000008/R2.htm', r'https://www.sec.gov/Archives/edgar/data/732717/000073271717000021/R2.htm']
+                    r'https://www.sec.gov/Archives/edgar/data/753308/000075330817000060/R2.htm', r'https://www.sec.gov/Archives/edgar/data/202058/000020205821000008/R2.htm', r'https://www.sec.gov/Archives/edgar/data/732717/000073271717000021/R2.htm',
+                    r'https://www.sec.gov/Archives/edgar/data/1108524/000110852418000011/R4.htm', r'https://www.sec.gov/Archives/edgar/data/97210/000119312519059974/R4.htm']
 
 rev_answers_htm = [[168088, 115856, 20716, 69916, 61271, 8.05, 7608000, '---', 61271], [274515, 104956, 18752, 66288, 57411, 3.28, 17528214, '---', 57411], [215639, 84263, 10045, 60024, 45687, 8.31, 5500281, 2.18, 45687],
                    [170910, 64304, 4475, 48999, 37037, 39.75, 931662, 11.4, 37037], [89950, 55689, 13037, 22326, 21204, 2.71, 7832000, 1.56, 21204], [77849, 57600, 10411, 26764, 21863, 2.58, 8470000, 0.92, 21863],
@@ -56,9 +57,10 @@ rev_answers_htm = [[168088, 115856, 20716, 69916, 61271, 8.05, 7608000, '---', 6
                    [15582, 13155, 3167, 4312, 3683, 4.04, 912000, '---', 3683], [705, 705, 0, 486, 290, 0.82, 350441, '---', 408], [1249, 1249, 0, 499, 431, 0.81, 530461, '---', 679],
                    [1034, 622, 0, 40, 41, 0.35, 117600, '---', 490], [672, 672, 0, 24, -84, -0.95, 88900, '---', 235], [399, 399, 0, 23, -10, -0.3, 54300, '---', 146],
                    [45085, 10649, 0, -125, -441, -1.31, 338600, '---', -441], [434, 434, 0, 164, 171, 1.41, 133969, '---', 179], [17997, 17997, 0, 5116, 2919, 1.48, 1972297, '---', 2919],
-                   [16155, 16155, 0, 4608, 2912, 6.25, 465800, '---', 2912], [18194, 5308, 0, '---', 1119, 5.19, 215607, '---', 352], [163786, 163786, 0, 24347, 12976, 2.1, 6179048, '---', 38823]]
+                   [16155, 16155, 0, 4608, 2912, 6.25, 465800, '---', 2912], [18194, 5308, 0, '---', 1119, 5.19, 215607, '---', 352], [163786, 163786, 0, 24347, 12976, 2.1, 6179048, '---', 38823],
+                   [10480, 7706, 1553, 236, 127, 0.17, 734598, '---', 127], [2101, 1220, 302, 474, 452, 2.35, 192605, 0.36, 452]]
 
-rev_url = r'https://www.sec.gov/Archives/edgar/data/1166691/000119312514047522/R4.htm'
+rev_url = r'https://www.sec.gov/Archives/edgar/data/97745/000009774521000011/R4.htm'
 
 # Rev Test
 #print(sp.rev_htm(rev_url, headers, get_sum_per(rev_url)))
@@ -79,7 +81,8 @@ bs_url_list_htm = [r'https://www.sec.gov/Archives/edgar/data/1403161/00014031612
                    r'https://www.sec.gov/Archives/edgar/data/916365/000091636516000140/R3.htm', r'https://www.sec.gov/Archives/edgar/data/319201/000031920120000047/R2.htm', r'https://www.sec.gov/Archives/edgar/data/318154/000031815414000004/R5.htm',
                    r'https://www.sec.gov/Archives/edgar/data/1538990/000155837021002003/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1053507/000105350721000026/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1287865/000119312517065943/R2.htm',
                    r'https://www.sec.gov/Archives/edgar/data/1045609/000119312515062622/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1253986/000110465921025551/R2.htm', r'https://www.sec.gov/Archives/edgar/data/753308/000075330814000025/R5.htm',
-                   r'https://www.sec.gov/Archives/edgar/data/753308/000075330813000023/R5.htm', r'https://www.sec.gov/Archives/edgar/data/2969/000000296919000051/R5.htm']
+                   r'https://www.sec.gov/Archives/edgar/data/753308/000075330813000023/R5.htm', r'https://www.sec.gov/Archives/edgar/data/2969/000000296919000051/R5.htm', r'https://www.sec.gov/Archives/edgar/data/1561550/000156459021009770/R2.htm',
+                   r'https://www.sec.gov/Archives/edgar/data/1099590/000156276221000079/R2.htm']
 
 bs_answers_htm = [[16289, 37201, 21071, 44709, 36210], [8162, 26473, 16630, 35219, 34006], [5619, 21735, 15882, 31123, 32912],
                   [1971, 15405, 0, 11156, 27413], [2127, 11656, 0, 8323, 26437], [14224, 276268, 50074, 191791, 141988],
@@ -92,9 +95,10 @@ bs_answers_htm = [[16289, 37201, 21071, 44709, 36210], [8162, 26473, 16630, 3521
                   [64, 2361, 150, 978, 1393], [1234, 5844, 3470, 6599, 2665], [3805, 37895, 29623, 44029, 22096],
                   [166, 9004, 2213, 3989, 5016], [1746, 26111, 28498, 42453, 4094], [83, 6419, 2909, 3165, 3248],
                   [351, 25818, 9380, 10635, 13976], [340, 7556, 3322, 6178, 1344], [438, 69306, 23969, 51266, 18040],
-                  [329, 64439, 23177, 48371, 16068], [2249, 17726, 2907, 7554, 11054]]
+                  [329, 64439, 23177, 48371, 16068], [2249, 17726, 2907, 7554, 11054], [225, 1870, 576, 933, 957],
+                  [1856, 6427, 861, 4875, 1652]]
 
-bs_url = r'https://www.sec.gov/Archives/edgar/data/2969/000000296919000051/R5.htm'
+bs_url = r'https://www.sec.gov/Archives/edgar/data/1099590/000156276221000079/R2.htm'
 
 
 # BS Test
@@ -166,7 +170,7 @@ div_answers_htm = [1.2, 1.0, 0.825,
                    0.1, 2.08, 2.05,
                    0.78]
 
-div_url = r'https://www.sec.gov/Archives/edgar/data/1166691/000119312514047522/R30.htm'
+div_url = r'https://www.sec.gov/Archives/edgar/data/97745/000009774521000011/R9.htm'
 
 def get_sum_per_div(url):
     obj = re.search(r'(/R\d?\d?\d\.htm)', str(url))
@@ -185,15 +189,15 @@ catch_url_list_htm = [r'https://www.sec.gov/Archives/edgar/data/100493/000010049
                       r'https://www.sec.gov/Archives/edgar/data/318154/000031815418000004/R22.htm', r'https://www.sec.gov/Archives/edgar/data/318154/000031815415000005/R23.htm', r'https://www.sec.gov/Archives/edgar/data/318154/000119312512086670/R22.htm',
                       r'https://www.sec.gov/Archives/edgar/data/1166691/000119312514047522/R55.htm']
 
-index = 6    # Change me!
+index = 1    # Change me!
 catch_answers_htm = [[5.86, 1.725, '---'], [1.58, 0.16, '---'], [1.97, 0.16, '---'],
                      ['---', 4.6, '---'], ['---', 2.44, '---'], ['---', 1.12, '---'],
                      [2.56, '---', 2665000]]
 
-catch_url = r'https://www.sec.gov/Archives/edgar/data/1166691/000119312514047522/R55.htm'
+catch_url = r'https://www.sec.gov/Archives/edgar/data/100493/000010049312000065/R17.htm'
 
 # Catch Test
-#print(sp.eps_catch_htm(catch_url_list_htm[index], headers, get_sum_per_div(catch_url)))
+#print(sp.eps_catch_htm(catch_url_list_htm[index], headers, get_sum_per_div(catch_url_list_htm[index])))
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
@@ -223,13 +227,13 @@ rev_url = r'https://www.sec.gov/Archives/edgar/data/1166691/000119312511047243/R
 # cash, assets, debt, liabilities, equity
 bs_url_list_xml = [r'https://www.sec.gov/Archives/edgar/data/1403161/000119312510265236/R2.xml', r'https://www.sec.gov/Archives/edgar/data/1018724/000119312511016253/R5.xml', r'https://www.sec.gov/Archives/edgar/data/320193/000119312510238044/R3.xml',
                    r'https://www.sec.gov/Archives/edgar/data/354950/000119312511076501/R3.xml', r'https://www.sec.gov/Archives/edgar/data/909832/000119312510230379/R2.xml', r'https://www.sec.gov/Archives/edgar/data/1045609/000095012311015736/R2.xml',
-                   r'https://www.sec.gov/Archives/edgar/data/732712/000119312511049476/R3.xml']
+                   r'https://www.sec.gov/Archives/edgar/data/732712/000119312511049476/R3.xml', r'https://www.sec.gov/Archives/edgar/data/1099590/000095012311018724/R2.xml']
 
 bs_answers_xml = [[3867, 10483, 32, 8394, 25011], [3777, 17448, 0, 11933, 6864], [11261, 74100, 0, 27392, 47791],
-                  [545, 38938, 8707, 21236, 18889], [3214, 23815, 2141, 12885, 10829], [198, 7373, 3331, 3671, 3321],
-                  [6668, 198017, 45252, 133093, 86912]]
+                  [545, 38938, 9749, 21236, 18889], [3214, 23815, 2141, 12885, 10829], [198, 7373, 3331, 3671, 3321],
+                  [6668, 198017, 45252, 133093, 86912], [57, 206, 0, 98, 172]]
 
-bs_url = r'https://www.sec.gov/Archives/edgar/data/732712/000119312511049476/R3.xml'
+bs_url = r'https://www.sec.gov/Archives/edgar/data/1099590/000095012311018724/R2.xml'
 
 # XML bs test
 #print(sp.bs_xml(bs_url, headers))
@@ -276,9 +280,10 @@ catch_url = r'https://www.sec.gov/Archives/edgar/data/318154/000095012311018800/
 #print(sp.eps_catch_xml(catch_url_list_xml[index], headers, eps_list_xml[index]))
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
-tickers = ['AAPL']
+tickers = ['AAPL', 'CRM']
 
-per = [['Sep. 26, 2020', 'Sep. 28, 2019', 'Sep. 29, 2018', 'Sep. 30, 2017', 'Sep. 24, 2016', 'Sep. 26, 2015', 'Sep. 27, 2014', 'Sep. 28, 2013', 'Sep. 29, 2012', 'Sep. 24, 2011', 'Sep. 25, 2010']]
+per = [['Sep. 26, 2020', 'Sep. 28, 2019', 'Sep. 29, 2018', 'Sep. 30, 2017', 'Sep. 24, 2016', 'Sep. 26, 2015', 'Sep. 27, 2014', 'Sep. 28, 2013', 'Sep. 29, 2012', 'Sep. 24, 2011', 'Sep. 25, 2010'],
+       ['Jan. 31, 2021', 'Jan. 31, 2020', 'Jan. 31, 2019', 'Jan. 31, 2018', 'Jan. 31, 2017', 'Jan. 31, 2016', 'Jan. 31, 2015', 'Jan. 31, 2014', 'Jan. 31, 2013', 'Jan. 31, 2012', 'Jan. 31, 2011']]
 
 index = 0    # Change me!
 
