@@ -415,6 +415,20 @@ def rev_htm(rev_url, headers, per):
         elif '[Member]' in str(row) and rev != 0:
             break   
 
+    # Check for gross data in member section
+    if gross == '---' and r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(soup) and cost == '---':
+        cost = 0
+        for row in soup.table.find_all('tr'):
+            tds = row.find_all('td')
+            if (r"this, 'defref_us-gaap_CostOfRevenue', window" in str(tds) or
+                r"this, 'defref_us-gaap_CostOfGoodsSold', window" in str(tds) or
+                r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(tds) or
+                r"this, 'defref_amgn_CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets', window" in str(tds)
+                ):
+                result = html_re(str(tds[colm]))
+                if result != '---':
+                    cost += round(result * (dollar_multiplier / 1_000_000)) 
+                
     # Calculate share total
     share_sum = sum(share_set)
 
@@ -530,7 +544,8 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_us-gaap_JuniorSubordinatedDebentureOwedToUnconsolidatedSubsidiaryTrust', window" in str(tds) or
               r"this, 'defref_us-gaap_ConvertibleDebtNoncurrent', window" in str(tds) or
               r"this, 'defref_us-gaap_ConvertibleLongTermNotesPayable', window" in str(tds) or
-              r"this, 'defref_us-gaap_LongTermLoansPayable', window" in str(tds)
+              r"this, 'defref_us-gaap_LongTermLoansPayable', window" in str(tds) or
+              r"this, 'defref_us-gaap_LongTermLineOfCredit', window" in str(tds)
               ):
             result = html_re(str(tds[colm]))
             if result != '---':

@@ -119,28 +119,31 @@ def split_factor_calc(splits, per):
         # Check if splits more recent than last annual report
         for split_date in split_list_date:
             if split_date > per[0]:
+                split_factor *= split_list_splits[split_index]
+                split_return[0] *= split_factor
                 split_index += 1
             else:
                 break
         
         # Create list of split factors
         for i in range(1, len(per)):
-            if split_list_date[split_index] < per[i-1] and split_list_date[split_index] > per[i]:
-                split_factor *= split_list_splits[split_index]
-                split_index += 1
-            split_return.append(split_factor)
-            
             # If end of splits
             if split_index > len(split_list_date) - 1:
-                end_list = [split_factor] * ((len(per) - i) - 1)
+                end_list = [split_factor] * ((len(per) - i))
                 split_return.extend(end_list)
-                break       
+                break 
 
             # If end of relevant splits
             if split_list_date[split_index] < per[-1]:
-                end_list = [split_factor] * ((len(per) - i) - 1)
+                end_list = [split_factor] * ((len(per) - i))
                 split_return.extend(end_list)
                 break
+
+            if split_list_date[split_index] < per[i-1] and split_list_date[split_index] > per[i]:
+                split_factor *= split_list_splits[split_index]
+                split_index += 1
+            split_return.append(split_factor)      
+
 
         return split_return
 
