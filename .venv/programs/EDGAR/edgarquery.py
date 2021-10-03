@@ -357,6 +357,7 @@ def parse_filings(filings, type, headers, splits):
                 'STATEMENTS OF STOCKHOLDERS\' EQUITY STATEMENTS OF STOCKHOLDERS\' EQUITY (PARENTHETICAL)', 'STATEMENT OF CONSOLIDATED STOCKHOLDERS\'S EQUITY (PARENTHETICAL)', 'CONDENSED CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY',
                 'CONDENSED CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)']
+    share_catch_list = ['CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEET (PARENTHETICAL)']
 
     # Lists for data frame
     Fiscal_Period = []
@@ -444,10 +445,14 @@ def parse_filings(filings, type, headers, splits):
                 # Create URL and call parser function
                 try:
                     rev_url = base_url + report.htmlfilename.text
-                    rev, gross, research, oi, net, eps, shares, div, ffo = sp.rev_htm(rev_url, headers, period_end)
+                    rev, gross, research, oi, net, eps, shares_return, div, ffo = sp.rev_htm(rev_url, headers, period_end)
+                    if shares == '---' or shares == 0:
+                        shares = shares_return
                 except:
                     rev_url = base_url + report.xmlfilename.text
-                    rev, gross, research, oi, net, eps, shares, div, ffo = sp.rev_xml(rev_url, headers)
+                    rev, gross, research, oi, net, eps, shares_return, div, ffo = sp.rev_xml(rev_url, headers)
+                    if shares == '---' or shares == 0:
+                        shares = shares_return
 
             # Balance sheet
             if report.shortname.text.upper() in bs_list:
@@ -499,7 +504,16 @@ def parse_filings(filings, type, headers, splits):
                     if div == '---' and div_result != '---':
                         div = div_result
                 
-        
+            # Shares if not reported on income statement
+            if report.shortname.text.upper() in share_catch_list and shares == '---' or report.shortname.text.upper() in share_catch_list and shares == 0:
+                # Create URL and call parser function
+                try:
+                    catch_url = base_url + report.htmlfilename.text
+                    shares = sp.share_catch_htm(catch_url, headers, period_end)
+                except:
+                    catch_url = base_url + report.xmlfilename.text
+                    shares = sp.share_catch_xml(catch_url, headers, period_end)
+
         # Check for repeat data
         if len(Fiscal_Period) != 0:
             if fy == Fiscal_Period[-1] or fy == '---':

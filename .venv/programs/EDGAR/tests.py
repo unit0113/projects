@@ -150,12 +150,39 @@ def eps_catch_test():
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
+def share_catch_test():
+    global fails
+    # HTML test
+    for i, url in enumerate(st.share_catch_url_list_htm):
+        result = sp.share_catch_htm(url, headers, st.get_sum_per_div(url))
+        answer = st.share_catch_answers_htm[i]
+        print(result)
+        print(answer)
+        if result != answer:
+            print(url)
+            fails += 1
+        print('-'*100)
+
+    # XML test
+    for i, url in enumerate(st.share_catch_url_list_xml):
+        result = sp.share_catch_xml(url, headers, st.get_sum_per_div_xml(url))
+        answer = st.share_catch_answers_xml[i]
+        print(result)
+        print(answer)
+        if result != answer:
+            print(url)
+            fails += 1
+        print('-'*100)
+
+'''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
+
 # TESTS!!!!!
-rev_test()
+#rev_test()
 #bs_test()
 #cf_test()
 #div_test()
 #eps_catch_test()
+share_catch_test()
 
 # Calculate duration of tests
 delta_time = timeit.default_timer() - starttime

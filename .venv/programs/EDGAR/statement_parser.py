@@ -87,6 +87,7 @@ def column_finder_annual_htm(soup, per):
 
     Args:
         Soup (soup data of sub filings)
+        Fiscal period end date
     Returns:
         Column number (int)        
     '''
@@ -167,7 +168,17 @@ multiplier_list_8 = ['shares in Millions']
 
 
 def multiple_extractor(head, shares=False, xml=False):
-    
+    ''' Return $ and share multiplier for statement
+
+    Args:
+        Head of statement
+        Bool for whether to return share multiplier or not
+        Bool for whether this is an xml doc or not
+    Returns:
+        Dollar multiplier (int)
+        Share multiplier (int) (optional)     
+    ''' 
+
     # Search for multiplier string
     if xml == True:
         obj = re.search(r'(?:<RoundingOption>)(.*)(?:</RoundingOption>)', head)
@@ -264,6 +275,7 @@ def rev_htm(rev_url, headers, per):
     Args:
         URL of statement
         User agent for SEC
+        Fiscal period end date
     Returns:
         Revenue (int)
         Gross profit (int)
@@ -435,6 +447,8 @@ def rev_htm(rev_url, headers, per):
                 
     # Calculate share total
     share_sum = sum(share_set)
+    if share_sum == 0:
+        share_sum = '---'
 
     # Account for non_attributable income
     if net != '---' and net_actual == False and non_attributable_net != '---':
@@ -442,7 +456,6 @@ def rev_htm(rev_url, headers, per):
             net += non_attributable_net
         else:
             net -= non_attributable_net
-
 
     # Calculate rev for REITs if total not given
     if rev < int_rev + oth_rev and 'Other income' in str(soup) and int_rev != 0 and oth_rev != 0:
@@ -455,12 +468,12 @@ def rev_htm(rev_url, headers, per):
         except:
             gross = rev
 
-    # Calculate shares if not listed
+    '''# Calculate shares if not listed
     if share_sum == 0 and net != '---' and eps != '---' and eps != 0:
-        share_sum = abs(round(net * 1000 / eps))
+        share_sum = abs(round(net * 1000 / eps))'''
 
     # Calculate EPS if not listed
-    if eps == '---' and net != '---' and share_sum != 0:
+    if eps == '---' and net != '---' and share_sum != '---':
         eps = net / share_sum
 
     # Calculate FFO for REITS
@@ -481,6 +494,7 @@ def bs_htm(bs_url, headers, per):
     Args:
         URL of statement
         User agent for SEC
+        Fiscal period end date
     Returns:
         Cash (int)
         Assets minus goodwill (int)
@@ -594,6 +608,7 @@ def cf_htm(cf_url, headers, per):
     Args:
         URL of statement
         User agent for SEC
+        Fiscal period end date
     Returns:
         Free cash flow (int)
         Debt repayments (int)
@@ -718,6 +733,7 @@ def div_htm(div_url, headers, per):
     Args:
         URL of statement
         User agent for SEC
+        Fiscal period end date
     Returns:
         Dividend (float)
     '''
@@ -1058,6 +1074,7 @@ def eps_catch_htm(catch_url, headers, per):
     Args:
         URL of statement
         User agent for SEC
+        Fiscal period end date
     Returns:
         EPS (float)
         Dividend (float)
@@ -1140,6 +1157,71 @@ def eps_catch_htm(catch_url, headers, per):
 
     return eps, div, shares
 
+
+'''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
+
+def share_catch_htm(catch_url, headers, per):
+    ''' Parse share data if not found in income statement
+
+    Args:
+        URL of statement
+        User agent for SEC
+        Fiscal period end date
+    Returns:
+        Shares (int)     
+    '''
+
+    # Get data from site
+    content = requests.get(catch_url, headers=headers).content
+    soup = BeautifulSoup(content, 'html.parser')
+
+    # Initial values
+    shares = '---'
+    shares_issued = shares_repurchased = 0
+    share_set = set()
+    shares_issued_set = set()
+    shares_repurchased_set = set()
+
+    # Find which column has 12 month data
+    colm = column_finder_annual_htm(soup, per)
+
+    # Determine multiplier
+    head = soup.find('th')
+    dollar_multiplier, share_multiplier = multiple_extractor(str(head), shares=True)
+
+    # Loop through rows, search for row of interest
+    for row in soup.table.find_all('tr'):
+        tds = row.find_all('td')
+        if (r"this, 'defref_us-gaap_CommonStockSharesOutstanding', window" in str(tds)
+            ):
+            shares_calc = html_re(str(tds[colm]))
+            if shares_calc != '---':
+                shares = round(shares_calc * (share_multiplier / 1_000))
+                share_set.add(shares)
+        elif (r"this, 'defref_us-gaap_CommonStockSharesIssued', window" in str(tds)
+            ):
+            shares_issued_calc = html_re(str(tds[colm]))
+            if shares_issued_calc != '---':
+                shares_issued = round(shares_issued_calc * (share_multiplier / 1_000))
+                shares_issued_set.add(shares_issued)
+        elif (r"this, 'defref_us-gaap_TreasuryStockShares', window" in str(tds)
+            ):
+            shares_repurchased_calc = html_re(str(tds[colm]))
+            if shares_repurchased_calc != '---':
+                shares_repurchased = round(shares_repurchased_calc * (share_multiplier / 1_000))
+                shares_repurchased_set.add(shares_repurchased)
+
+    shares = sum(share_set)
+    if shares == 0:
+        shares = '---'
+    shares_issued = sum(shares_issued_set)
+    shares_repurchased = sum(shares_repurchased_set)
+
+    # Calculate share if outstanding not given
+    if shares == '---' and shares_issued != '---' and shares_repurchased != '---':
+        shares = shares_issued - shares_repurchased
+
+    return shares
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
@@ -1337,13 +1419,16 @@ def rev_xml(rev_url, headers):
         except:
             gross = rev
 
-    # Calculate shares if not listed
+    '''# Calculate shares if not listed
     if share_sum == 0 and net != '---' and eps != '---':
-        share_sum = abs(round(net * 1000 / eps))
+        share_sum = abs(round(net * 1000 / eps))'''
 
     # Calculate EPS if not listed
-    if eps == '---' and net != '---':
+    if eps == '---' and net != '---' and share_sum != 0:
         eps = net / share_sum
+
+    if share_sum == 0:
+        share_sum = '---'
 
     # Calculate FFO for REITS
     if net != '---':
@@ -1587,3 +1672,67 @@ def eps_catch_xml(catch_url, headers, eps):
                 div = float(obj.group(1))
 
     return eps, div
+
+'''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
+
+def share_catch_xml(catch_url, headers, per):
+    ''' Parse share data if not found in income statement for xml docs
+
+    Args:
+        URL of statement
+        User agent for SEC
+        Fiscal period end date
+    Returns:
+        Shares (int)     
+    '''
+
+    # Get data from site
+    content = requests.get(catch_url, headers=headers).content
+    soup = BeautifulSoup(content, 'xml')
+
+    # Initial values
+    shares = '---'
+    shares_issued = shares_repurchased = share_sum = 0
+    multiple_classes = False
+
+    # Find which column has 12 month data
+    colm = column_finder_annual_xml(soup)
+
+    if colm == 0 and 'Class A Common Stock' in str(soup) and 'Class A Special Common Stock' in str(soup) and 'Class B Common Stock' in str(soup):
+        multiple_classes = True
+        new_per = datetime.strptime(per.replace('.', ''), '%b %d, %Y')
+        new_per_str = new_per.strftime('%m/%d/%Y')
+        colms = []
+        columns = soup.find_all('Column')
+        for index, column in enumerate(columns):
+            if 'Common Stock' in str(column) and new_per_str in str(column):
+                colms.append(index)
+
+    # Determine multiplier
+    head = soup.RoundingOption
+    dollar_multiplier, share_multiplier = multiple_extractor(str(head), shares=True, xml=True)
+
+    # Loop through rows, search for row of interest
+    rows = soup.find_all('Row')
+    for row in rows:
+        cells = row.find_all('Cell')
+        if (r'<ElementName>us-gaap_CommonStockSharesOutstanding</ElementName>' in str(row)
+            ):
+            if multiple_classes == True:
+                for colm in colms:
+                    share_sum += round(xml_re(str(cells[colm])) * (share_multiplier / 1_000))
+                shares = share_sum
+            else:
+                shares = round(xml_re(str(cells[colm])) * (share_multiplier / 1_000))
+            break
+        elif (r"<ElementName>us-gaap_CommonStockSharesIssued</ElementName>" in str(row)
+            ):
+            shares_issued = xml_re(str(cells[colm]))
+        elif (r"<ElementName>us-gaap_TreasuryStockShares</ElementName>" in str(row)
+            ):
+            shares_repurchased = xml_re(str(cells[colm]))
+
+    if shares == '---' and shares_issued != '---' and shares_repurchased != '---':
+        shares = round((shares_issued - shares_repurchased) * (share_multiplier / 1_000))
+
+    return shares
