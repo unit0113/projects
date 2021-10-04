@@ -166,6 +166,8 @@ multiplier_list_7 = ['shares in Thousands']
 
 multiplier_list_8 = ['shares in Millions']
 
+multiplier_list_9 = ['Share data in Thousands, except Per Share data, unless otherwise specified']
+
 
 def multiple_extractor(head, shares=False, xml=False):
     ''' Return $ and share multiplier for statement
@@ -221,6 +223,8 @@ def multiple_extractor(head, shares=False, xml=False):
         return 1, 1_000
     elif result in multiplier_list_8 and shares == True:
         return 1, 1_000_000
+    elif result in multiplier_list_9 and shares == True:
+        return 1, 1_000
     else:
         if shares == True:
             return 1, 1
@@ -525,7 +529,8 @@ def bs_htm(bs_url, headers, per):
         if ('this, \'defref_us-gaap_CashAndCashEquivalentsAtCarryingValue\', window' in str(tds) or
             r"this, 'defref_us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents', window" in str(tds) or
             r"this, 'defref_us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations', window" in str(tds) or
-            r"this, 'defref_us-gaap_CashEquivalentsAtCarryingValue', window" in str(tds)
+            r"this, 'defref_us-gaap_CashEquivalentsAtCarryingValue', window" in str(tds) or
+            r"this, 'defref_us-gaap_Cash', window" in str(tds)
             ):
             cash_calc = html_re(str(tds[colm]))
             if cash_calc != '---':
@@ -699,7 +704,8 @@ def cf_htm(cf_url, headers, per):
               'PaymentsOfDividendsAndDividendEquivalentsOnCommonStockAndRestrictedStockUnits\', window' in str(tds) or
               'this, \'defref_us-gaap_PaymentsOfDividendsCommonStock\', window' in str(tds) or
               r"this, 'defref_us-gaap_Dividends', window" in str(tds) or
-              r"this, 'defref_us-gaap_PaymentsOfOrdinaryDividends', window" in str(tds)
+              r"this, 'defref_us-gaap_PaymentsOfOrdinaryDividends', window" in str(tds) or
+              r"this, 'defref_us-gaap_PaymentsOfDividendsCommonStock', window" in str(tds)
               ):
             divpaid_calc = html_re(str(tds[colm]))
             if divpaid_calc != '---':
@@ -748,7 +754,7 @@ def div_htm(div_url, headers, per):
     div = '---'
 
     # If company has seperate div table
-    if 'EQUITY' not in soup.find('th').text.upper() and 'QUARTERLY FINANCIAL INFORMATION' not in str(soup).upper():
+    if 'EQUITY' not in soup.find('th').text.upper() and 'QUARTERLY FINANCIAL INFORMATION' not in str(soup).upper() and 'QUARTERLY RESULTS OF OPERATIONS' not in str(soup).upper():
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
             
@@ -821,8 +827,8 @@ def div_htm(div_url, headers, per):
                     div = sum(map(float, obj[0:4]))
                 else:
                     div = float(obj[0])
-
-    elif 'QUARTERLY FINANCIAL INFORMATION' in str(soup).upper():
+    
+    elif 'QUARTERLY FINANCIAL INFORMATION' in str(soup).upper() or 'QUARTERLY RESULTS OF OPERATIONS' in str(soup).upper():
         # Find column with total data        
         head = soup.table.find_all('tr')[5]
         tds = head.find_all('td')
@@ -869,7 +875,7 @@ def div_htm(div_url, headers, per):
         # For different table style
         # Find which column has 12 month data
         colm = column_finder_annual_htm(soup, per)
-
+        
         # Find div
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
@@ -877,8 +883,23 @@ def div_htm(div_url, headers, per):
                 r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds)
                 ):
                 div = html_re(str(tds[colm]))
-                if div is not None:
+                if div is not None and div != '---':
                     return div
+
+        # If 12 month sum not provided, but per quarter div is
+        if div == '---' and '3 Months Ended' in str(soup):
+            for row in soup.table.find_all('tr'):
+                tds = row.find_all('td')
+                if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds) or
+                    r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds)
+                    ):
+                    if r'toggleNextSibling(this)' in str(tds):
+                        obj = re.findall(r'(?:\">\$ )(\d?\d\.\d\d?\d?)(?:</a><span)', str(tds), re.M)
+                    else:
+                        obj = re.findall(r'(?:<td class=\"nump\">\$ )(\d?\d\.\d\d?\d?)(?:<span>)', str(tds), re.M)
+                    if obj != [] and len(obj) >= 4:
+                        div = sum(list(map(float, obj[:4])))
+                        return round(div, 3)
 
     elif "Consolidated Statements Of Changes In Stockholders' Equity (Parenthetical)" in str(soup) and '12 Months Ended' in str(soup):
         # Find which column has 12 month data
@@ -1473,7 +1494,9 @@ def bs_xml(bs_url, headers):
     for row in rows:
         cells = row.find_all('Cell')
         if ('us-gaap_CashCashEquivalentsAndShortTermInvestments' in str(row) or
-            'us-gaap_CashAndCashEquivalentsAtCarryingValue' in str(row)
+            'us-gaap_CashAndCashEquivalentsAtCarryingValue' in str(row) or
+            r'<ElementName>us-gaap_Cash</ElementName>' in str(row) or
+            r'<ElementName>us-gaap_CashEquivalentsAtCarryingValue</ElementName>' in str(row)
             ):
             cash = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000)) 
         elif 'us-gaap_Goodwill' in str(row):
@@ -1552,13 +1575,15 @@ def cf_xml(cf_url, headers):
         if (r'<ElementName>us-gaap_NetCashProvidedByUsedInOperatingActivities</ElementName>' in str(row) or
             r'<ElementName>us-gaap_NetCashProvidedByUsedInOperatingActivitiesContinuingOperations</ElementName>' in str(row)
             ):
-            cfo = xml_re(str(cells[colm]))
-            if cfo != '---':
-                cfo = round(check_neg(str(row), cfo, 'xml') * (dollar_multiplier / 1_000_000)) 
+            cfo_calc = xml_re(str(cells[colm]))
+            if cfo_calc != '---':
+                cfo = round(check_neg(str(row), cfo_calc, 'xml') * (dollar_multiplier / 1_000_000)) 
         elif (r'us-gaap_PaymentsToAcquirePropertyPlantAndEquipment' in str(row) or
               r'us-gaap_PaymentsToAcquireProductiveAssets' in str(row)
               ):
-            capex = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000)) 
+            capex_calc = xml_re(str(cells[colm]))
+            if capex_calc != '---':
+                capex = round(capex_calc * (dollar_multiplier / 1_000_000)) 
         elif (r'us-gaap_ProceedsFromRepaymentsOfShortTermDebtMaturingInThreeMonthsOrLess' in str(row) or
               r'RepaymentsOfShortTermAndLongTermBorrowings' in str(row) or
               r'us-gaap_RepaymentsOfLongTermDebtAndCapitalSecurities' in str(row) or
@@ -1566,23 +1591,33 @@ def cf_xml(cf_url, headers):
               r'us-gaap_RepaymentsOfLongTermDebt' in str(row) or
               r'us-gaap_RepaymentsOfOtherDebt' in str(row)
               ):
-            debt_pay += round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))                            
+            debt_pay_calc = xml_re(str(cells[colm]))
+            if debt_pay_calc != '---':
+                debt_pay += round(debt_pay_calc * (dollar_multiplier / 1_000_000))                            
         elif (r'us-gaap_PaymentsForRepurchaseOfCommonStock' in str(row) or
               r'<ElementName>us-gaap_PaymentsForRepurchaseOfEquity</ElementName>' in str(row)
               ):
-            buyback += round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))    
+            buyback_calc = xml_re(str(cells[colm]))
+            if buyback_calc != '---':
+                buyback += round(buyback_calc * (dollar_multiplier / 1_000_000)) 
         elif (r'us-gaap_ProceedsFromStockOptionsExercised' in str(row) or
               r'us-gaap_ProceedsFromIssuanceOfCommonStock' in str(row) or
               r'cost_ProceedsFromStockbasedAwardsNet' in str(row) or
               r'us-gaap_ProceedsFromIssuanceOrSaleOfEquity' in str(row)
               ):
-            share_issue = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))   
+            share_issue_calc = xml_re(str(cells[colm]))
+            if share_issue_calc != '---':
+                share_issue += round(share_issue_calc * (dollar_multiplier / 1_000_000))               
         elif (r'us-gaap_PaymentsOfDividendsCommonStock' in str(row) and divpaid == 0 or
               r'us-gaap_PaymentsOfDividends' in str(row) and divpaid == 0 
               ):
-            divpaid = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000))       
+            divpaid_calc = xml_re(str(cells[colm]))
+            if divpaid_calc != '---':
+                divpaid += round(divpaid_calc * (dollar_multiplier / 1_000_000))       
         elif r'us-gaap_ShareBasedCompensation' in str(row):
-            sbc = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000)) 
+            sbc_calc = xml_re(str(cells[colm]))
+            if sbc_calc != '---':
+                sbc += round(sbc_calc * (dollar_multiplier / 1_000_000)) 
     
     # Calculate Free Cash Flow
     fcf = cfo - capex

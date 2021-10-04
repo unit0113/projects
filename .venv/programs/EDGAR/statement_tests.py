@@ -13,7 +13,7 @@ with open(r'C:\Users\unit0\OneDrive\Desktop\EDGAR\user_agent.txt') as f:
     headers = json.loads(data)
 
 
-sum_url = r'https://www.sec.gov/Archives/edgar/data/320193/000032019320000096/R1.htm'
+sum_url = r'https://www.sec.gov/Archives/edgar/data/915913/000091591320000040/R1.htm'
 
 # Sum Test
 #print(sp.sum_htm(sum_url, headers))
@@ -62,10 +62,10 @@ rev_answers_htm = [[168088, 115856, 20716, 69916, 61271, 8.05, 7608000, '---', 6
                    [16155, 16155, 0, 4608, 2912, 6.25, 465800, '---', 2912], [18194, 5308, 0, '---', 1119, 5.19, '---', '---', 352], [163786, 163786, 0, 24347, 12976, 2.1, '---', '---', 38823],
                    [10480, 7706, 1553, 236, 127, 0.17, 734598, '---', 127], [2101, 1220, 302, 474, 452, 2.35, 192605, 0.36, 452], [32218, 16004, 1181, 7794, 6375, 15.96, 399000, '---', 6375]]
 
-rev_url = r'https://www.sec.gov/Archives/edgar/data/732717/000073271717000021/R2.htm'
+rev_url = r'https://www.sec.gov/Archives/edgar/data/1056903/000110465913016827/R5.htm'
 
 # Rev Test
-#print(sp.rev_htm(rev_url, headers, get_sum_per(rev_url)))
+print(sp.rev_htm(rev_url, headers, get_sum_per(rev_url)))
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
@@ -154,7 +154,8 @@ div_url_list_htm = [r'https://www.sec.gov/Archives/edgar/data/1403161/0001403161
                     r'https://www.sec.gov/Archives/edgar/data/753308/000075330821000014/R8.htm', r'https://www.sec.gov/Archives/edgar/data/773840/000077384021000015/R6.htm', r'https://www.sec.gov/Archives/edgar/data/773840/000093041319000366/R113.htm',
                     r'https://www.sec.gov/Archives/edgar/data/1501585/000150158513000003/R78.htm', r'https://www.sec.gov/Archives/edgar/data/732717/000073271721000012/R10.htm', r'https://www.sec.gov/Archives/edgar/data/732717/000156276220000064/R9.htm',
                     r'https://www.sec.gov/Archives/edgar/data/1166691/000119312514047522/R30.htm', r'https://www.sec.gov/Archives/edgar/data/1800/000110465921025751/R9.htm', r'https://www.sec.gov/Archives/edgar/data/6281/000000628119000144/R97.htm',
-                    r'https://www.sec.gov/Archives/edgar/data/4904/000000490421000010/R4.htm']
+                    r'https://www.sec.gov/Archives/edgar/data/4904/000000490421000010/R4.htm', r'https://www.sec.gov/Archives/edgar/data/91142/000009114221000025/R104.htm', r'https://www.sec.gov/Archives/edgar/data/91142/000119312515050825/R103.htm',
+                    r'https://www.sec.gov/Archives/edgar/data/91142/000119312512081738/R106.htm']
 
 div_answers_htm = [1.2, 1.0, 0.825,
                    0.48, 0.88, 1.6,
@@ -170,9 +171,10 @@ div_answers_htm = [1.2, 1.0, 0.825,
                    1.4, 3.63, 3.055,
                    0.1, 2.08, 2.05,
                    0.78, 1.53, 2.1,
-                   2.84]
+                   2.84, 0.98, 0.6,
+                   0.6]
 
-div_url = r'https://www.sec.gov/Archives/edgar/data/874761/000087476121000015/R5.htm'
+div_url = r'https://www.sec.gov/Archives/edgar/data/91142/000119312512081738/R106.htm'
 
 def get_sum_per_div(url):
     obj = re.search(r'(/R\d?\d?\d\.htm)', str(url))
@@ -242,13 +244,13 @@ rev_url = r'https://www.sec.gov/Archives/edgar/data/874761/000119312511047720/R2
 # cash, assets, debt, liabilities, equity
 bs_url_list_xml = [r'https://www.sec.gov/Archives/edgar/data/1403161/000119312510265236/R2.xml', r'https://www.sec.gov/Archives/edgar/data/1018724/000119312511016253/R5.xml', r'https://www.sec.gov/Archives/edgar/data/320193/000119312510238044/R3.xml',
                    r'https://www.sec.gov/Archives/edgar/data/354950/000119312511076501/R3.xml', r'https://www.sec.gov/Archives/edgar/data/909832/000119312510230379/R2.xml', r'https://www.sec.gov/Archives/edgar/data/1045609/000095012311015736/R2.xml',
-                   r'https://www.sec.gov/Archives/edgar/data/732712/000119312511049476/R3.xml', r'https://www.sec.gov/Archives/edgar/data/1099590/000095012311018724/R2.xml']
+                   r'https://www.sec.gov/Archives/edgar/data/732712/000119312511049476/R3.xml', r'https://www.sec.gov/Archives/edgar/data/1099590/000095012311018724/R2.xml', r'https://www.sec.gov/Archives/edgar/data/1410636/000119312511047938/R2.xml']
 
 bs_answers_xml = [[3867, 10483, 32, 8394, 25011], [3777, 17448, 0, 11933, 6864], [11261, 74100, 0, 27392, 47791],
                   [545, 38938, 9749, 21236, 18889], [3214, 23815, 2141, 12885, 10829], [198, 7373, 3331, 3671, 3321],
-                  [6668, 198017, 45252, 133093, 86912], [57, 206, 0, 98, 172]]
+                  [6668, 198017, 45252, 133093, 86912], [57, 206, 0, 98, 172], [13, 12829, 5410, 9948, 4132]]
 
-bs_url = r'https://www.sec.gov/Archives/edgar/data/1099590/000095012311018724/R2.xml'
+bs_url = r'https://www.sec.gov/Archives/edgar/data/1410636/000119312511047938/R2.xml'
 
 # XML bs test
 #print(sp.bs_xml(bs_url, headers))
@@ -264,7 +266,7 @@ cf_answers_xml = [[2450, 16, 944, 368, 131], [16590, 0, -912, 0, 879], [1725, 19
                   [2621, 0, 2047, 592, 190], [4083, 580, 854, 1500, 274], [3552, 1006, -195, 944, 164],
                   [6218, 1153, 1166, 1064, 300]]
 
-cf_url = r'https://www.sec.gov/Archives/edgar/data/1166691/000119312511047243/R5.xml'
+cf_url = r'https://www.sec.gov/Archives/edgar/data/91142/000119312511045134/R8.xml'
 
 # XML cf Test
 #print(sp.cf_xml(cf_url, headers))
@@ -340,7 +342,7 @@ def get_splits(ticker):
 # Div finder
 base_url = 'https://www.sec.gov/Archives/edgar/data/6281/000000628119000144/'
 div = 2.1
-def div_finder(base_url, div):
+def div_finder_htm(base_url, div):
     for i in range(200):
         url = base_url + 'R' + str(i) + '.htm'
         content = requests.get(url, headers=headers).content
@@ -348,4 +350,19 @@ def div_finder(base_url, div):
         if 'Dividend' in str(soup) or str(div) in str(soup):
             print(url)
 
-#div_finder(base_url, div)
+#div_finder_htm(base_url, div)
+
+'''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
+
+# Div finder
+base_url = 'https://www.sec.gov/Archives/edgar/data/91142/000119312511045134/'
+div = 0.21
+def div_finder_xml(base_url, div):
+    for i in range(200):
+        url = base_url + 'R' + str(i) + '.xml'
+        content = requests.get(url, headers=headers).content
+        soup = BeautifulSoup(content, 'xml')
+        if 'Dividend' in str(soup) or str(div) in str(soup):
+            print(url)
+
+#div_finder_xml(base_url, div)

@@ -322,10 +322,10 @@ def parse_filings(filings, type, headers, splits):
     Return:
         results (dataframe)       
     '''
-
+    
     # Define statements to Parse
     intro_list = ['DOCUMENT AND ENTITY INFORMATION', 'COVER PAGE', 'COVER', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT', 'COVER PAGE COVER PAGE', 'DEI DOCUMENT', 'COVER DOCUMENT', 'DOCUMENT INFORMATION STATEMENT',
-                  'DOCUMENT ENTITY INFORMATION', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT AND ENTITY INFORMATION']
+                  'DOCUMENT ENTITY INFORMATION', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT AND ENTITY INFORMATION', 'COVER COVER']
     income_list = ['CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF INCOME ALTERNATIVE', 'CONSOLIDATED STATEMENT OF INCOME', 'INCOME STATEMENTS', 'STATEMENT OF INCOME',
                    'CONSOLIDATED STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED INCOME', 'CONSOLIDATED STATEMENTS OF INCOME', 'CONSOLIDATED STATEMENT OF OPERATIONS', 
                    'CONSOLIDATED STATEMENTS OF EARNINGS (LOSSES)', 'CONSOLIDATED INCOME STATEMENTS', 'CONSOLIDATED STATEMENTS OF OPERATIONS CONSOLIDATED STATEMENTS OF OPERATIONS',
@@ -355,7 +355,8 @@ def parse_filings(filings, type, headers, splits):
                 'CONSOLIDATED STATEMENT OF SHAREHOLDERS\' EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENT OF SHAREHOLDERS\' EQUITY CONSOLIDATED STATEMENT OF SHAREHOLDERS\'S EQUITY (PARENTHETICAL)',
                 'CONSOLIDATED STATEMENT OF SHAREHOLDERS\' INVESTMENT (PARENTHETICAL)', 'SUPPLEMENTARY FINANCIAL INFORMATION (UNAUDITED) (DETAILS)', 'STATEMENTS OF STOCKHOLDERS\' EQUITY (PARENTHETICAL)',
                 'STATEMENTS OF STOCKHOLDERS\' EQUITY STATEMENTS OF STOCKHOLDERS\' EQUITY (PARENTHETICAL)', 'STATEMENT OF CONSOLIDATED STOCKHOLDERS\'S EQUITY (PARENTHETICAL)', 'CONDENSED CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY',
-                'CONDENSED CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY']
+                'CONDENSED CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS??? EQUITY (PARENTHETICAL)',
+                'CONSOLIDATED STATEMENTS OF SHAREHOLDERS??? EQUITY PARENTHETICAL', 'QUARTERLY RESULTS OF OPERATIONS (UNAUDITED) (DETAILS)', 'QUARTERLY FINANCIAL INFORMATION (DETAIL)', 'QUARTERLY RESULTS OF OPERATIONS (SCHEDULE OF QUARTERLY RESULTS OF OPERATIONS) (DETAILS)']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)']
     share_catch_list = ['CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEET (PARENTHETICAL)']
 
@@ -423,7 +424,7 @@ def parse_filings(filings, type, headers, splits):
         for report in reports.find_all('report')[:-1]:
 
             # Summary table
-            if report.shortname.text.upper() in intro_list:
+            if report.shortname.text.upper() in intro_list and fy == '---':
                 # Create URL and call parser function
                 try:
                     intro_url = base_url + report.htmlfilename.text
@@ -441,7 +442,7 @@ def parse_filings(filings, type, headers, splits):
                         break
 
             # Income Statement
-            if report.shortname.text.upper() in income_list:
+            if report.shortname.text.upper() in income_list and rev == '---':
                 # Create URL and call parser function
                 try:
                     rev_url = base_url + report.htmlfilename.text
@@ -455,7 +456,7 @@ def parse_filings(filings, type, headers, splits):
                         shares = shares_return
 
             # Balance sheet
-            if report.shortname.text.upper() in bs_list:
+            if report.shortname.text.upper() in bs_list and cash == '---':
                 # Create URL and call parser function
                 try:
                     bs_url = base_url + report.htmlfilename.text
@@ -465,7 +466,7 @@ def parse_filings(filings, type, headers, splits):
                     cash, assets, debt, liabilities, equity = sp.bs_xml(bs_url, headers)
 
             # Cash flow
-            if report.shortname.text.upper() in cf_list:
+            if report.shortname.text.upper() in cf_list and fcf == '---':
                 # Create URL and call parser function
                 try:
                     cf_url = base_url + report.htmlfilename.text
