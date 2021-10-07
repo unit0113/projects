@@ -561,9 +561,114 @@ def parse_filings(filings, type, headers, splits):
         Dividends = split_adjuster(split_list, Dividends)
         Shares_Outstanding = split_adjuster(split_list, Shares_Outstanding, shares=True)    
 
+
+    def divider(num, denom):
+        ''' Divide two lists elementwise accounting for empty data
+
+        Args:
+            Numerator (List)
+            Denominator (List)
+        Returns:
+            Result (List)
+        '''
+
+        # Convert empty results to 0
+        adj_num = [0 if elem == '---' else elem for elem in num]
+        adj_denom = [0 if elem == '---' else elem for elem in denom]
+
+        # return empty results if all of num is '---'
+        if sum(adj_num) == 0:
+            return ['---'] * len(num)
+
+        # Calculate return and convert 0's back to empty result
+        result = np.divide(adj_num, adj_denom)
+        result = ['---' if elem == 0 else round(elem, 4) for elem in result]
+
+        return result
+    
+
+    def subtractor(first, second):
+        ''' Subtract two lists elementwise accounting for empty data
+
+        Args:
+            List being subtracted from (List)
+            List being subtracted (List)
+        Returns:
+            Result (List)
+        '''
+        
+        # Convert empty results to 0
+        adj_first = [0 if elem == '---' else elem for elem in first]
+        adj_second = [0 if elem == '---' else elem for elem in second]
+
+        # Calculate return and convert 0's back to empty result
+        result = np.subtract(adj_first, adj_second)
+        result = ['---' if elem == 0 else round(elem, 2) for elem in result]
+
+        return result
+
+
+    def adder(first, second):
+        ''' Add two lists elementwise accounting for empty data
+
+        Args:
+            List being added (List)
+            Other list being added (List)
+        Returns:
+            Result (List)
+        '''
+        
+        # Convert empty results to 0
+        adj_first = [0 if elem == '---' else elem for elem in first]
+        adj_second = [0 if elem == '---' else elem for elem in second]
+
+        # Calculate return and convert 0's back to empty result
+        result = np.add(adj_first, adj_second)
+        result = ['---' if elem == 0 else round(elem, 2) for elem in result]
+
+        return result
+
+    # Further calculations of margins and payout ratios and what not
+    # Per share data
+    Revenue_Per_Share = divider(Revenue, divider(Shares_Outstanding, [1000] * len(Shares_Outstanding)))
+    FFO_Per_Share = divider(Funds_From_Operations, divider(Shares_Outstanding, [1000] * len(Shares_Outstanding)))
+    FCF_Per_Share = divider(Free_Cash_Flow, divider(Shares_Outstanding, [1000] * len(Shares_Outstanding)))
+    
+    # Payout ratios
+    Earning_Payout_Ratio = divider(Dividends, Earnings_Per_Share)
+    FCF_Payout_Ratio = divider(Dividends, FCF_Per_Share)
+    FFO_Payout_Ratio = divider(Dividends, FFO_Per_Share)
+    
+    # Margins
+    Gross_Margin = divider(Gross_Profit, Revenue)
+    Operating_Margin = divider(Operating_Income, Revenue)
+    Net_Margin = divider(Net_Profit, Revenue)
+    FFO_Margin = divider(Funds_From_Operations, Revenue)
+    FCF_Margin = divider(Free_Cash_Flow, Revenue)
+    SBC_Margin = divider(Share_Based_Comp, Revenue)
+    Research_Margin = divider(Research, Revenue)
+    
+    # Returns
+    Return_on_Assets = divider(Net_Profit, Total_Assets)
+    Return_on_Equity = divider(Net_Profit, SH_Equity)
+    nopat = subtractor(Net_Profit, Dividend_Payments)
+    ic = adder(Total_Debt, SH_Equity)
+    Return_on_Invested_Capital = divider(nopat, ic)
+
+    # Book Value
+    Book_Value = subtractor(Total_Assets, Total_Liabilities)
+    Book_Value_Per_Share = divider(Book_Value, divider(Shares_Outstanding, [1000] * len(Shares_Outstanding)))
+
+
+
+
+
     everything = {'FY': Fiscal_Period, 'Per': Period_End, 'Rev': Revenue, 'Gross': Gross_Profit, 'R&D': Research, 'OI': Operating_Income, 'Net': Net_Profit, 'EPS': Earnings_Per_Share,
                     'Shares': Shares_Outstanding, 'FFO': Funds_From_Operations, 'Cash': Cash, 'Assets': Total_Assets, 'Debt': Total_Debt, 'Liabilities': Total_Liabilities, 'SH_Equity': SH_Equity, 'FCF': Free_Cash_Flow,
-                    'Debt_Repayment': Debt_Repayment, 'Buybacks': Share_Buybacks, 'Div_Paid': Dividend_Payments, 'SBC': Share_Based_Comp, 'Div': Dividends}    
+                    'Debt_Repayment': Debt_Repayment, 'Buybacks': Share_Buybacks, 'Div_Paid': Dividend_Payments, 'SBC': Share_Based_Comp, 'Div': Dividends, 'Revenue Per Share': Revenue_Per_Share, 'FFO Per Share': FFO_Per_Share,
+                    'Free Cash Flow Per Share': FCF_Per_Share, 'Earnings Payout Ratio': Earning_Payout_Ratio, 'FCF Payout Ratio': FCF_Payout_Ratio, 'FFO Payout Ratio': FFO_Payout_Ratio, 'Gross Margin': Gross_Margin,
+                    'Operating Margin': Operating_Margin, 'Net Margin': Net_Margin, 'FFO Margin': FFO_Margin, 'FCF Margin': FCF_Margin, 'SBC Margin': SBC_Margin, 'R&D Margin': Research_Margin, 'ROA': Return_on_Assets,
+                    'ROE': Return_on_Equity, 'ROIC': Return_on_Invested_Capital, 'Book Value': Book_Value, 'Book Value Per Share': Book_Value_Per_Share}    
     print(everything)
 
     return everything
