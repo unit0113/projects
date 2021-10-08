@@ -508,8 +508,8 @@ def bs_htm(bs_url, headers, per):
     soup = BeautifulSoup(content, 'html.parser')
 
     # Initial values
-    equity = cash = assets = liabilities = tot_liabilities = '---'
-    intangible_assets = goodwill = debt = 0
+    equity = cash = assets = cur_liabilities = liabilities = tot_liabilities = '---'
+    intangible_assets = goodwill = debt = cur_liabilities_sum = 0
     intangible_assets_set = set()
 
     # Find which column has 12 month data
@@ -552,6 +552,20 @@ def bs_htm(bs_url, headers, per):
             assets_calc = html_re(str(tds[colm]))
             if assets_calc != '---':
                 assets = round(check_neg(str(tds), assets_calc) * (dollar_multiplier / 1_000_000), 2)
+        elif r"this, 'defref_us-gaap_LiabilitiesCurrent', window" in str(tds):
+            cur_liabilities_calc = html_re(str(tds[colm]))
+            if cur_liabilities_calc != '---':
+                cur_liabilities = round(check_neg(str(tds), cur_liabilities_calc) * (dollar_multiplier / 1_000_000), 2)
+        elif (r"this, 'defref_us-gaap_UnsecuredDebt', window" in str(tds) and cur_liabilities == '---' or
+              r"this, 'defref_stor_AccruedExpensesDeferredRevenueAndOtherLiabilities', window" in str(tds) and cur_liabilities == '---' or
+              r"this, 'defref_us-gaap_AccountsPayableAndAccruedLiabilitiesCurrentAndNoncurrent', window" in str(tds) and cur_liabilities == '---' or
+              r"this, 'defref_us-gaap_ConvertibleNotesPayable', window" in str(tds) and cur_liabilities == '---' or
+              r"this, 'defref_us-gaap_AccountsPayableRelatedPartiesCurrentAndNoncurrent', window" in str(tds) and cur_liabilities == '---' or
+              r"this, 'defref_abr_DueToBorrowers', window" in str(tds) and cur_liabilities == '---'
+              ):
+            cur_liabilities_calc = html_re(str(tds[colm]))
+            if cur_liabilities_calc != '---':
+                cur_liabilities_sum += round(check_neg(str(tds), cur_liabilities_calc) * (dollar_multiplier / 1_000_000), 2)
         elif 'onclick="top.Show.showAR( this, \'defref_us-gaap_Liabilities\', window )' in str(tds):
             liabilities_calc = html_re(str(tds[colm]))
             if liabilities_calc != '---':
@@ -591,6 +605,10 @@ def bs_htm(bs_url, headers, per):
         elif '[Member]' in str(row) and cash != '---':
             break     
 
+    # Calculate current liabilities if total not found
+    if cur_liabilities == '---' and cur_liabilities_sum != 0:
+        cur_liabilities = cur_liabilities_sum
+
     # Calculate liabilites from shareholder equity if not found
     if liabilities == '---' and tot_liabilities != '---' and equity != '---':
         liabilities = round(tot_liabilities - equity, 2)
@@ -599,7 +617,7 @@ def bs_htm(bs_url, headers, per):
     if assets != '---' and goodwill != '---':
         assets = round(assets - (goodwill + sum(intangible_assets_set)), 2)
     
-    return cash, assets, debt, liabilities, equity
+    return cash, assets, debt, cur_liabilities, liabilities, equity
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
@@ -1470,8 +1488,8 @@ def bs_xml(bs_url, headers):
     soup = BeautifulSoup(content, 'xml')
 
     # Initial values
-    equity = cash = assets = liabilities = '---'
-    intangible_assets = goodwill = debt = 0
+    equity = cash = assets = cur_liabilities = liabilities = '---'
+    intangible_assets = goodwill = debt = cur_liabilities_sum = 0
     debt_set = set()
 
     # Find which column has 12 month data
@@ -1505,6 +1523,12 @@ def bs_xml(bs_url, headers):
             debt_calc = xml_re(str(cells[colm]))
             if debt_calc != '---':
                 debt_set.add(round(debt_calc * (dollar_multiplier / 1_000_000), 2))
+        elif r'<ElementName>us-gaap_LiabilitiesCurrent</ElementName>' in str(row):
+            cur_liabilities = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)
+        elif (r'<ElementName>us-gaap_AccountsPayableAndAccruedLiabilitiesCurrentAndNoncurrent</ElementName>' in str(row) and cur_liabilities == '---' or
+              r'<ElementName>us-gaap_UnsecuredDebt</ElementName>' in str(row) and cur_liabilities == '---'
+              ):
+            cur_liabilities_sum += round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)
         elif r'<ElementName>us-gaap_Liabilities</ElementName>' in str(row):
             liabilities = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)
         elif r'us-gaap_LiabilitiesAndStockholdersEquity' in str(row) and liabilities == '---':
@@ -1519,6 +1543,10 @@ def bs_xml(bs_url, headers):
     # Calculate debt total
     debt = round(sum(debt_set), 2)
 
+    # Calculate current liabilities if total not found
+    if cur_liabilities == '---' and cur_liabilities_sum != 0:
+        cur_liabilities = cur_liabilities_sum
+
     # Calculate liabilites from shareholder equity if not found
     if liabilities == '---' and tot_liabilities != '---' and equity != '---':
         liabilities = round(tot_liabilities - equity, 2)
@@ -1527,7 +1555,7 @@ def bs_xml(bs_url, headers):
     if assets != '---' and goodwill != '---':
         assets = round(assets - (goodwill + intangible_assets), 2)
     
-    return cash, assets, debt, liabilities, equity
+    return cash, assets, debt, cur_liabilities, liabilities, equity
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 

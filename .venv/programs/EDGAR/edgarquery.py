@@ -374,6 +374,7 @@ def parse_filings(filings, type, headers, splits):
     Cash = []
     Total_Assets = []
     Total_Debt = []
+    Current_Liabilities = []
     Total_Liabilities = []
     SH_Equity = []
     Free_Cash_Flow = []
@@ -417,7 +418,7 @@ def parse_filings(filings, type, headers, splits):
         reports = pull_filing_2(xml_summary)
         
         # Initial values
-        fy = period_end = name = rev = gross = research = oi = net = eps = shares = div = ffo = cash = assets = debt = liabilities = equity = fcf = debt_pay = buyback = divpaid = sbc = '---'
+        fy = period_end = name = rev = gross = research = oi = net = eps = shares = div = ffo = cash = assets = debt = cur_liabilities = liabilities = equity = fcf = debt_pay = buyback = divpaid = sbc = '---'
         diff_comp_flag = False
 
         # Loop through each report with the 'myreports' tag but avoid the last one as this will cause an error
@@ -460,10 +461,10 @@ def parse_filings(filings, type, headers, splits):
                 # Create URL and call parser function
                 try:
                     bs_url = base_url + report.htmlfilename.text
-                    cash, assets, debt, liabilities, equity = sp.bs_htm(bs_url, headers, period_end)
+                    cash, assets, debt, cur_liabilities, liabilities, equity = sp.bs_htm(bs_url, headers, period_end)
                 except:
                     bs_url = base_url + report.xmlfilename.text
-                    cash, assets, debt, liabilities, equity = sp.bs_xml(bs_url, headers)
+                    cash, assets, debt, cur_liabilities, liabilities, equity = sp.bs_xml(bs_url, headers)
 
             # Cash flow
             if report.shortname.text.upper() in cf_list and fcf == '---':
@@ -538,6 +539,7 @@ def parse_filings(filings, type, headers, splits):
         Cash.append(cash)
         Total_Assets.append(assets)
         Total_Debt.append(debt)
+        Current_Liabilities.append(cur_liabilities)
         Total_Liabilities.append(liabilities)
         SH_Equity.append(equity)
         Free_Cash_Flow.append(fcf)
@@ -549,7 +551,7 @@ def parse_filings(filings, type, headers, splits):
         names.append(name)
 
         everything = {'FY': Fiscal_Period, 'Per': Period_End, 'Rev': Revenue, 'Gross': Gross_Profit, 'R&D': Research, 'OI': Operating_Income, 'Net': Net_Profit, 'EPS': Earnings_Per_Share,
-                      'Shares': Shares_Outstanding, 'FFO': Funds_From_Operations, 'Cash': Cash, 'Assets': Total_Assets, 'Debt': Total_Debt, 'Liabilities': Total_Liabilities, 'SH_Equity': SH_Equity, 'FCF': Free_Cash_Flow,
+                      'Shares': Shares_Outstanding, 'FFO': Funds_From_Operations, 'Cash': Cash, 'Assets': Total_Assets, 'Debt': Total_Debt, 'Current Liabilities': Current_Liabilities, 'Liabilities': Total_Liabilities, 'SH_Equity': SH_Equity, 'FCF': Free_Cash_Flow,
                       'Debt_Repayment': Debt_Repayment, 'Buybacks': Share_Buybacks, 'Div_Paid': Dividend_Payments, 'SBC': Share_Based_Comp, 'Div': Dividends}
         print(everything)
         print('-'*100)
@@ -654,21 +656,23 @@ def parse_filings(filings, type, headers, splits):
     nopat = subtractor(Net_Profit, Dividend_Payments)
     ic = adder(Total_Debt, SH_Equity)
     Return_on_Invested_Capital = divider(nopat, ic)
+    Return_on_Captial_Employed = divider(Net_Profit, subtractor(Total_Assets, Current_Liabilities))
 
     # Book Value
     Book_Value = subtractor(Total_Assets, Total_Liabilities)
     Book_Value_Per_Share = divider(Book_Value, divider(Shares_Outstanding, [1000] * len(Shares_Outstanding)))
 
-
+    # Other
+    Debt_to_Profit_Ratio = divider(Total_Debt, Net_Profit)
 
 
 
     everything = {'FY': Fiscal_Period, 'Per': Period_End, 'Rev': Revenue, 'Gross': Gross_Profit, 'R&D': Research, 'OI': Operating_Income, 'Net': Net_Profit, 'EPS': Earnings_Per_Share,
-                    'Shares': Shares_Outstanding, 'FFO': Funds_From_Operations, 'Cash': Cash, 'Assets': Total_Assets, 'Debt': Total_Debt, 'Liabilities': Total_Liabilities, 'SH_Equity': SH_Equity, 'FCF': Free_Cash_Flow,
+                    'Shares': Shares_Outstanding, 'FFO': Funds_From_Operations, 'Cash': Cash, 'Assets': Total_Assets, 'Debt': Total_Debt, 'Current Liabilities': Current_Liabilities, 'Liabilities': Total_Liabilities, 'SH_Equity': SH_Equity, 'FCF': Free_Cash_Flow,
                     'Debt_Repayment': Debt_Repayment, 'Buybacks': Share_Buybacks, 'Div_Paid': Dividend_Payments, 'SBC': Share_Based_Comp, 'Div': Dividends, 'Revenue Per Share': Revenue_Per_Share, 'FFO Per Share': FFO_Per_Share,
                     'Free Cash Flow Per Share': FCF_Per_Share, 'Earnings Payout Ratio': Earning_Payout_Ratio, 'FCF Payout Ratio': FCF_Payout_Ratio, 'FFO Payout Ratio': FFO_Payout_Ratio, 'Gross Margin': Gross_Margin,
                     'Operating Margin': Operating_Margin, 'Net Margin': Net_Margin, 'FFO Margin': FFO_Margin, 'FCF Margin': FCF_Margin, 'SBC Margin': SBC_Margin, 'R&D Margin': Research_Margin, 'ROA': Return_on_Assets,
-                    'ROE': Return_on_Equity, 'ROIC': Return_on_Invested_Capital, 'Book Value': Book_Value, 'Book Value Per Share': Book_Value_Per_Share}    
+                    'ROE': Return_on_Equity, 'ROIC': Return_on_Invested_Capital, 'ROCE': Return_on_Captial_Employed, 'Book Value': Book_Value, 'Book Value Per Share': Book_Value_Per_Share, 'Debt to Profit Ratio': Debt_to_Profit_Ratio}    
     print(everything)
 
     return everything
