@@ -41,12 +41,21 @@ class StockData:
         self.annual_data = parse_filings(self.annual_filings, 'annual', headers, self.yahoo_stock_class.splits)
 
         # Fill in missed divs
+        self.div_edit = False
         if '---' in self.annual_data['Div']:
             for index, (dividend, div_paid) in enumerate(zip(self.annual_data['Div'], self.annual_data['Div_Paid'])):
                 if div_paid > 0 and dividend == '---':
+                    self.div_edit = True
                     self.annual_data['Div'][index] = yf_div_catch(self.symbol, self.annual_data['Per'][index])
-                    print('-' * 100)
                     print(self.annual_data['Div'])
+                    print('-' * 100)
+
+        # Update div calcs if new div found
+        if self.div_edit == True:
+            self.annual_data['Earnings Payout Ratio'] = divider(self.annual_data['Div'], self.annual_data['EPS'])
+            self.annual_data['FCF Payout Ratio'] = divider(self.annual_data['Div'], self.annual_data['Free Cash Flow Per Share'])
+            self.annual_data['FFO Payout Ratio'] = divider(self.annual_data['Div'], self.annual_data['FFO Per Share'])
+            print(self.annual_data)
 
 
         # Calculate growth rates
@@ -57,6 +66,14 @@ class StockData:
         self.growth_rates['FFO Growth'] = growth_rate_calc(self.annual_data['FFO'])
         self.growth_rates['FCF Growth'] = growth_rate_calc(self.annual_data['FCF'])
         self.growth_rates['Dividend Growth'] = growth_rate_calc(self.annual_data['Div'])
+
+        # Calculate YoY growth
+        self.growth_rates['YoY Revenue Growth'] = per_over_per_growth_rate_calc(self.annual_data['Rev'])
+        self.growth_rates['YoY Net Income Growth'] = per_over_per_growth_rate_calc(self.annual_data['Net'])
+        self.growth_rates['YoY Shares Growth'] = per_over_per_growth_rate_calc(self.annual_data['Shares'])
+        self.growth_rates['YoY FFO Growth'] = per_over_per_growth_rate_calc(self.annual_data['FFO'])
+        self.growth_rates['YoY FCF Growth'] = per_over_per_growth_rate_calc(self.annual_data['FCF'])
+        self.growth_rates['YoY Dividend Growth'] = per_over_per_growth_rate_calc(self.annual_data['Div'])
 
         print('-' * 100)
         print(self.growth_rates)
@@ -215,6 +232,7 @@ def yf_div_catch(ticker, per):
     dividends = list(stock.dividends[:new_per])
     div = round(sum(dividends[-4:]), 3)
     
+    print('-' * 100)
     print(f'Dividend of {div} caught by YF')
     return div
 
@@ -357,6 +375,73 @@ def annualData(cik, headers):
     return filings
 
 
+def divider(num, denom):
+    ''' Divide two lists elementwise accounting for empty data
+
+    Args:
+        Numerator (List)
+        Denominator (List)
+    Returns:
+        Result (List)
+    '''
+
+    # Convert empty results to 0
+    adj_num = [0 if elem == '---' else elem for elem in num]
+    adj_denom = [0 if elem == '---' else elem for elem in denom]
+
+    # return empty results if all of num is '---'
+    if sum(adj_num) == 0:
+        return ['---'] * len(num)
+
+    # Calculate return and convert 0's back to empty result
+    result = np.divide(adj_num, adj_denom)
+    result = ['---' if elem == 0 else round(elem, 4) for elem in result]
+
+    return result
+
+
+def subtractor(first, second):
+    ''' Subtract two lists elementwise accounting for empty data
+
+    Args:
+        List being subtracted from (List)
+        List being subtracted (List)
+    Returns:
+        Result (List)
+    '''
+    
+    # Convert empty results to 0
+    adj_first = [0 if elem == '---' else elem for elem in first]
+    adj_second = [0 if elem == '---' else elem for elem in second]
+
+    # Calculate return and convert 0's back to empty result
+    result = np.subtract(adj_first, adj_second)
+    result = ['---' if elem == 0 else round(elem, 2) for elem in result]
+
+    return result
+
+
+def adder(first, second):
+    ''' Add two lists elementwise accounting for empty data
+
+    Args:
+        List being added (List)
+        Other list being added (List)
+    Returns:
+        Result (List)
+    '''
+    
+    # Convert empty results to 0
+    adj_first = [0 if elem == '---' else elem for elem in first]
+    adj_second = [0 if elem == '---' else elem for elem in second]
+
+    # Calculate return and convert 0's back to empty result
+    result = np.add(adj_first, adj_second)
+    result = ['---' if elem == 0 else round(elem, 2) for elem in result]
+
+    return result
+
+
 def parse_filings(filings, type, headers, splits):    
     ''' Parse filings and create datafram from the data
 
@@ -488,8 +573,11 @@ def parse_filings(filings, type, headers, splits):
                         print(f'Name comparision between {name} and {names[-1]} failed with a ratio of {name_diff}')
                         break
 
+        # Loop through each report with the 'myreports' a second time because some companies put the document summary at the end
+        for report in reports.find_all('report')[:-1]:
+
             # Income Statement
-            elif report.shortname.text.upper() in income_list and rev == '---':
+            if report.shortname.text.upper() in income_list and rev == '---':
                 # Create URL and call parser function
                 try:
                     rev_url = base_url + report.htmlfilename.text
@@ -615,73 +703,6 @@ def parse_filings(filings, type, headers, splits):
         Dividends = split_adjuster(split_list, Dividends)
         Shares_Outstanding = split_adjuster(split_list, Shares_Outstanding, shares=True)    
 
-
-    def divider(num, denom):
-        ''' Divide two lists elementwise accounting for empty data
-
-        Args:
-            Numerator (List)
-            Denominator (List)
-        Returns:
-            Result (List)
-        '''
-
-        # Convert empty results to 0
-        adj_num = [0 if elem == '---' else elem for elem in num]
-        adj_denom = [0 if elem == '---' else elem for elem in denom]
-
-        # return empty results if all of num is '---'
-        if sum(adj_num) == 0:
-            return ['---'] * len(num)
-
-        # Calculate return and convert 0's back to empty result
-        result = np.divide(adj_num, adj_denom)
-        result = ['---' if elem == 0 else round(elem, 4) for elem in result]
-
-        return result
-    
-
-    def subtractor(first, second):
-        ''' Subtract two lists elementwise accounting for empty data
-
-        Args:
-            List being subtracted from (List)
-            List being subtracted (List)
-        Returns:
-            Result (List)
-        '''
-        
-        # Convert empty results to 0
-        adj_first = [0 if elem == '---' else elem for elem in first]
-        adj_second = [0 if elem == '---' else elem for elem in second]
-
-        # Calculate return and convert 0's back to empty result
-        result = np.subtract(adj_first, adj_second)
-        result = ['---' if elem == 0 else round(elem, 2) for elem in result]
-
-        return result
-
-
-    def adder(first, second):
-        ''' Add two lists elementwise accounting for empty data
-
-        Args:
-            List being added (List)
-            Other list being added (List)
-        Returns:
-            Result (List)
-        '''
-        
-        # Convert empty results to 0
-        adj_first = [0 if elem == '---' else elem for elem in first]
-        adj_second = [0 if elem == '---' else elem for elem in second]
-
-        # Calculate return and convert 0's back to empty result
-        result = np.add(adj_first, adj_second)
-        result = ['---' if elem == 0 else round(elem, 2) for elem in result]
-
-        return result
-
     # Further calculations of margins and payout ratios and what not
     # Per share data
     Revenue_Per_Share = divider(Revenue, divider(Shares_Outstanding, [1000] * len(Shares_Outstanding)))
@@ -731,7 +752,7 @@ def parse_filings(filings, type, headers, splits):
 
 
 def growth_rate_calc(numbers):
-    ''' Get quarterly data from Edgar
+    ''' Calculates 1, 3, 5, and 10 year growth rates
 
     Args:
         List of yearly numbers
@@ -761,6 +782,28 @@ def growth_rate_calc(numbers):
         ten_year = '---'
 
     return one_year, three_year, five_year, ten_year
+
+
+def per_over_per_growth_rate_calc(numbers):
+    ''' Calculates period over period growth
+
+    Args:
+        List of numbers
+    Returns:
+        List of growth rates
+    '''
+
+    # Return nothing if length is only 1
+    if len(numbers) == 1:
+        return '---'
+
+    # Calc growth
+    results = []    
+    for i in range(1, len(numbers)):
+        growth = (numbers[i-1] - numbers[i]) / numbers[i]
+        results.append(round(growth, 4))
+
+    return results
 
 
 def main(gui_return, header):

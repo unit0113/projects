@@ -587,7 +587,9 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_us-gaap_ConvertibleDebtNoncurrent', window" in str(tds) or
               r"this, 'defref_us-gaap_ConvertibleLongTermNotesPayable', window" in str(tds) or
               r"this, 'defref_us-gaap_LongTermLoansPayable', window" in str(tds) or
-              r"this, 'defref_us-gaap_LongTermLineOfCredit', window" in str(tds)
+              r"this, 'defref_us-gaap_LongTermLineOfCredit', window" in str(tds) or
+              r"this, 'defref_cat_LongTermDebtDueAfterOneYearMachineryEnergyTransNoncurrent', window" in str(tds) or
+              r"this, 'defref_cat_LongTermDebtDueAfterOneYearFinancialProducts', window" in str(tds)
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -689,7 +691,9 @@ def cf_htm(cf_url, headers, per):
               'Repayment of debt and commercial paper borrowings' in str(tds) or
               r"this, 'defref_us-gaap_RepaymentsOfUnsecuredDebt', window" in str(tds) or
               r"this, 'defref_us-gaap_RepaymentsOfOtherDebt', window" in str(tds) or
-              r"this, 'defref_vz_RepaymentsOfLongTermBorrowingsAndFinanceLeaseObligations', window" in str(tds)
+              r"this, 'defref_vz_RepaymentsOfLongTermBorrowingsAndFinanceLeaseObligations', window" in str(tds) or
+              r"this, 'defref_cat_PaymentsMachineryEnergyandTransportation', window" in str(tds) or
+              r"this, 'defref_cat_PaymentsFinancialProducts', window" in str(tds)
               ):
             debt_payment = html_re(str(tds[colm]))
             if debt_payment != '---':
@@ -1581,7 +1585,9 @@ def bs_xml(bs_url, headers):
         elif (r'us-gaap_LongTermDebtNoncurrent' in str(row) or
               r'us-gaap_LongTermDebtAndCapitalLeaseObligations' in str(row) or
               r'<ElementName>us-gaap_LongTermDebt</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_LongTermLoansPayable</ElementName>' in str(row)
+              r'<ElementName>us-gaap_LongTermLoansPayable</ElementName>' in str(row) or
+              r'<ElementName>cat_LongTermDebtDueAfterOneYearMachineryAndEnginesNoncurrent</ElementName>' in str(row) or
+              r'<ElementName>cat_LongTermDebtDueAfterOneYearFinancialProducts</ElementName>' in str(row)
               ):
             debt_calc = xml_re(str(cells[colm]))
             if debt_calc != '---':
@@ -1672,7 +1678,9 @@ def cf_xml(cf_url, headers):
               r'us-gaap_RepaymentsOfLongTermDebtAndCapitalSecurities' in str(row) or
               r'us-gaap_InterestPaid' in str(row) or
               r'us-gaap_RepaymentsOfLongTermDebt' in str(row) or
-              r'us-gaap_RepaymentsOfOtherDebt' in str(row)
+              r'us-gaap_RepaymentsOfOtherDebt' in str(row) or
+              r'<ElementName>cat_PaymentsMachineryAndEngines</ElementName>' in str(row) or
+              r'<ElementName>cat_PaymentsFinancialProducts</ElementName>' in str(row)
               ):
             debt_pay_calc = xml_re(str(cells[colm]))
             if debt_pay_calc != '---':
