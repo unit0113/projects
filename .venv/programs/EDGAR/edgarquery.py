@@ -12,6 +12,7 @@ import math
 import yfinance as yf
 import numpy as np
 from fuzzywuzzy import fuzz
+from dateutil.relativedelta import relativedelta
 
 
 class StockData:
@@ -31,7 +32,6 @@ class StockData:
 
         # Get yahoo data, and initiate split factor list
         self.yahoo_stock_class = yahoo_pull(self.symbol)
-        #self.split_list = split_factor_calc(self.yahoo_stock_class.splits, self.annual_data['Per'])
 
         # Get list of fillings
         self.annual_filings = annualData(self.cik, headers) 
@@ -40,6 +40,26 @@ class StockData:
         # Pull data from filings
         self.annual_data = parse_filings(self.annual_filings, 'annual', headers, self.yahoo_stock_class.splits)
 
+        # Fill in missed divs
+        if '---' in self.annual_data['Div']:
+            for index, (dividend, div_paid) in enumerate(zip(self.annual_data['Div'], self.annual_data['Div_Paid'])):
+                if div_paid > 0 and dividend == '---':
+                    self.annual_data['Div'][index] = yf_div_catch(self.symbol, self.annual_data['Per'][index])
+                    print('-' * 100)
+                    print(self.annual_data['Div'])
+
+
+        # Calculate growth rates
+        self.growth_rates = {}
+        self.growth_rates['Revenue Growth'] = growth_rate_calc(self.annual_data['Rev'])
+        self.growth_rates['Net Income Growth'] = growth_rate_calc(self.annual_data['Net'])
+        self.growth_rates['Shares Growth'] = growth_rate_calc(self.annual_data['Shares'])
+        self.growth_rates['FFO Growth'] = growth_rate_calc(self.annual_data['FFO'])
+        self.growth_rates['FCF Growth'] = growth_rate_calc(self.annual_data['FCF'])
+        self.growth_rates['Dividend Growth'] = growth_rate_calc(self.annual_data['Div'])
+
+        print('-' * 100)
+        print(self.growth_rates)
 
 def network_check_decorator(num, max_attempts=5):
     ''' Retries failed network connections
@@ -174,6 +194,29 @@ def split_adjuster(split_factor, values, shares=False):
     adj_values = ['---' if elem == 0 else elem for elem in adj_values]
 
     return adj_values
+
+
+def yf_div_catch(ticker, per):
+    ''' Pulls div data from YF if div not reported
+
+    Args:
+        Ticker (str)
+        Period end date (str)
+    Returns:
+        Dividend (float)
+    '''  
+    # Adjust period to catch relevant div payments
+    per_edit = per.replace('.', '')
+    date_per = datetime. strptime(per_edit, '%b %d, %Y')
+    new_per = date_per + relativedelta(months=3)
+
+    # Pull and sum div data
+    stock = yf.Ticker(ticker)
+    dividends = list(stock.dividends[:new_per])
+    div = round(sum(dividends[-4:]), 3)
+    
+    print(f'Dividend of {div} caught by YF')
+    return div
 
 
 def getFilings(cik, period, limit, headers):
@@ -325,15 +368,16 @@ def parse_filings(filings, type, headers, splits):
     
     # Define statements to Parse
     intro_list = ['DOCUMENT AND ENTITY INFORMATION', 'COVER PAGE', 'COVER', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT', 'COVER PAGE COVER PAGE', 'DEI DOCUMENT', 'COVER DOCUMENT', 'DOCUMENT INFORMATION STATEMENT',
-                  'DOCUMENT ENTITY INFORMATION', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT AND ENTITY INFORMATION', 'COVER COVER']
+                  'DOCUMENT ENTITY INFORMATION', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT AND ENTITY INFORMATION', 'COVER COVER', 'DOCUMENT']
     income_list = ['CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF INCOME ALTERNATIVE', 'CONSOLIDATED STATEMENT OF INCOME', 'INCOME STATEMENTS', 'STATEMENT OF INCOME',
                    'CONSOLIDATED STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED INCOME', 'CONSOLIDATED STATEMENTS OF INCOME', 'CONSOLIDATED STATEMENT OF OPERATIONS', 
                    'CONSOLIDATED STATEMENTS OF EARNINGS (LOSSES)', 'CONSOLIDATED INCOME STATEMENTS', 'CONSOLIDATED STATEMENTS OF OPERATIONS CONSOLIDATED STATEMENTS OF OPERATIONS',
                    'CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS', 'CONSOLIDATED STATEMENTS OF NET INCOME', 'CONSOLIDATED AND COMBINED STATEMENTS OF OPERATIONS', 'CONSOLIDATED STATEMENT OF EARNINGS',
                    'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS)', 'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME', 'CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS)',
-                   'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE LOSS', 'CONSOLIDATED STATEMENTS OF OPERATIONS AND OTHER COMPREHENSIVE LOSS', 'STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED EARNINGS']
+                   'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE LOSS', 'CONSOLIDATED STATEMENTS OF OPERATIONS AND OTHER COMPREHENSIVE LOSS', 'STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED EARNINGS',
+                   'CONSOLIDATED RESULTS OF OPERATIONS']
     bs_list = ['BALANCE SHEETS', 'CONSOLIDATED BALANCE SHEETS', 'STATEMENT OF FINANCIAL POSITION CLASSIFIED', 'CONSOLIDATED BALANCE SHEET', 'CONDENSED CONSOLIDATED BALANCE SHEETS',
-               'CONSOLIDATED AND COMBINED BALANCE SHEETS', 'CONSOLIDATED STATEMENTS OF FINANCIAL POSITION', 'BALANCE SHEET']
+               'CONSOLIDATED AND COMBINED BALANCE SHEETS', 'CONSOLIDATED STATEMENTS OF FINANCIAL POSITION', 'BALANCE SHEET', 'CONSOLIDATED FINANCIAL POSITION']
     cf_list = ['CASH FLOWS STATEMENTS', 'CONSOLIDATED STATEMENTS OF CASH FLOWS', 'STATEMENT OF CASH FLOWS INDIRECT', 'CONSOLIDATED STATEMENT OF CASH FLOWS',
                'STATEMENTS OF CONSOLIDATED CASH FLOWS', 'CONSOLIDATED CASH FLOWS STATEMENTS', 'CONDENSED CONSOLIDATED STATEMENTS OF CASH FLOWS', 'CONSOLIDATED AND COMBINED STATEMENTS OF CASH FLOWS', 'CONSOLIDATED STATEMENT OF CASH FLOW',
                'STATEMENT OF CASH FLOWS']
@@ -356,7 +400,9 @@ def parse_filings(filings, type, headers, splits):
                 'CONSOLIDATED STATEMENT OF SHAREHOLDERS\' INVESTMENT (PARENTHETICAL)', 'SUPPLEMENTARY FINANCIAL INFORMATION (UNAUDITED) (DETAILS)', 'STATEMENTS OF STOCKHOLDERS\' EQUITY (PARENTHETICAL)',
                 'STATEMENTS OF STOCKHOLDERS\' EQUITY STATEMENTS OF STOCKHOLDERS\' EQUITY (PARENTHETICAL)', 'STATEMENT OF CONSOLIDATED STOCKHOLDERS\'S EQUITY (PARENTHETICAL)', 'CONDENSED CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY',
                 'CONDENSED CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS??? EQUITY (PARENTHETICAL)',
-                'CONSOLIDATED STATEMENTS OF SHAREHOLDERS??? EQUITY PARENTHETICAL', 'QUARTERLY RESULTS OF OPERATIONS (UNAUDITED) (DETAILS)', 'QUARTERLY FINANCIAL INFORMATION (DETAIL)', 'QUARTERLY RESULTS OF OPERATIONS (SCHEDULE OF QUARTERLY RESULTS OF OPERATIONS) (DETAILS)']
+                'CONSOLIDATED STATEMENTS OF SHAREHOLDERS??? EQUITY PARENTHETICAL', 'QUARTERLY RESULTS OF OPERATIONS (UNAUDITED) (DETAILS)', 'QUARTERLY FINANCIAL INFORMATION (DETAIL)', 'QUARTERLY RESULTS OF OPERATIONS (SCHEDULE OF QUARTERLY RESULTS OF OPERATIONS) (DETAILS)',
+                'CONSOLIDATED STATEMENTS OF SHAREHOLDERS EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF STOCKHOLDERS\' EQUITY CONSOLIDATED STATEMENTS OF STOCKHOLDERS\' EQUITY (PARENTHETICAL)',
+                'STOCK-BASED COMPENSATION - STOCK OPTION ASSUMPTIONS (DETAILS)', 'STOCK-BASED COMPENSATION (STOCK OPTION ASSUMPTIONS) (DETAILS)', 'CHANGES IN CONSOLIDATED SHAREHOLDERS\' EQUITY']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)']
     share_catch_list = ['CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEET (PARENTHETICAL)']
 
@@ -443,7 +489,7 @@ def parse_filings(filings, type, headers, splits):
                         break
 
             # Income Statement
-            if report.shortname.text.upper() in income_list and rev == '---':
+            elif report.shortname.text.upper() in income_list and rev == '---':
                 # Create URL and call parser function
                 try:
                     rev_url = base_url + report.htmlfilename.text
@@ -457,7 +503,7 @@ def parse_filings(filings, type, headers, splits):
                         shares = shares_return
 
             # Balance sheet
-            if report.shortname.text.upper() in bs_list and cash == '---':
+            elif report.shortname.text.upper() in bs_list and cash == '---':
                 # Create URL and call parser function
                 try:
                     bs_url = base_url + report.htmlfilename.text
@@ -467,7 +513,7 @@ def parse_filings(filings, type, headers, splits):
                     cash, assets, debt, cur_liabilities, liabilities, equity = sp.bs_xml(bs_url, headers)
 
             # Cash flow
-            if report.shortname.text.upper() in cf_list and fcf == '---':
+            elif report.shortname.text.upper() in cf_list and fcf == '---':
                 # Create URL and call parser function
                 try:
                     cf_url = base_url + report.htmlfilename.text
@@ -477,7 +523,7 @@ def parse_filings(filings, type, headers, splits):
                     fcf, debt_pay, buyback, divpaid, sbc = sp.cf_xml(cf_url, headers)
             
             # Dividends
-            if report.shortname.text.upper() in div_list and div == '---':
+            elif report.shortname.text.upper() in div_list and div == '---':
                 # Create URL and call parser function
                 try:
                     div_url = base_url + report.htmlfilename.text
@@ -487,7 +533,7 @@ def parse_filings(filings, type, headers, splits):
                     div = sp.div_xml(div_url, headers)
 
             # EPS/div catcher
-            if report.shortname.text.upper() in eps_catch_list and div == '---' and divpaid != 0 or report.shortname.text.upper() in eps_catch_list and eps == '---':
+            elif report.shortname.text.upper() in eps_catch_list and div == '---' and divpaid != 0 or report.shortname.text.upper() in eps_catch_list and eps == '---':
                 # Create URL and call parser function
                     try:
                         catch_url = base_url + report.htmlfilename.text
@@ -507,7 +553,7 @@ def parse_filings(filings, type, headers, splits):
                         div = div_result
                 
             # Shares if not reported on income statement
-            if report.shortname.text.upper() in share_catch_list and shares == '---' or report.shortname.text.upper() in share_catch_list and shares == 0:
+            elif report.shortname.text.upper() in share_catch_list and shares == '---' or report.shortname.text.upper() in share_catch_list and shares == 0:
                 # Create URL and call parser function
                 try:
                     catch_url = base_url + report.htmlfilename.text
@@ -515,6 +561,12 @@ def parse_filings(filings, type, headers, splits):
                 except:
                     catch_url = base_url + report.xmlfilename.text
                     shares = sp.share_catch_xml(catch_url, headers, period_end)
+
+            # Break if all data found
+            elif (rev != '---' and cash != '---' and fcf != '---' and shares != 0 and eps != '---' and div != '---' and divpaid > 0 or
+                  rev != '---' and cash != '---' and fcf != '---' and shares != 0 and eps != '---' and divpaid == 0
+                  ):
+                  break
 
         # Check for repeat data
         if len(Fiscal_Period) != 0:
@@ -678,10 +730,37 @@ def parse_filings(filings, type, headers, splits):
     return everything
 
 
+def growth_rate_calc(numbers):
+    ''' Get quarterly data from Edgar
 
+    Args:
+        List of yearly numbers
+    Returns:
+        List of 1, 3, 5, and 10 year growth rates
+    '''
 
+    # One year growth
+    if len(numbers) > 1:
+        one_year = round((numbers[0] - numbers[1]) / numbers[1], 4)
+    else:
+        one_year = '---'
+    # Three year growth
+    if len(numbers) > 3:
+        three_year = round(((numbers[0] / numbers[3]) ** (1 / 3)) - 1, 4)
+    else:
+        three_year = '---'
+    # Five year growth
+    if len(numbers) > 5:
+        five_year = round(((numbers[0] / numbers[5]) ** (1 / 5)) - 1, 4)
+    else:
+        five_year = '---'
+    # Ten year growth
+    if len(numbers) > 10:
+        ten_year = round(((numbers[0] / numbers[10]) ** (1 / 10)) - 1, 4)
+    else:
+        ten_year = '---'
 
-
+    return one_year, three_year, five_year, ten_year
 
 
 def main(gui_return, header):

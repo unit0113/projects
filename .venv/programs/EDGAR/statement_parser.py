@@ -150,7 +150,7 @@ def column_finder_annual_htm(soup, per):
         return int(colm.group(1))
 
 
-multiplier_list_1 = ['shares in Millions, $ in Millions', 'In Millions, except Per Share data, unless otherwise specified', 'In Millions, except Per Share data']
+multiplier_list_1 = ['shares in Millions, $ in Millions', 'In Millions, except Per Share data, unless otherwise specified', 'In Millions, except Per Share data', 'In Millions, except Share data, unless otherwise specified']
 
 multiplier_list_2 = ['shares in Thousands, $ in Millions', 'In Millions, except Share data in Thousands, unless otherwise specified']
 
@@ -526,7 +526,8 @@ def bs_htm(bs_url, headers, per):
             r"this, 'defref_us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents', window" in str(tds) or
             r"this, 'defref_us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations', window" in str(tds) or
             r"this, 'defref_us-gaap_CashEquivalentsAtCarryingValue', window" in str(tds) or
-            r"this, 'defref_us-gaap_Cash', window" in str(tds)
+            r"this, 'defref_us-gaap_Cash', window" in str(tds) or
+            r"this, 'defref_us-gaap_CashCashEquivalentsAndShortTermInvestments', window" in str(tds)
             ):
             cash_calc = html_re(str(tds[colm]))
             if cash_calc != '---':
@@ -757,8 +758,7 @@ def div_htm(div_url, headers, per):
     Returns:
         Dividend (float)
     '''
-    
-    pd.set_option('display.max_columns', None)
+
     # Get data from site
     content = requests.get(div_url, headers=headers).content
     soup = BeautifulSoup(content, 'html.parser')
@@ -768,7 +768,7 @@ def div_htm(div_url, headers, per):
     div = '---'
 
     # If company has seperate div table
-    if 'EQUITY' not in soup.find('th').text.upper() and 'QUARTERLY FINANCIAL INFORMATION' not in str(soup).upper() and 'QUARTERLY RESULTS OF OPERATIONS' not in str(soup).upper():
+    if 'EQUITY' not in soup.find('th').text.upper() and 'QUARTERLY FINANCIAL INFORMATION' not in str(soup).upper() and 'QUARTERLY RESULTS OF OPERATIONS' not in str(soup).upper() and 'STOCK OPTION ASSUMPTIONS' not in str(soup).upper():
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
             
@@ -842,7 +842,7 @@ def div_htm(div_url, headers, per):
                 else:
                     div = float(obj[0])
     
-    elif 'QUARTERLY FINANCIAL INFORMATION' in str(soup).upper() or 'QUARTERLY RESULTS OF OPERATIONS' in str(soup).upper():
+    elif 'QUARTERLY FINANCIAL INFORMATION' in str(soup).upper() or 'QUARTERLY RESULTS OF OPERATIONS' in str(soup).upper() or 'STOCK OPTION ASSUMPTIONS' in str(soup).upper():
         # Find column with total data        
         head = soup.table.find_all('tr')[5]
         tds = head.find_all('td')
@@ -927,6 +927,68 @@ def div_htm(div_url, headers, per):
                 div = html_re(str(tds[colm]))
                 if div is not None:
                     return div
+
+    elif 'Stockholders\' Equity (Dividends) (Details)' in str(soup) and '0 Months Ended' in str(soup):
+        spec_div = '---'
+        # Find correct cell index for div and special div
+        index = 4
+        spec_index = 0
+        if '<div>Special Cash Dividend</div>' in str(soup):
+            for cell in soup.table.find_all('div'):
+                    if 'Special Cash Dividend' in str(cell):
+                        index += 1
+                    elif per in str(cell):
+                        spec_index = index
+                    elif 'Ordinary Dividend' in str(cell):
+                        break
+        else:
+            index_list = []
+            head = soup.table.find_all('tr')[1]
+            for index, cell in enumerate(head.find_all('div')):
+                if per in str(cell):
+                    index_list.append(1 + index)
+
+        # Find div data
+        if r'onclick="toggleNextSibling(this);' in str(soup):
+            for row in soup.table.find_all('tr'):
+                tds = row.find_all('td')
+                if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds) or
+                    r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds)
+                    ):
+                    # Find special div if present
+                    if spec_div == '---':
+                        spec_result = re.search(r'(?:\">\$ )(\d?\d\.\d\d?\d?)', str(tds[index_list[0]]))
+                        if spec_result != None:
+                            spec_div = float(spec_result.group(1))
+
+                    # Find div if present
+                    if div == '---':
+                        result = re.search(r'(?:\">\$ )(\d?\d\.\d\d?\d?)', str(tds[index_list[1]]))
+                        if result != None:
+                            result = re.findall(r'(?:\">\$ )(\d?\d\.\d\d?\d?)', str(tds))
+                            div = round(sum(list(map(float, result[:4]))), 3)
+                            if spec_div != '---':
+                                div += spec_div
+                                return div
+
+        else:
+            for row in soup.table.find_all('tr'):
+                tds = row.find_all('td')
+                if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds) or
+                    r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds)
+                    ):
+                    # Find special div if present
+                    spec_result = re.search(r'(?:<td class=\"nump\">\$ )(\d?\d\.\d\d?\d?)(?:<span>)', str(tds[spec_index]))
+                    if spec_result != None:
+                        spec_div = float(spec_result.group(1))
+
+                    # Find div
+                    result = re.findall(r'(?:<td class=\"nump\">\$ )(\d?\d\.\d\d?\d?)(?:<span>)', str(tds[index:]), re.M)
+                    if result is not []:
+                        div = sum(list(map(float, result[:4])))
+                        if spec_result != None:
+                            div += spec_div
+                        return div
 
     # If company is a jerk and burries it (like apple)
     else:
@@ -1090,7 +1152,7 @@ def div_htm(div_url, headers, per):
                             continue
                     break
 
-            if div == '---':
+            if div == '---' and 'Share Repurchase Program' not in str(soup):
                 try:
                     table = pd.read_html(content, match='Dividend')[1]
                     div_list = list(table[3][-4:])
@@ -1227,7 +1289,8 @@ def share_catch_htm(catch_url, headers, per):
     # Loop through rows, search for row of interest
     for row in soup.table.find_all('tr'):
         tds = row.find_all('td')
-        if (r"this, 'defref_us-gaap_CommonStockSharesOutstanding', window" in str(tds)
+        if (r"this, 'defref_us-gaap_CommonStockSharesOutstanding', window" in str(tds) or
+            r"this, 'defref_us-gaap_CommonStockValueOutstanding', window" in str(tds)
             ):
             shares_calc = html_re(str(tds[colm]))
             if shares_calc != '---':
@@ -1246,7 +1309,7 @@ def share_catch_htm(catch_url, headers, per):
                 shares_repurchased = round(shares_repurchased_calc * (share_multiplier / 1_000), 2)
                 shares_repurchased_set.add(shares_repurchased)
 
-    shares = sum(share_set)
+    shares = round(sum(share_set), 2)
     if shares == 0:
         shares = '---'
     shares_issued = sum(shares_issued_set)
