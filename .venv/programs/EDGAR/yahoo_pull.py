@@ -8,11 +8,12 @@ import pandas as pd
 import math
 import yfinance as yf
 import numpy as np
+from dateutil.relativedelta import relativedelta
 
 
 # Ticker to lookup
-ticker = 'STOR'
-stock = yf.Ticker(ticker)
+ticker = 'CAT'
+stock = yf.Ticker(ticker.upper())
 
 def yahoo_data_pull(stock):
     # Summary Data
@@ -53,11 +54,7 @@ def yahoo_data_pull(stock):
     return splits
 
 # Yahoo test
-splits = yahoo_data_pull(stock)
-print(splits)
-print(splits.empty)
-
-
+#splits = yahoo_data_pull(stock)
 
 
 def yahoo_data_pull_2(ticker):
@@ -258,7 +255,7 @@ def split_factor_calc(splits, per):
         return split_return
 
 
-split_factor = split_factor_calc(splits, per)
+#split_factor = split_factor_calc(splits, per)
 
 
 def split_adjuster(split_factor, values, shares=False):
@@ -289,4 +286,33 @@ def split_adjuster(split_factor, values, shares=False):
     return adj_values
 
 
-print(split_adjuster(split_factor, eps, shares=False))
+#print(split_adjuster(split_factor, eps, shares=False))
+
+
+per = 'Dec. 31, 2018'
+
+
+def yf_div_catch(ticker, per):
+    ''' Pulls div data from YF if div not reported
+
+    Args:
+        Ticker (str)
+        Period end date (str)
+    Returns:
+        Dividend (float)
+    '''  
+    # Adjust period to catch relevant div payments
+    per_edit = per.replace('.', '')
+    date_per = datetime. strptime(per_edit, '%b %d, %Y')
+    new_per = date_per + relativedelta(months=3)
+
+    # Pull and sum div data
+    stock = yf.Ticker(ticker)
+    dividends = list(stock.dividends[:new_per])
+    div = round(sum(dividends[-4:]), 3)
+    
+    return div
+
+
+# Div catch test
+#print(yf_div_catch(ticker, per))

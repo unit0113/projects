@@ -508,8 +508,8 @@ def bs_htm(bs_url, headers, per):
     soup = BeautifulSoup(content, 'html.parser')
 
     # Initial values
-    equity = cash = assets = cur_liabilities = liabilities = tot_liabilities = '---'
-    intangible_assets = goodwill = debt = cur_liabilities_sum = 0
+    equity = cash = cur_assets = assets = cur_liabilities = liabilities = tot_liabilities = '---'
+    intangible_assets = goodwill = recievables = debt = cur_liabilities_sum = 0
     intangible_assets_set = set()
 
     # Find which column has 12 month data
@@ -553,6 +553,19 @@ def bs_htm(bs_url, headers, per):
             assets_calc = html_re(str(tds[colm]))
             if assets_calc != '---':
                 assets = round(check_neg(str(tds), assets_calc) * (dollar_multiplier / 1_000_000), 2)
+        elif (r"this, 'defref_us-gaap_AssetsCurrent', window" in str(tds)
+              ):
+            cur_assets_calc = html_re(str(tds[colm]))
+            if cur_assets_calc != '---':
+                cur_assets = round(check_neg(str(tds), cur_assets_calc) * (dollar_multiplier / 1_000_000), 2)
+        elif (r"this, 'defref_us-gaap_LoansAndLeasesReceivableNetReportedAmount', window" in str(tds) or
+              r"this, 'defref_mpw_InterestAndRentReceivable', window" in str(tds) or
+              r"this, 'defref_mpw_StraightLineRentReceivable', window" in str(tds) or
+              r"this, 'defref_us-gaap_DueFromRelatedParties', window" in str(tds)
+              ):
+            recievables_calc = html_re(str(tds[colm]))
+            if recievables_calc != '---':
+                recievables += round(check_neg(str(tds), recievables_calc) * (dollar_multiplier / 1_000_000), 2)
         elif r"this, 'defref_us-gaap_LiabilitiesCurrent', window" in str(tds):
             cur_liabilities_calc = html_re(str(tds[colm]))
             if cur_liabilities_calc != '---':
@@ -608,6 +621,10 @@ def bs_htm(bs_url, headers, per):
         elif '[Member]' in str(row) and cash != '---':
             break     
 
+    # Calculate curent assets if total not found
+    if cash != '---' and cur_assets == '---':
+        cur_assets = round(cash + recievables, 2)
+
     # Calculate current liabilities if total not found
     if cur_liabilities == '---' and cur_liabilities_sum != 0:
         cur_liabilities = cur_liabilities_sum
@@ -620,7 +637,7 @@ def bs_htm(bs_url, headers, per):
     if assets != '---' and goodwill != '---':
         assets = round(assets - (goodwill + sum(intangible_assets_set)), 2)
     
-    return cash, assets, debt, cur_liabilities, liabilities, equity
+    return cash, cur_assets, assets, debt, cur_liabilities, liabilities, equity
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
@@ -1555,7 +1572,7 @@ def bs_xml(bs_url, headers):
     soup = BeautifulSoup(content, 'xml')
 
     # Initial values
-    equity = cash = assets = cur_liabilities = liabilities = '---'
+    equity = cash = cur_assets = assets = cur_liabilities = liabilities = '---'
     intangible_assets = goodwill = debt = cur_liabilities_sum = 0
     debt_set = set()
 
@@ -1581,7 +1598,9 @@ def bs_xml(bs_url, headers):
         elif r'us-gaap_IntangibleAssetsNetExcludingGoodwill' in str(row):
             intangible_assets = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)
         elif r'<ElementName>us-gaap_Assets</ElementName>' in str(row):
-            assets = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)       
+            assets = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)   
+        elif r'<ElementName>us-gaap_AssetsCurrent</ElementName>' in str(row):
+            cur_assets = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)     
         elif (r'us-gaap_LongTermDebtNoncurrent' in str(row) or
               r'us-gaap_LongTermDebtAndCapitalLeaseObligations' in str(row) or
               r'<ElementName>us-gaap_LongTermDebt</ElementName>' in str(row) or
@@ -1624,7 +1643,7 @@ def bs_xml(bs_url, headers):
     if assets != '---' and goodwill != '---':
         assets = round(assets - (goodwill + intangible_assets), 2)
     
-    return cash, assets, debt, cur_liabilities, liabilities, equity
+    return cash, cur_assets, assets, debt, cur_liabilities, liabilities, equity
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
