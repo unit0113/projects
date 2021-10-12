@@ -296,8 +296,8 @@ def rev_htm(rev_url, headers, per):
     soup = BeautifulSoup(content, 'html.parser')
 
     # Initial values
-    gross = oi = net = eps = cost = shares = div = '---'
-    rev = share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = operating_exp = int_rev = oth_rev = 0
+    gross = oi = net = eps = shares = div = '---'
+    cost = rev = op_exp = share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = operating_exp = int_rev = oth_rev = 0
     share_set = set()
     net_actual = net_add = False
 
@@ -349,6 +349,13 @@ def rev_htm(rev_url, headers, per):
             research_calc = html_re(str(tds[colm]))
             if research_calc != '---':
                 research = round(research_calc * (dollar_multiplier / 1_000_000), 2)
+        elif (r"this, 'defref_us-gaap_SellingGeneralAndAdministrativeExpense', window" in str(tds) and oi == '---' or
+              r"this, 'defref_us-gaap_AdvertisingExpense', window" in str(tds) and oi == '---' or
+              r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(tds) and oi == '---'
+              ):
+            op_exp_calc = html_re(str(tds[colm]))
+            if op_exp_calc != '---':
+                op_exp += round(op_exp_calc * (dollar_multiplier / 1_000_000), 2)
         elif r"this, 'defref_us-gaap_OperatingIncomeLoss', window" in str(tds) and oi == '---':
             oi_calc = html_re(str(tds[colm]))
             if oi_calc != '---':
@@ -393,10 +400,10 @@ def rev_htm(rev_url, headers, per):
             result = html_re(str(tds[colm]))
             if result != '---' and result != 0:
                 eps = check_neg(str(tds), result)
-        elif (r"this, 'defref_us-gaap_CostOfRevenue', window" in str(tds) and cost == '---' or
-              r"this, 'defref_us-gaap_CostOfGoodsSold', window" in str(tds) and cost == '---' or
-              r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(tds) and cost == '---' or
-              r"this, 'defref_amgn_CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets', window" in str(tds) and cost == '---'
+        elif (r"this, 'defref_us-gaap_CostOfRevenue', window" in str(tds) and cost == 0 or
+              r"this, 'defref_us-gaap_CostOfGoodsSold', window" in str(tds) and cost == 0 or
+              r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(tds) and cost == 0 or
+              r"this, 'defref_amgn_CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets', window" in str(tds) and cost == 0
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -448,7 +455,11 @@ def rev_htm(rev_url, headers, per):
                 result = html_re(str(tds[colm]))
                 if result != '---':
                     cost += round(result * (dollar_multiplier / 1_000_000), 2) 
-                
+
+    # Calculate operating income if not found
+    if oi == '---' and op_exp > 0:
+        oi = round(rev - (cost + op_exp + research), 2)
+
     # Calculate share total
     share_sum = round(sum(share_set), 2)
     if share_sum == 0:
@@ -1573,7 +1584,7 @@ def bs_xml(bs_url, headers):
 
     # Initial values
     equity = cash = cur_assets = assets = cur_liabilities = liabilities = '---'
-    intangible_assets = goodwill = debt = cur_liabilities_sum = 0
+    recievables = intangible_assets = goodwill = debt = cur_liabilities_sum = 0
     debt_set = set()
 
     # Find which column has 12 month data
@@ -1600,7 +1611,9 @@ def bs_xml(bs_url, headers):
         elif r'<ElementName>us-gaap_Assets</ElementName>' in str(row):
             assets = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)   
         elif r'<ElementName>us-gaap_AssetsCurrent</ElementName>' in str(row):
-            cur_assets = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)     
+            cur_assets = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)  
+        elif r'<ElementName>us-gaap_AccountsReceivableNet</ElementName>' in str(row):
+            recievables = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)               
         elif (r'us-gaap_LongTermDebtNoncurrent' in str(row) or
               r'us-gaap_LongTermDebtAndCapitalLeaseObligations' in str(row) or
               r'<ElementName>us-gaap_LongTermDebt</ElementName>' in str(row) or
@@ -1627,6 +1640,10 @@ def bs_xml(bs_url, headers):
             equity = xml_re(str(cells[colm])) 
             if equity != '---':
                 equity = round(check_neg(str(row), equity, 'xml') * (dollar_multiplier / 1_000_000), 2)                                                 
+
+    # Calculate curent assets if total not found
+    if cash != '---' and cur_assets == '---':
+        cur_assets = round(cash + recievables, 2)
 
     # Calculate debt total
     debt = round(sum(debt_set), 2)

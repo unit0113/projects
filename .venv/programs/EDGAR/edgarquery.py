@@ -394,7 +394,7 @@ def divider(num, denom):
         return ['---'] * len(num)
 
     # Calculate return and convert 0's back to empty result
-    result = np.divide(adj_num, adj_denom)
+    result = np.divide(adj_num, adj_denom, out=np.zeros_like(adj_num), where=adj_denom!=0)
     result = ['---' if elem == 0 else round(elem, 4) for elem in result]
 
     return result
@@ -460,12 +460,12 @@ def parse_filings(filings, type, headers, splits):
                    'CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS', 'CONSOLIDATED STATEMENTS OF NET INCOME', 'CONSOLIDATED AND COMBINED STATEMENTS OF OPERATIONS', 'CONSOLIDATED STATEMENT OF EARNINGS',
                    'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS)', 'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME', 'CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS)',
                    'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE LOSS', 'CONSOLIDATED STATEMENTS OF OPERATIONS AND OTHER COMPREHENSIVE LOSS', 'STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED EARNINGS',
-                   'CONSOLIDATED RESULTS OF OPERATIONS']
+                   'CONSOLIDATED RESULTS OF OPERATIONS', 'CONDENSED CONSOLIDATED STATEMENTS OF EARNINGS']
     bs_list = ['BALANCE SHEETS', 'CONSOLIDATED BALANCE SHEETS', 'STATEMENT OF FINANCIAL POSITION CLASSIFIED', 'CONSOLIDATED BALANCE SHEET', 'CONDENSED CONSOLIDATED BALANCE SHEETS',
                'CONSOLIDATED AND COMBINED BALANCE SHEETS', 'CONSOLIDATED STATEMENTS OF FINANCIAL POSITION', 'BALANCE SHEET', 'CONSOLIDATED FINANCIAL POSITION']
     cf_list = ['CASH FLOWS STATEMENTS', 'CONSOLIDATED STATEMENTS OF CASH FLOWS', 'STATEMENT OF CASH FLOWS INDIRECT', 'CONSOLIDATED STATEMENT OF CASH FLOWS',
                'STATEMENTS OF CONSOLIDATED CASH FLOWS', 'CONSOLIDATED CASH FLOWS STATEMENTS', 'CONDENSED CONSOLIDATED STATEMENTS OF CASH FLOWS', 'CONSOLIDATED AND COMBINED STATEMENTS OF CASH FLOWS', 'CONSOLIDATED STATEMENT OF CASH FLOW',
-               'STATEMENT OF CASH FLOWS']
+               'STATEMENT OF CASH FLOWS', 'CONSOLIDATED STATEMENTS OF CASH FLOW']
     div_list = ['DIVIDENDS DECLARED (DETAIL)', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY (PARENTHETICAL)',
                 'SHAREHOLDERS\' EQUITY', 'SHAREHOLDERS\' EQUITY AND SHARE-BASED COMPENSATION - ADDITIONAL INFORMATION (DETAIL) (USD $)', 'SHAREHOLDERS\' EQUITY - ADDITIONAL INFORMATION (DETAIL)',
                 'SHAREHOLDERS\' EQUITY AND SHARE-BASED COMPENSATION - ADDITIONAL INFORMATION (DETAIL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY (PARENTHETICAL)',
@@ -487,7 +487,8 @@ def parse_filings(filings, type, headers, splits):
                 'CONDENSED CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS??? EQUITY (PARENTHETICAL)',
                 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS??? EQUITY PARENTHETICAL', 'QUARTERLY RESULTS OF OPERATIONS (UNAUDITED) (DETAILS)', 'QUARTERLY FINANCIAL INFORMATION (DETAIL)', 'QUARTERLY RESULTS OF OPERATIONS (SCHEDULE OF QUARTERLY RESULTS OF OPERATIONS) (DETAILS)',
                 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF STOCKHOLDERS\' EQUITY CONSOLIDATED STATEMENTS OF STOCKHOLDERS\' EQUITY (PARENTHETICAL)',
-                'STOCK-BASED COMPENSATION - STOCK OPTION ASSUMPTIONS (DETAILS)', 'STOCK-BASED COMPENSATION (STOCK OPTION ASSUMPTIONS) (DETAILS)', 'CHANGES IN CONSOLIDATED SHAREHOLDERS\' EQUITY']
+                'STOCK-BASED COMPENSATION - STOCK OPTION ASSUMPTIONS (DETAILS)', 'STOCK-BASED COMPENSATION (STOCK OPTION ASSUMPTIONS) (DETAILS)', 'CHANGES IN CONSOLIDATED SHAREHOLDERS\' EQUITY', 'STOCKHOLDERS\' EQUITY (COMMON STOCK DIVIDENDS) (DETAILS)',
+                'STOCKHOLDERS\' EQUITY (DEFICIT) (NARRATIVE) (DETAILS)']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)']
     share_catch_list = ['CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEET (PARENTHETICAL)']
 
@@ -764,26 +765,28 @@ def growth_rate_calc(numbers):
         List of 1, 3, 5, and 10 year growth rates
     '''
 
+    # Replace empty values with 0
+    adj_numbers = [0 if elem == '---' else elem for elem in numbers]
+
+    # Initial values
+    one_year = three_year = five_year = ten_year = '---'
+
     # One year growth
     if len(numbers) > 1:
-        one_year = round((numbers[0] - numbers[1]) / numbers[1], 4)
-    else:
-        one_year = '---'
+        if adj_numbers[1] != 0:
+            one_year = round((adj_numbers[0] - adj_numbers[1]) / adj_numbers[1], 4)
     # Three year growth
-    if len(numbers) > 3:
-        three_year = round(((numbers[0] / numbers[3]) ** (1 / 3)) - 1, 4)
-    else:
-        three_year = '---'
+    if len(adj_numbers) > 3:
+        if adj_numbers[3] != 0:
+            three_year = round(((adj_numbers[0] / adj_numbers[3]) ** (1 / 3)) - 1, 4)
     # Five year growth
-    if len(numbers) > 5:
-        five_year = round(((numbers[0] / numbers[5]) ** (1 / 5)) - 1, 4)
-    else:
-        five_year = '---'
+    if len(adj_numbers) > 5:
+        if adj_numbers[5] != 0:
+            five_year = round(((adj_numbers[0] / adj_numbers[5]) ** (1 / 5)) - 1, 4)
     # Ten year growth
-    if len(numbers) > 10:
-        ten_year = round(((numbers[0] / numbers[10]) ** (1 / 10)) - 1, 4)
-    else:
-        ten_year = '---'
+    if len(adj_numbers) > 10:
+        if adj_numbers[10] != 0:
+            ten_year = round(((adj_numbers[0] / adj_numbers[10]) ** (1 / 10)) - 1, 4)
 
     return one_year, three_year, five_year, ten_year
 
@@ -801,13 +804,20 @@ def per_over_per_growth_rate_calc(numbers):
     if len(numbers) == 1:
         return '---'
 
+    adj_numbers = [0 if elem == '---' else elem for elem in numbers]
+
     # Calc growth
     results = []    
-    for i in range(1, len(numbers)):
-        growth = (numbers[i-1] - numbers[i]) / numbers[i]
-        results.append(round(growth, 4))
+    for i in range(1, len(adj_numbers)):
+        if adj_numbers[i] != 0:
+            growth = (adj_numbers[i-1] - adj_numbers[i]) / adj_numbers[i]
+            results.append(round(growth, 4))
+        else:
+            results.append(0)
 
-    return results
+    adj_results = ['---' if elem == 0 else elem for elem in results]
+
+    return adj_results
 
 
 def main(gui_return, header):
