@@ -743,7 +743,6 @@ def parse_filings(filings, type, headers, splits):
     Current_Ratio = divider(Current_Assets, Current_Liabilities)
 
 
-
     everything = {'FY': Fiscal_Period, 'Per': Period_End, 'Rev': Revenue, 'Gross': Gross_Profit, 'R&D': Research, 'OI': Operating_Income, 'Net': Net_Profit, 'EPS': Earnings_Per_Share,
                     'Shares': Shares_Outstanding, 'FFO': Funds_From_Operations, 'Cash': Cash, 'Current Assets': Current_Assets, 'Assets': Total_Assets, 'Debt': Total_Debt, 'Current Liabilities': Current_Liabilities, 'Liabilities': Total_Liabilities, 'SH_Equity': SH_Equity, 'FCF': Free_Cash_Flow,
                     'Debt_Repayment': Debt_Repayment, 'Buybacks': Share_Buybacks, 'Div_Paid': Dividend_Payments, 'SBC': Share_Based_Comp, 'Div': Dividends, 'Revenue Per Share': Revenue_Per_Share, 'FFO Per Share': FFO_Per_Share,
@@ -772,21 +771,17 @@ def growth_rate_calc(numbers):
     one_year = three_year = five_year = ten_year = '---'
 
     # One year growth
-    if len(numbers) > 1:
-        if adj_numbers[1] != 0:
-            one_year = round((adj_numbers[0] - adj_numbers[1]) / adj_numbers[1], 4)
+    if len(numbers) > 1 and adj_numbers[0] > 0 and adj_numbers[1] > 0:
+        one_year = round((adj_numbers[0] - adj_numbers[1]) / adj_numbers[1], 4)
     # Three year growth
-    if len(adj_numbers) > 3:
-        if adj_numbers[3] != 0:
-            three_year = round(((adj_numbers[0] / adj_numbers[3]) ** (1 / 3)) - 1, 4)
+    if len(adj_numbers) > 3 and adj_numbers[0] > 0 and adj_numbers[3] > 0:
+        three_year = round(((adj_numbers[0] / adj_numbers[3]) ** (1 / 3)) - 1, 4)
     # Five year growth
-    if len(adj_numbers) > 5:
-        if adj_numbers[5] != 0:
-            five_year = round(((adj_numbers[0] / adj_numbers[5]) ** (1 / 5)) - 1, 4)
+    if len(adj_numbers) > 5 and adj_numbers[0] > 0 and adj_numbers[5] > 0:
+        five_year = round(((adj_numbers[0] / adj_numbers[5]) ** (1 / 5)) - 1, 4)
     # Ten year growth
-    if len(adj_numbers) > 10:
-        if adj_numbers[10] != 0:
-            ten_year = round(((adj_numbers[0] / adj_numbers[10]) ** (1 / 10)) - 1, 4)
+    if len(adj_numbers) > 10 and adj_numbers[0] > 0 and adj_numbers[10] > 0:
+        ten_year = round(((adj_numbers[0] / adj_numbers[10]) ** (1 / 10)) - 1, 4)
 
     return one_year, three_year, five_year, ten_year
 

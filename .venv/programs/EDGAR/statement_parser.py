@@ -297,7 +297,7 @@ def rev_htm(rev_url, headers, per):
 
     # Initial values
     gross = oi = net = eps = shares = div = '---'
-    cost = rev = op_exp = share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = operating_exp = int_rev = oth_rev = 0
+    cost_sum = cost = rev = op_exp = share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = operating_exp = int_rev = oth_rev = 0
     share_set = set()
     net_actual = net_add = False
 
@@ -326,7 +326,7 @@ def rev_htm(rev_url, headers, per):
                 rev_calc = round(rev_calc * (dollar_multiplier / 1_000_000), 2)
                 if rev_calc > rev:
                     rev = rev_calc
-        elif (r"this, 'defref_us-gaap_InterestIncomeExpenseNet', window" in str(tds)
+        elif (r"this, 'defref_us-gaap_InterestIncomeOperating', window" in str(tds)
               ):
             int_rev_calc = html_re(str(tds[colm]))
             if int_rev_calc != '---':
@@ -349,9 +349,19 @@ def rev_htm(rev_url, headers, per):
             research_calc = html_re(str(tds[colm]))
             if research_calc != '---':
                 research = round(research_calc * (dollar_multiplier / 1_000_000), 2)
+        elif (r"this, 'defref_us-gaap_CostsAndExpenses', window" in str(tds) or
+            r"this, 'defref_us-gaap_OperatingExpenses', window" in str(tds)
+            ):
+            result = html_re(str(tds[colm]))
+            if result != '---':
+                operating_exp = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000), 2) 
         elif (r"this, 'defref_us-gaap_SellingGeneralAndAdministrativeExpense', window" in str(tds) and oi == '---' or
               r"this, 'defref_us-gaap_AdvertisingExpense', window" in str(tds) and oi == '---' or
-              r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(tds) and oi == '---'
+              r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(tds) and oi == '---' or
+              r"this, 'defref_us-gaap_GeneralAndAdministrativeExpense', window" in str(tds) and oi == '---' or
+              r"this, 'defref_abr_PropertyOperatingExpense', window" in str(tds) and oi == '---' or
+              r"this, 'defref_us-gaap_LaborAndRelatedExpense', window" in str(tds) and oi == '---' or
+              r"this, 'defref_tmo_RestructuringAndOtherCostsIncomeNet', window" in str(tds) and oi == '---'
               ):
             op_exp_calc = html_re(str(tds[colm]))
             if op_exp_calc != '---':
@@ -403,11 +413,19 @@ def rev_htm(rev_url, headers, per):
         elif (r"this, 'defref_us-gaap_CostOfRevenue', window" in str(tds) and cost == 0 or
               r"this, 'defref_us-gaap_CostOfGoodsSold', window" in str(tds) and cost == 0 or
               r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(tds) and cost == 0 or
-              r"this, 'defref_amgn_CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets', window" in str(tds) and cost == 0
+              r"this, 'defref_amgn_CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets', window" in str(tds) and cost == 0 or
+              r"this, 'defref_nee_FuelPurchasedPowerAndInterchangeExpense', window" in str(tds) and cost == 0
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
                 cost = round(result * (dollar_multiplier / 1_000_000), 2) 
+        elif (r"this, 'defref_us-gaap_InterestExpense', window" in str(tds) and cost == 0 and oi == '---' or
+              r"this, 'defref_abr_PropertyOperatingExpense', window" in str(tds) and cost == 0 and oi == '---' or
+              r"this, 'defref_stor_PropertyCosts', window" in str(tds) and cost == 0 and oi == '---' 
+              ):
+            result = html_re(str(tds[colm]))
+            if result != '---':
+                cost_sum += round(result * (dollar_multiplier / 1_000_000), 2)
         elif (r"this, 'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding', window" in str(tds) or
               r"this, 'defref_us-gaap_WeightedAverageNumberOfShareOutstandingBasicAndDiluted', window" in str(tds) or
               r"this, 'defref_tsla_WeightedAverageNumberOfSharesOutstandingBasicAndDilutedOne', window" in str(tds)
@@ -433,12 +451,7 @@ def rev_htm(rev_url, headers, per):
             result = html_re(str(tds[colm]))
             if result != '---':
                 disposition = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000), 2)  
-        elif (r"this, 'defref_us-gaap_CostsAndExpenses', window" in str(tds) or
-              r"this, 'defref_us-gaap_OperatingExpenses', window" in str(tds)
-              ):
-            result = html_re(str(tds[colm]))
-            if result != '---':
-                operating_exp = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000), 2)         
+      
         elif '[Member]' in str(row) and rev != 0:
             break   
 
@@ -456,9 +469,22 @@ def rev_htm(rev_url, headers, per):
                 if result != '---':
                     cost += round(result * (dollar_multiplier / 1_000_000), 2) 
 
+    # Calculate rev for REITs if total not given
+    if rev < int_rev + oth_rev and 'Other income' in str(soup) and int_rev != 0 and oth_rev != 0:
+        rev = round(int_rev + oth_rev, 2)
+
+    # Find highest value of cost and cost_sum
+    cost = max(cost, cost_sum)
+
     # Calculate operating income if not found
-    if oi == '---' and op_exp > 0:
-        oi = round(rev - (cost + op_exp + research), 2)
+    op_exp += cost + research + dep_am
+    if oi == '---':
+        oi = round(rev - max(operating_exp, op_exp), 2)
+
+    # Calculate Gross if OI is given
+    if cost == 0 and oi != '---' and operating_exp != 0:
+        cost = operating_exp - op_exp
+        gross = round(rev - cost, 2)
 
     # Calculate share total
     share_sum = round(sum(share_set), 2)
@@ -472,15 +498,11 @@ def rev_htm(rev_url, headers, per):
         else:
             net = round(net - non_attributable_net, 2)
 
-    # Calculate rev for REITs if total not given
-    if rev < int_rev + oth_rev and 'Other income' in str(soup) and int_rev != 0 and oth_rev != 0:
-        rev = round(int_rev + oth_rev, 2)
-
     # Calculate gross if not listed
     if gross == '---':
-        try:
+        if cost != 0:
             gross = round(rev - cost, 2)
-        except:
+        else:
             gross = rev
 
     # Calculate EPS if not listed
@@ -490,10 +512,6 @@ def rev_htm(rev_url, headers, per):
     # Calculate FFO for REITS
     if net != '---':
         ffo = round(net + dep_am + impairment - disposition, 2)
-
-    # Calculate OI if not listed
-    if oi == '---' and operating_exp != 0:
-        oi = round(rev - operating_exp, 2)
 
     return rev, gross, research, oi, net, eps, share_sum, div, ffo
 
