@@ -96,18 +96,25 @@ def column_finder_annual_htm(soup, per):
     head = soup.table.find_all('tr')[0]
     head2 = soup.table.find_all('tr')[1]
     first_cell = soup.table.find_all('tr')[2]
+    
+    # Identify next FY in case there is a more recent date than the relevant period
+    next_year = str(int(per[-4:]) + 1)
+    weird_colm = False
 
     # Find index for period end
     if per in str(head2):
         rows = head2.find_all('th')
         index = 0
         for row1 in rows:
-            if per in str(row1):
+            # If extra/next FY in table
+            if next_year in str(row1) or 'Minimum' in str(row1):
+                weird_colm = True         
+            elif per in str(row1):
                 # Find correct column if multiple things before 12 months data
                 col_index = 0
                 colm = 0
                 rows2 = head.find_all('th')
-                
+
                 # Go through colms and check if index lines up with 12 month data
                 for row2 in rows2:
                     # Restart loop if data ends on 3 or 4 month data, else, get new index and start loop over
@@ -128,13 +135,16 @@ def column_finder_annual_htm(soup, per):
                                     if col_index > colm:
                                         return cell_index
                             else:
-                                return colm           
+                                if weird_colm == True:
+                                    return (colm + 1 - col_last)
+                                else:
+                                    return colm          
                     if 'colspan' in str(row2):
                         colm_part = re.search(r'(?:colspan=\"(\d\d?)\")', str(row2), re.M)
                         colm += int(colm_part.group(1))
                         col_index += int(colm_part.group(1))
                         col_last = int(colm_part.group(1))
-            
+                
             # Check for wide date columns
             if 'colspan' in str(row1):
                 index_part = re.search(r'(?:colspan=\"(\d\d?)\")', str(row1), re.M)
@@ -656,7 +666,7 @@ def bs_htm(bs_url, headers, per):
 
     # Calculate current liabilities if total not found
     if cur_liabilities == '---' and cur_liabilities_sum != 0:
-        cur_liabilities = cur_liabilities_sum
+        cur_liabilities = round(cur_liabilities_sum, 2)
 
     # Calculate liabilites from shareholder equity if not found
     if liabilities == '---' and tot_liabilities != '---' and equity != '---':
@@ -666,7 +676,7 @@ def bs_htm(bs_url, headers, per):
     if assets != '---' and goodwill != '---':
         assets = round(assets - (goodwill + sum(intangible_assets_set)), 2)
     
-    return cash, cur_assets, assets, debt, cur_liabilities, liabilities, equity
+    return cash, cur_assets, assets, round(debt, 2), cur_liabilities, liabilities, equity
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
@@ -688,7 +698,7 @@ def cf_htm(cf_url, headers, per):
     # Get data from site
     content = requests.get(cf_url, headers=headers).content
     soup = BeautifulSoup(content, 'html.parser')
-
+    
     # Initial values
     cfo = capex = share_issue = buyback = divpaid = sbc = debt_payment = 0
     fcf = '---'
@@ -816,7 +826,7 @@ def div_htm(div_url, headers, per):
 
     # Initial value
     div = '---'
-
+    
     # If company has seperate div table
     if 'EQUITY' not in soup.find('th').text.upper() and 'QUARTERLY FINANCIAL INFORMATION' not in str(soup).upper() and 'QUARTERLY RESULTS OF OPERATIONS' not in str(soup).upper() and 'STOCK OPTION ASSUMPTIONS' not in str(soup).upper():
         for row in soup.table.find_all('tr'):
@@ -936,10 +946,7 @@ def div_htm(div_url, headers, per):
                 if div != '---':
                     return div     
 
-        # For different table style
-        # Find which column has 12 month data
-        colm = column_finder_annual_htm(soup, per)
-        
+        # For different table style        
         # Find div
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
@@ -965,18 +972,34 @@ def div_htm(div_url, headers, per):
                         div = sum(list(map(float, obj[:4])))
                         return round(div, 3)
 
-    elif "Consolidated Statements Of Changes In Stockholders' Equity (Parenthetical)" in str(soup) and '12 Months Ended' in str(soup):
-        # Find which column has 12 month data
-        colm = column_finder_annual_htm(soup, per)
-
+    elif ("Consolidated Statements Of Changes In Stockholders' Equity (Parenthetical)" in str(soup) and '12 Months Ended' in str(soup) or
+          "Stockholders' Equity - Dividends (Details)" in str(soup) and '12 Months Ended' in str(soup) or
+          "Equity and Accumulated Other Comprehensive" in str(soup) and '12 Months Ended' in str(soup) or
+          "Equity And Accumulated Other Comprehensive" in str(soup) and '12 Months Ended' in str(soup)
+          ):      
         # Find row with div data
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
-            if r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds):
+            if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds) or
+                r"this, 'defref_cor_DistributionsPerShare', window" in str(tds) or
+                r"this, 'defref_cor_DistributionsPerShare', window" in str(tds) or
+                r"this, 'defref_dlr_CommonStockDividendRatePerDollarAmount', window" in str(tds)
+                ):
                 # Pull div
                 div = html_re(str(tds[colm]))
-                if div is not None:
+                if div is not None and div != '---':
                     return div
+
+        # Catch for weird format
+        if 'Equity And Accumulated Other Comprehensive' in str(soup) and div == '---':
+            for row in soup.table.find_all('tr'):
+                tds = row.find_all('td')
+                if r"this, 'defref_dlr_CommonStockDividendRatePerDollarAmount', window" in str(tds):
+                    # Pull div
+                    result = re.search(r'(?:<td class=\"nump\">\$ )(\d?\d\.\d\d?\d?)', str(tds), re.M)
+                    if result is not None:
+                        div = float(result.group(1))
+                        return div
 
     elif 'Stockholders\' Equity (Dividends) (Details)' in str(soup) and '0 Months Ended' in str(soup):
         spec_div = '---'
@@ -1098,7 +1121,8 @@ def div_htm(div_url, headers, per):
             for row in soup.table.find_all('tr'):
                 tds = row.find_all('td')
                 if ('this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds) or
-                    'this, \'defref_us-gaap_CommonStockDividendsPerShareCashPaid\', window' in str(tds)
+                    'this, \'defref_us-gaap_CommonStockDividendsPerShareCashPaid\', window' in str(tds) or
+                    r"this, 'defref_cor_DistributionsPerShare', window" in str(tds)
                     ):
                     div = html_re(str(tds[colm]))
                     return div
@@ -1194,8 +1218,8 @@ def div_htm(div_url, headers, per):
                     # Iterate over list of columns and fetch the rows indexes where value exists
                     for col in column_number:
                         row = list(result[col][result[col] == True].index)
-                        answer = table.at[row[0] + 1, col + 2]
                         try:
+                            answer = table.at[row[0] + 1, col + 2]
                             div = float(answer)
                             break
                         except:
@@ -1497,7 +1521,7 @@ def rev_xml(rev_url, headers):
 
     # Initial values
     rev = gross = oi = net = eps = cost = shares = div = '---'
-    share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = int_rev = oth_rev = 0
+    share_sum = research = op_exp = dep_am = impairment = disposition = ffo = 0
     net_check = False
 
     # Find which column has 12 month data
@@ -1528,8 +1552,12 @@ def rev_xml(rev_url, headers):
               ):
             cost = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)             
         elif r'us-gaap_ResearchAndDevelopmentExpense' in str(row):
-            research = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)                    
-        elif r'us-gaap_OperatingIncomeLoss' in str(row):
+            research = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)    
+        elif r'<ElementName>de_CostsAndExpensesIncludingInterest</ElementName>' in str(row):
+            op_exp = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)                  
+        elif (r'us-gaap_OperatingIncomeLoss' in str(row) or
+              r'<ElementName>us-gaap_IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments</ElementName>' in str(row) and oi == '---'
+              ):
             result = xml_re(str(cells[colm]))
             if result != '---':
                 oi = round(check_neg(str(row), result, 'xml') * (dollar_multiplier / 1_000_000), 2)      
@@ -1566,6 +1594,10 @@ def rev_xml(rev_url, headers):
             gross = round(rev - cost, 2)
         except:
             gross = rev
+
+    # Calculate operating income if not found
+    if oi == '---':
+        oi = round(rev - op_exp, 2)
 
     # Calculate EPS if not listed
     if eps == '---' and net != '---' and share_sum != 0:

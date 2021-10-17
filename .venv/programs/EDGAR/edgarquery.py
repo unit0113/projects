@@ -44,9 +44,12 @@ class StockData:
         self.div_edit = False
         if '---' in self.annual_data['Div']:
             for index, (dividend, div_paid) in enumerate(zip(self.annual_data['Div'], self.annual_data['Div_Paid'])):
-                if div_paid > 0 and dividend == '---':
+                if div_paid != 0 and dividend == '---':
                     self.div_edit = True
-                    self.annual_data['Div'][index] = yf_div_catch(self.symbol, self.annual_data['Per'][index])
+                    if index == 0:
+                        self.annual_data['Div'][index] = yf_div_catch(self.symbol, self.annual_data['Per'][index])
+                    else:
+                        self.annual_data['Div'][index] = yf_div_catch(self.symbol, self.annual_data['Per'][index], self.annual_data['Per'][index - 1], self.annual_data['Div'][index - 1])
                     print(self.annual_data['Div'])
                     print('-' * 100)
 
@@ -61,18 +64,26 @@ class StockData:
         # Calculate growth rates
         self.growth_rates = {}
         self.growth_rates['Revenue Growth'] = growth_rate_calc(self.annual_data['Rev'])
+        self.growth_rates['Revenue per Share Growth'] = growth_rate_calc(self.annual_data['Revenue Per Share'])
         self.growth_rates['Net Income Growth'] = growth_rate_calc(self.annual_data['Net'])
+        self.growth_rates['EPS Growth'] = growth_rate_calc(self.annual_data['EPS'])
         self.growth_rates['Shares Growth'] = growth_rate_calc(self.annual_data['Shares'])
         self.growth_rates['FFO Growth'] = growth_rate_calc(self.annual_data['FFO'])
+        self.growth_rates['FFO per Share Growth'] = growth_rate_calc(self.annual_data['FFO Per Share'])
         self.growth_rates['FCF Growth'] = growth_rate_calc(self.annual_data['FCF'])
+        self.growth_rates['FCF per Share Growth'] = growth_rate_calc(self.annual_data['Free Cash Flow Per Share'])
         self.growth_rates['Dividend Growth'] = growth_rate_calc(self.annual_data['Div'])
 
         # Calculate YoY growth
         self.growth_rates['YoY Revenue Growth'] = per_over_per_growth_rate_calc(self.annual_data['Rev'])
+        self.growth_rates['YoY Revenue per Share Growth'] = per_over_per_growth_rate_calc(self.annual_data['Revenue Per Share'])
         self.growth_rates['YoY Net Income Growth'] = per_over_per_growth_rate_calc(self.annual_data['Net'])
+        self.growth_rates['YoY EPS Growth'] = per_over_per_growth_rate_calc(self.annual_data['EPS'])
         self.growth_rates['YoY Shares Growth'] = per_over_per_growth_rate_calc(self.annual_data['Shares'])
         self.growth_rates['YoY FFO Growth'] = per_over_per_growth_rate_calc(self.annual_data['FFO'])
+        self.growth_rates['YoY FFO per Share Growth'] = per_over_per_growth_rate_calc(self.annual_data['FFO Per Share'])
         self.growth_rates['YoY FCF Growth'] = per_over_per_growth_rate_calc(self.annual_data['FCF'])
+        self.growth_rates['YoY FCF per Share Growth'] = per_over_per_growth_rate_calc(self.annual_data['Free Cash Flow Per Share'])
         self.growth_rates['YoY Dividend Growth'] = per_over_per_growth_rate_calc(self.annual_data['Div'])
 
         print('-' * 100)
@@ -213,7 +224,7 @@ def split_adjuster(split_factor, values, shares=False):
     return adj_values
 
 
-def yf_div_catch(ticker, per):
+def yf_div_catch(ticker, per, pre_per=None, pre_div=None):
     ''' Pulls div data from YF if div not reported
 
     Args:
@@ -222,13 +233,31 @@ def yf_div_catch(ticker, per):
     Returns:
         Dividend (float)
     '''  
-    # Adjust period to catch relevant div payments
+
+    # Pull div data
+    stock = yf.Ticker(ticker)
+
+    # Intitiate period end as datetime object
     per_edit = per.replace('.', '')
     date_per = datetime. strptime(per_edit, '%b %d, %Y')
-    new_per = date_per + relativedelta(months=3)
 
-    # Pull and sum div data
-    stock = yf.Ticker(ticker)
+    # Check if we need to adjust period to catch correct div total
+    offset_needed = False
+    if pre_per != None and pre_div != None:
+        pre_per_edit = pre_per.replace('.', '')
+        pre_date_per = datetime. strptime(pre_per_edit, '%b %d, %Y')
+        dividends_last = list(stock.dividends[:pre_date_per])
+        div_last = round(sum(dividends_last[-4:]), 3)
+        if div_last != pre_div:
+            offset_needed = True
+
+    if offset_needed == True:
+        offset = relativedelta(months=3)
+        new_per = date_per + offset
+    else:
+        new_per = date_per
+
+    # Pull correct (hopefully) div data
     dividends = list(stock.dividends[:new_per])
     div = round(sum(dividends[-4:]), 3)
     
@@ -460,12 +489,12 @@ def parse_filings(filings, type, headers, splits):
                    'CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS', 'CONSOLIDATED STATEMENTS OF NET INCOME', 'CONSOLIDATED AND COMBINED STATEMENTS OF OPERATIONS', 'CONSOLIDATED STATEMENT OF EARNINGS',
                    'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS)', 'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME', 'CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS)',
                    'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE LOSS', 'CONSOLIDATED STATEMENTS OF OPERATIONS AND OTHER COMPREHENSIVE LOSS', 'STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED EARNINGS',
-                   'CONSOLIDATED RESULTS OF OPERATIONS', 'CONDENSED CONSOLIDATED STATEMENTS OF EARNINGS']
+                   'CONSOLIDATED RESULTS OF OPERATIONS', 'CONDENSED CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF CONSOLIDATED INCOME']
     bs_list = ['BALANCE SHEETS', 'CONSOLIDATED BALANCE SHEETS', 'STATEMENT OF FINANCIAL POSITION CLASSIFIED', 'CONSOLIDATED BALANCE SHEET', 'CONDENSED CONSOLIDATED BALANCE SHEETS',
                'CONSOLIDATED AND COMBINED BALANCE SHEETS', 'CONSOLIDATED STATEMENTS OF FINANCIAL POSITION', 'BALANCE SHEET', 'CONSOLIDATED FINANCIAL POSITION']
     cf_list = ['CASH FLOWS STATEMENTS', 'CONSOLIDATED STATEMENTS OF CASH FLOWS', 'STATEMENT OF CASH FLOWS INDIRECT', 'CONSOLIDATED STATEMENT OF CASH FLOWS',
                'STATEMENTS OF CONSOLIDATED CASH FLOWS', 'CONSOLIDATED CASH FLOWS STATEMENTS', 'CONDENSED CONSOLIDATED STATEMENTS OF CASH FLOWS', 'CONSOLIDATED AND COMBINED STATEMENTS OF CASH FLOWS', 'CONSOLIDATED STATEMENT OF CASH FLOW',
-               'STATEMENT OF CASH FLOWS', 'CONSOLIDATED STATEMENTS OF CASH FLOW']
+               'STATEMENT OF CASH FLOWS', 'CONSOLIDATED STATEMENTS OF CASH FLOW', 'CONSOLIDATED  STATEMENTS OF CASH FLOWS', 'STATEMENT OF CONSOLIDATED CASH FLOWS']
     div_list = ['DIVIDENDS DECLARED (DETAIL)', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY (PARENTHETICAL)',
                 'SHAREHOLDERS\' EQUITY', 'SHAREHOLDERS\' EQUITY AND SHARE-BASED COMPENSATION - ADDITIONAL INFORMATION (DETAIL) (USD $)', 'SHAREHOLDERS\' EQUITY - ADDITIONAL INFORMATION (DETAIL)',
                 'SHAREHOLDERS\' EQUITY AND SHARE-BASED COMPENSATION - ADDITIONAL INFORMATION (DETAIL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY (PARENTHETICAL)',
@@ -488,7 +517,9 @@ def parse_filings(filings, type, headers, splits):
                 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS??? EQUITY PARENTHETICAL', 'QUARTERLY RESULTS OF OPERATIONS (UNAUDITED) (DETAILS)', 'QUARTERLY FINANCIAL INFORMATION (DETAIL)', 'QUARTERLY RESULTS OF OPERATIONS (SCHEDULE OF QUARTERLY RESULTS OF OPERATIONS) (DETAILS)',
                 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF STOCKHOLDERS\' EQUITY CONSOLIDATED STATEMENTS OF STOCKHOLDERS\' EQUITY (PARENTHETICAL)',
                 'STOCK-BASED COMPENSATION - STOCK OPTION ASSUMPTIONS (DETAILS)', 'STOCK-BASED COMPENSATION (STOCK OPTION ASSUMPTIONS) (DETAILS)', 'CHANGES IN CONSOLIDATED SHAREHOLDERS\' EQUITY', 'STOCKHOLDERS\' EQUITY (COMMON STOCK DIVIDENDS) (DETAILS)',
-                'STOCKHOLDERS\' EQUITY (DEFICIT) (NARRATIVE) (DETAILS)']
+                'STOCKHOLDERS\' EQUITY (DEFICIT) (NARRATIVE) (DETAILS)', 'STOCKHOLDERS\' EQUITY - DIVIDENDS (DETAILS)', 'STOCKHOLDERS\' EQUITY (DETAIL 2)', 'STOCKHOLDERS\' EQUITY (DETAILS 2)', 'STOCKHOLDERS\' EQUITY (DETAILS)',
+                'SHAREHOLDERS\' EQUITY (NARRATIVE) (DETAILS)', 'EQUITY AND ACCUMULATED OTHER COMPREHENSIVE INCOME (LOSS), NET - SCHEDULE OF DIVIDENDS (DETAILS)', 'EQUITY AND ACCUMULATED OTHER COMPREHENSIVE LOSS, NET (SCHEDULE OF DIVIDENDS) (DETAILS)',
+                'EQUITY AND ACCUMULATED OTHER COMPREHENSIVE LOSS, NET (SCHEDULE OF DIVIDENDS DECLARED AND PAYABLE) (DETAILS)']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)']
     share_catch_list = ['CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEET (PARENTHETICAL)']
 
@@ -577,6 +608,9 @@ def parse_filings(filings, type, headers, splits):
 
         # Loop through each report with the 'myreports' a second time because some companies put the document summary at the end
         for report in reports.find_all('report')[:-1]:
+            # Break if name comp failed
+            if diff_comp_flag == True:
+                break
 
             # Income Statement
             if report.shortname.text.upper() in income_list and rev == '---':
