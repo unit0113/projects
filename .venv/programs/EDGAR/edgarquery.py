@@ -415,8 +415,8 @@ def divider(num, denom):
     '''
 
     # Convert empty results to 0
-    adj_num = [0 if elem == '---' else elem for elem in num]
-    adj_denom = [0 if elem == '---' else elem for elem in denom]
+    adj_num = [0.0 if type(elem) == str else float(elem) for elem in num]
+    adj_denom = [0.0 if type(elem) == str else float(elem) for elem in denom]
 
     # return empty results if all of num is '---'
     if sum(adj_num) == 0:
@@ -440,8 +440,8 @@ def subtractor(first, second):
     '''
     
     # Convert empty results to 0
-    adj_first = [0 if elem == '---' else elem for elem in first]
-    adj_second = [0 if elem == '---' else elem for elem in second]
+    adj_first = [0.0 if type(elem) == str else elem for elem in first]
+    adj_second = [0.0 if type(elem) == str else elem for elem in second]
 
     # Calculate return and convert 0's back to empty result
     result = np.subtract(adj_first, adj_second)
@@ -461,8 +461,8 @@ def adder(first, second):
     '''
     
     # Convert empty results to 0
-    adj_first = [0 if elem == '---' else elem for elem in first]
-    adj_second = [0 if elem == '---' else elem for elem in second]
+    adj_first = [0.0 if type(elem) == str else elem for elem in first]
+    adj_second = [0.0 if type(elem) == str else elem for elem in second]
 
     # Calculate return and convert 0's back to empty result
     result = np.add(adj_first, adj_second)
@@ -482,7 +482,7 @@ def parse_filings(filings, type, headers, splits):
     
     # Define statements to Parse
     intro_list = ['DOCUMENT AND ENTITY INFORMATION', 'COVER PAGE', 'COVER', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT', 'COVER PAGE COVER PAGE', 'DEI DOCUMENT', 'COVER DOCUMENT', 'DOCUMENT INFORMATION STATEMENT',
-                  'DOCUMENT ENTITY INFORMATION', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT AND ENTITY INFORMATION', 'COVER COVER', 'DOCUMENT']
+                  'DOCUMENT ENTITY INFORMATION', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT AND ENTITY INFORMATION', 'COVER COVER', 'DOCUMENT', 'DOCUMENT ENTITY INFORMATION DOCUMENT']
     income_list = ['CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF INCOME ALTERNATIVE', 'CONSOLIDATED STATEMENT OF INCOME', 'INCOME STATEMENTS', 'STATEMENT OF INCOME',
                    'CONSOLIDATED STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED INCOME', 'CONSOLIDATED STATEMENTS OF INCOME', 'CONSOLIDATED STATEMENT OF OPERATIONS', 
                    'CONSOLIDATED STATEMENTS OF EARNINGS (LOSSES)', 'CONSOLIDATED INCOME STATEMENTS', 'CONSOLIDATED STATEMENTS OF OPERATIONS CONSOLIDATED STATEMENTS OF OPERATIONS',
@@ -519,7 +519,8 @@ def parse_filings(filings, type, headers, splits):
                 'STOCK-BASED COMPENSATION - STOCK OPTION ASSUMPTIONS (DETAILS)', 'STOCK-BASED COMPENSATION (STOCK OPTION ASSUMPTIONS) (DETAILS)', 'CHANGES IN CONSOLIDATED SHAREHOLDERS\' EQUITY', 'STOCKHOLDERS\' EQUITY (COMMON STOCK DIVIDENDS) (DETAILS)',
                 'STOCKHOLDERS\' EQUITY (DEFICIT) (NARRATIVE) (DETAILS)', 'STOCKHOLDERS\' EQUITY - DIVIDENDS (DETAILS)', 'STOCKHOLDERS\' EQUITY (DETAIL 2)', 'STOCKHOLDERS\' EQUITY (DETAILS 2)', 'STOCKHOLDERS\' EQUITY (DETAILS)',
                 'SHAREHOLDERS\' EQUITY (NARRATIVE) (DETAILS)', 'EQUITY AND ACCUMULATED OTHER COMPREHENSIVE INCOME (LOSS), NET - SCHEDULE OF DIVIDENDS (DETAILS)', 'EQUITY AND ACCUMULATED OTHER COMPREHENSIVE LOSS, NET (SCHEDULE OF DIVIDENDS) (DETAILS)',
-                'EQUITY AND ACCUMULATED OTHER COMPREHENSIVE LOSS, NET (SCHEDULE OF DIVIDENDS DECLARED AND PAYABLE) (DETAILS)']
+                'EQUITY AND ACCUMULATED OTHER COMPREHENSIVE LOSS, NET (SCHEDULE OF DIVIDENDS DECLARED AND PAYABLE) (DETAILS)', 'CONSOLIDATED STATEMENT OF CHANGES IN EQUITY CONSOLIDATED STATEMENT OF CHANGES IN EQUITY (PARENTHETICAL)',
+                'CONSOLIDATED STATEMENT OF CHANGES IN EQUITY (PARENTHETICAL)', 'STOCKHOLDERS\' EQUITY (EARNINGS PER SHARE DATA) (DETAILS)']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)']
     share_catch_list = ['CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEET (PARENTHETICAL)']
 
@@ -691,6 +692,12 @@ def parse_filings(filings, type, headers, splits):
                   rev != '---' and cash != '---' and fcf != '---' and shares != 0 and eps != '---' and divpaid == 0
                   ):
                   break
+
+        # Check for errors in FY pull (company's fault)
+        if len(Fiscal_Period) > 0:
+            if int(Fiscal_Period[-1]) - int(fy) > 1 and str(int(Period_End[-1][-4:]) - 1) in period_end:
+                fy = str(int(Period_End[-1][-4:]) - 1)
+                print('FY error caught')
 
         # Check for repeat data
         if len(Fiscal_Period) != 0:
