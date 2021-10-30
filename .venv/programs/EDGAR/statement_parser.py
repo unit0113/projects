@@ -160,7 +160,7 @@ def column_finder_annual_htm(soup, per):
         return int(colm.group(1))
 
 
-multiplier_list_1 = ['shares in Millions, $ in Millions', 'In Millions, except Per Share data, unless otherwise specified', 'In Millions, except Per Share data', 'In Millions, except Share data, unless otherwise specified']
+multiplier_list_1 = ['shares in Millions, $ in Millions', 'In Millions, except Per Share data, unless otherwise specified', 'In Millions, except Per Share data']
 
 multiplier_list_2 = ['shares in Thousands, $ in Millions', 'In Millions, except Share data in Thousands, unless otherwise specified']
 
@@ -168,7 +168,7 @@ multiplier_list_3 = ['shares in Thousands, $ in Thousands', 'In Thousands, excep
 
 multiplier_list_4 = ['In Thousands, except Share data, unless otherwise specified', 'In Thousands, except Share data']
 
-multiplier_list_5 = ['$ in Millions', 'In Millions, unless otherwise specified', 'In Millions', '$ in Millions, ¥ in Billions', 'In Millions, except Share data']
+multiplier_list_5 = ['$ in Millions', 'In Millions, unless otherwise specified', 'In Millions', '$ in Millions, ¥ in Billions', 'In Millions, except Share data', 'In Millions, except Share data, unless otherwise specified']
 
 multiplier_list_6 = ['$ in Thousands', 'In Thousands, unless otherwise specified', 'In Thousands']
 
@@ -809,7 +809,8 @@ def cf_htm(cf_url, headers, per):
             if divpaid_calc != '---' and divpaid_calc != 0:
                 divpaid = round(divpaid_calc * (dollar_multiplier / 1_000_000), 2)
         elif ('this, \'defref_us-gaap_ShareBasedCompensation\', window' in str(tds) or
-              'this, \'defref_us-gaap_AllocatedShareBasedCompensationExpense\', window' in str(tds)
+              'this, \'defref_us-gaap_AllocatedShareBasedCompensationExpense\', window' in str(tds) or
+              r"this, 'defref_epr_ShareBasedPaymentArrangementNoncashExpenseManagementAndTrustees', window" in str(tds)
               ):
             sbc_calc = html_re(str(tds[colm]))
             if sbc_calc != '---':
@@ -1544,7 +1545,7 @@ def rev_xml(rev_url, headers):
 
     # Initial values
     rev = gross = oi = net = eps = cost = shares = div = '---'
-    share_sum = research = op_exp = dep_am = impairment = disposition = ffo = 0
+    cost_sum = share_sum = research = op_exp = dep_am = impairment = disposition = ffo = 0
     net_check = False
 
     # Find which column has 12 month data
@@ -1562,7 +1563,8 @@ def rev_xml(rev_url, headers):
             r'us-gaap_SalesRevenueNet' in str(row) or
             r'<ElementName>us-gaap_SalesRevenueGoodsNet</ElementName>' in str(row) or
             r'<ElementName>us-gaap_ElectricUtilityRevenue</ElementName>' in str(row) or
-            r'<ElementName>us-gaap_UtilityRevenue</ElementName>' in str(row)
+            r'<ElementName>us-gaap_UtilityRevenue</ElementName>' in str(row) or
+            r'<ElementName>us-gaap_RealEstateRevenueNet</ElementName>' in str(row)
             ):
             rev = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)
         elif r'us-gaap_GrossProfit' in str(row):
@@ -1575,13 +1577,14 @@ def rev_xml(rev_url, headers):
               r'CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets' in str(row) and cost == '---' or
               r'<ElementName>us-gaap_CostOfGoodsAndServicesEnergyCommoditiesAndServices</ElementName>' in str(row) and cost == '---'
               ):
-            cost = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)             
+            cost = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2) 
         elif r'us-gaap_ResearchAndDevelopmentExpense' in str(row):
             research = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)    
         elif r'<ElementName>de_CostsAndExpensesIncludingInterest</ElementName>' in str(row):
             op_exp = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)                  
         elif (r'us-gaap_OperatingIncomeLoss' in str(row) or
-              r'<ElementName>us-gaap_IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments</ElementName>' in str(row) and oi == '---'
+              r'<ElementName>us-gaap_IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments</ElementName>' in str(row) and oi == '---' or
+              r'<ElementName>us-gaap_OperatingIncomeLoss</ElementName>' in str(row)
               ):
             result = xml_re(str(cells[colm]))
             if result != '---':
@@ -1868,7 +1871,7 @@ def div_xml(div_url, headers):
                     break
     
     # Check if reporting quarterly div
-    if 'QUARTERLY' in str(row).upper():
+    if 'QUARTERLY' in str(row).upper() and div != '---':
         div *= 4
 
     return div

@@ -237,30 +237,40 @@ def yf_div_catch(ticker, per, pre_per=None, pre_div=None):
     # Pull div data
     stock = yf.Ticker(ticker)
 
-    # Intitiate period end as datetime object
+    # Intitiate period end and period start as datetime object
     per_edit = per.replace('.', '')
     date_per = datetime. strptime(per_edit, '%b %d, %Y')
+    date_per_start = date_per - relativedelta(years=1)
+    offset = 0
 
-    # Check if we need to adjust period to catch correct div total
+    # Reverse divi dataframs
+    rev_divs = stock.dividends.iloc[::-1]
+    divs = rev_divs.loc[date_per:date_per_start]
+
+    # Determine if offset required
     offset_needed = False
     if pre_per != None and pre_div != None:
         pre_per_edit = pre_per.replace('.', '')
         pre_date_per = datetime. strptime(pre_per_edit, '%b %d, %Y')
-        dividends_last = list(stock.dividends[:pre_date_per])
-        div_last = round(sum(dividends_last[-4:]), 3)
-        if div_last != pre_div:
+        pre_date_per_start = pre_date_per - relativedelta(years=1)
+        dividends_pre = list(rev_divs[pre_date_per:pre_date_per_start])
+        dividends_pre = round(sum(dividends_pre), 3)
+        if dividends_pre != pre_div:
             offset_needed = True
 
+    # Adjust dates if offset needed
     if offset_needed == True:
-        offset = relativedelta(months=3)
-        new_per = date_per + offset
-    else:
-        new_per = date_per
+        for offset in range(1, 4):
+            pre_date_per_new = pre_date_per + relativedelta(months=offset)
+            pre_date_per_start_new = pre_date_per_start + relativedelta(months=offset)
+            divs_new = rev_divs.loc[pre_date_per_new:pre_date_per_start_new]
+            divs_new = round(sum(list(divs_new)), 3)
+            if divs_new == pre_div:
+                break
 
-    # Pull correct (hopefully) div data
-    dividends = list(stock.dividends[:new_per])
-    div = round(sum(dividends[-4:]), 3)
-    
+    # Pull div data accounting for possible offset
+    dividends = list(rev_divs[date_per + relativedelta(months=offset):date_per_start + relativedelta(months=offset)])
+    div = round(sum(dividends), 3)
     print('-' * 100)
     print(f'Dividend of {div} caught by YF')
     return div
@@ -489,7 +499,7 @@ def parse_filings(filings, type, headers, splits):
                    'CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS', 'CONSOLIDATED STATEMENTS OF NET INCOME', 'CONSOLIDATED AND COMBINED STATEMENTS OF OPERATIONS', 'CONSOLIDATED STATEMENT OF EARNINGS',
                    'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS)', 'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME', 'CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS)',
                    'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE LOSS', 'CONSOLIDATED STATEMENTS OF OPERATIONS AND OTHER COMPREHENSIVE LOSS', 'STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED EARNINGS',
-                   'CONSOLIDATED RESULTS OF OPERATIONS', 'CONDENSED CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF CONSOLIDATED INCOME']
+                   'CONSOLIDATED RESULTS OF OPERATIONS', 'CONDENSED CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF CONSOLIDATED INCOME', 'CONSOLIDATED STATEMENTS OF INCOME AND COMPREHENSIVE INCOME']
     bs_list = ['BALANCE SHEETS', 'CONSOLIDATED BALANCE SHEETS', 'STATEMENT OF FINANCIAL POSITION CLASSIFIED', 'CONSOLIDATED BALANCE SHEET', 'CONDENSED CONSOLIDATED BALANCE SHEETS',
                'CONSOLIDATED AND COMBINED BALANCE SHEETS', 'CONSOLIDATED STATEMENTS OF FINANCIAL POSITION', 'BALANCE SHEET', 'CONSOLIDATED FINANCIAL POSITION']
     cf_list = ['CASH FLOWS STATEMENTS', 'CONSOLIDATED STATEMENTS OF CASH FLOWS', 'STATEMENT OF CASH FLOWS INDIRECT', 'CONSOLIDATED STATEMENT OF CASH FLOWS',
@@ -520,7 +530,7 @@ def parse_filings(filings, type, headers, splits):
                 'STOCKHOLDERS\' EQUITY (DEFICIT) (NARRATIVE) (DETAILS)', 'STOCKHOLDERS\' EQUITY - DIVIDENDS (DETAILS)', 'STOCKHOLDERS\' EQUITY (DETAIL 2)', 'STOCKHOLDERS\' EQUITY (DETAILS 2)', 'STOCKHOLDERS\' EQUITY (DETAILS)',
                 'SHAREHOLDERS\' EQUITY (NARRATIVE) (DETAILS)', 'EQUITY AND ACCUMULATED OTHER COMPREHENSIVE INCOME (LOSS), NET - SCHEDULE OF DIVIDENDS (DETAILS)', 'EQUITY AND ACCUMULATED OTHER COMPREHENSIVE LOSS, NET (SCHEDULE OF DIVIDENDS) (DETAILS)',
                 'EQUITY AND ACCUMULATED OTHER COMPREHENSIVE LOSS, NET (SCHEDULE OF DIVIDENDS DECLARED AND PAYABLE) (DETAILS)', 'CONSOLIDATED STATEMENT OF CHANGES IN EQUITY CONSOLIDATED STATEMENT OF CHANGES IN EQUITY (PARENTHETICAL)',
-                'CONSOLIDATED STATEMENT OF CHANGES IN EQUITY (PARENTHETICAL)', 'STOCKHOLDERS\' EQUITY (EARNINGS PER SHARE DATA) (DETAILS)']
+                'CONSOLIDATED STATEMENT OF CHANGES IN EQUITY (PARENTHETICAL)', 'STOCKHOLDERS\' EQUITY (EARNINGS PER SHARE DATA) (DETAILS)', 'CONSOLIDATED STATEMENTS OF EQUITY (PARENTHETICALS)', 'COMMON AND PREFERRED SHARES COMMON SHARES (DETAILS)']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)']
     share_catch_list = ['CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEET (PARENTHETICAL)']
 
@@ -806,7 +816,7 @@ def growth_rate_calc(numbers):
     '''
 
     # Replace empty values with 0
-    adj_numbers = [0 if elem == '---' else elem for elem in numbers]
+    adj_numbers = [0 if type(elem) == str else elem for elem in numbers]
 
     # Initial values
     one_year = three_year = five_year = ten_year = '---'
@@ -840,7 +850,7 @@ def per_over_per_growth_rate_calc(numbers):
     if len(numbers) == 1:
         return '---'
 
-    adj_numbers = [0 if elem == '---' else elem for elem in numbers]
+    adj_numbers = [0 if type(elem) == str else elem for elem in numbers]
 
     # Calc growth
     results = []    
