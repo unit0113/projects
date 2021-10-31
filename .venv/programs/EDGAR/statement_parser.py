@@ -106,6 +106,7 @@ def column_finder_annual_htm(soup, per):
         rows = head2.find_all('th')
         index = 0
         for row1 in rows:
+            tweleve_month_prior = False
             # If extra/next FY in table
             if next_year in str(row1) or 'Minimum' in str(row1):
                 weird_colm = True         
@@ -117,9 +118,17 @@ def column_finder_annual_htm(soup, per):
 
                 # Go through colms and check if index lines up with 12 month data
                 for row2 in rows2:
-                    # Restart loop if data ends on 3 or 4 month data, else, get new index and start loop over
+                    # Identify if 12 month data is listed prior and column is unlabled
+                    if '12 Months Ended' in str(row2):
+                        tweleve_month_prior = True
+                    # Restart loop if data doesn't end on FY data, else, get new index and start loop over
                     if col_index > index:
-                        if '3 Months Ended' in str(row2) or '4 Months Ended' in str(row2) or '1 Months Ended' in str(row2) and '11 Months Ended' not in str(row2):
+                        if ('3 Months Ended' in str(row2) or
+                            '4 Months Ended' in str(row2) or
+                            '1 Months Ended' in str(row2) and '11 Months Ended' not in str(row2) or
+                            '0 Months Ended' in str(row2) or
+                            'Months Ended' not in str(row2) and '12 Months Ended' in str(head) and tweleve_month_prior == False
+                            ):
                             break 
                         else:
                             # Check if data cells have wide cells
@@ -780,7 +789,8 @@ def cf_htm(cf_url, headers, per):
               r"this, 'defref_us-gaap_PaymentsForRepurchaseOfEquity', window" in str(tds) or
               r"this, 'defref_pld_PaymentsForRepurchaseOfPreferredStock', window" in str(tds) or
               r"this, 'defref_us-gaap_ProceedsFromIssuanceOrSaleOfEquity', window" in str(tds) or
-              r"this, 'defref_us-gaap_PaymentsForRepurchaseOfPreferredStockAndPreferenceStock', window" in str(tds)
+              r"this, 'defref_us-gaap_PaymentsForRepurchaseOfPreferredStockAndPreferenceStock', window" in str(tds) or
+              r"this, 'defref_us-gaap_PaymentsForRepurchaseOfCommonStock', window" in str(tds)
               ):
             buyback_calc = html_re(str(tds[colm]))
             if buyback_calc != '---':
@@ -792,7 +802,8 @@ def cf_htm(cf_url, headers, per):
               r"this, 'defref_us-gaap_ProceedsFromIssuanceOfCommonStock', window" in str(tds) or
               r"this, 'defref_us-gaap_ProceedsFromStockPlans', window" in str(tds) or
               r"this, 'defref_doc_ProceedsFromPaymentsToFromSaleOfCommonSharesNet', window" in str(tds) or
-              r"this, 'defref_us-gaap_ProceedsFromIssuanceOfPreferredStockAndPreferenceStock', window" in str(tds)
+              r"this, 'defref_us-gaap_ProceedsFromIssuanceOfPreferredStockAndPreferenceStock', window" in str(tds) or
+              r"this, 'defref_us-gaap_ProceedsFromSaleOfTreasuryStock', window" in str(tds)
               ):
             share_issue_rtn = html_re(str(tds[colm]))
             if share_issue_rtn != '---':
@@ -803,7 +814,8 @@ def cf_htm(cf_url, headers, per):
               'this, \'defref_us-gaap_PaymentsOfDividendsCommonStock\', window' in str(tds) or
               r"this, 'defref_us-gaap_Dividends', window" in str(tds) or
               r"this, 'defref_us-gaap_PaymentsOfOrdinaryDividends', window" in str(tds) or
-              r"this, 'defref_us-gaap_PaymentsOfDividendsCommonStock', window" in str(tds)
+              r"this, 'defref_us-gaap_PaymentsOfDividendsCommonStock', window" in str(tds) or
+              r"this, 'defref_frt_DividendsPaidToCommonAndPreferredShareholders', window" in str(tds)
               ):
             divpaid_calc = html_re(str(tds[colm]))
             if divpaid_calc != '---' and divpaid_calc != 0:
@@ -852,7 +864,14 @@ def div_htm(div_url, headers, per):
     div = '---'
     
     # If company has seperate div table
-    if 'EQUITY' not in soup.find('th').text.upper() and 'QUARTERLY FINANCIAL INFORMATION' not in str(soup).upper() and 'QUARTERLY RESULTS OF OPERATIONS' not in str(soup).upper() and 'STOCK OPTION ASSUMPTIONS' not in str(soup).upper():
+    if ('EQUITY' not in soup.find('th').text.upper() and
+        'QUARTERLY FINANCIAL INFORMATION' not in str(soup).upper() and
+        'QUARTERLY RESULTS OF OPERATIONS' not in str(soup).upper() and
+        'STOCK OPTION ASSUMPTIONS' not in str(soup).upper() and
+        'FEDERAL INCOME TAX TREATMENT OF COMMON DIVIDENDS' not in str(soup).upper() and
+        'DIVIDENDS [ABSTRACT]' not in str(soup).upper() and
+        'SHAREHOLDERS\' EQUITY - (NARRATIVE) (DETAILS)' not in str(soup).upper()
+        ):
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
             
@@ -998,8 +1017,11 @@ def div_htm(div_url, headers, per):
 
     elif ("Consolidated Statements Of Changes In Stockholders' Equity (Parenthetical)" in str(soup) and '12 Months Ended' in str(soup) or
           "Stockholders' Equity - Dividends (Details)" in str(soup) and '12 Months Ended' in str(soup) or
+          "Stockholders' Equity (Details 2)" in str(soup) and '12 Months Ended' in str(soup) or
           "Equity and Accumulated Other Comprehensive" in str(soup) and '12 Months Ended' in str(soup) or
-          "Equity And Accumulated Other Comprehensive" in str(soup) and '12 Months Ended' in str(soup)
+          "Equity And Accumulated Other Comprehensive" in str(soup) and '12 Months Ended' in str(soup) or
+          "Income Taxes - Federal Income Tax Treatment of Common Dividends (Details) - Common Stock" in str(soup) and '12 Months Ended' in str(soup) or
+          "Shareholders' Equity - (Narrative) (Details)" in str(soup) and '12 Months Ended' in str(soup)
           ):      
         # Find row with div data
         for row in soup.table.find_all('tr'):
@@ -1007,7 +1029,9 @@ def div_htm(div_url, headers, per):
             if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds) or
                 r"this, 'defref_cor_DistributionsPerShare', window" in str(tds) or
                 r"this, 'defref_cor_DistributionsPerShare', window" in str(tds) or
-                r"this, 'defref_dlr_CommonStockDividendRatePerDollarAmount', window" in str(tds)
+                r"this, 'defref_dlr_CommonStockDividendRatePerDollarAmount', window" in str(tds) or
+                r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds) or
+                r"this, 'defref_us-gaap_DividendsPayableAmountPerShare', window" in str(tds)
                 ):
                 # Pull div
                 div = html_re(str(tds[colm]))
@@ -1814,7 +1838,8 @@ def cf_xml(cf_url, headers):
             if share_issue_calc != '---':
                 share_issue += round(share_issue_calc * (dollar_multiplier / 1_000_000), 2)               
         elif (r'us-gaap_PaymentsOfDividendsCommonStock' in str(row) and divpaid == 0 or
-              r'us-gaap_PaymentsOfDividends' in str(row) and divpaid == 0 
+              r'us-gaap_PaymentsOfDividends' in str(row) and divpaid == 0 or
+              r'<ElementName>frt_DividendsPaidToCommonAndPreferredShareholders</ElementName>' in str(row) and divpaid == 0
               ):
             divpaid_calc = xml_re(str(cells[colm]))
             if divpaid_calc != '---':
