@@ -173,13 +173,13 @@ multiplier_list_1 = ['shares in Millions, $ in Millions', 'In Millions, except P
 
 multiplier_list_2 = ['shares in Thousands, $ in Millions', 'In Millions, except Share data in Thousands, unless otherwise specified']
 
-multiplier_list_3 = ['shares in Thousands, $ in Thousands', 'In Thousands, except Per Share data, unless otherwise specified', 'In Thousands, except Per Share data']
+multiplier_list_3 = ['shares in Thousands, $ in Thousands', 'In Thousands, except Per Share data, unless otherwise specified', 'In Thousands, except Per Share data', 'In Thousands, unless otherwise specified', 'In Thousands']
 
 multiplier_list_4 = ['In Thousands, except Share data, unless otherwise specified', 'In Thousands, except Share data']
 
 multiplier_list_5 = ['$ in Millions', 'In Millions, unless otherwise specified', 'In Millions', '$ in Millions, ¥ in Billions', 'In Millions, except Share data', 'In Millions, except Share data, unless otherwise specified']
 
-multiplier_list_6 = ['$ in Thousands', 'In Thousands, unless otherwise specified', 'In Thousands']
+multiplier_list_6 = ['$ in Thousands']
 
 multiplier_list_7 = ['shares in Thousands']
 
@@ -1021,7 +1021,8 @@ def div_htm(div_url, headers, per):
           "Equity and Accumulated Other Comprehensive" in str(soup) and '12 Months Ended' in str(soup) or
           "Equity And Accumulated Other Comprehensive" in str(soup) and '12 Months Ended' in str(soup) or
           "Income Taxes - Federal Income Tax Treatment of Common Dividends (Details) - Common Stock" in str(soup) and '12 Months Ended' in str(soup) or
-          "Shareholders' Equity - (Narrative) (Details)" in str(soup) and '12 Months Ended' in str(soup)
+          "Shareholders' Equity - (Narrative) (Details)" in str(soup) and '12 Months Ended' in str(soup) or
+          "Shareholders' Equity (Narrative) (Details)" in str(soup) and '12 Months Ended' in str(soup)
           ):      
         # Find row with div data
         for row in soup.table.find_all('tr'):
@@ -1114,7 +1115,9 @@ def div_htm(div_url, headers, per):
     # If company is a jerk and burries it (like apple)
     else:
         # If contained in equity increase/decrease statement
-        if 'defref_us-gaap_IncreaseDecreaseInStockholdersEquityRollForward' in str(soup):
+        if ('defref_us-gaap_IncreaseDecreaseInStockholdersEquityRollForward' in str(soup) or
+            'Balance at, beginning of period at' in str(soup)
+            ):
             for row in soup.table.find_all('tr'):
                 tds = row.find_all('td')
                 if ('this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds) or
@@ -1124,8 +1127,13 @@ def div_htm(div_url, headers, per):
             return div
         
         # If no 12 month data, for divs broken out by quarter
-        elif '12 Months Ended' not in str(soup) and 'ABSTRACT' not in soup.find('th').text.upper():
-            if 'this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(soup):
+        elif ('12 Months Ended' not in str(soup) and 'ABSTRACT' not in soup.find('th').text.upper() or
+              'Stockholders\' equity (Details Textual)' in str(soup) and '3 Months Ended' in str(soup) or
+              'Stockholders\' equity (Details Textual)' in str(soup) and '0 Months Ended' in str(soup)
+              ):
+            if ('this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(soup) or
+                r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(soup)
+                ):
                 period_found = False
                 new_year = int(per[-4:]) - 1
                 new_per = per[:-4] + str(new_year)
@@ -1133,10 +1141,12 @@ def div_htm(div_url, headers, per):
                     tds = row.find_all('td')
                     if new_per in str(row):
                         period_found = True
-                    elif 'this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds) and period_found == True:
+                    elif ('this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds) and period_found == True or
+                          r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds) and period_found == True
+                          ):
                         div = re.findall(r'\d+\.\d+', str(tds))[0:4]
                         div = sum(list(map(float, div)))
-                        return div
+                        return round(div, 3)
             elif '>CONSOLIDATED STATEMENT OF SHAREOWNERS EQUITY - USD ($)' in str(soup):
                 period_found = False
                 for row in soup.table.find_all('tr'):
@@ -1358,17 +1368,17 @@ def eps_catch_htm(catch_url, headers, per):
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
             if ('EarningsPerShareDiluted' in str(tds) and eps == '---' or
-              'this, \'defref_us-gaap_EarningsPerShareBasicAndDiluted\', window' in str(tds) and eps == '---' or
-              r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsPerBasicAndDilutedShare', window" in str(tds) and eps == '---' or
-              r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsPerDilutedShare', window" in str(tds) and eps == '---'
-              ):
+                'this, \'defref_us-gaap_EarningsPerShareBasicAndDiluted\', window' in str(tds) and eps == '---' or
+                r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsPerBasicAndDilutedShare', window" in str(tds) and eps == '---' or
+                r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsPerDilutedShare', window" in str(tds) and eps == '---'
+                ):
                 result = html_re(str(tds[colm]))
                 if result != '---':
                     eps = check_neg(str(tds), result)
             elif (r"this, 'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding', window" in str(tds) or
-              r"this, 'defref_us-gaap_WeightedAverageNumberOfShareOutstandingBasicAndDiluted', window" in str(tds) or
-              r"this, 'defref_tsla_WeightedAverageNumberOfSharesOutstandingBasicAndDilutedOne', window" in str(tds)
-              ):
+                  r"this, 'defref_us-gaap_WeightedAverageNumberOfShareOutstandingBasicAndDiluted', window" in str(tds) or
+                  r"this, 'defref_tsla_WeightedAverageNumberOfSharesOutstandingBasicAndDilutedOne', window" in str(tds)
+                  ):
                 shares_calc = html_re(str(tds[colm]))
                 if shares_calc != '---':
                     shares = round(shares_calc * (share_multiplier / 1_000), 2)
@@ -1412,7 +1422,8 @@ def share_catch_htm(catch_url, headers, per):
     for row in soup.table.find_all('tr'):
         tds = row.find_all('td')
         if (r"this, 'defref_us-gaap_CommonStockSharesOutstanding', window" in str(tds) or
-            r"this, 'defref_us-gaap_CommonStockValueOutstanding', window" in str(tds)
+            r"this, 'defref_us-gaap_CommonStockValueOutstanding', window" in str(tds) or
+            r"this, 'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding', window" in str(tds)
             ):
             shares_calc = html_re(str(tds[colm]))
             if shares_calc != '---':
@@ -1438,7 +1449,7 @@ def share_catch_htm(catch_url, headers, per):
     shares_repurchased = sum(shares_repurchased_set)
 
     # Calculate share if outstanding not given
-    if shares == '---' and shares_issued != '---' and shares_repurchased != '---':
+    if shares == '---' and shares_issued + shares_repurchased > 0:
         shares = round(shares_issued - shares_repurchased, 2)
 
     return shares
@@ -1887,7 +1898,8 @@ def div_xml(div_url, headers):
     rows = soup.find_all('Row')
     for row in rows:
         if (r'>us-gaap_CommonStockDividendsPerShareDeclared' in str(row) or
-            r'us-gaap_CommonStockDividendsPerShareCashPaid' in str(row)
+            r'us-gaap_CommonStockDividendsPerShareCashPaid' in str(row) or
+            r'<ElementName>us-gaap_DividendsPayableAmountPerShare</ElementName>' in str(row)
             ):
             cells = row.find_all('Cell')
             for cell in cells:
@@ -1902,7 +1914,7 @@ def div_xml(div_url, headers):
     return div
 
 
-def eps_catch_xml(catch_url, headers, eps):
+def eps_catch_xml(catch_url, headers):
     ''' Parse EPS and div info if not listed elsewhere
 
     Args:
@@ -1914,11 +1926,14 @@ def eps_catch_xml(catch_url, headers, eps):
     '''
 
     # Initial value
-    div = '---'
+    eps = div = shares = '---'
 
     # Get data from site
     content = requests.get(catch_url, headers=headers).content
     soup = BeautifulSoup(content, 'xml')
+    colm = column_finder_annual_xml(soup)
+    head = soup.RoundingOption
+    dollar_multiplier, share_multiplier = multiple_extractor(str(head), shares=True, xml=True)
 
     # Find table
     rows = soup.find_all('Row')
@@ -1935,8 +1950,13 @@ def eps_catch_xml(catch_url, headers, eps):
             obj = re.search(r'(?:Less Dividends)(?:.|\n)*?(\d?\d.\d\d)', str(cells[0]))
             if obj is not None:
                 div = float(obj.group(1))
+        elif r'<ElementName>us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding</ElementName>' in str(row):
+            cells = row.find_all('Cell')
+            share_calc = xml_re(str(cells[colm]))
+            if share_calc != '---':
+                shares = round(share_calc * (share_multiplier / 1_000), 2) 
 
-    return eps, div
+    return eps, div, shares
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 

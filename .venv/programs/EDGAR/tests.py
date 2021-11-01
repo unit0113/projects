@@ -11,7 +11,7 @@ import timeit
 
 
 # Header data for data pull
-with open(r'C:\Users\unit0\OneDrive\Desktop\EDGAR\user_agent.txt') as f:
+with open(r'C:\Users\unit0\Desktop\EDGAR\user_agent.txt') as f:
     data = f.read()
     headers = json.loads(data)
 
@@ -139,7 +139,7 @@ def eps_catch_test():
 
     # XML test
     for i, url in enumerate(st.catch_url_list_xml):
-        result = list(sp.eps_catch_xml(url, headers, st.eps_list_xml[i]))
+        result = list(sp.eps_catch_xml(url, headers))
         answer = st.catch_answers_xml[i]
         print(result)
         print(answer)

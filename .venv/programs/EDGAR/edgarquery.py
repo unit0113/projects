@@ -500,7 +500,7 @@ def parse_filings(filings, type, headers, splits):
                    'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS)', 'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME', 'CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS)',
                    'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE LOSS', 'CONSOLIDATED STATEMENTS OF OPERATIONS AND OTHER COMPREHENSIVE LOSS', 'STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED EARNINGS',
                    'CONSOLIDATED RESULTS OF OPERATIONS', 'CONDENSED CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF CONSOLIDATED INCOME', 'CONSOLIDATED STATEMENTS OF INCOME AND COMPREHENSIVE INCOME', 'CONSOLIDATED STATEMENTS OF INCOME (LOSS)',
-                   'CONSOLIDATED STATEMENTS OF COMPREHENSIVE INCOME']
+                   'CONSOLIDATED STATEMENTS OF COMPREHENSIVE INCOME', 'CONSOLIDATED STATEMENTS OF EARNINGS (LOSS)']
     bs_list = ['BALANCE SHEETS', 'CONSOLIDATED BALANCE SHEETS', 'STATEMENT OF FINANCIAL POSITION CLASSIFIED', 'CONSOLIDATED BALANCE SHEET', 'CONDENSED CONSOLIDATED BALANCE SHEETS',
                'CONSOLIDATED AND COMBINED BALANCE SHEETS', 'CONSOLIDATED STATEMENTS OF FINANCIAL POSITION', 'BALANCE SHEET', 'CONSOLIDATED FINANCIAL POSITION']
     cf_list = ['CASH FLOWS STATEMENTS', 'CONSOLIDATED STATEMENTS OF CASH FLOWS', 'STATEMENT OF CASH FLOWS INDIRECT', 'CONSOLIDATED STATEMENT OF CASH FLOWS',
@@ -534,8 +534,8 @@ def parse_filings(filings, type, headers, splits):
                 'CONSOLIDATED STATEMENT OF CHANGES IN EQUITY (PARENTHETICAL)', 'STOCKHOLDERS\' EQUITY (EARNINGS PER SHARE DATA) (DETAILS)', 'CONSOLIDATED STATEMENTS OF EQUITY (PARENTHETICALS)', 'COMMON AND PREFERRED SHARES COMMON SHARES (DETAILS)',
                 'CONSOLIDATED STATEMENTS OF CHANGES IN COMMON STOCKHOLDERS\' INVESTMENT (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS EQUITY AND COMPREHENSIVE INCOME (PARENTHETICAL)',
                 'CONSOLIDATED STATEMENT OF CHANGES IN EQUITY (PARANTHETICAL)', 'CONSOLIDATED STATEMENT OF CHANGES IN STOCKHOLDERS\' EQUITY (PARANTHETICAL)', 'INCOME TAXES - FEDERAL INCOME TAX TREATMENT OF COMMON DIVIDENDS (DETAILS)',
-                'DIVIDENDS (DETAILS)', 'DIVIDENDS']
-    eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)']
+                'DIVIDENDS (DETAILS)', 'DIVIDENDS', 'SHAREHOLDERS\' EQUITY - (NARRATIVE) (DETAILS)', 'STOCKHOLDERS\' EQUITY (DETAILS TEXTUAL)']
+    eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)', 'EARNINGS PER SHARE (DETAIL)', 'EARNING PER SHARE (DETAIL)', 'EARNINGS PER SHARE (BASIC AND DILUTED WEIGHTED AVERAGE SHARES OUTSTANDING) (DETAILS)']
     share_catch_list = ['CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEET (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEETS (PARANTHETICAL)']
 
     # Lists for data frame
@@ -672,24 +672,21 @@ def parse_filings(filings, type, headers, splits):
                     div = sp.div_xml(div_url, headers)
 
             # EPS/div catcher
-            elif report.shortname.text.upper() in eps_catch_list and div == '---' and divpaid != 0 or report.shortname.text.upper() in eps_catch_list and eps == '---':
+            elif report.shortname.text.upper() in eps_catch_list and div == '---' and divpaid != 0 or report.shortname.text.upper() in eps_catch_list and eps == '---' or report.shortname.text.upper() in eps_catch_list and shares == '---':
                 # Create URL and call parser function
                     try:
                         catch_url = base_url + report.htmlfilename.text
                         eps_result, div_result, share_result = sp.eps_catch_htm(catch_url, headers, period_end)
-                        if shares == 0 and share_result != '---':
-                            shares = share_result
                     except:
                         catch_url = base_url + report.xmlfilename.text
-                        eps_result, div_result = sp.eps_catch_xml(catch_url, headers, period_end)
+                        eps_result, div_result, share_result = sp.eps_catch_xml(catch_url, headers)
                     # Update EPS or div if result found/needed
                     if eps == '---' and eps_result != '---':
                         eps = eps_result
-                        # Calc shares if not found previously
-                        if shares == 0 and net != '---':
-                            shares = abs(round(net * 1000 / eps))
                     if div == '---' and div_result != '---':
                         div = div_result
+                    if shares == '---' and share_result != '---':
+                            shares = share_result
                 
             # Shares if not reported on income statement
             elif report.shortname.text.upper() in share_catch_list and shares == '---' or report.shortname.text.upper() in share_catch_list and shares == 0:
