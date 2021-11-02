@@ -37,57 +37,59 @@ class StockData:
         self.annual_filings = annualData(self.cik, headers) 
         #quarterly_filings = quarterlyData(self, headers)   
 
-        # Pull data from filings
-        self.annual_data = parse_filings(self.annual_filings, 'annual', headers, self.yahoo_stock_class.splits)
+        # Check if empty, if not, do more calcs
+        if self.annual_filings != []:
+            # Pull data from filings
+            self.annual_data = parse_filings(self.annual_filings, 'annual', headers, self.yahoo_stock_class.splits)
 
-        # Fill in missed divs
-        self.div_edit = False
-        if '---' in self.annual_data['Div']:
-            for index, (dividend, div_paid) in enumerate(zip(self.annual_data['Div'], self.annual_data['Div_Paid'])):
-                if div_paid != 0 and dividend == '---':
-                    self.div_edit = True
-                    if index == 0:
-                        self.annual_data['Div'][index] = yf_div_catch(self.symbol, self.annual_data['Per'][index])
-                    else:
-                        self.annual_data['Div'][index] = yf_div_catch(self.symbol, self.annual_data['Per'][index], self.annual_data['Per'][index - 1], self.annual_data['Div'][index - 1])
-                    print(self.annual_data['Div'])
-                    print('-' * 100)
+            # Fill in missed divs
+            self.div_edit = False
+            if '---' in self.annual_data['Div']:
+                for index, (dividend, div_paid) in enumerate(zip(self.annual_data['Div'], self.annual_data['Div_Paid'])):
+                    if div_paid != 0 and dividend == '---':
+                        self.div_edit = True
+                        if index == 0:
+                            self.annual_data['Div'][index] = yf_div_catch(self.symbol, self.annual_data['Per'][index])
+                        else:
+                            self.annual_data['Div'][index] = yf_div_catch(self.symbol, self.annual_data['Per'][index], self.annual_data['Per'][index - 1], self.annual_data['Div'][index - 1])
+                        print(self.annual_data['Div'])
+                        print('-' * 100)
 
-        # Update div calcs if new div found
-        if self.div_edit == True:
-            self.annual_data['Earnings Payout Ratio'] = divider(self.annual_data['Div'], self.annual_data['EPS'])
-            self.annual_data['FCF Payout Ratio'] = divider(self.annual_data['Div'], self.annual_data['Free Cash Flow Per Share'])
-            self.annual_data['FFO Payout Ratio'] = divider(self.annual_data['Div'], self.annual_data['FFO Per Share'])
-            print(self.annual_data)
+            # Update div calcs if new div found
+            if self.div_edit == True:
+                self.annual_data['Earnings Payout Ratio'] = divider(self.annual_data['Div'], self.annual_data['EPS'])
+                self.annual_data['FCF Payout Ratio'] = divider(self.annual_data['Div'], self.annual_data['Free Cash Flow Per Share'])
+                self.annual_data['FFO Payout Ratio'] = divider(self.annual_data['Div'], self.annual_data['FFO Per Share'])
+                print(self.annual_data)
 
 
-        # Calculate growth rates
-        self.growth_rates = {}
-        self.growth_rates['Revenue Growth'] = growth_rate_calc(self.annual_data['Rev'])
-        self.growth_rates['Revenue per Share Growth'] = growth_rate_calc(self.annual_data['Revenue Per Share'])
-        self.growth_rates['Net Income Growth'] = growth_rate_calc(self.annual_data['Net'])
-        self.growth_rates['EPS Growth'] = growth_rate_calc(self.annual_data['EPS'])
-        self.growth_rates['Shares Growth'] = growth_rate_calc(self.annual_data['Shares'])
-        self.growth_rates['FFO Growth'] = growth_rate_calc(self.annual_data['FFO'])
-        self.growth_rates['FFO per Share Growth'] = growth_rate_calc(self.annual_data['FFO Per Share'])
-        self.growth_rates['FCF Growth'] = growth_rate_calc(self.annual_data['FCF'])
-        self.growth_rates['FCF per Share Growth'] = growth_rate_calc(self.annual_data['Free Cash Flow Per Share'])
-        self.growth_rates['Dividend Growth'] = growth_rate_calc(self.annual_data['Div'])
+            # Calculate growth rates
+            self.growth_rates = {}
+            self.growth_rates['Revenue Growth'] = growth_rate_calc(self.annual_data['Rev'])
+            self.growth_rates['Revenue per Share Growth'] = growth_rate_calc(self.annual_data['Revenue Per Share'])
+            self.growth_rates['Net Income Growth'] = growth_rate_calc(self.annual_data['Net'])
+            self.growth_rates['EPS Growth'] = growth_rate_calc(self.annual_data['EPS'])
+            self.growth_rates['Shares Growth'] = growth_rate_calc(self.annual_data['Shares'])
+            self.growth_rates['FFO Growth'] = growth_rate_calc(self.annual_data['FFO'])
+            self.growth_rates['FFO per Share Growth'] = growth_rate_calc(self.annual_data['FFO Per Share'])
+            self.growth_rates['FCF Growth'] = growth_rate_calc(self.annual_data['FCF'])
+            self.growth_rates['FCF per Share Growth'] = growth_rate_calc(self.annual_data['Free Cash Flow Per Share'])
+            self.growth_rates['Dividend Growth'] = growth_rate_calc(self.annual_data['Div'])
 
-        # Calculate YoY growth
-        self.growth_rates['YoY Revenue Growth'] = per_over_per_growth_rate_calc(self.annual_data['Rev'])
-        self.growth_rates['YoY Revenue per Share Growth'] = per_over_per_growth_rate_calc(self.annual_data['Revenue Per Share'])
-        self.growth_rates['YoY Net Income Growth'] = per_over_per_growth_rate_calc(self.annual_data['Net'])
-        self.growth_rates['YoY EPS Growth'] = per_over_per_growth_rate_calc(self.annual_data['EPS'])
-        self.growth_rates['YoY Shares Growth'] = per_over_per_growth_rate_calc(self.annual_data['Shares'])
-        self.growth_rates['YoY FFO Growth'] = per_over_per_growth_rate_calc(self.annual_data['FFO'])
-        self.growth_rates['YoY FFO per Share Growth'] = per_over_per_growth_rate_calc(self.annual_data['FFO Per Share'])
-        self.growth_rates['YoY FCF Growth'] = per_over_per_growth_rate_calc(self.annual_data['FCF'])
-        self.growth_rates['YoY FCF per Share Growth'] = per_over_per_growth_rate_calc(self.annual_data['Free Cash Flow Per Share'])
-        self.growth_rates['YoY Dividend Growth'] = per_over_per_growth_rate_calc(self.annual_data['Div'])
+            # Calculate YoY growth
+            self.growth_rates['YoY Revenue Growth'] = per_over_per_growth_rate_calc(self.annual_data['Rev'])
+            self.growth_rates['YoY Revenue per Share Growth'] = per_over_per_growth_rate_calc(self.annual_data['Revenue Per Share'])
+            self.growth_rates['YoY Net Income Growth'] = per_over_per_growth_rate_calc(self.annual_data['Net'])
+            self.growth_rates['YoY EPS Growth'] = per_over_per_growth_rate_calc(self.annual_data['EPS'])
+            self.growth_rates['YoY Shares Growth'] = per_over_per_growth_rate_calc(self.annual_data['Shares'])
+            self.growth_rates['YoY FFO Growth'] = per_over_per_growth_rate_calc(self.annual_data['FFO'])
+            self.growth_rates['YoY FFO per Share Growth'] = per_over_per_growth_rate_calc(self.annual_data['FFO Per Share'])
+            self.growth_rates['YoY FCF Growth'] = per_over_per_growth_rate_calc(self.annual_data['FCF'])
+            self.growth_rates['YoY FCF per Share Growth'] = per_over_per_growth_rate_calc(self.annual_data['Free Cash Flow Per Share'])
+            self.growth_rates['YoY Dividend Growth'] = per_over_per_growth_rate_calc(self.annual_data['Div'])
 
-        print('-' * 100)
-        print(self.growth_rates)
+            print('-' * 100)
+            print(self.growth_rates)
 
 def network_check_decorator(num, max_attempts=5):
     ''' Retries failed network connections
@@ -489,7 +491,7 @@ def parse_filings(filings, type, headers, splits):
     Return:
         results (dataframe)       
     '''
-    
+
     # Define statements to Parse
     intro_list = ['DOCUMENT AND ENTITY INFORMATION', 'COVER PAGE', 'COVER', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT', 'COVER PAGE COVER PAGE', 'DEI DOCUMENT', 'COVER DOCUMENT', 'DOCUMENT INFORMATION STATEMENT',
                   'DOCUMENT ENTITY INFORMATION', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT AND ENTITY INFORMATION', 'COVER COVER', 'DOCUMENT', 'DOCUMENT ENTITY INFORMATION DOCUMENT']
@@ -502,7 +504,7 @@ def parse_filings(filings, type, headers, splits):
                    'CONSOLIDATED RESULTS OF OPERATIONS', 'CONDENSED CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF CONSOLIDATED INCOME', 'CONSOLIDATED STATEMENTS OF INCOME AND COMPREHENSIVE INCOME', 'CONSOLIDATED STATEMENTS OF INCOME (LOSS)',
                    'CONSOLIDATED STATEMENTS OF COMPREHENSIVE INCOME', 'CONSOLIDATED STATEMENTS OF EARNINGS (LOSS)']
     bs_list = ['BALANCE SHEETS', 'CONSOLIDATED BALANCE SHEETS', 'STATEMENT OF FINANCIAL POSITION CLASSIFIED', 'CONSOLIDATED BALANCE SHEET', 'CONDENSED CONSOLIDATED BALANCE SHEETS',
-               'CONSOLIDATED AND COMBINED BALANCE SHEETS', 'CONSOLIDATED STATEMENTS OF FINANCIAL POSITION', 'BALANCE SHEET', 'CONSOLIDATED FINANCIAL POSITION']
+               'CONSOLIDATED AND COMBINED BALANCE SHEETS', 'CONSOLIDATED STATEMENTS OF FINANCIAL POSITION', 'BALANCE SHEET', 'CONSOLIDATED FINANCIAL POSITION', 'CONSOLIDATED STATEMENTS OF FINANCIAL CONDITION']
     cf_list = ['CASH FLOWS STATEMENTS', 'CONSOLIDATED STATEMENTS OF CASH FLOWS', 'STATEMENT OF CASH FLOWS INDIRECT', 'CONSOLIDATED STATEMENT OF CASH FLOWS',
                'STATEMENTS OF CONSOLIDATED CASH FLOWS', 'CONSOLIDATED CASH FLOWS STATEMENTS', 'CONDENSED CONSOLIDATED STATEMENTS OF CASH FLOWS', 'CONSOLIDATED AND COMBINED STATEMENTS OF CASH FLOWS', 'CONSOLIDATED STATEMENT OF CASH FLOW',
                'STATEMENT OF CASH FLOWS', 'CONSOLIDATED STATEMENTS OF CASH FLOW', 'CONSOLIDATED  STATEMENTS OF CASH FLOWS', 'STATEMENT OF CONSOLIDATED CASH FLOWS']
