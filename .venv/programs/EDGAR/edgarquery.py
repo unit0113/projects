@@ -536,7 +536,7 @@ def parse_filings(filings, type, headers, splits):
                 'CONSOLIDATED STATEMENT OF CHANGES IN EQUITY (PARENTHETICAL)', 'STOCKHOLDERS\' EQUITY (EARNINGS PER SHARE DATA) (DETAILS)', 'CONSOLIDATED STATEMENTS OF EQUITY (PARENTHETICALS)', 'COMMON AND PREFERRED SHARES COMMON SHARES (DETAILS)',
                 'CONSOLIDATED STATEMENTS OF CHANGES IN COMMON STOCKHOLDERS\' INVESTMENT (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS EQUITY AND COMPREHENSIVE INCOME (PARENTHETICAL)',
                 'CONSOLIDATED STATEMENT OF CHANGES IN EQUITY (PARANTHETICAL)', 'CONSOLIDATED STATEMENT OF CHANGES IN STOCKHOLDERS\' EQUITY (PARANTHETICAL)', 'INCOME TAXES - FEDERAL INCOME TAX TREATMENT OF COMMON DIVIDENDS (DETAILS)',
-                'DIVIDENDS (DETAILS)', 'DIVIDENDS', 'SHAREHOLDERS\' EQUITY - (NARRATIVE) (DETAILS)', 'STOCKHOLDERS\' EQUITY (DETAILS TEXTUAL)']
+                'DIVIDENDS (DETAILS)', 'DIVIDENDS', 'SHAREHOLDERS\' EQUITY - (NARRATIVE) (DETAILS)', 'STOCKHOLDERS\' EQUITY (DETAILS TEXTUAL)', 'SHAREHOLDERS\' EQUITY (DETAILS 3)']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)', 'EARNINGS PER SHARE (DETAIL)', 'EARNING PER SHARE (DETAIL)', 'EARNINGS PER SHARE (BASIC AND DILUTED WEIGHTED AVERAGE SHARES OUTSTANDING) (DETAILS)']
     share_catch_list = ['CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEET (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEETS (PARANTHETICAL)']
 
@@ -794,6 +794,7 @@ def parse_filings(filings, type, headers, splits):
 
     # Other
     Debt_to_Profit_Ratio = divider(Total_Debt, Net_Profit)
+    Debt_to_Equity_Ratio = divider(Total_Debt, SH_Equity)
     Current_Ratio = divider(Current_Assets, Current_Liabilities)
 
 
@@ -803,7 +804,7 @@ def parse_filings(filings, type, headers, splits):
                     'Free Cash Flow Per Share': FCF_Per_Share, 'Earnings Payout Ratio': Earning_Payout_Ratio, 'FCF Payout Ratio': FCF_Payout_Ratio, 'FFO Payout Ratio': FFO_Payout_Ratio, 'Gross Margin': Gross_Margin,
                     'Operating Margin': Operating_Margin, 'Net Margin': Net_Margin, 'FFO Margin': FFO_Margin, 'FCF Margin': FCF_Margin, 'SBC Margin': SBC_Margin, 'R&D Margin': Research_Margin, 'ROA': Return_on_Assets,
                     'ROE': Return_on_Equity, 'ROIC': Return_on_Invested_Capital, 'ROCE': Return_on_Captial_Employed, 'Book Value': Book_Value, 'Book Value Per Share': Book_Value_Per_Share, 'Debt to Profit Ratio': Debt_to_Profit_Ratio,
-                    'Current Ratio': Current_Ratio}    
+                    'Debt to Equity Ratio': Debt_to_Equity_Ratio,'Current Ratio': Current_Ratio}    
     print(everything)
 
     return everything

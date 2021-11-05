@@ -815,7 +815,8 @@ def cf_htm(cf_url, headers, per):
               r"this, 'defref_us-gaap_RepaymentsOfOtherDebt', window" in str(tds) or
               r"this, 'defref_vz_RepaymentsOfLongTermBorrowingsAndFinanceLeaseObligations', window" in str(tds) or
               r"this, 'defref_cat_PaymentsMachineryEnergyandTransportation', window" in str(tds) or
-              r"this, 'defref_cat_PaymentsFinancialProducts', window" in str(tds)
+              r"this, 'defref_cat_PaymentsFinancialProducts', window" in str(tds) or
+              r"this, 'defref_gs_RepaymentsOfUnsecuredLongTermBorrowingsIncludingCurrentPortion', window" in str(tds)
               ):
             debt_payment = html_re(str(tds[colm]))
             if debt_payment != '---':
@@ -896,19 +897,20 @@ def div_htm(div_url, headers, per):
     content = requests.get(div_url, headers=headers).content
     soup = BeautifulSoup(content, 'html.parser')
     colm = column_finder_annual_htm(soup, per)
+    head = soup.table.find_all('tr')[0]
 
     # Initial value
     div = '---'
     
     # If company has seperate div table
-    if ('EQUITY' not in soup.find('th').text.upper() and
-        'QUARTERLY FINANCIAL INFORMATION' not in str(soup).upper() and
-        'QUARTERLY RESULTS OF OPERATIONS' not in str(soup).upper() and
-        'STOCK OPTION ASSUMPTIONS' not in str(soup).upper() and
-        'FEDERAL INCOME TAX TREATMENT OF COMMON DIVIDENDS' not in str(soup).upper() and
-        'DIVIDENDS [ABSTRACT]' not in str(soup).upper() and
-        'SHAREHOLDERS\' EQUITY - (NARRATIVE) (DETAILS)' not in str(soup).upper() and
-        'SHAREHOLDERS\' EQUITY - ADDITIONAL INFORMATION (DETAIL)' not in str(soup).upper()
+    if ('EQUITY' not in str(head).upper() and
+        'QUARTERLY FINANCIAL INFORMATION' not in str(head).upper() and
+        'QUARTERLY RESULTS OF OPERATIONS' not in str(head).upper() and
+        'STOCK OPTION ASSUMPTIONS' not in str(head).upper() and
+        'FEDERAL INCOME TAX TREATMENT OF COMMON DIVIDENDS' not in str(head).upper() and
+        'DIVIDENDS [ABSTRACT]' not in str(head).upper() and
+        'SHAREHOLDERS\' EQUITY - (NARRATIVE) (DETAILS)' not in str(head).upper() and
+        'SHAREHOLDERS\' EQUITY - ADDITIONAL INFORMATION (DETAIL)' not in str(head).upper()
         ):
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
@@ -983,10 +985,9 @@ def div_htm(div_url, headers, per):
                 else:
                     div = float(obj[0])
     
-    elif 'QUARTERLY FINANCIAL INFORMATION' in str(soup).upper() or 'QUARTERLY RESULTS OF OPERATIONS' in str(soup).upper() or 'STOCK OPTION ASSUMPTIONS' in str(soup).upper():
+    elif 'QUARTERLY FINANCIAL INFORMATION' in str(head).upper() or 'QUARTERLY RESULTS OF OPERATIONS' in str(head).upper() or 'STOCK OPTION ASSUMPTIONS' in str(head).upper():
         # Find column with total data        
-        head = soup.table.find_all('tr')[5]
-        tds = head.find_all('td')
+        tds = soup.table.find_all('tr')[5].find_all('td')
         td_count = -1
         for td in tds:
             if 'colspan' in str(td):
@@ -1014,7 +1015,7 @@ def div_htm(div_url, headers, per):
 
         # If data source is in one big line
         else:
-            if 'UNAUDITED' not in str(soup) and 'Dividends declared per common share' in str(soup):
+            if 'UNAUDITED' not in str(head) and 'Dividends declared per common share' in str(soup):
                 # Create tables with Pandas
                 table = pd.read_html(content, match='Dividend')[1]               
                 
@@ -1039,7 +1040,7 @@ def div_htm(div_url, headers, per):
                     return div
 
         # If 12 month sum not provided, but per quarter div is
-        if div == '---' and '3 Months Ended' in str(soup):
+        if div == '---' and '3 Months Ended' in str(head):
             for row in soup.table.find_all('tr'):
                 tds = row.find_all('td')
                 if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds) or
@@ -1053,15 +1054,16 @@ def div_htm(div_url, headers, per):
                         div = sum(list(map(float, obj[:4])))
                         return round(div, 3)
 
-    elif ("Consolidated Statements Of Changes In Stockholders' Equity (Parenthetical)" in str(soup) and '12 Months Ended' in str(soup) or
-          "Stockholders' Equity - Dividends (Details)" in str(soup) and '12 Months Ended' in str(soup) or
-          "Stockholders' Equity (Details 2)" in str(soup) and '12 Months Ended' in str(soup) or
-          "Equity and Accumulated Other Comprehensive" in str(soup) and '12 Months Ended' in str(soup) or
-          "Equity And Accumulated Other Comprehensive" in str(soup) and '12 Months Ended' in str(soup) or
-          "Income Taxes - Federal Income Tax Treatment of Common Dividends (Details) - Common Stock" in str(soup) and '12 Months Ended' in str(soup) or
-          "Shareholders' Equity - (Narrative) (Details)" in str(soup) and '12 Months Ended' in str(soup) or
-          "Shareholders' Equity (Narrative) (Details)" in str(soup) and '12 Months Ended' in str(soup) or
-          "Shareholders' Equity - Additional Information (Detail)" in str(soup) and '12 Months Ended' in str(soup)
+    elif ("Consolidated Statements Of Changes In Stockholders' Equity (Parenthetical)" in str(head) and '12 Months Ended' in str(head) or
+          "Stockholders' Equity - Dividends (Details)" in str(head) and '12 Months Ended' in str(head) or
+          "Stockholders' Equity (Details 2)" in str(head) and '12 Months Ended' in str(head) or
+          "Equity and Accumulated Other Comprehensive" in str(head) and '12 Months Ended' in str(head) or
+          "Equity And Accumulated Other Comprehensive" in str(head) and '12 Months Ended' in str(head) or
+          "Income Taxes - Federal Income Tax Treatment of Common Dividends (Details) - Common Stock" in str(head) and '12 Months Ended' in str(head) or
+          "Shareholders' Equity - (Narrative) (Details)" in str(head) and '12 Months Ended' in str(head) or
+          "Shareholders' Equity (Narrative) (Details)" in str(head) and '12 Months Ended' in str(head) or
+          "Shareholders' Equity - Additional Information (Detail)" in str(head) and '12 Months Ended' in str(head) or
+          ">Shareholders' Equity (Details 3)" in str(head) and '12 Months Ended' in str(head)
           ):      
         # Find row with div data
         for row in soup.table.find_all('tr'):
@@ -1071,7 +1073,8 @@ def div_htm(div_url, headers, per):
                 r"this, 'defref_cor_DistributionsPerShare', window" in str(tds) or
                 r"this, 'defref_dlr_CommonStockDividendRatePerDollarAmount', window" in str(tds) or
                 r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds) or
-                r"this, 'defref_us-gaap_DividendsPayableAmountPerShare', window" in str(tds)
+                r"this, 'defref_us-gaap_DividendsPayableAmountPerShare', window" in str(tds) or
+                r"this, 'defref_gs_DividendsDeclaredPerCommonShare', window" in str(tds)
                 ):
                 # Pull div
                 div = html_re(str(tds[colm]))
@@ -1079,7 +1082,7 @@ def div_htm(div_url, headers, per):
                     return div
 
         # Catch for weird format
-        if 'Equity And Accumulated Other Comprehensive' in str(soup) and div == '---':
+        if 'Equity And Accumulated Other Comprehensive' in str(head) and div == '---':
             for row in soup.table.find_all('tr'):
                 tds = row.find_all('td')
                 if r"this, 'defref_dlr_CommonStockDividendRatePerDollarAmount', window" in str(tds):
@@ -1089,7 +1092,7 @@ def div_htm(div_url, headers, per):
                         div = float(result.group(1))
                         return div
 
-    elif 'Stockholders\' Equity (Dividends) (Details)' in str(soup) and '0 Months Ended' in str(soup):
+    elif 'Stockholders\' Equity (Dividends) (Details)' in str(head) and '0 Months Ended' in str(head):
         spec_div = '---'
         # Find correct cell index for div and special div
         index = 4
@@ -1166,9 +1169,9 @@ def div_htm(div_url, headers, per):
             return div
         
         # If no 12 month data, for divs broken out by quarter
-        elif ('12 Months Ended' not in str(soup) and 'ABSTRACT' not in soup.find('th').text.upper() or
-              'Stockholders\' equity (Details Textual)' in str(soup) and '3 Months Ended' in str(soup) or
-              'Stockholders\' equity (Details Textual)' in str(soup) and '0 Months Ended' in str(soup)
+        elif ('12 Months Ended' not in str(head) and 'ABSTRACT' not in str(head).upper() or
+              'Stockholders\' equity (Details Textual)' in str(head) and '3 Months Ended' in str(head) or
+              'Stockholders\' equity (Details Textual)' in str(head) and '0 Months Ended' in str(head)
               ):
             if ('this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(soup) or
                 r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(soup)
@@ -1186,7 +1189,7 @@ def div_htm(div_url, headers, per):
                         div = re.findall(r'\d+\.\d+', str(tds))[0:4]
                         div = sum(list(map(float, div)))
                         return round(div, 3)
-            elif '>CONSOLIDATED STATEMENT OF SHAREOWNERS EQUITY - USD ($)' in str(soup):
+            elif '>CONSOLIDATED STATEMENT OF SHAREOWNERS EQUITY - USD ($)' in str(head):
                 period_found = False
                 for row in soup.table.find_all('tr'):
                     if per in str(row):
@@ -1203,8 +1206,7 @@ def div_htm(div_url, headers, per):
 
             # Check for three month data prior to 12 month data
             if '4 Months Ended' in str(soup):
-                head = soup.table.find_all('tr')[0]
-                
+
                 # Check if 3 month data appears earlier
                 four_mon = re.search(r'4 Months Ended', str(head), re.M)
                 twelve_mon = re.search(r'12 Months Ended', str(head), re.M)
@@ -1225,8 +1227,7 @@ def div_htm(div_url, headers, per):
                     return div
         
         else:
-            # Find row where 12 month data starts and generate multiplier
-            index = 1
+            # Find multiplier
             multiplier = 1
             for header in soup.table.find_all('th'):
                 if '9 Months Ended' in str(header):
@@ -1237,17 +1238,13 @@ def div_htm(div_url, headers, per):
                     multiplier = 4
                     break
 
-                if 'Months Ended' in str(header) and 'colspan' in str(header):
-                    index_str = re.findall(r'\d', str(header))
-                    index += int(index_str[0])
-
             # Find div data
             for row in soup.table.find_all('tr'):
                 tds = row.find_all('td')
                 
                 if ('this, \'defref_v_Cashdividendsdeclaredandpaidquarterlyperasconvertedshare\', window' in str(tds) or
                     'this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds) and 'quarterly' in str(tds)):
-                    div = multiplier * html_re(str(tds[index]))
+                    div = multiplier * html_re(str(tds[colm]))
                     if multiplier == 3:
                         div += float(''.join(re.findall(r'\d+\.\d+', tds[1].text.strip())))
 
@@ -1323,7 +1320,7 @@ def div_htm(div_url, headers, per):
                             continue
                     break
 
-            if div == '---' and 'Share Repurchase Program' not in str(soup):
+            if div == '---' and 'Share Repurchase Program' not in str(head) and 'Shareholders\' Equity' not in str(head):
                 try:
                     table = pd.read_html(content, match='Dividend')[1]
                     div_list = list(table[3][-4:])

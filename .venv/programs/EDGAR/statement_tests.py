@@ -168,7 +168,8 @@ div_url_list_htm = [r'https://www.sec.gov/Archives/edgar/data/1403161/0001403161
                     r'https://www.sec.gov/Archives/edgar/data/1490892/000155837017000503/R55.htm', r'https://www.sec.gov/Archives/edgar/data/1490892/000104746914000899/R51.htm', r'https://www.sec.gov/Archives/edgar/data/1297996/000155837021002191/R99.htm',
                     r'https://www.sec.gov/Archives/edgar/data/1297996/000129799618000026/R84.htm', r'https://www.sec.gov/Archives/edgar/data/1297996/000129799615000010/R87.htm', r'https://www.sec.gov/Archives/edgar/data/1297996/000119312514078397/R95.htm',
                     r'https://www.sec.gov/Archives/edgar/data/921825/000092182521000006/R64.htm', r'https://www.sec.gov/Archives/edgar/data/34903/000003490319000013/R64.htm', r'https://www.sec.gov/Archives/edgar/data/318154/000031815418000004/R92.htm',
-                    r'https://www.sec.gov/Archives/edgar/data/318154/000031815415000005/R96.htm', r'https://www.sec.gov/Archives/edgar/data/886982/000119312518056383/R156.htm']
+                    r'https://www.sec.gov/Archives/edgar/data/318154/000031815415000005/R96.htm', r'https://www.sec.gov/Archives/edgar/data/886982/000119312518056383/R156.htm', r'https://www.sec.gov/Archives/edgar/data/886982/000119312514073792/R106.htm',
+                    r'https://www.sec.gov/Archives/edgar/data/886982/000119312512085822/R26.htm']
 
 div_answers_htm = [1.2, 1.0, 0.825,
                    0.48, 0.88, 1.6,
@@ -190,9 +191,10 @@ div_answers_htm = [1.2, 1.0, 0.825,
                    2.36, 1.16, 4.48,
                    3.72, 3.32, 3.12,
                    1.0, 4.04, 4.6,
-                   2.62, 2.9]
+                   2.62, 2.9, 2.05,
+                   '---']
 
-div_url = r'https://www.sec.gov/Archives/edgar/data/886982/000119312518056383/R156.htm'
+div_url = r'https://www.sec.gov/Archives/edgar/data/886982/000119312512085822/R26.htm'
 
 def get_sum_per_div(url):
     obj = re.search(r'(/R\d?\d?\d\.htm)', str(url))
