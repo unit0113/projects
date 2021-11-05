@@ -439,7 +439,7 @@ def rev_htm(rev_url, headers, per):
             result = html_re(str(tds[colm]))
             if result != '---' and result != 0:
                 eps = check_neg(str(tds), result)
-        elif (r"this, 'defref_us-gaap_CostOfRevenue', window" in str(tds) and cost == 0 or
+        elif (r"this, 'defref_us-gaap_CostOfRevenue', window" in str(tds) and net == '---' or
               r"this, 'defref_us-gaap_CostOfGoodsSold', window" in str(tds) and cost == 0 or
               r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(tds) and cost == 0 or
               r"this, 'defref_amgn_CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets', window" in str(tds) and cost == 0 or
@@ -1658,7 +1658,8 @@ def rev_xml(rev_url, headers):
             op_exp = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)                  
         elif (r'us-gaap_OperatingIncomeLoss' in str(row) or
               r'<ElementName>us-gaap_IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments</ElementName>' in str(row) and oi == '---' or
-              r'<ElementName>us-gaap_OperatingIncomeLoss</ElementName>' in str(row)
+              r'<ElementName>us-gaap_OperatingIncomeLoss</ElementName>' in str(row) or
+              r'<ElementName>hrl_OperatingIncomeLossIncludingEquityMethodInvestments</ElementName>' in str(row)
               ):
             result = xml_re(str(cells[colm]))
             if result != '---':
@@ -1937,7 +1938,7 @@ def div_xml(div_url, headers):
     Returns:
         Dividend (float)
     '''
-
+    
     # Get data from site
     content = requests.get(div_url, headers=headers).content
     soup = BeautifulSoup(content, 'xml')

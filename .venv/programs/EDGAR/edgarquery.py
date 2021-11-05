@@ -159,7 +159,7 @@ def split_factor_calc(splits, per):
     split_list_splits.reverse()
 
     # Check if there are any relevant splits
-    if per[-1] > split_list_date[0]:
+    if pd.Timestamp(per[-1]) > split_list_date[0]:
         return False
     else:
         split_return = [1]
@@ -168,7 +168,7 @@ def split_factor_calc(splits, per):
         
         # Check if splits more recent than last annual report
         for split_date in split_list_date:
-            if split_date > per[0]:
+            if split_date > pd.Timestamp(per[0]):
                 split_factor *= split_list_splits[split_index]
                 split_return[0] *= split_factor
                 split_index += 1
@@ -184,12 +184,12 @@ def split_factor_calc(splits, per):
                 break 
 
             # If end of relevant splits
-            if split_list_date[split_index] < per[-1]:
+            if split_list_date[split_index] < pd.Timestamp(per[-1]):
                 end_list = [split_factor] * ((len(per) - i))
                 split_return.extend(end_list)
                 break
 
-            if split_list_date[split_index] < per[i-1] and split_list_date[split_index] > per[i]:
+            if split_list_date[split_index] < pd.Timestamp(per[i-1]) and split_list_date[split_index] > pd.Timestamp(per[i]):
                 split_factor *= split_list_splits[split_index]
                 split_index += 1
             split_return.append(split_factor)      
@@ -502,12 +502,14 @@ def parse_filings(filings, type, headers, splits):
                    'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS)', 'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME', 'CONDENSED CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE INCOME (LOSS)',
                    'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE LOSS', 'CONSOLIDATED STATEMENTS OF OPERATIONS AND OTHER COMPREHENSIVE LOSS', 'STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED EARNINGS',
                    'CONSOLIDATED RESULTS OF OPERATIONS', 'CONDENSED CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF CONSOLIDATED INCOME', 'CONSOLIDATED STATEMENTS OF INCOME AND COMPREHENSIVE INCOME', 'CONSOLIDATED STATEMENTS OF INCOME (LOSS)',
-                   'CONSOLIDATED STATEMENTS OF COMPREHENSIVE INCOME', 'CONSOLIDATED STATEMENTS OF EARNINGS (LOSS)']
+                   'CONSOLIDATED STATEMENTS OF COMPREHENSIVE INCOME', 'CONSOLIDATED STATEMENTS OF EARNINGS (LOSS)', 'CONSOLDIATED STATEMENTS OF OPERATIONS', 'CONSOLIDATED INCOME STATEMENT']
     bs_list = ['BALANCE SHEETS', 'CONSOLIDATED BALANCE SHEETS', 'STATEMENT OF FINANCIAL POSITION CLASSIFIED', 'CONSOLIDATED BALANCE SHEET', 'CONDENSED CONSOLIDATED BALANCE SHEETS',
-               'CONSOLIDATED AND COMBINED BALANCE SHEETS', 'CONSOLIDATED STATEMENTS OF FINANCIAL POSITION', 'BALANCE SHEET', 'CONSOLIDATED FINANCIAL POSITION', 'CONSOLIDATED STATEMENTS OF FINANCIAL CONDITION']
+               'CONSOLIDATED AND COMBINED BALANCE SHEETS', 'CONSOLIDATED STATEMENTS OF FINANCIAL POSITION', 'BALANCE SHEET', 'CONSOLIDATED FINANCIAL POSITION', 'CONSOLIDATED STATEMENTS OF FINANCIAL CONDITION',
+               'CONSOLIDATED STATEMENT OF FINANCIAL POSITION']
     cf_list = ['CASH FLOWS STATEMENTS', 'CONSOLIDATED STATEMENTS OF CASH FLOWS', 'STATEMENT OF CASH FLOWS INDIRECT', 'CONSOLIDATED STATEMENT OF CASH FLOWS',
                'STATEMENTS OF CONSOLIDATED CASH FLOWS', 'CONSOLIDATED CASH FLOWS STATEMENTS', 'CONDENSED CONSOLIDATED STATEMENTS OF CASH FLOWS', 'CONSOLIDATED AND COMBINED STATEMENTS OF CASH FLOWS', 'CONSOLIDATED STATEMENT OF CASH FLOW',
-               'STATEMENT OF CASH FLOWS', 'CONSOLIDATED STATEMENTS OF CASH FLOW', 'CONSOLIDATED  STATEMENTS OF CASH FLOWS', 'STATEMENT OF CONSOLIDATED CASH FLOWS']
+               'STATEMENT OF CASH FLOWS', 'CONSOLIDATED STATEMENTS OF CASH FLOW', 'CONSOLIDATED  STATEMENTS OF CASH FLOWS', 'STATEMENT OF CONSOLIDATED CASH FLOWS',
+               'CONSOLDIATED STATEMENTS OF CASH FLOWS']
     div_list = ['DIVIDENDS DECLARED (DETAIL)', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY (PARENTHETICAL)',
                 'SHAREHOLDERS\' EQUITY', 'SHAREHOLDERS\' EQUITY AND SHARE-BASED COMPENSATION - ADDITIONAL INFORMATION (DETAIL) (USD $)', 'SHAREHOLDERS\' EQUITY - ADDITIONAL INFORMATION (DETAIL)',
                 'SHAREHOLDERS\' EQUITY AND SHARE-BASED COMPENSATION - ADDITIONAL INFORMATION (DETAIL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN EQUITY (PARENTHETICAL)',
@@ -536,7 +538,8 @@ def parse_filings(filings, type, headers, splits):
                 'CONSOLIDATED STATEMENT OF CHANGES IN EQUITY (PARENTHETICAL)', 'STOCKHOLDERS\' EQUITY (EARNINGS PER SHARE DATA) (DETAILS)', 'CONSOLIDATED STATEMENTS OF EQUITY (PARENTHETICALS)', 'COMMON AND PREFERRED SHARES COMMON SHARES (DETAILS)',
                 'CONSOLIDATED STATEMENTS OF CHANGES IN COMMON STOCKHOLDERS\' INVESTMENT (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS EQUITY AND COMPREHENSIVE INCOME (PARENTHETICAL)',
                 'CONSOLIDATED STATEMENT OF CHANGES IN EQUITY (PARANTHETICAL)', 'CONSOLIDATED STATEMENT OF CHANGES IN STOCKHOLDERS\' EQUITY (PARANTHETICAL)', 'INCOME TAXES - FEDERAL INCOME TAX TREATMENT OF COMMON DIVIDENDS (DETAILS)',
-                'DIVIDENDS (DETAILS)', 'DIVIDENDS', 'SHAREHOLDERS\' EQUITY - (NARRATIVE) (DETAILS)', 'STOCKHOLDERS\' EQUITY (DETAILS TEXTUAL)', 'SHAREHOLDERS\' EQUITY (DETAILS 3)']
+                'DIVIDENDS (DETAILS)', 'DIVIDENDS', 'SHAREHOLDERS\' EQUITY - (NARRATIVE) (DETAILS)', 'STOCKHOLDERS\' EQUITY (DETAILS TEXTUAL)', 'SHAREHOLDERS\' EQUITY (DETAILS 3)',
+                'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS\' INVESTMENT (PARENTHETICAL)', 'CONSOLDIATED STATEMENTS OF CHANGES IN SHAREHOLDERS\' INVESTMENT (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS\' INVESTMENT  (PARENTHETICAL)']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)', 'EARNINGS PER SHARE (DETAIL)', 'EARNING PER SHARE (DETAIL)', 'EARNINGS PER SHARE (BASIC AND DILUTED WEIGHTED AVERAGE SHARES OUTSTANDING) (DETAILS)']
     share_catch_list = ['CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEET (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEETS (PARANTHETICAL)']
 
@@ -604,7 +607,7 @@ def parse_filings(filings, type, headers, splits):
 
         # Loop through each report with the 'myreports' tag but avoid the last one as this will cause an error
         for report in reports.find_all('report')[:-1]:
-
+            
             # Summary table
             if report.shortname.text.upper() in intro_list and fy == '---':
                 # Create URL and call parser function
@@ -621,14 +624,14 @@ def parse_filings(filings, type, headers, splits):
                     if name_diff < 55 and name != '---':
                         diff_comp_flag = True
                         print(f'Name comparision between {name} and {names[-1]} failed with a ratio of {name_diff}')
-                        break
+                break
 
         # Loop through each report with the 'myreports' a second time because some companies put the document summary at the end
         for report in reports.find_all('report')[:-1]:
             # Break if name comp failed
             if diff_comp_flag == True:
                 break
-
+            
             # Income Statement
             if report.shortname.text.upper() in income_list and rev == '---':
                 # Create URL and call parser function
@@ -701,10 +704,10 @@ def parse_filings(filings, type, headers, splits):
                     shares = sp.share_catch_xml(catch_url, headers, period_end)
 
             # Break if all data found
-            elif (rev != '---' and cash != '---' and fcf != '---' and shares != 0 and eps != '---' and div != '---' and divpaid > 0 or
-                  rev != '---' and cash != '---' and fcf != '---' and shares != 0 and eps != '---' and divpaid == 0
-                  ):
-                  break
+            if (rev != '---' and cash != '---' and fcf != '---' and shares != 0 and eps != '---' and div != '---' and divpaid > 0 or
+                rev != '---' and cash != '---' and fcf != '---' and shares != 0 and eps != '---' and divpaid == 0
+                ):
+                break
 
         # Check for errors in FY pull (company's fault)
         if len(Fiscal_Period) > 0:
