@@ -317,7 +317,7 @@ def rev_htm(rev_url, headers, per):
 
     # Initial values
     gross = oi = net = eps = shares = div = '---'
-    cost_sum = cost = rev = op_exp = share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = operating_exp = int_rev = oth_rev = 0
+    credit_loss_provision = cost_sum = cost = rev = op_exp = share_sum = research = non_attributable_net = dep_am = impairment = disposition = ffo = operating_exp = int_rev = oth_rev = 0
     share_set = set()
     net_actual = net_add = False
 
@@ -373,11 +373,17 @@ def rev_htm(rev_url, headers, per):
             if research_calc != '---':
                 research = round(research_calc * (dollar_multiplier / 1_000_000), 2)
         elif (r"this, 'defref_us-gaap_CostsAndExpenses', window" in str(tds) or
-            r"this, 'defref_us-gaap_OperatingExpenses', window" in str(tds)
-            ):
+              r"this, 'defref_us-gaap_OperatingExpenses', window" in str(tds) or
+              r"this, 'defref_us-gaap_NoninterestExpense', window" in str(tds)
+              ):
             result = html_re(str(tds[colm]))
             if result != '---':
-                operating_exp = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000), 2) 
+                operating_exp = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000), 2)
+        elif (r"this, 'defref_us-gaap_ProvisionForLoanLeaseAndOtherLosses', window" in str(tds)
+              ):
+            result = html_re(str(tds[colm]))
+            if result != '---':
+                credit_loss_provision = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000), 2)         
         elif (r"this, 'defref_us-gaap_SellingGeneralAndAdministrativeExpense', window" in str(tds) and oi == '---' or
               r"this, 'defref_us-gaap_AdvertisingExpense', window" in str(tds) and oi == '---' or
               r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(tds) and oi == '---' or
@@ -510,8 +516,10 @@ def rev_htm(rev_url, headers, per):
 
     # Calculate operating income if not found
     op_exp += cost + research + dep_am
-    if oi == '---':
-        oi = round(rev - max(operating_exp, op_exp), 2)
+    if oi == '---' and operating_exp > 0:
+        oi = round(rev - credit_loss_provision - operating_exp, 2)
+    elif oi == '---' and op_exp > 0:
+        oi = round(rev - credit_loss_provision - op_exp, 2)
 
     # Calculate Gross if OI is given
     if cost == 0 and oi != '---' and operating_exp != 0:
@@ -631,7 +639,9 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_gs_CashAndSecuritiesSegregatedForRegulatoryAndOtherPurposes', window" in str(tds) and cur_assets == '---' or
               r"this, 'defref_gs_SecuritiesPurchasedUnderAgreementsToResellAndFederalFundsSold', window" in str(tds) and cur_assets == '---' or
               r"this, 'defref_gs_ReceivablesFromBrokersDealersAndClearingOrganizationsBS', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_gs_ReceivablesFromCustomersAndCounterparties', window" in str(tds) and cur_assets == '---'
+              r"this, 'defref_gs_ReceivablesFromCustomersAndCounterparties', window" in str(tds) and cur_assets == '---' or
+              r"this, 'defref_us-gaap_ReceivablesFromBrokersDealersAndClearingOrganizations', window" in str(tds) and cur_assets == '---' or
+              r"this, 'defref_us-gaap_ReceivablesFromCustomers', window" in str(tds) and cur_assets == '---'
               ):
             recievables_calc = html_re(str(tds[colm]))
             if recievables_calc != '---':
@@ -661,7 +671,9 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_gs_PayablesToBrokerDealersAndClearingOrganizationsBS', window" in str(tds) and cur_liabilities == '---' or
               r"this, 'defref_gs_PayablesToCustomersAndCounterparties', window" in str(tds) and cur_liabilities == '---' or
               r"this, 'defref_gs_UnsecuredShortTermBorrowingsIncludingCurrentPortionOfUnsecuredLongTermBorrowings', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_us-gaap_FinancialInstrumentsSoldNotYetPurchasedAtFairValue', window" in str(tds) and cur_liabilities == '---'
+              r"this, 'defref_us-gaap_FinancialInstrumentsSoldNotYetPurchasedAtFairValue', window" in str(tds) and cur_liabilities == '---' or
+              r"this, 'defref_us-gaap_PayablesToBrokerDealersAndClearingOrganizations', window" in str(tds) and cur_liabilities == '---' or
+              r"this, 'defref_us-gaap_PayablesToCustomers', window" in str(tds) and cur_liabilities == '---'
               ):
             cur_liabilities_calc = html_re(str(tds[colm]))
             if cur_liabilities_calc != '---':
@@ -1744,7 +1756,8 @@ def bs_xml(bs_url, headers):
         if ('us-gaap_CashCashEquivalentsAndShortTermInvestments' in str(row) or
             'us-gaap_CashAndCashEquivalentsAtCarryingValue' in str(row) or
             r'<ElementName>us-gaap_Cash</ElementName>' in str(row) or
-            r'<ElementName>us-gaap_CashEquivalentsAtCarryingValue</ElementName>' in str(row)
+            r'<ElementName>us-gaap_CashEquivalentsAtCarryingValue</ElementName>' in str(row) or
+            r'<ElementName>gs_CashAndCashEquivalents</ElementName>' in str(row)
             ):
             cash = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2) 
         elif 'us-gaap_Goodwill' in str(row):
@@ -1755,14 +1768,23 @@ def bs_xml(bs_url, headers):
             assets = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)   
         elif r'<ElementName>us-gaap_AssetsCurrent</ElementName>' in str(row):
             cur_assets = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)  
-        elif r'<ElementName>us-gaap_AccountsReceivableNet</ElementName>' in str(row):
-            recievables = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)               
+        elif (r'<ElementName>us-gaap_AccountsReceivableNet</ElementName>' in str(row) or
+              r'<ElementName>gs_CashAndSecuritiesSegregatedForRegulatoryAndOtherPurposes</ElementName>' in str(row) or
+              r'<ElementName>gs_SecuritiesPurchasedUnderAgreementsToResellAndFederalFundsSold</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_SecuritiesBorrowed</ElementName>' in str(row) or
+              r'<ElementName>gs_ReceivablesFromBrokersDealersAndClearingOrganizationsBS</ElementName>' in str(row) or
+              r'<ElementName>gs_ReceivablesFromCustomersAndCounterparties</ElementName>' in str(row)
+              ):
+            recievables_calc = xml_re(str(cells[colm]))
+            if recievables_calc != '---':
+                recievables += round(recievables_calc * (dollar_multiplier / 1_000_000), 2)               
         elif (r'us-gaap_LongTermDebtNoncurrent' in str(row) or
               r'us-gaap_LongTermDebtAndCapitalLeaseObligations' in str(row) or
               r'<ElementName>us-gaap_LongTermDebt</ElementName>' in str(row) or
               r'<ElementName>us-gaap_LongTermLoansPayable</ElementName>' in str(row) or
               r'<ElementName>cat_LongTermDebtDueAfterOneYearMachineryAndEnginesNoncurrent</ElementName>' in str(row) or
-              r'<ElementName>cat_LongTermDebtDueAfterOneYearFinancialProducts</ElementName>' in str(row)
+              r'<ElementName>cat_LongTermDebtDueAfterOneYearFinancialProducts</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_UnsecuredLongTermDebt</ElementName>' in str(row)
               ):
             debt_calc = xml_re(str(cells[colm]))
             if debt_calc != '---':
@@ -1770,7 +1792,16 @@ def bs_xml(bs_url, headers):
         elif r'<ElementName>us-gaap_LiabilitiesCurrent</ElementName>' in str(row):
             cur_liabilities = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)
         elif (r'<ElementName>us-gaap_AccountsPayableAndAccruedLiabilitiesCurrentAndNoncurrent</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>us-gaap_UnsecuredDebt</ElementName>' in str(row) and cur_liabilities == '---'
+              r'<ElementName>us-gaap_UnsecuredDebt</ElementName>' in str(row) and cur_liabilities == '---' or
+              r'<ElementName>us-gaap_Deposits</ElementName>' in str(row) and cur_liabilities == '---' or
+              r'<ElementName>us-gaap_SecuritiesSoldUnderAgreementsToRepurchase</ElementName>' in str(row) and cur_liabilities == '---' or
+              r'<ElementName>gs_SecuritiesLoanedBS</ElementName>' in str(row) and cur_liabilities == '---' or
+              r'<ElementName>us-gaap_OtherSecuredFinancings</ElementName>' in str(row) and cur_liabilities == '---' or
+              r'<ElementName>gs_PayablesToBrokerDealersAndClearingOrganizationsBS</ElementName>' in str(row) and cur_liabilities == '---' or
+              r'<ElementName>gs_PayablesToCustomersAndCounterparties</ElementName>' in str(row) and cur_liabilities == '---' or
+              r'<ElementName>us-gaap_FinancialInstrumentsSoldNotYetPurchasedAtFairValue</ElementName>' in str(row) and cur_liabilities == '---' or
+              r'<ElementName>gs_UnsecuredShortTermBorrowingsIncludingCurrentPortionOfUnsecuredLongTermBorrowings</ElementName>' in str(row) and cur_liabilities == '---' or
+              r'<ElementName>gs_OtherLiabilitiesAndAccruedExpenses</ElementName>' in str(row) and cur_liabilities == '---'
               ):
             cur_liabilities_sum += round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)
         elif r'<ElementName>us-gaap_Liabilities</ElementName>' in str(row):
