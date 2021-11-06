@@ -44,9 +44,13 @@ class StockData:
 
             # Fill in missed divs
             self.div_edit = False
-            if '---' in self.annual_data['Div']:
+            if ('---' in self.annual_data['Div'] or
+                len(self.annual_data['Div']) != len(set(self.annual_data['Div']))
+                ):
                 for index, (dividend, div_paid) in enumerate(zip(self.annual_data['Div'], self.annual_data['Div_Paid'])):
-                    if div_paid != 0 and dividend == '---':
+                    if (div_paid != 0 and dividend == '---' or
+                        index + 1 != len(self.annual_data['Div']) and self.annual_data['Div'][index] == self.annual_data['Div'][index + 1] and (self.annual_data['Div_Paid'][index] / (self.annual_data['Shares'][index] / 1000)) / (self.annual_data['Div_Paid'][index + 1] / (self.annual_data['Shares'][index + 1] / 1000)) > 1.05
+                        ):
                         self.div_edit = True
                         if index == 0:
                             self.annual_data['Div'][index] = yf_div_catch(self.symbol, self.annual_data['Per'][index])
@@ -75,6 +79,10 @@ class StockData:
             self.growth_rates['FCF Growth'] = growth_rate_calc(self.annual_data['FCF'])
             self.growth_rates['FCF per Share Growth'] = growth_rate_calc(self.annual_data['Free Cash Flow Per Share'])
             self.growth_rates['Dividend Growth'] = growth_rate_calc(self.annual_data['Div'])
+            self.growth_rates['Earnings Payout Ratio Growth'] = growth_rate_calc(self.annual_data['Earnings Payout Ratio'])
+            self.growth_rates['FCF Payout Ratio Growth'] = growth_rate_calc(self.annual_data['FCF Payout Ratio'])
+            self.growth_rates['FFO Payout Ratio Growth'] = growth_rate_calc(self.annual_data['FFO Payout Ratio'])
+            self.growth_rates['FDebt Growth'] = growth_rate_calc(self.annual_data['Debt'])
 
             # Calculate YoY growth
             self.growth_rates['YoY Revenue Growth'] = per_over_per_growth_rate_calc(self.annual_data['Rev'])
@@ -539,7 +547,8 @@ def parse_filings(filings, type, headers, splits):
                 'CONSOLIDATED STATEMENTS OF CHANGES IN COMMON STOCKHOLDERS\' INVESTMENT (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS EQUITY AND COMPREHENSIVE INCOME (PARENTHETICAL)',
                 'CONSOLIDATED STATEMENT OF CHANGES IN EQUITY (PARANTHETICAL)', 'CONSOLIDATED STATEMENT OF CHANGES IN STOCKHOLDERS\' EQUITY (PARANTHETICAL)', 'INCOME TAXES - FEDERAL INCOME TAX TREATMENT OF COMMON DIVIDENDS (DETAILS)',
                 'DIVIDENDS (DETAILS)', 'DIVIDENDS', 'SHAREHOLDERS\' EQUITY - (NARRATIVE) (DETAILS)', 'STOCKHOLDERS\' EQUITY (DETAILS TEXTUAL)', 'SHAREHOLDERS\' EQUITY (DETAILS 3)',
-                'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS\' INVESTMENT (PARENTHETICAL)', 'CONSOLDIATED STATEMENTS OF CHANGES IN SHAREHOLDERS\' INVESTMENT (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS\' INVESTMENT  (PARENTHETICAL)']
+                'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS\' INVESTMENT (PARENTHETICAL)', 'CONSOLDIATED STATEMENTS OF CHANGES IN SHAREHOLDERS\' INVESTMENT (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS\' INVESTMENT  (PARENTHETICAL)',
+                'STOCKHOLDERS\' EQUITY MATTERS - DIVIDENDS DECLARED (DETAILS)']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)', 'EARNINGS PER SHARE (DETAIL)', 'EARNING PER SHARE (DETAIL)', 'EARNINGS PER SHARE (BASIC AND DILUTED WEIGHTED AVERAGE SHARES OUTSTANDING) (DETAILS)']
     share_catch_list = ['CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEET (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEETS (PARANTHETICAL)']
 

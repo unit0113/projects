@@ -65,7 +65,7 @@ def check_neg(string, value, type='htm'):
         else:
             re_str = '.' + format(value, '.2f') + '.'
     else:
-        re_str = '.' + str(value) + '.'
+        re_str = '.' + str(value)
     
     obj = re.search(re_str, string, re.M)
     
@@ -75,10 +75,16 @@ def check_neg(string, value, type='htm'):
         obj = re.search(re_str, string, re.M)
 
     # Check if negative
-    if '(' in obj.group(0) and ')' in obj.group(0):
-        return (value * -1)
+    if type == 'htm':
+        if '(' in obj.group(0) and ')' in obj.group(0):
+            return (value * -1)
+        else:
+            return value
     else:
-        return value
+        if '-' in obj.group(0):
+            return (value * -1)
+        else:
+            return value
 
 
 # Find correct column for data
@@ -1202,7 +1208,6 @@ def div_htm(div_url, headers, per):
 
         # If data is not quarterly
         elif 'QUARTERLY' not in soup.text.upper() and div == '---':
-            colm = column_finder_annual_htm(soup, per)
 
             # Check for three month data prior to 12 month data
             if '4 Months Ended' in str(soup):
@@ -1324,7 +1329,7 @@ def div_htm(div_url, headers, per):
                 try:
                     table = pd.read_html(content, match='Dividend')[1]
                     div_list = list(table[3][-4:])
-                    div = round(sum(map(float, div_list)), 2)
+                    div = round(sum(map(float, div_list)), 3)
                     if math.isnan(div):
                         div = '---'
                 except:
@@ -1636,7 +1641,8 @@ def rev_xml(rev_url, headers):
             r'<ElementName>us-gaap_ElectricUtilityRevenue</ElementName>' in str(row) or
             r'<ElementName>us-gaap_UtilityRevenue</ElementName>' in str(row) or
             r'<ElementName>us-gaap_RealEstateRevenueNet</ElementName>' in str(row) or
-            r'<ElementName>gs_NetRevenuesIncludingNetInterestIncome</ElementName>' in str(row)
+            r'<ElementName>gs_NetRevenuesIncludingNetInterestIncome</ElementName>' in str(row) or
+            r'<ElementName>us-gaap_SalesRevenueServicesNet</ElementName>' in str(row)
             ):
             rev = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)
         elif r'us-gaap_GrossProfit' in str(row):
@@ -1648,7 +1654,8 @@ def rev_xml(rev_url, headers):
               r'us-gaap_CostOfGoodsSold' in str(row) and cost == '---' or
               r'CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets' in str(row) and cost == '---' or
               r'<ElementName>us-gaap_CostOfGoodsAndServicesEnergyCommoditiesAndServices</ElementName>' in str(row) and cost == '---' or
-              r'<ElementName>gs_BrokerageClearingExchangeAndDistributionFees</ElementName>' in str(row) and cost == '---'
+              r'<ElementName>gs_BrokerageClearingExchangeAndDistributionFees</ElementName>' in str(row) and cost == '---' or
+              r'<ElementName>irm_CostOfSalesExcludingDepreciationAndAmortization</ElementName>' in str(row) and cost == '---'
               ):
             cost = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2) 
         elif r'us-gaap_ResearchAndDevelopmentExpense' in str(row):
@@ -1682,11 +1689,17 @@ def rev_xml(rev_url, headers):
         elif (r'us-gaap_CommonStockDividendsPerShareCashPaid' in str(row) or
               r'us-gaap_CommonStockDividendsPerShareDeclared' in str(row)):
             div = xml_re(str(cells[colm])) 
-        elif r'<ElementName>us-gaap_DepreciationAmortizationAndAccretionNet</ElementName>' in str(row):
+        elif (r'<ElementName>us-gaap_DepreciationAmortizationAndAccretionNet</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_DepreciationDepletionAndAmortization</ElementName>' in str(row)
+              ):
             dep_am = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)  
-        elif r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(row):  
+        elif (r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(row) or
+              r'<ElementName>us-gaap_GoodwillImpairmentLoss</ElementName>' in str(row)
+              ):  
             impairment = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)    
-        elif r"this, 'defref_us-gaap_GainsLossesOnSalesOfInvestmentRealEstate', window" in str(row): 
+        elif (r"this, 'defref_us-gaap_GainsLossesOnSalesOfInvestmentRealEstate', window" in str(row) or
+              r'<ElementName>irm_GainLossOnDispositionAndImpairmentOfAssets</ElementName>' in str(row)
+              ): 
             result = xml_re(str(cells[colm]))
             if result != '---':
                 disposition = round(check_neg(str(row), result, 'xml') * (dollar_multiplier / 1_000_000), 2)  
