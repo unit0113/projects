@@ -706,7 +706,8 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_us-gaap_LongTermLoansPayable', window" in str(tds) or
               r"this, 'defref_us-gaap_LongTermLineOfCredit', window" in str(tds) or
               r"this, 'defref_cat_LongTermDebtDueAfterOneYearMachineryEnergyTransNoncurrent', window" in str(tds) or
-              r"this, 'defref_cat_LongTermDebtDueAfterOneYearFinancialProducts', window" in str(tds)
+              r"this, 'defref_cat_LongTermDebtDueAfterOneYearFinancialProducts', window" in str(tds) or
+              r"this, 'defref_us-gaap_LongTermNotesAndLoans', window" in str(tds)
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -912,6 +913,7 @@ def div_htm(div_url, headers, per):
     if ('EQUITY' not in str(head).upper() and
         'QUARTERLY FINANCIAL INFORMATION' not in str(head).upper() and
         'QUARTERLY RESULTS OF OPERATIONS' not in str(head).upper() and
+        'UNAUDITED QUARTERLY DATA (DETAILS)' not in str(head).upper() and
         'STOCK OPTION ASSUMPTIONS' not in str(head).upper() and
         'FEDERAL INCOME TAX TREATMENT OF COMMON DIVIDENDS' not in str(head).upper() and
         'DIVIDENDS [ABSTRACT]' not in str(head).upper() and
@@ -991,8 +993,12 @@ def div_htm(div_url, headers, per):
                 else:
                     div = float(obj[0])
     
-    elif 'QUARTERLY FINANCIAL INFORMATION' in str(head).upper() or 'QUARTERLY RESULTS OF OPERATIONS' in str(head).upper() or 'STOCK OPTION ASSUMPTIONS' in str(head).upper():
-        # Find column with total data        
+    elif ('QUARTERLY FINANCIAL INFORMATION' in str(head).upper() or
+          'QUARTERLY RESULTS OF OPERATIONS' in str(head).upper() or
+          'STOCK OPTION ASSUMPTIONS' in str(head).upper() or
+          'UNAUDITED QUARTERLY DATA (DETAILS)' in str(head).upper()
+          ):
+        # Find column with total data   
         tds = soup.table.find_all('tr')[5].find_all('td')
         td_count = -1
         for td in tds:
@@ -1492,6 +1498,8 @@ def share_catch_htm(catch_url, headers, per):
     # Calculate share if outstanding not given
     if shares == '---' and shares_issued + shares_repurchased > 0:
         shares = round(shares_issued - shares_repurchased, 2)
+        if shares < 0:
+            shares = shares_issued
 
     return shares
 
@@ -1795,7 +1803,8 @@ def bs_xml(bs_url, headers):
               r'<ElementName>us-gaap_LongTermLoansPayable</ElementName>' in str(row) or
               r'<ElementName>cat_LongTermDebtDueAfterOneYearMachineryAndEnginesNoncurrent</ElementName>' in str(row) or
               r'<ElementName>cat_LongTermDebtDueAfterOneYearFinancialProducts</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_UnsecuredLongTermDebt</ElementName>' in str(row)
+              r'<ElementName>us-gaap_UnsecuredLongTermDebt</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_LongTermNotesAndLoans</ElementName>' in str(row)
               ):
             debt_calc = xml_re(str(cells[colm]))
             if debt_calc != '---':
@@ -1955,33 +1964,40 @@ def div_xml(div_url, headers):
     # Get data from site
     content = requests.get(div_url, headers=headers).content
     soup = BeautifulSoup(content, 'xml')
+    colm = column_finder_annual_xml(soup)
+    name = soup.find_all('ReportLongName')
 
     # Initial value
     div = '---'
 
-    # Find index for 12 month data
-    cols = soup.find_all('Column')
-    for index, col in enumerate(cols):
-        if '12 Months Ended' in str(col):
-            break
-    search_id = '<Id>' + str(index + 1) + r'</Id>'
+    # Pull div if reported by quarter
+    if 'Unaudited Quarterly Data (Details)' in str(name):
+        rows = soup.find_all('Row')
+        for row in rows:
+            if (r'>us-gaap_CommonStockDividendsPerShareDeclared' in str(row) or
+                r'us-gaap_CommonStockDividendsPerShareCashPaid' in str(row) or
+                r'<ElementName>us-gaap_DividendsPayableAmountPerShare</ElementName>' in str(row)
+                ):
+                cells = row.find_all('Cell')
+                obj = re.findall(r'(?:<RoundedNumericAmount>-?)(.*?)(?:</RoundedNumericAmount>)', str(cells), re.M)
+                div = sum(map(float, obj[0:4]))
+                return div
 
-    # Go to cell with 12 month data and pull div
-    rows = soup.find_all('Row')
-    for row in rows:
-        if (r'>us-gaap_CommonStockDividendsPerShareDeclared' in str(row) or
-            r'us-gaap_CommonStockDividendsPerShareCashPaid' in str(row) or
-            r'<ElementName>us-gaap_DividendsPayableAmountPerShare</ElementName>' in str(row)
-            ):
-            cells = row.find_all('Cell')
-            for cell in cells:
-                if search_id in str(cell):
-                    div = xml_re(str(cell))
-                    break
-    
-    # Check if reporting quarterly div
-    if 'QUARTERLY' in str(row).upper() and div != '---':
-        div *= 4
+    else:
+        # Go to cell with 12 month data and pull div
+        rows = soup.find_all('Row')
+        for row in rows:
+            if (r'>us-gaap_CommonStockDividendsPerShareDeclared' in str(row) or
+                r'us-gaap_CommonStockDividendsPerShareCashPaid' in str(row)  or
+                r'<ElementName>us-gaap_DividendsPayableAmountPerShare</ElementName>' in str(row)
+                ):
+                cells = row.find_all('Cell')
+                div = xml_re(str(cells[colm]))
+                break
+        
+        # Check if reporting quarterly div
+        if 'QUARTERLY' in str(row).upper() and div != '---':
+            div *= 4
 
     return div
 
