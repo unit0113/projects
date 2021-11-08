@@ -437,13 +437,14 @@ def divider(num, denom):
     # Convert empty results to 0
     adj_num = [0.0 if type(elem) == str else float(elem) for elem in num]
     adj_denom = [0.0 if type(elem) == str else float(elem) for elem in denom]
-
+    
     # return empty results if all of num is '---'
     if sum(adj_num) == 0:
         return ['---'] * len(num)
 
     # Calculate return and convert 0's back to empty result
-    result = np.divide(adj_num, adj_denom, out=np.zeros_like(adj_num), where=adj_denom!=0)
+    with np.errstate(invalid='ignore', divide='ignore'):
+        result = np.divide(adj_num, adj_denom, out=np.zeros_like(adj_num), where=adj_denom!=0.0)
     result = ['---' if elem == 0 else round(elem, 4) for elem in result]
 
     return result
@@ -502,7 +503,8 @@ def parse_filings(filings, type, headers, splits):
 
     # Define statements to Parse
     intro_list = ['DOCUMENT AND ENTITY INFORMATION', 'COVER PAGE', 'COVER', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT', 'COVER PAGE COVER PAGE', 'DEI DOCUMENT', 'COVER DOCUMENT', 'DOCUMENT INFORMATION STATEMENT',
-                  'DOCUMENT ENTITY INFORMATION', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT AND ENTITY INFORMATION', 'COVER COVER', 'DOCUMENT', 'DOCUMENT ENTITY INFORMATION DOCUMENT']
+                  'DOCUMENT ENTITY INFORMATION', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT AND ENTITY INFORMATION', 'COVER COVER', 'DOCUMENT', 'DOCUMENT ENTITY INFORMATION DOCUMENT',
+                  'DOCUMENT AND ENTITY INFORMATION (PARENTHETICALS)']
     income_list = ['CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF INCOME ALTERNATIVE', 'CONSOLIDATED STATEMENT OF INCOME', 'INCOME STATEMENTS', 'STATEMENT OF INCOME',
                    'CONSOLIDATED STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED INCOME', 'CONSOLIDATED STATEMENTS OF INCOME', 'CONSOLIDATED STATEMENT OF OPERATIONS', 
                    'CONSOLIDATED STATEMENTS OF EARNINGS (LOSSES)', 'CONSOLIDATED INCOME STATEMENTS', 'CONSOLIDATED STATEMENTS OF OPERATIONS CONSOLIDATED STATEMENTS OF OPERATIONS',
@@ -548,7 +550,8 @@ def parse_filings(filings, type, headers, splits):
                 'CONSOLIDATED STATEMENT OF CHANGES IN EQUITY (PARANTHETICAL)', 'CONSOLIDATED STATEMENT OF CHANGES IN STOCKHOLDERS\' EQUITY (PARANTHETICAL)', 'INCOME TAXES - FEDERAL INCOME TAX TREATMENT OF COMMON DIVIDENDS (DETAILS)',
                 'DIVIDENDS (DETAILS)', 'DIVIDENDS', 'SHAREHOLDERS\' EQUITY - (NARRATIVE) (DETAILS)', 'STOCKHOLDERS\' EQUITY (DETAILS TEXTUAL)', 'SHAREHOLDERS\' EQUITY (DETAILS 3)',
                 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS\' INVESTMENT (PARENTHETICAL)', 'CONSOLDIATED STATEMENTS OF CHANGES IN SHAREHOLDERS\' INVESTMENT (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREHOLDERS\' INVESTMENT  (PARENTHETICAL)',
-                'STOCKHOLDERS\' EQUITY MATTERS - DIVIDENDS DECLARED (DETAILS)', 'CONSOLIDATED STATEMENT OF STOCKHOLDERS\' EQUITY (PARENTHETICALS)', 'UNAUDITED QUARTERLY DATA (DETAILS)']
+                'STOCKHOLDERS\' EQUITY MATTERS - DIVIDENDS DECLARED (DETAILS)', 'CONSOLIDATED STATEMENT OF STOCKHOLDERS\' EQUITY (PARENTHETICALS)', 'UNAUDITED QUARTERLY DATA (DETAILS)', 'CONSOLIDATED STATEMENT OF CHANGES IN SHAREHOLDERS\' EQUITY (PARENTHETICAL)',
+                'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREOWNERS\' EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF  EQUITY (PARENTHETICAL)']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)', 'EARNINGS PER SHARE (DETAIL)', 'EARNING PER SHARE (DETAIL)', 'EARNINGS PER SHARE (BASIC AND DILUTED WEIGHTED AVERAGE SHARES OUTSTANDING) (DETAILS)']
     share_catch_list = ['CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEET (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEETS (PARANTHETICAL)', 'CONSOLIDATED BALANCE SHEET CONSOLIDATED BALANCE SHEET (PARENTHETICAL)',
                         'CONSOLIDATED BALANCE SHEET (PARENTHETICALS)']
@@ -648,12 +651,12 @@ def parse_filings(filings, type, headers, splits):
                 try:
                     rev_url = base_url + report.htmlfilename.text
                     rev, gross, research, oi, net, eps, shares_return, div, ffo = sp.rev_htm(rev_url, headers, period_end)
-                    if shares == '---' or shares == 0:
+                    if shares_return != '---' and shares_return != 0:
                         shares = shares_return
                 except:
                     rev_url = base_url + report.xmlfilename.text
                     rev, gross, research, oi, net, eps, shares_return, div, ffo = sp.rev_xml(rev_url, headers)
-                    if shares == '---' or shares == 0:
+                    if shares_return != '---' and shares_return != 0:
                         shares = shares_return
 
             # Balance sheet
@@ -712,13 +715,13 @@ def parse_filings(filings, type, headers, splits):
                 except:
                     catch_url = base_url + report.xmlfilename.text
                     shares = sp.share_catch_xml(catch_url, headers, period_end)
-
+            
             # Break if all data found
             if (rev != '---' and cash != '---' and fcf != '---' and shares != 0 and eps != '---' and div != '---' and divpaid > 0 or
                 rev != '---' and cash != '---' and fcf != '---' and shares != 0 and eps != '---' and divpaid == 0
                 ):
                 break
-
+                
         # Check for errors in FY pull (company's fault)
         if len(Fiscal_Period) > 0:
             if int(Fiscal_Period[-1]) - int(fy) > 1 and str(int(Period_End[-1][-4:]) - 1) in period_end:

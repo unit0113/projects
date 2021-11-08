@@ -707,7 +707,8 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_us-gaap_LongTermLineOfCredit', window" in str(tds) or
               r"this, 'defref_cat_LongTermDebtDueAfterOneYearMachineryEnergyTransNoncurrent', window" in str(tds) or
               r"this, 'defref_cat_LongTermDebtDueAfterOneYearFinancialProducts', window" in str(tds) or
-              r"this, 'defref_us-gaap_LongTermNotesAndLoans', window" in str(tds)
+              r"this, 'defref_us-gaap_LongTermNotesAndLoans', window" in str(tds) or
+              r"this, 'defref_kr_LongTermDebtAndFinanceLease', window" in str(tds)
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -1227,15 +1228,28 @@ def div_htm(div_url, headers, per):
                         colm = re.findall(r'(?:colspan=\"(\d)\")(?!>12 Months Ended)', str(head), re.M)
                         colm = sum(map(int, colm))
             
-            
+            spec_div = False
+            if 'Special cash dividend' in str(soup):
+                spec_div = True
             for row in soup.table.find_all('tr'):
                 tds = row.find_all('td')
                 if ('this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds) or
                     'this, \'defref_us-gaap_CommonStockDividendsPerShareCashPaid\', window' in str(tds) or
                     r"this, 'defref_cor_DistributionsPerShare', window" in str(tds)
                     ):
-                    div = html_re(str(tds[colm]))
-                    return div
+                    div_result = html_re(str(tds[colm]))
+                    if div_result != '---':
+                        div = div_result
+                    if spec_div == False:
+                        return div
+                    else:
+                        continue
+                if spec_div == True:        
+                    if (r"this, 'defref_ldos_SpecialDividendPerShareDeclared', window" in str(tds)
+                        ):
+                        spec_div_float = html_re(str(tds[colm]))
+                        if div != '---' and spec_div_float != '---':
+                            return round(div + spec_div_float, 3)
         
         else:
             # Find multiplier

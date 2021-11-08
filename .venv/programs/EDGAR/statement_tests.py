@@ -169,7 +169,8 @@ div_url_list_htm = [r'https://www.sec.gov/Archives/edgar/data/1403161/0001403161
                     r'https://www.sec.gov/Archives/edgar/data/1297996/000129799618000026/R84.htm', r'https://www.sec.gov/Archives/edgar/data/1297996/000129799615000010/R87.htm', r'https://www.sec.gov/Archives/edgar/data/1297996/000119312514078397/R95.htm',
                     r'https://www.sec.gov/Archives/edgar/data/921825/000092182521000006/R64.htm', r'https://www.sec.gov/Archives/edgar/data/34903/000003490319000013/R64.htm', r'https://www.sec.gov/Archives/edgar/data/318154/000031815418000004/R92.htm',
                     r'https://www.sec.gov/Archives/edgar/data/318154/000031815415000005/R96.htm', r'https://www.sec.gov/Archives/edgar/data/886982/000119312518056383/R156.htm', r'https://www.sec.gov/Archives/edgar/data/886982/000119312514073792/R106.htm',
-                    r'https://www.sec.gov/Archives/edgar/data/886982/000119312512085822/R26.htm', r'https://www.sec.gov/Archives/edgar/data/55785/000005578512000021/R119.htm']
+                    r'https://www.sec.gov/Archives/edgar/data/886982/000119312512085822/R26.htm', r'https://www.sec.gov/Archives/edgar/data/55785/000005578512000021/R119.htm', r'https://www.sec.gov/Archives/edgar/data/1336920/000133692017000014/R8.htm',
+                    r'https://www.sec.gov/Archives/edgar/data/1336920/000133692016000076/R7.htm']
 
 div_answers_htm = [1.2, 1.0, 0.825,
                    0.48, 0.88, 1.6,
@@ -192,9 +193,10 @@ div_answers_htm = [1.2, 1.0, 0.825,
                    3.72, 3.32, 3.12,
                    1.0, 4.04, 4.6,
                    2.62, 2.9, 2.05,
-                   '---', 2.8]
+                   '---', 2.8, 14.92,
+                   1.28]
 
-div_url = r'https://www.sec.gov/Archives/edgar/data/55785/000005578512000021/R119.htm'
+div_url = r'https://www.sec.gov/Archives/edgar/data/1336920/000133692016000076/R7.htm'
 
 def get_sum_per_div(url):
     obj = re.search(r'(/R\d?\d?\d\.htm)', str(url))
@@ -230,7 +232,7 @@ share_catch_url_list_htm = [r'https://www.sec.gov/Archives/edgar/data/874761/000
 share_catch_answers_htm = [665370.13, 1857981.56, 4580656.18,
                            55800.0, 287913.0, 428000.0]
 
-catch_url = r'https://www.sec.gov/Archives/edgar/data/55785/000005578513000011/R5.htm'
+catch_url = r'https://www.sec.gov/Archives/edgar/data/1336920/000133692021000010/R3.htm'
 
 # Catch Test
 #print(sp.share_catch_htm(catch_url, headers, get_sum_per_div(catch_url)))
@@ -404,10 +406,10 @@ def yf_div_catch_test(ticker, divpaid, divs, pers):
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
 # Div finder
-base_url = 'https://www.sec.gov/Archives/edgar/data/55785/000005578512000021/'
-div = 2.685
+base_url = 'https://www.sec.gov/Archives/edgar/data/55785/000005578521000016/'
+div = 4.28
 def div_finder_htm(base_url, div):
-    for i in range(200):
+    for i in range(150):
         url = base_url + 'R' + str(i) + '.htm'
         content = requests.get(url, headers=headers).content
         soup = BeautifulSoup(content, 'html.parser')
