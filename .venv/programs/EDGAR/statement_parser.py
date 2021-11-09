@@ -919,7 +919,9 @@ def div_htm(div_url, headers, per):
         'FEDERAL INCOME TAX TREATMENT OF COMMON DIVIDENDS' not in str(head).upper() and
         'DIVIDENDS [ABSTRACT]' not in str(head).upper() and
         'SHAREHOLDERS\' EQUITY - (NARRATIVE) (DETAILS)' not in str(head).upper() and
-        'SHAREHOLDERS\' EQUITY - ADDITIONAL INFORMATION (DETAIL)' not in str(head).upper()
+        'SHAREHOLDERS\' EQUITY - ADDITIONAL INFORMATION (DETAIL)' not in str(head).upper() and
+        'SELECTED QUARTERLY DATA (UNAUDITED) (DETAILS)' not in str(head).upper() and
+        'SELECTED QUARTERLY DATA (DETAILS)' not in str(head).upper()
         ):
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
@@ -929,13 +931,16 @@ def div_htm(div_url, headers, per):
                 for index, row in enumerate(tds):
                     if not re.findall(r'\d', str(row)):
                         break
-            elif 'onclick="top.Show.showAR( this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window )' in str(tds) and 'Distributions (Details)' not in str(soup):
-                try:
-                    div = html_re(str(tds[index]))
-                except:
-                    div = html_re(str(tds[colm]))
-                if div != '---':
-                    return div
+            if 'Distributions (Details)' not in str(head):
+                if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds) and 'Capital Stock (Narrative) (Details) (USD $)' not in str(head) or
+                    r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds)
+                    ):
+                    try:
+                        div = html_re(str(tds[index]))
+                    except:
+                        div = html_re(str(tds[colm]))
+                    if div != '---' and r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" not in str(soup) and r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds):
+                        return div
 
         if 'onclick="top.Show.showAR( this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window )' in str(soup) and 'Distributions (Details) (USD $)' in str(soup):
             # Find index for yearly div data
@@ -997,7 +1002,9 @@ def div_htm(div_url, headers, per):
     elif ('QUARTERLY FINANCIAL INFORMATION' in str(head).upper() or
           'QUARTERLY RESULTS OF OPERATIONS' in str(head).upper() or
           'STOCK OPTION ASSUMPTIONS' in str(head).upper() or
-          'UNAUDITED QUARTERLY DATA (DETAILS)' in str(head).upper()
+          'UNAUDITED QUARTERLY DATA (DETAILS)' in str(head).upper() or
+          'SELECTED QUARTERLY DATA (UNAUDITED) (DETAILS)' in str(head).upper() or
+          'SELECTED QUARTERLY DATA (DETAILS)' in str(head).upper()
           ):
         # Find column with total data   
         tds = soup.table.find_all('tr')[5].find_all('td')
@@ -1062,7 +1069,7 @@ def div_htm(div_url, headers, per):
                     if r'toggleNextSibling(this)' in str(tds):
                         obj = re.findall(r'(?:\">\$ )(\d?\d\.\d\d?\d?)(?:</a><span)', str(tds), re.M)
                     else:
-                        obj = re.findall(r'(?:<td class=\"nump\">\$ )(\d?\d\.\d\d?\d?)(?:<span>)', str(tds), re.M)
+                        obj = re.findall(r'(?:<td class=\"nump\">\$? ?)(\d?\d\.\d\d?\d?)(?:<span>)', str(tds), re.M)
                     if obj != [] and len(obj) >= 4:
                         div = sum(list(map(float, obj[:4])))
                         return round(div, 3)
@@ -1273,87 +1280,98 @@ def div_htm(div_url, headers, per):
                     if multiplier == 3:
                         div += float(''.join(re.findall(r'\d+\.\d+', tds[1].text.strip())))
 
-        # If data source is in one big line
-        if div == '---':
-            # Create tables with Pandas
-            tables = soup.find_all('table')[0] 
-            panda = pd.read_html(str(tables))
+    # If data source is in one big line
+    if div == '---':
 
-            # Look for table with div data
-            for table in panda:
-                if ('Dividends Per Share' in table.values or
-                    'DividendsPer Share' in table.values or
-                    'Cash dividends per share'in table.values
-                    ):                    
-                    # Find row with div data and pull
-                    row = table.loc[table[0] == 'Cash dividends per share']
-                    div = float(re.findall(r'\d+\.\d\d', str(row))[0])
-                    break
-                
-                elif 'Distributionper share' in table.values:
-                    # For REITS
-                    # Get bool dataframe with True at positions where the given value exists
-                    result = table.isin(['Distributionper share'])
-                    # Get list of columns that contains the value
-                    series_obj = result.any()
-                    column_number = list(series_obj[series_obj == True].index)
-                    # Iterate over list of columns and fetch the rows indexes where value exists
-                    for col in column_number:
-                        row = list(result[col][result[col] == True].index)
-                        row[0] += 1
-                        answer = table.at[row[0], col]
-                        try:
-                            div = float(answer)
-                            break
-                        except:
-                            continue
-                    break
-                
-                elif 'Capital gains distribution' in table.values:
-                    # For REITS
-                    # Get bool dataframe with True at positions where the given value exists
-                    result = table.isin(['Capital gains distribution'])
-                    # Get list of columns that contains the value
-                    series_obj = result.any()
-                    column_number = list(series_obj[series_obj == True].index)
-                    # Iterate over list of columns and fetch the rows indexes where value exists
-                    for col in column_number:
-                        row = list(result[col][result[col] == True].index)
+        # Check if listed in big line on equity report
+        if '>Cash dividends declared per share: $' in str(soup) and 'Shareholders\' Equity (Tables)' in str(head):
+            try:
+                obj = float(re.findall(r'(?:Cash dividends declared per share: .)(\d?\d\.\d\d?)', str(soup))[-1])
+                if obj is not None:
+                    div = obj
+                    return div
+            except:
+                pass
+
+        # Create tables with Pandas
+        tables = soup.find_all('table')[0] 
+        panda = pd.read_html(str(tables))
+
+        # Look for table with div data
+        for table in panda:
+            if ('Dividends Per Share' in table.values or
+                'DividendsPer Share' in table.values or
+                'Cash dividends per share'in table.values
+                ):                    
+                # Find row with div data and pull
+                row = table.loc[table[0] == 'Cash dividends per share']
+                div = float(re.findall(r'\d+\.\d\d', str(row))[0])
+                break
+            
+            elif 'Distributionper share' in table.values:
+                # For REITS
+                # Get bool dataframe with True at positions where the given value exists
+                result = table.isin(['Distributionper share'])
+                # Get list of columns that contains the value
+                series_obj = result.any()
+                column_number = list(series_obj[series_obj == True].index)
+                # Iterate over list of columns and fetch the rows indexes where value exists
+                for col in column_number:
+                    row = list(result[col][result[col] == True].index)
+                    row[0] += 1
+                    answer = table.at[row[0], col]
+                    try:
+                        div = float(answer)
+                        break
+                    except:
+                        continue
+                break
+            
+            elif 'Capital gains distribution' in table.values:
+                # For REITS
+                # Get bool dataframe with True at positions where the given value exists
+                result = table.isin(['Capital gains distribution'])
+                # Get list of columns that contains the value
+                series_obj = result.any()
+                column_number = list(series_obj[series_obj == True].index)
+                # Iterate over list of columns and fetch the rows indexes where value exists
+                for col in column_number:
+                    row = list(result[col][result[col] == True].index)
+                    answer = table.at[row[0] + 1, col + 2]
+                    try:
+                        div = float(answer)
+                        break
+                    except:
+                        continue
+                break
+
+            elif 'Return of capital' in table.values and 'Common Stock' in table.values:
+                # For REITS
+                # Get bool dataframe with True at positions where the given value exists
+                result = table.isin(['Return of capital'])
+                # Get list of columns that contains the value
+                series_obj = result.any()
+                column_number = list(series_obj[series_obj == True].index)
+                # Iterate over list of columns and fetch the rows indexes where value exists
+                for col in column_number:
+                    row = list(result[col][result[col] == True].index)
+                    try:
                         answer = table.at[row[0] + 1, col + 2]
-                        try:
-                            div = float(answer)
-                            break
-                        except:
-                            continue
-                    break
+                        div = float(answer)
+                        break
+                    except:
+                        continue
+                break
 
-                elif 'Return of capital' in table.values and 'Common Stock' in table.values:
-                    # For REITS
-                    # Get bool dataframe with True at positions where the given value exists
-                    result = table.isin(['Return of capital'])
-                    # Get list of columns that contains the value
-                    series_obj = result.any()
-                    column_number = list(series_obj[series_obj == True].index)
-                    # Iterate over list of columns and fetch the rows indexes where value exists
-                    for col in column_number:
-                        row = list(result[col][result[col] == True].index)
-                        try:
-                            answer = table.at[row[0] + 1, col + 2]
-                            div = float(answer)
-                            break
-                        except:
-                            continue
-                    break
-
-            if div == '---' and 'Share Repurchase Program' not in str(head) and 'Shareholders\' Equity' not in str(head):
-                try:
-                    table = pd.read_html(content, match='Dividend')[1]
-                    div_list = list(table[3][-4:])
-                    div = round(sum(map(float, div_list)), 3)
-                    if math.isnan(div):
-                        div = '---'
-                except:
-                    pass
+        if div == '---' and 'Share Repurchase Program' not in str(head) and 'Shareholders\' Equity' not in str(head):
+            try:
+                table = pd.read_html(content, match='Dividend')[1]
+                div_list = list(table[3][-4:])
+                div = round(sum(map(float, div_list)), 3)
+                if math.isnan(div):
+                    div = '---'
+            except:
+                pass
     
     return div
 
@@ -1677,13 +1695,15 @@ def rev_xml(rev_url, headers):
               r'CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets' in str(row) and cost == '---' or
               r'<ElementName>us-gaap_CostOfGoodsAndServicesEnergyCommoditiesAndServices</ElementName>' in str(row) and cost == '---' or
               r'<ElementName>gs_BrokerageClearingExchangeAndDistributionFees</ElementName>' in str(row) and cost == '---' or
-              r'<ElementName>irm_CostOfSalesExcludingDepreciationAndAmortization</ElementName>' in str(row) and cost == '---'
+              r'<ElementName>irm_CostOfSalesExcludingDepreciationAndAmortization</ElementName>' in str(row) and cost == '---' or
+              r'<ElementName>us-gaap_DirectOperatingCosts</ElementName>' in str(row) and cost == '---'
               ):
             cost = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2) 
         elif r'us-gaap_ResearchAndDevelopmentExpense' in str(row):
             research = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)    
         elif (r'<ElementName>de_CostsAndExpensesIncludingInterest</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_NoninterestExpense</ElementName>' in str(row)):
+              r'<ElementName>us-gaap_NoninterestExpense</ElementName>' in str(row)
+              ):
             op_exp = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)                  
         elif (r'us-gaap_OperatingIncomeLoss' in str(row) or
               r'<ElementName>us-gaap_IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments</ElementName>' in str(row) and oi == '---' or
