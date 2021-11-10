@@ -176,7 +176,7 @@ def column_finder_annual_htm(soup, per):
         return int(colm.group(1))
 
 
-multiplier_list_1 = ['shares in Millions, $ in Millions', 'In Millions, except Per Share data, unless otherwise specified', 'In Millions, except Per Share data']
+multiplier_list_1 = ['shares in Millions, $ in Millions', 'In Millions, except Per Share data, unless otherwise specified', 'In Millions, except Per Share data', 'In Millions', 'In Millions, unless otherwise specified']
 
 multiplier_list_2 = ['shares in Thousands, $ in Millions', 'In Millions, except Share data in Thousands, unless otherwise specified']
 
@@ -184,7 +184,7 @@ multiplier_list_3 = ['shares in Thousands, $ in Thousands', 'In Thousands, excep
 
 multiplier_list_4 = ['In Thousands, except Share data, unless otherwise specified', 'In Thousands, except Share data']
 
-multiplier_list_5 = ['$ in Millions', 'In Millions, unless otherwise specified', 'In Millions', '$ in Millions, ¥ in Billions', 'In Millions, except Share data', 'In Millions, except Share data, unless otherwise specified']
+multiplier_list_5 = ['$ in Millions', '$ in Millions, ¥ in Billions', 'In Millions, except Share data', 'In Millions, except Share data, unless otherwise specified', '€ in Millions, $ in Millions']
 
 multiplier_list_6 = ['$ in Thousands']
 
@@ -584,7 +584,7 @@ def bs_htm(bs_url, headers, per):
 
     # Initial values
     equity = cash = cur_assets = assets = cur_liabilities = liabilities = tot_liabilities = '---'
-    intangible_assets = goodwill = recievables = debt = cur_liabilities_sum = 0
+    cash_sum = intangible_assets = goodwill = recievables = debt = cur_liabilities_sum = 0
     intangible_assets_set = set()
 
     # Find which column has 12 month data
@@ -608,6 +608,13 @@ def bs_htm(bs_url, headers, per):
             cash_calc = html_re(str(tds[colm]))
             if cash_calc != '---':
                 cash = round(check_neg(str(tds), cash_calc) * (dollar_multiplier / 1_000_000), 2)
+        elif (r"this, 'defref_us-gaap_CashAndDueFromBanks', window" in str(tds) or
+              r"this, 'defref_us-gaap_InterestBearingDepositsInBanks', window" in str(tds) or
+              r"this, 'defref_us-gaap_RestrictedCash', window" in str(tds)
+              ):
+            cash_calc = html_re(str(tds[colm]))
+            if cash_calc != '---':
+                cash_sum += round(check_neg(str(tds), cash_calc) * (dollar_multiplier / 1_000_000), 2)
         elif ('defref_us-gaap_Goodwill' in str(tds) or
               r"this, 'defref_us-gaap_IntangibleAssetsNetIncludingGoodwill', window" in str(tds)
               ):
@@ -647,7 +654,11 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_gs_ReceivablesFromBrokersDealersAndClearingOrganizationsBS', window" in str(tds) and cur_assets == '---' or
               r"this, 'defref_gs_ReceivablesFromCustomersAndCounterparties', window" in str(tds) and cur_assets == '---' or
               r"this, 'defref_us-gaap_ReceivablesFromBrokersDealersAndClearingOrganizations', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_us-gaap_ReceivablesFromCustomers', window" in str(tds) and cur_assets == '---'
+              r"this, 'defref_us-gaap_ReceivablesFromCustomers', window" in str(tds) and cur_assets == '---' or
+              r"this, 'defref_us-gaap_SecuritiesPurchasedUnderAgreementsToResell', window" in str(tds) and cur_assets == '---' or
+              r"this, 'defref_us-gaap_OtherReceivables', window" in str(tds) and cur_assets == '---' or
+              r"this, 'defref_us-gaap_NotesReceivableNet', window" in str(tds) and cur_assets == '---' or
+              r"this, 'defref_us-gaap_LoansReceivableHeldForSaleNetNotPartOfDisposalGroup', window" in str(tds) and cur_assets == '---'
               ):
             recievables_calc = html_re(str(tds[colm]))
             if recievables_calc != '---':
@@ -679,7 +690,8 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_gs_UnsecuredShortTermBorrowingsIncludingCurrentPortionOfUnsecuredLongTermBorrowings', window" in str(tds) and cur_liabilities == '---' or
               r"this, 'defref_us-gaap_FinancialInstrumentsSoldNotYetPurchasedAtFairValue', window" in str(tds) and cur_liabilities == '---' or
               r"this, 'defref_us-gaap_PayablesToBrokerDealersAndClearingOrganizations', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_us-gaap_PayablesToCustomers', window" in str(tds) and cur_liabilities == '---'
+              r"this, 'defref_us-gaap_PayablesToCustomers', window" in str(tds) and cur_liabilities == '---' or
+              r"this, 'defref_ms_Payables', window" in str(tds) and cur_liabilities == '---'
               ):
             cur_liabilities_calc = html_re(str(tds[colm]))
             if cur_liabilities_calc != '---':
@@ -708,7 +720,8 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_cat_LongTermDebtDueAfterOneYearMachineryEnergyTransNoncurrent', window" in str(tds) or
               r"this, 'defref_cat_LongTermDebtDueAfterOneYearFinancialProducts', window" in str(tds) or
               r"this, 'defref_us-gaap_LongTermNotesAndLoans', window" in str(tds) or
-              r"this, 'defref_kr_LongTermDebtAndFinanceLease', window" in str(tds)
+              r"this, 'defref_kr_LongTermDebtAndFinanceLease', window" in str(tds) or
+              r"this, 'defref_us-gaap_DebtLongtermAndShorttermCombinedAmount', window" in str(tds)
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -726,6 +739,10 @@ def bs_htm(bs_url, headers, per):
                 equity = round(check_neg(str(tds), equity) * (dollar_multiplier / 1_000_000), 2)    
         elif '[Member]' in str(row) and cash != '---':
             break     
+
+    # Use cash sum if cash total not found
+    if cash == '---':
+        cash = cash_sum
 
     # Calculate curent assets if total not found
     if cash != '---' and cur_assets == '---':
@@ -791,7 +808,7 @@ def cf_htm(cf_url, headers, per):
             else:
                 repeat_flag = True
         elif ('Net cash from operations' in str(tds) or
-            'this, \'defref_us-gaap_NetCashProvidedByUsedInOperatingActivities\', window' in str(tds) or
+            'this, \'defref_us-gaap_NetCashProvidedByUsedInOperatingActivities\', window' in str(tds) or 
             'this, \'defref_us-gaap_NetCashProvidedByUsedInOperatingActivitiesContinuingOperations\', window' in str(tds)
             ): 
             cfo_calc = html_re(str(tds[colm]))
@@ -1792,7 +1809,7 @@ def bs_xml(bs_url, headers):
 
     # Initial values
     equity = cash = cur_assets = assets = cur_liabilities = liabilities = '---'
-    recievables = intangible_assets = goodwill = debt = cur_liabilities_sum = 0
+    cash_sum = recievables = intangible_assets = goodwill = debt = cur_liabilities_sum = 0
     debt_set = set()
 
     # Find which column has 12 month data
@@ -1813,6 +1830,13 @@ def bs_xml(bs_url, headers):
             r'<ElementName>gs_CashAndCashEquivalents</ElementName>' in str(row)
             ):
             cash = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2) 
+        elif (r'<ElementName>us-gaap_CashAndDueFromBanks</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_InterestBearingDepositsInBanks</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_CashReserveDepositRequiredAndMade</ElementName>' in str(row)
+              ):
+            cash_calc = xml_re(str(cells[colm]))
+            if cash_calc != '---':
+                cash_sum += round(cash_calc * (dollar_multiplier / 1_000_000), 2)
         elif 'us-gaap_Goodwill' in str(row):
             goodwill = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)               
         elif r'us-gaap_IntangibleAssetsNetExcludingGoodwill' in str(row):
@@ -1826,7 +1850,12 @@ def bs_xml(bs_url, headers):
               r'<ElementName>gs_SecuritiesPurchasedUnderAgreementsToResellAndFederalFundsSold</ElementName>' in str(row) or
               r'<ElementName>us-gaap_SecuritiesBorrowed</ElementName>' in str(row) or
               r'<ElementName>gs_ReceivablesFromBrokersDealersAndClearingOrganizationsBS</ElementName>' in str(row) or
-              r'<ElementName>gs_ReceivablesFromCustomersAndCounterparties</ElementName>' in str(row)
+              r'<ElementName>gs_ReceivablesFromCustomersAndCounterparties</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_ReceivablesFromBrokersDealersAndClearingOrganizations</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_AccruedFeesAndOtherRevenueReceivable</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_NotesAndLoansReceivableNetNoncurrent</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_FederalFundsSoldAndSecuritiesPurchasedUnderAgreementsToResell</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_SecuritiesReceivedAsCollateral</ElementName>' in str(row)
               ):
             recievables_calc = xml_re(str(cells[colm]))
             if recievables_calc != '---':
@@ -1855,9 +1884,18 @@ def bs_xml(bs_url, headers):
               r'<ElementName>gs_PayablesToCustomersAndCounterparties</ElementName>' in str(row) and cur_liabilities == '---' or
               r'<ElementName>us-gaap_FinancialInstrumentsSoldNotYetPurchasedAtFairValue</ElementName>' in str(row) and cur_liabilities == '---' or
               r'<ElementName>gs_UnsecuredShortTermBorrowingsIncludingCurrentPortionOfUnsecuredLongTermBorrowings</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>gs_OtherLiabilitiesAndAccruedExpenses</ElementName>' in str(row) and cur_liabilities == '---'
+              r'<ElementName>gs_OtherLiabilitiesAndAccruedExpenses</ElementName>' in str(row) and cur_liabilities == '---' or
+              r'<ElementName>us-gaap_ShortTermBorrowings</ElementName>' in str(row) and cur_liabilities == '---' or
+              r'<ElementName>us-gaap_ObligationToReturnSecuritiesReceivedAsCollateral</ElementName>' in str(row) and cur_liabilities == '---' or
+              r'<ElementName>us-gaap_SecuritiesLoaned</ElementName>' in str(row) and cur_liabilities == '---' or
+              r'<ElementName>us-gaap_AccountsPayableCurrentAndNoncurrent</ElementName>' in str(row) and cur_liabilities == '---' or
+              r'<ElementName>us-gaap_PayablesToBrokerDealersAndClearingOrganizations</ElementName>' in str(row) and cur_liabilities == '---' or
+              r'<ElementName>us-gaap_InterestAndDividendsPayableCurrentAndNoncurrent</ElementName>' in str(row) and cur_liabilities == '---' or
+              r'<ElementName>us-gaap_OtherLiabilities</ElementName>' in str(row) and cur_liabilities == '---'
               ):
-            cur_liabilities_sum += round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)
+            liabilities_calc = xml_re(str(cells[colm]))
+            if liabilities_calc != '---':              
+                cur_liabilities_sum += round(liabilities_calc * (dollar_multiplier / 1_000_000), 2)
         elif r'<ElementName>us-gaap_Liabilities</ElementName>' in str(row):
             liabilities = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)
         elif r'us-gaap_LiabilitiesAndStockholdersEquity' in str(row) and liabilities == '---':
@@ -1868,6 +1906,10 @@ def bs_xml(bs_url, headers):
             equity = xml_re(str(cells[colm])) 
             if equity != '---':
                 equity = round(check_neg(str(row), equity, 'xml') * (dollar_multiplier / 1_000_000), 2)                                                 
+
+    # Use cash sum if cash total not found
+    if cash == '---':
+        cash = cash_sum
 
     # Calculate curent assets if total not found
     if cash != '---' and cur_assets == '---':
