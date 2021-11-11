@@ -610,7 +610,8 @@ def bs_htm(bs_url, headers, per):
                 cash = round(check_neg(str(tds), cash_calc) * (dollar_multiplier / 1_000_000), 2)
         elif (r"this, 'defref_us-gaap_CashAndDueFromBanks', window" in str(tds) or
               r"this, 'defref_us-gaap_InterestBearingDepositsInBanks', window" in str(tds) or
-              r"this, 'defref_us-gaap_RestrictedCash', window" in str(tds)
+              r"this, 'defref_us-gaap_RestrictedCash', window" in str(tds) or
+              r"this, 'defref_us-gaap_CashReserveDepositRequiredAndMade', window" in str(tds)
               ):
             cash_calc = html_re(str(tds[colm]))
             if cash_calc != '---':
@@ -641,61 +642,73 @@ def bs_htm(bs_url, headers, per):
             cur_assets_calc = html_re(str(tds[colm]))
             if cur_assets_calc != '---':
                 cur_assets = round(check_neg(str(tds), cur_assets_calc) * (dollar_multiplier / 1_000_000), 2)
-        elif (r"this, 'defref_us-gaap_LoansAndLeasesReceivableNetReportedAmount', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_mpw_InterestAndRentReceivable', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_mpw_StraightLineRentReceivable', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_us-gaap_DueFromRelatedParties', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_us-gaap_FederalFundsSoldAndSecuritiesPurchasedUnderAgreementsToResell', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_us-gaap_SecuritiesBorrowed', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_gs_CustomerAndOtherReceivables', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_us-gaap_LoansAndLeasesReceivableNetReportedAmount', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_gs_CashAndSecuritiesSegregatedForRegulatoryAndOtherPurposes', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_gs_SecuritiesPurchasedUnderAgreementsToResellAndFederalFundsSold', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_gs_ReceivablesFromBrokersDealersAndClearingOrganizationsBS', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_gs_ReceivablesFromCustomersAndCounterparties', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_us-gaap_ReceivablesFromBrokersDealersAndClearingOrganizations', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_us-gaap_ReceivablesFromCustomers', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_us-gaap_SecuritiesPurchasedUnderAgreementsToResell', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_us-gaap_OtherReceivables', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_us-gaap_NotesReceivableNet', window" in str(tds) and cur_assets == '---' or
-              r"this, 'defref_us-gaap_LoansReceivableHeldForSaleNetNotPartOfDisposalGroup', window" in str(tds) and cur_assets == '---'
+        elif (r"this, 'defref_us-gaap_LoansAndLeasesReceivableNetReportedAmount', window" in str(tds) or
+              r"this, 'defref_mpw_InterestAndRentReceivable', window" in str(tds) or
+              r"this, 'defref_mpw_StraightLineRentReceivable', window" in str(tds) or
+              r"this, 'defref_us-gaap_DueFromRelatedParties', window" in str(tds) or
+              r"this, 'defref_us-gaap_FederalFundsSoldAndSecuritiesPurchasedUnderAgreementsToResell', window" in str(tds) or
+              r"this, 'defref_us-gaap_SecuritiesBorrowed', window" in str(tds) or
+              r"this, 'defref_gs_CustomerAndOtherReceivables', window" in str(tds) or
+              r"this, 'defref_us-gaap_LoansAndLeasesReceivableNetReportedAmount', window" in str(tds) or
+              r"this, 'defref_gs_CashAndSecuritiesSegregatedForRegulatoryAndOtherPurposes', window" in str(tds) or
+              r"this, 'defref_gs_SecuritiesPurchasedUnderAgreementsToResellAndFederalFundsSold', window" in str(tds) or
+              r"this, 'defref_gs_ReceivablesFromBrokersDealersAndClearingOrganizationsBS', window" in str(tds) or
+              r"this, 'defref_gs_ReceivablesFromCustomersAndCounterparties', window" in str(tds) or
+              r"this, 'defref_us-gaap_ReceivablesFromBrokersDealersAndClearingOrganizations', window" in str(tds) or
+              r"this, 'defref_us-gaap_ReceivablesFromCustomers', window" in str(tds) or
+              r"this, 'defref_us-gaap_SecuritiesPurchasedUnderAgreementsToResell', window" in str(tds) or
+              r"this, 'defref_us-gaap_OtherReceivables', window" in str(tds) or
+              r"this, 'defref_us-gaap_NotesReceivableNet', window" in str(tds) or
+              r"this, 'defref_us-gaap_LoansReceivableHeldForSaleNetNotPartOfDisposalGroup', window" in str(tds) or
+              r"this, 'defref_ms_LoansHeldforInvestment', window" in str(tds) or
+              r"this, 'defref_us-gaap_SecuritiesReceivedAsCollateral', window" in str(tds) or
+              r"this, 'defref_us-gaap_LoansReceivableHeldForSaleNet', window" in str(tds) or
+              r"this, 'defref_ms_Receivables', window" in str(tds) in str(tds) or
+              r"this, 'defref_us-gaap_AccountsReceivableNet', window" in str(tds) or
+              r"this, 'defref_us-gaap_AccruedFeesAndOtherRevenueReceivable', window" in str(tds) or
+              r"this, 'defref_us-gaap_NotesAndLoansReceivableNetNoncurrent', window" in str(tds)
               ):
-            recievables_calc = html_re(str(tds[colm]))
-            if recievables_calc != '---':
-                recievables += round(check_neg(str(tds), recievables_calc) * (dollar_multiplier / 1_000_000), 2)
+            if cur_assets == '---':
+                recievables_calc = html_re(str(tds[colm]))
+                if recievables_calc != '---':
+                    recievables += round(check_neg(str(tds), recievables_calc) * (dollar_multiplier / 1_000_000), 2)
         elif r"this, 'defref_us-gaap_LiabilitiesCurrent', window" in str(tds) and cur_liabilities == '---':
             cur_liabilities_calc = html_re(str(tds[colm]))
             if cur_liabilities_calc != '---':
                 cur_liabilities = round(check_neg(str(tds), cur_liabilities_calc) * (dollar_multiplier / 1_000_000), 2)
-        elif (r"this, 'defref_us-gaap_UnsecuredDebt', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_stor_AccruedExpensesDeferredRevenueAndOtherLiabilities', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_us-gaap_AccountsPayableAndAccruedLiabilitiesCurrentAndNoncurrent', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_us-gaap_ConvertibleNotesPayable', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_us-gaap_AccountsPayableRelatedPartiesCurrentAndNoncurrent', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_abr_DueToBorrowers', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_us-gaap_AccountsPayableCurrentAndNoncurrent', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_us-gaap_AccruedLiabilitiesAndOtherLiabilities', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_us-gaap_DerivativeLiabilities', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_us-gaap_Deposits', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_us-gaap_SecuritiesSoldUnderAgreementsToRepurchase', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_us-gaap_SecuritiesLoaned', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_us-gaap_OtherSecuredFinancings', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_gs_CustomerAndOtherPayables', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_us-gaap_TradingLiabilities', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_gs_UnsecuredShortTermBorrowingsIncludingCurrentPortionOfUnsecuredLongTermBorrowings', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_us-gaap_OtherLiabilities', window" in str(tds) and cur_liabilities == '---' and 'Capitalized mortgage servicing rights, net' not in str(soup) and 'Investments in real estate properties' not in str(soup) or
-              r"this, 'defref_gs_SecuritiesLoanedBS', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_gs_PayablesToBrokerDealersAndClearingOrganizationsBS', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_gs_PayablesToCustomersAndCounterparties', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_gs_UnsecuredShortTermBorrowingsIncludingCurrentPortionOfUnsecuredLongTermBorrowings', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_us-gaap_FinancialInstrumentsSoldNotYetPurchasedAtFairValue', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_us-gaap_PayablesToBrokerDealersAndClearingOrganizations', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_us-gaap_PayablesToCustomers', window" in str(tds) and cur_liabilities == '---' or
-              r"this, 'defref_ms_Payables', window" in str(tds) and cur_liabilities == '---'
+        elif (r"this, 'defref_us-gaap_UnsecuredDebt', window" in str(tds) or
+              r"this, 'defref_stor_AccruedExpensesDeferredRevenueAndOtherLiabilities', window" in str(tds) or
+              r"this, 'defref_us-gaap_AccountsPayableAndAccruedLiabilitiesCurrentAndNoncurrent', window" in str(tds) or
+              r"this, 'defref_us-gaap_ConvertibleNotesPayable', window" in str(tds) or
+              r"this, 'defref_us-gaap_AccountsPayableRelatedPartiesCurrentAndNoncurrent', window" in str(tds) or
+              r"this, 'defref_abr_DueToBorrowers', window" in str(tds) or
+              r"this, 'defref_us-gaap_AccountsPayableCurrentAndNoncurrent', window" in str(tds) or
+              r"this, 'defref_us-gaap_AccruedLiabilitiesAndOtherLiabilities', window" in str(tds) or
+              r"this, 'defref_us-gaap_DerivativeLiabilities', window" in str(tds) or
+              r"this, 'defref_us-gaap_Deposits', window" in str(tds) or
+              r"this, 'defref_us-gaap_SecuritiesSoldUnderAgreementsToRepurchase', window" in str(tds) or
+              r"this, 'defref_us-gaap_SecuritiesLoaned', window" in str(tds) or
+              r"this, 'defref_us-gaap_OtherSecuredFinancings', window" in str(tds) or
+              r"this, 'defref_gs_CustomerAndOtherPayables', window" in str(tds) or
+              r"this, 'defref_us-gaap_TradingLiabilities', window" in str(tds) or
+              r"this, 'defref_gs_UnsecuredShortTermBorrowingsIncludingCurrentPortionOfUnsecuredLongTermBorrowings', window" in str(tds) or
+              r"this, 'defref_us-gaap_OtherLiabilities', window" in str(tds) and 'Capitalized mortgage servicing rights, net' not in str(soup) and 'Investments in real estate properties' not in str(soup) or
+              r"this, 'defref_gs_SecuritiesLoanedBS', window" in str(tds) or
+              r"this, 'defref_gs_PayablesToBrokerDealersAndClearingOrganizationsBS', window" in str(tds) or
+              r"this, 'defref_gs_PayablesToCustomersAndCounterparties', window" in str(tds) or
+              r"this, 'defref_gs_UnsecuredShortTermBorrowingsIncludingCurrentPortionOfUnsecuredLongTermBorrowings', window" in str(tds) or
+              r"this, 'defref_us-gaap_FinancialInstrumentsSoldNotYetPurchasedAtFairValue', window" in str(tds) or
+              r"this, 'defref_us-gaap_PayablesToBrokerDealersAndClearingOrganizations', window" in str(tds) or
+              r"this, 'defref_us-gaap_PayablesToCustomers', window" in str(tds) or
+              r"this, 'defref_ms_Payables', window" in str(tds) or
+              r"this, 'defref_us-gaap_ShortTermBorrowings', window" in str(tds) or
+              r"this, 'defref_us-gaap_ObligationToReturnSecuritiesReceivedAsCollateral', window" in str(tds) or
+              r"this, 'defref_us-gaap_InterestAndDividendsPayableCurrentAndNoncurrent', window" in str(tds)
               ):
-            cur_liabilities_calc = html_re(str(tds[colm]))
-            if cur_liabilities_calc != '---':
-                cur_liabilities_sum += round(check_neg(str(tds), cur_liabilities_calc) * (dollar_multiplier / 1_000_000), 2)
+            if cur_liabilities == '---':
+                cur_liabilities_calc = html_re(str(tds[colm]))
+                if cur_liabilities_calc != '---':
+                    cur_liabilities_sum += round(check_neg(str(tds), cur_liabilities_calc) * (dollar_multiplier / 1_000_000), 2)
         elif 'onclick="top.Show.showAR( this, \'defref_us-gaap_Liabilities\', window )' in str(tds):
             liabilities_calc = html_re(str(tds[colm]))
             if liabilities_calc != '---':
@@ -923,7 +936,7 @@ def div_htm(div_url, headers, per):
     soup = BeautifulSoup(content, 'html.parser')
     colm = column_finder_annual_htm(soup, per)
     head = soup.table.find_all('tr')[0]
-
+    
     # Initial value
     div = '---'
     
@@ -938,7 +951,8 @@ def div_htm(div_url, headers, per):
         'SHAREHOLDERS\' EQUITY - (NARRATIVE) (DETAILS)' not in str(head).upper() and
         'SHAREHOLDERS\' EQUITY - ADDITIONAL INFORMATION (DETAIL)' not in str(head).upper() and
         'SELECTED QUARTERLY DATA (UNAUDITED) (DETAILS)' not in str(head).upper() and
-        'SELECTED QUARTERLY DATA (DETAILS)' not in str(head).upper()
+        'SELECTED QUARTERLY DATA (DETAILS)' not in str(head).upper() and
+        'QUARTERLY RESULTS (DETAILS)' not in str(head).upper()
         ):
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
@@ -1021,7 +1035,8 @@ def div_htm(div_url, headers, per):
           'STOCK OPTION ASSUMPTIONS' in str(head).upper() or
           'UNAUDITED QUARTERLY DATA (DETAILS)' in str(head).upper() or
           'SELECTED QUARTERLY DATA (UNAUDITED) (DETAILS)' in str(head).upper() or
-          'SELECTED QUARTERLY DATA (DETAILS)' in str(head).upper()
+          'SELECTED QUARTERLY DATA (DETAILS)' in str(head).upper() or
+          'QUARTERLY RESULTS (DETAILS)' in str(head).upper()
           ):
         # Find column with total data   
         tds = soup.table.find_all('tr')[5].find_all('td')
@@ -1100,7 +1115,8 @@ def div_htm(div_url, headers, per):
           "Shareholders' Equity - (Narrative) (Details)" in str(head) and '12 Months Ended' in str(head) or
           "Shareholders' Equity (Narrative) (Details)" in str(head) and '12 Months Ended' in str(head) or
           "Shareholders' Equity - Additional Information (Detail)" in str(head) and '12 Months Ended' in str(head) or
-          ">Shareholders' Equity (Details 3)" in str(head) and '12 Months Ended' in str(head)
+          ">Shareholders' Equity (Details 3)" in str(head) and '12 Months Ended' in str(head) or
+          "Total Equity" in str(head) and '12 Months Ended' in str(head)
           ):      
         # Find row with div data
         for row in soup.table.find_all('tr'):
