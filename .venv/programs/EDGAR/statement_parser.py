@@ -347,7 +347,7 @@ def rev_htm(rev_url, headers, per):
     # Determine multiplier
     head = soup.find('th')
     dollar_multiplier, share_multiplier = multiple_extractor(str(head), shares=True)
- 
+
     # Loop through rows, search for row of interest
     for row in soup.table.find_all('tr'):
         tds = row.find_all('td')
@@ -425,7 +425,8 @@ def rev_htm(rev_url, headers, per):
               'this, \'defref_us-gaap_ProfitLoss\', window' in str(tds) and net == '---' or
               r"this, 'defref_us-gaap_NetIncomeLossAvailableToCommonStockholdersBasic', window" in str(tds) and net == '---' or
               r"this, 'defref_us-gaap_IncomeLossFromContinuingOperations', window" in str(tds) and net == '---' or
-              r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest', window" in str(tds) and net == '---'
+              r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest', window" in str(tds) and net == '---' or
+              r"this, 'defref_us-gaap_NetIncomeLossAvailableToCommonStockholdersBasic', window" in str(tds) and ('>Net earnings attributable to common stockholders<' in str(tds) or '>Net earnings available to common stockholders<' in str(tds))
             ):
             net_calc = html_re(str(tds[colm]))
             if net_calc != '---':
@@ -503,10 +504,12 @@ def rev_htm(rev_url, headers, per):
             result = html_re(str(tds[colm]))
             if result != '---':
                 dep_am = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000), 2) 
-        elif r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(tds):
+        elif (r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(tds) or
+              r"this, 'defref_nnn_ImpairmentLossesAndOtherChargesNetOfRecoveries', window" in str(tds)
+              ):
             result = html_re(str(tds[colm]))
             if result != '---':
-                impairment = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000), 2) 
+                impairment += round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000), 2) 
         elif r"this, 'defref_us-gaap_GainsLossesOnSalesOfInvestmentRealEstate', window" in str(tds):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -1765,7 +1768,8 @@ def rev_xml(rev_url, headers):
             if result != '---':
                 oi = round(check_neg(str(row), result, 'xml') * (dollar_multiplier / 1_000_000), 2)      
         elif (r'>us-gaap_NetIncomeLoss<' in str(row) and net_check == False or
-              r'<ElementName>us-gaap_ProfitLoss</ElementName>' in str(row) and net == '---' and 'including non-controlling interest' not in str(row) and 'including noncontrolling interests' not in str(row)
+              r'<ElementName>us-gaap_ProfitLoss</ElementName>' in str(row) and net == '---' and 'including non-controlling interest' not in str(row) and 'including noncontrolling interests' not in str(row) or
+              r'<ElementName>us-gaap_NetIncomeLossAvailableToCommonStockholdersBasic</ElementName>' in str(row) and 'Net earnings attributable to common stockholders' in str(row)
               ):
             result = xml_re(str(cells[colm]))
             if result != '---':
@@ -1783,15 +1787,19 @@ def rev_xml(rev_url, headers):
               r'us-gaap_CommonStockDividendsPerShareDeclared' in str(row)):
             div = xml_re(str(cells[colm])) 
         elif (r'<ElementName>us-gaap_DepreciationAmortizationAndAccretionNet</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_DepreciationDepletionAndAmortization</ElementName>' in str(row)
+              r'<ElementName>us-gaap_DepreciationDepletionAndAmortization</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_DepreciationAndAmortization</ElementName>' in str(row)
               ):
             dep_am = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)  
         elif (r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(row) or
-              r'<ElementName>us-gaap_GoodwillImpairmentLoss</ElementName>' in str(row)
+              r'<ElementName>us-gaap_GoodwillImpairmentLoss</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_AssetImpairmentCharges</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_ImpairmentOfRetainedInterest</ElementName>' in str(row)
               ):  
-            impairment = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)    
+            impairment += round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)    
         elif (r"this, 'defref_us-gaap_GainsLossesOnSalesOfInvestmentRealEstate', window" in str(row) or
-              r'<ElementName>irm_GainLossOnDispositionAndImpairmentOfAssets</ElementName>' in str(row)
+              r'<ElementName>irm_GainLossOnDispositionAndImpairmentOfAssets</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_GainLossOnDispositionOfOtherAssets</ElementName>' in str(row)
               ): 
             result = xml_re(str(cells[colm]))
             if result != '---':
