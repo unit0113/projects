@@ -516,7 +516,7 @@ def parse_filings(filings, type, headers, splits):
                    'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE LOSS', 'CONSOLIDATED STATEMENTS OF OPERATIONS AND OTHER COMPREHENSIVE LOSS', 'STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED EARNINGS',
                    'CONSOLIDATED RESULTS OF OPERATIONS', 'CONDENSED CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF CONSOLIDATED INCOME', 'CONSOLIDATED STATEMENTS OF INCOME AND COMPREHENSIVE INCOME', 'CONSOLIDATED STATEMENTS OF INCOME (LOSS)',
                    'CONSOLIDATED STATEMENTS OF COMPREHENSIVE INCOME', 'CONSOLIDATED STATEMENTS OF EARNINGS (LOSS)', 'CONSOLDIATED STATEMENTS OF OPERATIONS', 'CONSOLIDATED INCOME STATEMENT',
-                   'CONDENSED CONSOLIDATED STATEMENTS OF INCOME']
+                   'CONDENSED CONSOLIDATED STATEMENTS OF INCOME', 'STATEMENTS OF CONSOLIDATED OPERATIONS']
     bs_list = ['BALANCE SHEETS', 'CONSOLIDATED BALANCE SHEETS', 'STATEMENT OF FINANCIAL POSITION CLASSIFIED', 'CONSOLIDATED BALANCE SHEET', 'CONDENSED CONSOLIDATED BALANCE SHEETS',
                'CONSOLIDATED AND COMBINED BALANCE SHEETS', 'CONSOLIDATED STATEMENTS OF FINANCIAL POSITION', 'BALANCE SHEET', 'CONSOLIDATED FINANCIAL POSITION', 'CONSOLIDATED STATEMENTS OF FINANCIAL CONDITION',
                'CONSOLIDATED STATEMENT OF FINANCIAL POSITION', 'CONDENSED CONSOLIDATED BALANCE SHEET', 'CONDENSED CONSOLIDATED STATEMENTS OF FINANCIAL CONDITION']
@@ -558,10 +558,10 @@ def parse_filings(filings, type, headers, splits):
                 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREOWNERS\' EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF  EQUITY (PARENTHETICAL)', 'SELECTED QUARTERLY DATA (UNAUDITED) (DETAILS)', 'SELECTED QUARTERLY DATA (DETAILS)',
                 'CAPITAL STOCK - DIVIDENDS PAID (DETAIL)', 'DIVIDENDS PAID (DETAIL)', 'CAPITAL STOCK (SCHEDULE OF DIVIDENDS PAID BY COMPANY) (DETAILS)', 'CAPITAL STOCK (NARRATIVE) (DETAILS)',
                 'SELECTED QUARTERLY DATA (SCHEDULED OF QUARTERLY FINANCIAL INFORMATION) (DETAILS)', 'TOTAL EQUITY - DIVIDENDS (DETAILS)', 'TOTAL EQUITY - COMMON STOCK DIVIDENDS PER SHARE (DETAILS)',
-                'TOTAL EQUITY (DIVIDENDS AND SHARE REPURCHASES) (DETAILS)', 'QUARTERLY RESULTS (DETAILS)']
+                'TOTAL EQUITY (DIVIDENDS AND SHARE REPURCHASES) (DETAILS)', 'QUARTERLY RESULTS (DETAILS)', 'QUARTERLY RESULTS (UNAUDITED) - (QUARTERLY RESULTS) (DETAILS)']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)', 'EARNINGS PER SHARE (DETAIL)', 'EARNING PER SHARE (DETAIL)', 'EARNINGS PER SHARE (BASIC AND DILUTED WEIGHTED AVERAGE SHARES OUTSTANDING) (DETAILS)']
     share_catch_list = ['CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEET (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEETS (PARANTHETICAL)', 'CONSOLIDATED BALANCE SHEET CONSOLIDATED BALANCE SHEET (PARENTHETICAL)',
-                        'CONSOLIDATED BALANCE SHEET (PARENTHETICALS)', 'CONDENSED CONSOLIDATED BALANCE SHEET (PARENTHETICAL)']
+                        'CONSOLIDATED BALANCE SHEET (PARENTHETICALS)', 'CONDENSED CONSOLIDATED BALANCE SHEET (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEETS - PARENTHETICAL INFO', 'CONSOLIDATED BALANCE SHEETS']
 
     # Lists for data frame
     Fiscal_Period = []
@@ -651,7 +651,7 @@ def parse_filings(filings, type, headers, splits):
             # Break if name comp failed
             if diff_comp_flag == True:
                 break
-            
+
             # Income Statement
             if report.shortname.text.upper() in income_list and rev == '---':
                 # Create URL and call parser function
@@ -714,7 +714,7 @@ def parse_filings(filings, type, headers, splits):
                             shares = share_result
                 
             # Shares if not reported on income statement
-            elif report.shortname.text.upper() in share_catch_list and shares == '---' or report.shortname.text.upper() in share_catch_list and shares == 0:
+            if report.shortname.text.upper() in share_catch_list and shares == '---' or report.shortname.text.upper() in share_catch_list and shares == 0:
                 # Create URL and call parser function
                 try:
                     catch_url = base_url + report.htmlfilename.text
@@ -724,8 +724,8 @@ def parse_filings(filings, type, headers, splits):
                     shares = sp.share_catch_xml(catch_url, headers, period_end)
             
             # Break if all data found
-            if (rev != '---' and cash != '---' and fcf != '---' and shares != 0 and eps != '---' and div != '---' and divpaid > 0 or
-                rev != '---' and cash != '---' and fcf != '---' and shares != 0 and eps != '---' and divpaid == 0
+            if (rev != '---' and cash != '---' and fcf != '---' and shares != '---' and eps != '---' and div != '---' and divpaid > 0 or
+                rev != '---' and cash != '---' and fcf != '---' and shares != '---' and eps != '---' and divpaid == 0
                 ):
                 break
                 
@@ -920,4 +920,5 @@ complete comment strings
 corr() to find highest correlated with share price
 figure out how to get SBC from table
 find a way to parse for companies that don't report an xml summary (MAIN)
+determine avg price per FY for use in price to whatever calcs
 '''
