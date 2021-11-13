@@ -608,7 +608,7 @@ def bs_htm(bs_url, headers, per):
     # Determine multiplier
     head = soup.find('th')
     dollar_multiplier = multiple_extractor(str(head))
-
+    
     # Loop through rows, search for row of interest
     for row in soup.table.find_all('tr'):
         tds = row.find_all('td')
@@ -681,7 +681,10 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_ms_Receivables', window" in str(tds) in str(tds) or
               r"this, 'defref_us-gaap_AccountsReceivableNet', window" in str(tds) or
               r"this, 'defref_us-gaap_AccruedFeesAndOtherRevenueReceivable', window" in str(tds) or
-              r"this, 'defref_us-gaap_NotesAndLoansReceivableNetNoncurrent', window" in str(tds)
+              r"this, 'defref_us-gaap_NotesAndLoansReceivableNetNoncurrent', window" in str(tds) or
+              r"this, 'defref_us-gaap_AccountsAndNotesReceivableNet', window" in str(tds) or
+              r"this, 'defref_us-gaap_DeferredRentReceivablesNet', window" in str(tds) or
+              r"this, 'defref_us-gaap_InterestsContinuedToBeHeldByTransferorFairValue', window" in str(tds)
               ):
             if cur_assets == '---':
                 recievables_calc = html_re(str(tds[colm]))
@@ -694,7 +697,7 @@ def bs_htm(bs_url, headers, per):
         elif (r"this, 'defref_us-gaap_UnsecuredDebt', window" in str(tds) or
               r"this, 'defref_stor_AccruedExpensesDeferredRevenueAndOtherLiabilities', window" in str(tds) or
               r"this, 'defref_us-gaap_AccountsPayableAndAccruedLiabilitiesCurrentAndNoncurrent', window" in str(tds) or
-              r"this, 'defref_us-gaap_ConvertibleNotesPayable', window" in str(tds) or
+              r"this, 'defref_us-gaap_ConvertibleNotesPayable', window" in str(tds) and 'Accounted for using the operating method, net of accumulated depreciation and amortization' not in str(soup) or
               r"this, 'defref_us-gaap_AccountsPayableRelatedPartiesCurrentAndNoncurrent', window" in str(tds) or
               r"this, 'defref_abr_DueToBorrowers', window" in str(tds) or
               r"this, 'defref_us-gaap_AccountsPayableCurrentAndNoncurrent', window" in str(tds) or
@@ -707,7 +710,7 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_gs_CustomerAndOtherPayables', window" in str(tds) or
               r"this, 'defref_us-gaap_TradingLiabilities', window" in str(tds) or
               r"this, 'defref_gs_UnsecuredShortTermBorrowingsIncludingCurrentPortionOfUnsecuredLongTermBorrowings', window" in str(tds) or
-              r"this, 'defref_us-gaap_OtherLiabilities', window" in str(tds) and 'Capitalized mortgage servicing rights, net' not in str(soup) and 'Investments in real estate properties' not in str(soup) or
+              r"this, 'defref_us-gaap_OtherLiabilities', window" in str(tds) and 'Capitalized mortgage servicing rights, net' not in str(soup) and 'Investments in real estate properties' not in str(soup) and 'Mortgages payable, including unamortized premium and net of unamortized debt costs' not in str(soup)  and 'Accounted for using the operating method, net of accumulated depreciation and amortization' not in str(soup) or
               r"this, 'defref_gs_SecuritiesLoanedBS', window" in str(tds) or
               r"this, 'defref_gs_PayablesToBrokerDealersAndClearingOrganizationsBS', window" in str(tds) or
               r"this, 'defref_gs_PayablesToCustomersAndCounterparties', window" in str(tds) or
@@ -718,7 +721,8 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_ms_Payables', window" in str(tds) or
               r"this, 'defref_us-gaap_ShortTermBorrowings', window" in str(tds) or
               r"this, 'defref_us-gaap_ObligationToReturnSecuritiesReceivedAsCollateral', window" in str(tds) or
-              r"this, 'defref_us-gaap_InterestAndDividendsPayableCurrentAndNoncurrent', window" in str(tds)
+              r"this, 'defref_us-gaap_InterestAndDividendsPayableCurrentAndNoncurrent', window" in str(tds) or
+              r"this, 'defref_us-gaap_InterestPayableCurrentAndNoncurrent', window" in str(tds)
               ):
             if cur_liabilities == '---':
                 cur_liabilities_calc = html_re(str(tds[colm]))
@@ -749,7 +753,9 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_cat_LongTermDebtDueAfterOneYearFinancialProducts', window" in str(tds) or
               r"this, 'defref_us-gaap_LongTermNotesAndLoans', window" in str(tds) or
               r"this, 'defref_kr_LongTermDebtAndFinanceLease', window" in str(tds) or
-              r"this, 'defref_us-gaap_DebtLongtermAndShorttermCombinedAmount', window" in str(tds)
+              r"this, 'defref_us-gaap_DebtLongtermAndShorttermCombinedAmount', window" in str(tds) or
+              r"this, 'defref_us-gaap_NotesPayable', window" in str(tds) or
+              r"this, 'defref_us-gaap_ConvertibleNotesPayable', window" in str(tds)
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -1897,7 +1903,11 @@ def bs_xml(bs_url, headers):
               r'<ElementName>us-gaap_AccruedFeesAndOtherRevenueReceivable</ElementName>' in str(row) or
               r'<ElementName>us-gaap_NotesAndLoansReceivableNetNoncurrent</ElementName>' in str(row) or
               r'<ElementName>us-gaap_FederalFundsSoldAndSecuritiesPurchasedUnderAgreementsToResell</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_SecuritiesReceivedAsCollateral</ElementName>' in str(row)
+              r'<ElementName>us-gaap_SecuritiesReceivedAsCollateral</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_LoansAndLeasesReceivableNetReportedAmount</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_InterestsContinuedToBeHeldByTransferorFairValue</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_AccountsAndNotesReceivableNet</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_DeferredRentReceivablesNet</ElementName>' in str(row)
               ):
             recievables_calc = xml_re(str(cells[colm]))
             if recievables_calc != '---':
@@ -1909,7 +1919,11 @@ def bs_xml(bs_url, headers):
               r'<ElementName>cat_LongTermDebtDueAfterOneYearMachineryAndEnginesNoncurrent</ElementName>' in str(row) or
               r'<ElementName>cat_LongTermDebtDueAfterOneYearFinancialProducts</ElementName>' in str(row) or
               r'<ElementName>us-gaap_UnsecuredLongTermDebt</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_LongTermNotesAndLoans</ElementName>' in str(row)
+              r'<ElementName>us-gaap_LongTermNotesAndLoans</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_LineOfCredit</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_SecuredDebt</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_ConvertibleNotesPayable</ElementName>' in str(row) or
+              r'<ElementName>us-gaap_NotesPayable</ElementName>' in str(row)
               ):
             debt_calc = xml_re(str(cells[colm]))
             if debt_calc != '---':
@@ -1933,7 +1947,8 @@ def bs_xml(bs_url, headers):
               r'<ElementName>us-gaap_AccountsPayableCurrentAndNoncurrent</ElementName>' in str(row) and cur_liabilities == '---' or
               r'<ElementName>us-gaap_PayablesToBrokerDealersAndClearingOrganizations</ElementName>' in str(row) and cur_liabilities == '---' or
               r'<ElementName>us-gaap_InterestAndDividendsPayableCurrentAndNoncurrent</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>us-gaap_OtherLiabilities</ElementName>' in str(row) and cur_liabilities == '---'
+              r'<ElementName>us-gaap_OtherLiabilities</ElementName>' in str(row) and cur_liabilities == '---' and 'Mortgages, notes and accrued interest receivable, net of allowance' not in str(soup) or
+              r'<ElementName>us-gaap_InterestPayableCurrentAndNoncurrent</ElementName>' in str(row) and cur_liabilities == '---'
               ):
             liabilities_calc = xml_re(str(cells[colm]))
             if liabilities_calc != '---':              
