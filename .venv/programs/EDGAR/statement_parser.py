@@ -351,169 +351,175 @@ def rev_htm(rev_url, headers, per):
     # Loop through rows, search for row of interest
     for row in soup.table.find_all('tr'):
         tds = row.find_all('td')
-        if (r"this, 'defref_us-gaap_Revenues', window" in str(tds) or
-            r"this, 'defref_us-gaap_SalesRevenueNet', window" in str(tds) or
-            r'defref_us-gaap_RevenueFromContractWithCustomerExcludingAssessedTax' in str(tds) or
-            r"this, 'defref_us-gaap_SalesRevenueGoodsNet', window" in str(tds) or
-            r"this, 'defref_us-gaap_RealEstateRevenueNet', window" in str(tds) or
-            r"this, 'defref_us-gaap_RevenueFromContractWithCustomerIncludingAssessedTax', window" in str(tds) or
-            r"this, 'defref_us-gaap_RegulatedAndUnregulatedOperatingRevenue', window" in str(tds) or
-            r"this, 'defref_us-gaap_SalesRevenueServicesNet', window" in str(tds) or
-            r"this, 'defref_us-gaap_ElectricUtilityRevenue', window" in str(tds) or
-            r"this, 'defref_us-gaap_UtilityRevenue', window" in str(tds) or
-            r"this, 'defref_us-gaap_RevenuesNetOfInterestExpense', window" in str(tds) or
-            r"this, 'defref_gs_NetRevenuesIncludingNetInterestIncome', window" in str(tds) or
-            r"this, 'defref_us-gaap_RevenueMineralSales', window" in str(tds)
+        if tds == []:
+            continue
+        elif (r"this, 'defref_us-gaap_Revenues', window" in str(tds[0]) or
+            r"this, 'defref_us-gaap_SalesRevenueNet', window" in str(tds[0]) or
+            r'defref_us-gaap_RevenueFromContractWithCustomerExcludingAssessedTax' in str(tds[0]) or
+            r"this, 'defref_us-gaap_SalesRevenueGoodsNet', window" in str(tds[0]) or
+            r"this, 'defref_us-gaap_RealEstateRevenueNet', window" in str(tds[0]) or
+            r"this, 'defref_us-gaap_RevenueFromContractWithCustomerIncludingAssessedTax', window" in str(tds[0]) or
+            r"this, 'defref_us-gaap_RegulatedAndUnregulatedOperatingRevenue', window" in str(tds[0]) or
+            r"this, 'defref_us-gaap_SalesRevenueServicesNet', window" in str(tds[0]) or
+            r"this, 'defref_us-gaap_ElectricUtilityRevenue', window" in str(tds[0]) or
+            r"this, 'defref_us-gaap_UtilityRevenue', window" in str(tds[0]) or
+            r"this, 'defref_us-gaap_RevenuesNetOfInterestExpense', window" in str(tds[0]) or
+            r"this, 'defref_gs_NetRevenuesIncludingNetInterestIncome', window" in str(tds[0]) or
+            r"this, 'defref_us-gaap_RevenueMineralSales', window" in str(tds[0])
             ):
             rev_calc = html_re(str(tds[colm]))
             if rev_calc != '---':
                 rev_calc = round(rev_calc * (dollar_multiplier / 1_000_000), 2)
                 if rev_calc > rev:
                     rev = rev_calc
-        elif (r"this, 'defref_us-gaap_InterestIncomeOperating', window" in str(tds)
+        elif (r"this, 'defref_us-gaap_InterestIncomeOperating', window" in str(tds[0])
               ):
             int_rev_calc = html_re(str(tds[colm]))
             if int_rev_calc != '---':
                 int_rev = round(int_rev_calc * (dollar_multiplier / 1_000_000), 2)
-        elif (r"this, 'defref_us-gaap_NoninterestIncome', window" in str(tds) or
-              r"this, 'defref_us-gaap_OtherIncome', window" in str(tds)
+        elif (r"this, 'defref_us-gaap_NoninterestIncome', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_OtherIncome', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ContractuallySpecifiedServicingFeesLateFeesAndAncillaryFeesEarnedInExchangeForServicingFinancialAssets', window" in str(tds[0]) or
+              r"this, 'defref_nrz_GainLossOnSaleOfOriginatedMortgageLoansHeldForSaleNet', window" in str(tds[0])
               ):
             oth_rev_calc = html_re(str(tds[colm]))
             if oth_rev_calc != '---':
-                oth_rev = round(oth_rev_calc * (dollar_multiplier / 1_000_000), 2)
-        elif r'defref_us-gaap_GrossProfit' in str(tds):
+                oth_rev += round(oth_rev_calc * (dollar_multiplier / 1_000_000), 2)
+        elif r'defref_us-gaap_GrossProfit' in str(tds[0]):
             gross = html_re(str(tds[colm]))
             if gross != '---':
-                gross = round(check_neg(str(tds), gross) * (dollar_multiplier / 1_000_000), 2)
-        elif (r"this, 'defref_us-gaap_ResearchAndDevelopmentExpense', window" in str(tds) or
-              r"this, 'defref_amzn_TechnologyAndContentExpense', window" in str(tds) or
-              r"this, 'defref_us-gaap_ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost', window" in str(tds) or
-              r"this, 'defref_us-gaap_ResearchAndDevelopmentExpenseSoftwareExcludingAcquiredInProcessCost', window" in str(tds)
+                gross = round(check_neg(str(tds[colm]), gross) * (dollar_multiplier / 1_000_000), 2)
+        elif (r"this, 'defref_us-gaap_ResearchAndDevelopmentExpense', window" in str(tds[0]) or
+              r"this, 'defref_amzn_TechnologyAndContentExpense', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ResearchAndDevelopmentExpenseSoftwareExcludingAcquiredInProcessCost', window" in str(tds[0])
               ):
             research_calc = html_re(str(tds[colm]))
             if research_calc != '---':
                 research = round(research_calc * (dollar_multiplier / 1_000_000), 2)
-        elif (r"this, 'defref_us-gaap_CostsAndExpenses', window" in str(tds) or
-              r"this, 'defref_us-gaap_OperatingExpenses', window" in str(tds) or
-              r"this, 'defref_us-gaap_NoninterestExpense', window" in str(tds)
+        elif (r"this, 'defref_us-gaap_CostsAndExpenses', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_OperatingExpenses', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_NoninterestExpense', window" in str(tds[0])
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
-                operating_exp = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000), 2)
-        elif (r"this, 'defref_us-gaap_ProvisionForLoanLeaseAndOtherLosses', window" in str(tds)
+                operating_exp = round(check_neg(str(tds[colm]), result) * (dollar_multiplier / 1_000_000), 2)
+        elif (r"this, 'defref_us-gaap_ProvisionForLoanLeaseAndOtherLosses', window" in str(tds[0])
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
-                credit_loss_provision = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000), 2)         
-        elif (r"this, 'defref_us-gaap_SellingGeneralAndAdministrativeExpense', window" in str(tds) and oi == '---' or
-              r"this, 'defref_us-gaap_AdvertisingExpense', window" in str(tds) and oi == '---' or
-              r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(tds) and oi == '---' or
-              r"this, 'defref_us-gaap_GeneralAndAdministrativeExpense', window" in str(tds) and oi == '---' or
-              r"this, 'defref_abr_PropertyOperatingExpense', window" in str(tds) and oi == '---' or
-              r"this, 'defref_us-gaap_LaborAndRelatedExpense', window" in str(tds) and oi == '---' or
-              r"this, 'defref_tmo_RestructuringAndOtherCostsIncomeNet', window" in str(tds) and oi == '---'
+                credit_loss_provision = round(check_neg(str(tds[colm]), result) * (dollar_multiplier / 1_000_000), 2)         
+        elif (r"this, 'defref_us-gaap_SellingGeneralAndAdministrativeExpense', window" in str(tds[0]) and oi == '---' or
+              r"this, 'defref_us-gaap_AdvertisingExpense', window" in str(tds[0]) and oi == '---' or
+              r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(tds[0]) and oi == '---' or
+              r"this, 'defref_us-gaap_GeneralAndAdministrativeExpense', window" in str(tds[0]) and oi == '---' or
+              r"this, 'defref_abr_PropertyOperatingExpense', window" in str(tds[0]) and oi == '---' or
+              r"this, 'defref_us-gaap_LaborAndRelatedExpense', window" in str(tds[0]) and oi == '---' or
+              r"this, 'defref_tmo_RestructuringAndOtherCostsIncomeNet', window" in str(tds[0]) and oi == '---'
               ):
             op_exp_calc = html_re(str(tds[colm]))
             if op_exp_calc != '---':
                 op_exp += round(op_exp_calc * (dollar_multiplier / 1_000_000), 2)
-        elif r"this, 'defref_us-gaap_OperatingIncomeLoss', window" in str(tds) and oi == '---':
+        elif r"this, 'defref_us-gaap_OperatingIncomeLoss', window" in str(tds[0]) and oi == '---':
             oi_calc = html_re(str(tds[colm]))
             if oi_calc != '---':
-                oi = round(check_neg(str(tds), oi_calc) * (dollar_multiplier / 1_000_000), 2)
-        elif ('this, \'defref_us-gaap_NetIncomeLoss\', window' in str(tds) and net == '---' or
-              'this, \'defref_us-gaap_NetIncomeLoss\', window' in str(tds) and net_actual == False or
-              'this, \'defref_us-gaap_ProfitLoss\', window' in str(tds) and net == '---' or
-              r"this, 'defref_us-gaap_NetIncomeLossAvailableToCommonStockholdersBasic', window" in str(tds) and net == '---' or
-              r"this, 'defref_us-gaap_IncomeLossFromContinuingOperations', window" in str(tds) and net == '---' or
-              r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest', window" in str(tds) and net == '---' or
-              r"this, 'defref_us-gaap_NetIncomeLossAvailableToCommonStockholdersBasic', window" in str(tds) and ('>Net earnings attributable to common stockholders<' in str(tds) or '>Net earnings available to common stockholders<' in str(tds))
+                oi = round(check_neg(str(tds[colm]), oi_calc) * (dollar_multiplier / 1_000_000), 2)
+        elif ('this, \'defref_us-gaap_NetIncomeLoss\', window' in str(tds[0]) and net == '---' or
+              'this, \'defref_us-gaap_NetIncomeLoss\', window' in str(tds[0]) and net_actual == False or
+              'this, \'defref_us-gaap_ProfitLoss\', window' in str(tds[0]) and net == '---' or
+              r"this, 'defref_us-gaap_NetIncomeLossAvailableToCommonStockholdersBasic', window" in str(tds[0]) and net == '---' or
+              r"this, 'defref_us-gaap_IncomeLossFromContinuingOperations', window" in str(tds[0]) and net == '---' or
+              r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest', window" in str(tds[0]) and net == '---' or
+              r"this, 'defref_us-gaap_NetIncomeLossAvailableToCommonStockholdersBasic', window" in str(tds[0]) and ('>Net earnings attributable to common stockholders<' in str(tds[0]) or 'Net income (loss) attributable to common stockholders' in str(tds[0]) or '>Net earnings available to common stockholders<' in str(tds[0]))
             ):
             net_calc = html_re(str(tds[colm]))
             if net_calc != '---':
-                net = round(check_neg(str(tds), net_calc) * (dollar_multiplier / 1_000_000), 2)
-                if (r"this, 'defref_us-gaap_NetIncomeLossAvailableToCommonStockholdersBasic', window" in str(tds) or
-                    'ATTRIBUT' in str(tds).upper() and 'NONCONTROLLING' not in str(tds).upper() and 'NON-CONTROLLING' not in str(tds).upper()):
+                net = round(check_neg(str(tds[colm]), net_calc) * (dollar_multiplier / 1_000_000), 2)
+                if (r"this, 'defref_us-gaap_NetIncomeLossAvailableToCommonStockholdersBasic', window" in str(tds[0]) or
+                    'ATTRIBUT' in str(tds[0]).upper() and 'NONCONTROLLING' not in str(tds[0]).upper() and 'NON-CONTROLLING' not in str(tds[0]).upper()
+                    ):
                     net_actual = True
-        elif (r"this, 'defref_us-gaap_NetIncomeLossAttributableToNoncontrollingInterest', window" in str(tds) or
-              r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsAttributableToNoncontrollingEntity', window" in str(tds) and non_attributable_net == 0 or
-              r"this, 'defref_us-gaap_IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToNoncontrollingInterest', window" in str(tds)  and non_attributable_net == 0
+        elif (r"this, 'defref_us-gaap_NetIncomeLossAttributableToNoncontrollingInterest', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsAttributableToNoncontrollingEntity', window" in str(tds[0]) and non_attributable_net == 0 or
+              r"this, 'defref_us-gaap_IncomeLossFromDiscontinuedOperationsNetOfTaxAttributableToNoncontrollingInterest', window" in str(tds[0])  and non_attributable_net == 0
               ):
             non_attributable_net_calc = html_re(str(tds[colm]))
             if non_attributable_net_calc != '---':
-                non_attributable_net = round(check_neg(str(tds), non_attributable_net_calc) * (dollar_multiplier / 1_000_000), 2)
-                if ('Net income attributable to noncontrolling interests' in str(tds) or
-                    'Net earnings from continuing operations attributable to noncontrolling interests' in str(tds) or
-                    'Net loss from discontinued operations attributable to noncontrolling interests' in str(tds) or
-                    'Net income attributable to non-controlling interests' in str(tds) or
-                    'Net (earnings) losses attributable to noncontrolling interests' in str(tds) or
-                    'NET LOSS ATTRIBUTABLE TO NONCONTROLLING INTERESTS' in str(tds) or
-                    'Noncontrolling interests, net of income taxes' in str(tds) or
-                    'Net (income) loss attributable to noncontrolling interests' in str(tds) or
-                    'Total net income attributable to noncontrolling interests' in str(tds) or
-                    'Net Income Attributable to Noncontrolling Interest' in str(tds)
+                non_attributable_net = round(check_neg(str(tds[colm]), non_attributable_net_calc) * (dollar_multiplier / 1_000_000), 2)
+                if ('Net income attributable to noncontrolling interests' in str(tds[0]) or
+                    'Net earnings from continuing operations attributable to noncontrolling interests' in str(tds[0]) or
+                    'Net loss from discontinued operations attributable to noncontrolling interests' in str(tds[0]) or
+                    'Net income attributable to non-controlling interests' in str(tds[0]) or
+                    'Net (earnings) losses attributable to noncontrolling interests' in str(tds[0]) or
+                    'NET LOSS ATTRIBUTABLE TO NONCONTROLLING INTERESTS' in str(tds[0]) or
+                    'Noncontrolling interests, net of income taxes' in str(tds[0]) or
+                    'Net (income) loss attributable to noncontrolling interests' in str(tds[0]) or
+                    'Total net income attributable to noncontrolling interests' in str(tds[0]) or
+                    'Net Income Attributable to Noncontrolling Interest' in str(tds[0])
                     ):
                     net_add = True
-        elif (r"this, 'defref_us-gaap_EarningsPerShareDiluted', window" in str(tds) and eps == '---' or
-              'this, \'defref_us-gaap_EarningsPerShareBasicAndDiluted\', window' in str(tds) and eps == '---' or
-              r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsPerBasicAndDilutedShare', window" in str(tds) and eps == '---' or
-              r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsPerDilutedShare', window" in str(tds) and eps == '---' and '>Continuing operations' not in str(tds) and r"this, 'defref_us-gaap_EarningsPerShareDiluted', window" not in str(soup)
+        elif (r"this, 'defref_us-gaap_EarningsPerShareDiluted', window" in str(tds[0]) and eps == '---' or
+              'this, \'defref_us-gaap_EarningsPerShareBasicAndDiluted\', window' in str(tds[0]) and eps == '---' or
+              r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsPerBasicAndDilutedShare', window" in str(tds[0]) and eps == '---' or
+              r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsPerDilutedShare', window" in str(tds[0]) and eps == '---' and '>Continuing operations' not in str(tds[0]) and r"this, 'defref_us-gaap_EarningsPerShareDiluted', window" not in str(soup)
               ):
             result = html_re(str(tds[colm]))
             if result != '---' and result != 0:
-                eps = check_neg(str(tds), result)
-        elif (r"this, 'defref_us-gaap_CostOfRevenue', window" in str(tds) and net == '---' or
-              r"this, 'defref_us-gaap_CostOfGoodsSold', window" in str(tds) and cost == 0 or
-              r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(tds) and cost == 0 or
-              r"this, 'defref_amgn_CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets', window" in str(tds) and cost == 0 or
-              r"this, 'defref_nee_FuelPurchasedPowerAndInterchangeExpense', window" in str(tds) and cost == 0 or
-              r"this, 'defref_us-gaap_CostOfGoodsAndServicesEnergyCommoditiesAndServices', window" in str(tds) and cost == 0 or
-              r"this, 'defref_us-gaap_MineralExtractionProcessingAndMarketingCosts', window" in str(tds) and cost == 0
+                eps = check_neg(str(tds[colm]), result)
+        elif (r"this, 'defref_us-gaap_CostOfRevenue', window" in str(tds[0]) and net == '---' or
+              r"this, 'defref_us-gaap_CostOfGoodsSold', window" in str(tds[0]) and cost == 0 or
+              r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(tds[0]) and cost == 0 or
+              r"this, 'defref_amgn_CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets', window" in str(tds[0]) and cost == 0 or
+              r"this, 'defref_nee_FuelPurchasedPowerAndInterchangeExpense', window" in str(tds[0]) and cost == 0 or
+              r"this, 'defref_us-gaap_CostOfGoodsAndServicesEnergyCommoditiesAndServices', window" in str(tds[0]) and cost == 0 or
+              r"this, 'defref_us-gaap_MineralExtractionProcessingAndMarketingCosts', window" in str(tds[0]) and cost == 0
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
                 cost = round(result * (dollar_multiplier / 1_000_000), 2) 
-        elif (r"this, 'defref_us-gaap_InterestExpense', window" in str(tds) and cost == 0 and oi == '---' or
-              r"this, 'defref_abr_PropertyOperatingExpense', window" in str(tds) and cost == 0 and oi == '---' or
-              r"this, 'defref_stor_PropertyCosts', window" in str(tds) and cost == 0 and oi == '---' or
-              r"this, 'defref_us-gaap_UtilitiesOperatingExpenseProductsAndServices', window" in str(tds) and cost == 0 and oi == '---' or
-              r"this, 'defref_dte_UnregulatedOperatingExpenseProductsandServices', window" in str(tds) and cost == 0 and oi == '---' or
-              r"this, 'defref_dte_UtilitiesOperatingExpenseFuelUsedPurchasedPowerandGasandPetroleumPurchased', window" in str(tds) and cost == 0 and oi == '---' or
-              r"this, 'defref_dte_UnregulatedOperatingExpenseFuelUsedPurchasedPowerandGasandPetroleumPurchased', window" in str(tds) and cost == 0 and oi == '---' or
-              r"this, 'defref_dte_RegulatedOperatingExpenseFuelUsedPurchasedPowerGas', window" in str(tds) and cost == 0 and oi == '---' or
-              r"this, 'defref_dte_UnregulatedOperatingExpenseFuelUsedPurchasedPowerGas', window" in str(tds) and cost == 0 and oi == '---' or
-              r"this, 'defref_us-gaap_CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization', window" in str(tds) and cost == 0 and oi == '---'
+        elif (r"this, 'defref_us-gaap_InterestExpense', window" in str(tds[0]) and cost == 0 and oi == '---' or
+              r"this, 'defref_abr_PropertyOperatingExpense', window" in str(tds[0]) and cost == 0 and oi == '---' or
+              r"this, 'defref_stor_PropertyCosts', window" in str(tds[0]) and cost == 0 and oi == '---' or
+              r"this, 'defref_us-gaap_UtilitiesOperatingExpenseProductsAndServices', window" in str(tds[0]) and cost == 0 and oi == '---' or
+              r"this, 'defref_dte_UnregulatedOperatingExpenseProductsandServices', window" in str(tds[0]) and cost == 0 and oi == '---' or
+              r"this, 'defref_dte_UtilitiesOperatingExpenseFuelUsedPurchasedPowerandGasandPetroleumPurchased', window" in str(tds[0]) and cost == 0 and oi == '---' or
+              r"this, 'defref_dte_UnregulatedOperatingExpenseFuelUsedPurchasedPowerandGasandPetroleumPurchased', window" in str(tds[0]) and cost == 0 and oi == '---' or
+              r"this, 'defref_dte_RegulatedOperatingExpenseFuelUsedPurchasedPowerGas', window" in str(tds[0]) and cost == 0 and oi == '---' or
+              r"this, 'defref_dte_UnregulatedOperatingExpenseFuelUsedPurchasedPowerGas', window" in str(tds[0]) and cost == 0 and oi == '---' or
+              r"this, 'defref_us-gaap_CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization', window" in str(tds[0]) and cost == 0 and oi == '---'
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
                 cost_sum += round(result * (dollar_multiplier / 1_000_000), 2)
-        elif (r"this, 'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding', window" in str(tds) or
-              r"this, 'defref_us-gaap_WeightedAverageNumberOfShareOutstandingBasicAndDiluted', window" in str(tds) or
-              r"this, 'defref_tsla_WeightedAverageNumberOfSharesOutstandingBasicAndDilutedOne', window" in str(tds) or
-              r"this, 'defref_us-gaap_WeightedAverageNumberDilutedSharesOutstandingAdjustment', window" in str(tds)
+        elif (r"this, 'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_WeightedAverageNumberOfShareOutstandingBasicAndDiluted', window" in str(tds[0]) or
+              r"this, 'defref_tsla_WeightedAverageNumberOfSharesOutstandingBasicAndDilutedOne', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_WeightedAverageNumberDilutedSharesOutstandingAdjustment', window" in str(tds[0])
               ):
             shares = html_re(str(tds[colm]))
             if shares != '---':
                 share_set.add(round(shares * (share_multiplier / 1_000), 2))
-        elif (r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds) or
-              r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds)
+        elif (r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds[0])
               ):
             div = html_re(str(tds[colm]))
-        elif (r"this, 'defref_us-gaap_DepreciationAndAmortization', window" in str(tds) or
-              r"this, 'defref_us-gaap_DepreciationDepletionAndAmortization', window" in str(tds)
+        elif (r"this, 'defref_us-gaap_DepreciationAndAmortization', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_DepreciationDepletionAndAmortization', window" in str(tds[0])
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
-                dep_am = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000), 2) 
-        elif (r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(tds) or
-              r"this, 'defref_nnn_ImpairmentLossesAndOtherChargesNetOfRecoveries', window" in str(tds)
+                dep_am = round(check_neg(str(tds[colm]), result) * (dollar_multiplier / 1_000_000), 2) 
+        elif (r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(tds[0]) or
+              r"this, 'defref_nnn_ImpairmentLossesAndOtherChargesNetOfRecoveries', window" in str(tds[0]) or
+              r"this, 'defref_nrz_TotalImpairmentCharges', window" in str(tds[0])
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
-                impairment += round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000), 2) 
-        elif r"this, 'defref_us-gaap_GainsLossesOnSalesOfInvestmentRealEstate', window" in str(tds):
+                impairment += round(check_neg(str(tds[colm]), result) * (dollar_multiplier / 1_000_000), 2) 
+        elif r"this, 'defref_us-gaap_GainsLossesOnSalesOfInvestmentRealEstate', window" in str(tds[0]):
             result = html_re(str(tds[colm]))
             if result != '---':
-                disposition = round(check_neg(str(tds), result) * (dollar_multiplier / 1_000_000), 2)  
+                disposition = round(check_neg(str(tds[colm]), result) * (dollar_multiplier / 1_000_000), 2)  
       
         elif '[Member]' in str(row) and rev != 0:
             break   
@@ -523,10 +529,10 @@ def rev_htm(rev_url, headers, per):
         cost = 0
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
-            if (r"this, 'defref_us-gaap_CostOfRevenue', window" in str(tds) or
-                r"this, 'defref_us-gaap_CostOfGoodsSold', window" in str(tds) or
-                r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(tds) or
-                r"this, 'defref_amgn_CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets', window" in str(tds)
+            if (r"this, 'defref_us-gaap_CostOfRevenue', window" in str(tds[0]) or
+                r"this, 'defref_us-gaap_CostOfGoodsSold', window" in str(tds[0]) or
+                r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(tds[0]) or
+                r"this, 'defref_amgn_CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets', window" in str(tds[0])
                 ):
                 result = html_re(str(tds[colm]))
                 if result != '---':
@@ -612,165 +618,167 @@ def bs_htm(bs_url, headers, per):
     # Loop through rows, search for row of interest
     for row in soup.table.find_all('tr'):
         tds = row.find_all('td')
-        if ('this, \'defref_us-gaap_CashAndCashEquivalentsAtCarryingValue\', window' in str(tds) or
-            r"this, 'defref_us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents', window" in str(tds) or
-            r"this, 'defref_us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations', window" in str(tds) or
-            r"this, 'defref_us-gaap_CashEquivalentsAtCarryingValue', window" in str(tds) or
-            r"this, 'defref_us-gaap_Cash', window" in str(tds) or
-            r"this, 'defref_us-gaap_CashCashEquivalentsAndShortTermInvestments', window" in str(tds) or
-            r"this, 'defref_gs_CashAndCashEquivalents', window" in str(tds)
+        if tds == []:
+            continue
+        elif ('this, \'defref_us-gaap_CashAndCashEquivalentsAtCarryingValue\', window' in str(tds[0]) or
+            r"this, 'defref_us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents', window" in str(tds[0]) or
+            r"this, 'defref_us-gaap_CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsIncludingDisposalGroupAndDiscontinuedOperations', window" in str(tds[0]) or
+            r"this, 'defref_us-gaap_CashEquivalentsAtCarryingValue', window" in str(tds[0]) or
+            r"this, 'defref_us-gaap_Cash', window" in str(tds[0]) or
+            r"this, 'defref_us-gaap_CashCashEquivalentsAndShortTermInvestments', window" in str(tds[0]) or
+            r"this, 'defref_gs_CashAndCashEquivalents', window" in str(tds[0])
             ):
             cash_calc = html_re(str(tds[colm]))
             if cash_calc != '---':
-                cash = round(check_neg(str(tds), cash_calc) * (dollar_multiplier / 1_000_000), 2)
-        elif (r"this, 'defref_us-gaap_CashAndDueFromBanks', window" in str(tds) or
-              r"this, 'defref_us-gaap_InterestBearingDepositsInBanks', window" in str(tds) or
-              r"this, 'defref_us-gaap_RestrictedCash', window" in str(tds) or
-              r"this, 'defref_us-gaap_CashReserveDepositRequiredAndMade', window" in str(tds)
+                cash = round(check_neg(str(tds[colm]), cash_calc) * (dollar_multiplier / 1_000_000), 2)
+        elif (r"this, 'defref_us-gaap_CashAndDueFromBanks', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_InterestBearingDepositsInBanks', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_RestrictedCash', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_CashReserveDepositRequiredAndMade', window" in str(tds[0])
               ):
             cash_calc = html_re(str(tds[colm]))
             if cash_calc != '---':
-                cash_sum += round(check_neg(str(tds), cash_calc) * (dollar_multiplier / 1_000_000), 2)
-        elif ('defref_us-gaap_Goodwill' in str(tds) or
-              r"this, 'defref_us-gaap_IntangibleAssetsNetIncludingGoodwill', window" in str(tds)
+                cash_sum += round(check_neg(str(tds[colm]), cash_calc) * (dollar_multiplier / 1_000_000), 2)
+        elif ('defref_us-gaap_Goodwill' in str(tds[0]) or
+              r"this, 'defref_us-gaap_IntangibleAssetsNetIncludingGoodwill', window" in str(tds[0])
               ):
             goodwill_calc = html_re(str(tds[colm]))
             if goodwill_calc != '---':
-                goodwill = round(check_neg(str(tds), goodwill_calc) * (dollar_multiplier / 1_000_000), 2)
-        elif ('this, \'defref_us-gaap_FiniteLivedIntangibleAssetsNet\', window' in str(tds) or
-              'this, \'defref_us-gaap_IntangibleAssetsNetExcludingGoodwill\', window' in str(tds) or
-              r"this, 'defref_us-gaap_IndefiniteLivedIntangibleAssetsExcludingGoodwill', window" in str(tds)
+                goodwill = round(check_neg(str(tds[colm]), goodwill_calc) * (dollar_multiplier / 1_000_000), 2)
+        elif ('this, \'defref_us-gaap_FiniteLivedIntangibleAssetsNet\', window' in str(tds[0]) or
+              'this, \'defref_us-gaap_IntangibleAssetsNetExcludingGoodwill\', window' in str(tds[0]) or
+              r"this, 'defref_us-gaap_IndefiniteLivedIntangibleAssetsExcludingGoodwill', window" in str(tds[0])
               ):
             intangible_assets_calc = html_re(str(tds[colm]))
             if intangible_assets_calc != '---':
                 intangible_assets = round(intangible_assets_calc * (dollar_multiplier / 1_000_000), 2)
                 intangible_assets_set.add(intangible_assets)
-        elif ('Total assets' in str(tds) and assets == '---' or
-              'Total Assets' in str(tds) and assets == '---' or
-              r"this, 'defref_us-gaap_Assets', window" in str(tds) and assets == '---'
+        elif ('Total assets' in str(tds[0]) and assets == '---' or
+              'Total Assets' in str(tds[0]) and assets == '---' or
+              r"this, 'defref_us-gaap_Assets', window" in str(tds[0]) and assets == '---'
               ):
             assets_calc = html_re(str(tds[colm]))
             if assets_calc != '---':
-                assets = round(check_neg(str(tds), assets_calc) * (dollar_multiplier / 1_000_000), 2)
-        elif (r"this, 'defref_us-gaap_AssetsCurrent', window" in str(tds)
+                assets = round(check_neg(str(tds[colm]), assets_calc) * (dollar_multiplier / 1_000_000), 2)
+        elif (r"this, 'defref_us-gaap_AssetsCurrent', window" in str(tds[0])
               ):
             cur_assets_calc = html_re(str(tds[colm]))
             if cur_assets_calc != '---':
-                cur_assets = round(check_neg(str(tds), cur_assets_calc) * (dollar_multiplier / 1_000_000), 2)
-        elif (r"this, 'defref_us-gaap_LoansAndLeasesReceivableNetReportedAmount', window" in str(tds) or
-              r"this, 'defref_mpw_InterestAndRentReceivable', window" in str(tds) or
-              r"this, 'defref_mpw_StraightLineRentReceivable', window" in str(tds) or
-              r"this, 'defref_us-gaap_DueFromRelatedParties', window" in str(tds) or
-              r"this, 'defref_us-gaap_FederalFundsSoldAndSecuritiesPurchasedUnderAgreementsToResell', window" in str(tds) or
-              r"this, 'defref_us-gaap_SecuritiesBorrowed', window" in str(tds) or
-              r"this, 'defref_gs_CustomerAndOtherReceivables', window" in str(tds) or
-              r"this, 'defref_us-gaap_LoansAndLeasesReceivableNetReportedAmount', window" in str(tds) or
-              r"this, 'defref_gs_CashAndSecuritiesSegregatedForRegulatoryAndOtherPurposes', window" in str(tds) or
-              r"this, 'defref_gs_SecuritiesPurchasedUnderAgreementsToResellAndFederalFundsSold', window" in str(tds) or
-              r"this, 'defref_gs_ReceivablesFromBrokersDealersAndClearingOrganizationsBS', window" in str(tds) or
-              r"this, 'defref_gs_ReceivablesFromCustomersAndCounterparties', window" in str(tds) or
-              r"this, 'defref_us-gaap_ReceivablesFromBrokersDealersAndClearingOrganizations', window" in str(tds) or
-              r"this, 'defref_us-gaap_ReceivablesFromCustomers', window" in str(tds) or
+                cur_assets = round(check_neg(str(tds[colm]), cur_assets_calc) * (dollar_multiplier / 1_000_000), 2)
+        elif (r"this, 'defref_us-gaap_LoansAndLeasesReceivableNetReportedAmount', window" in str(tds[0]) or
+              r"this, 'defref_mpw_InterestAndRentReceivable', window" in str(tds[0]) or
+              r"this, 'defref_mpw_StraightLineRentReceivable', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_DueFromRelatedParties', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_FederalFundsSoldAndSecuritiesPurchasedUnderAgreementsToResell', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_SecuritiesBorrowed', window" in str(tds[0]) or
+              r"this, 'defref_gs_CustomerAndOtherReceivables', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_LoansAndLeasesReceivableNetReportedAmount', window" in str(tds[0]) or
+              r"this, 'defref_gs_CashAndSecuritiesSegregatedForRegulatoryAndOtherPurposes', window" in str(tds[0]) or
+              r"this, 'defref_gs_SecuritiesPurchasedUnderAgreementsToResellAndFederalFundsSold', window" in str(tds[0]) or
+              r"this, 'defref_gs_ReceivablesFromBrokersDealersAndClearingOrganizationsBS', window" in str(tds[0]) or
+              r"this, 'defref_gs_ReceivablesFromCustomersAndCounterparties', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ReceivablesFromBrokersDealersAndClearingOrganizations', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ReceivablesFromCustomers', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_SecuritiesPurchasedUnderAgreementsToResell', window" in str(tds) or
-              r"this, 'defref_us-gaap_OtherReceivables', window" in str(tds) or
-              r"this, 'defref_us-gaap_NotesReceivableNet', window" in str(tds) or
-              r"this, 'defref_us-gaap_LoansReceivableHeldForSaleNetNotPartOfDisposalGroup', window" in str(tds) or
-              r"this, 'defref_ms_LoansHeldforInvestment', window" in str(tds) or
-              r"this, 'defref_us-gaap_SecuritiesReceivedAsCollateral', window" in str(tds) or
-              r"this, 'defref_us-gaap_LoansReceivableHeldForSaleNet', window" in str(tds) or
-              r"this, 'defref_ms_Receivables', window" in str(tds) in str(tds) or
-              r"this, 'defref_us-gaap_AccountsReceivableNet', window" in str(tds) or
-              r"this, 'defref_us-gaap_AccruedFeesAndOtherRevenueReceivable', window" in str(tds) or
-              r"this, 'defref_us-gaap_NotesAndLoansReceivableNetNoncurrent', window" in str(tds) or
-              r"this, 'defref_us-gaap_AccountsAndNotesReceivableNet', window" in str(tds) or
-              r"this, 'defref_us-gaap_DeferredRentReceivablesNet', window" in str(tds) or
-              r"this, 'defref_us-gaap_InterestsContinuedToBeHeldByTransferorFairValue', window" in str(tds)
+              r"this, 'defref_us-gaap_OtherReceivables', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_NotesReceivableNet', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_LoansReceivableHeldForSaleNetNotPartOfDisposalGroup', window" in str(tds[0]) or
+              r"this, 'defref_ms_LoansHeldforInvestment', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_SecuritiesReceivedAsCollateral', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_LoansReceivableHeldForSaleNet', window" in str(tds[0]) or
+              r"this, 'defref_ms_Receivables', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_AccountsReceivableNet', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_AccruedFeesAndOtherRevenueReceivable', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_NotesAndLoansReceivableNetNoncurrent', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_AccountsAndNotesReceivableNet', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_DeferredRentReceivablesNet', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_InterestsContinuedToBeHeldByTransferorFairValue', window" in str(tds[0])
               ):
             if cur_assets == '---':
                 recievables_calc = html_re(str(tds[colm]))
                 if recievables_calc != '---':
-                    recievables += round(check_neg(str(tds), recievables_calc) * (dollar_multiplier / 1_000_000), 2)
-        elif r"this, 'defref_us-gaap_LiabilitiesCurrent', window" in str(tds) and cur_liabilities == '---':
+                    recievables += round(check_neg(str(tds[colm]), recievables_calc) * (dollar_multiplier / 1_000_000), 2)
+        elif r"this, 'defref_us-gaap_LiabilitiesCurrent', window" in str(tds[0]) and cur_liabilities == '---':
             cur_liabilities_calc = html_re(str(tds[colm]))
             if cur_liabilities_calc != '---':
-                cur_liabilities = round(check_neg(str(tds), cur_liabilities_calc) * (dollar_multiplier / 1_000_000), 2)
-        elif (r"this, 'defref_us-gaap_UnsecuredDebt', window" in str(tds) or
-              r"this, 'defref_stor_AccruedExpensesDeferredRevenueAndOtherLiabilities', window" in str(tds) or
-              r"this, 'defref_us-gaap_AccountsPayableAndAccruedLiabilitiesCurrentAndNoncurrent', window" in str(tds) or
-              r"this, 'defref_us-gaap_ConvertibleNotesPayable', window" in str(tds) and 'Accounted for using the operating method, net of accumulated depreciation and amortization' not in str(soup) or
-              r"this, 'defref_us-gaap_AccountsPayableRelatedPartiesCurrentAndNoncurrent', window" in str(tds) or
-              r"this, 'defref_abr_DueToBorrowers', window" in str(tds) or
-              r"this, 'defref_us-gaap_AccountsPayableCurrentAndNoncurrent', window" in str(tds) or
-              r"this, 'defref_us-gaap_AccruedLiabilitiesAndOtherLiabilities', window" in str(tds) or
-              r"this, 'defref_us-gaap_DerivativeLiabilities', window" in str(tds) or
-              r"this, 'defref_us-gaap_Deposits', window" in str(tds) or
-              r"this, 'defref_us-gaap_SecuritiesSoldUnderAgreementsToRepurchase', window" in str(tds) or
-              r"this, 'defref_us-gaap_SecuritiesLoaned', window" in str(tds) or
-              r"this, 'defref_us-gaap_OtherSecuredFinancings', window" in str(tds) or
-              r"this, 'defref_gs_CustomerAndOtherPayables', window" in str(tds) or
-              r"this, 'defref_us-gaap_TradingLiabilities', window" in str(tds) or
-              r"this, 'defref_gs_UnsecuredShortTermBorrowingsIncludingCurrentPortionOfUnsecuredLongTermBorrowings', window" in str(tds) or
-              r"this, 'defref_us-gaap_OtherLiabilities', window" in str(tds) and 'Capitalized mortgage servicing rights, net' not in str(soup) and 'Investments in real estate properties' not in str(soup) and 'Mortgages payable, including unamortized premium and net of unamortized debt costs' not in str(soup)  and 'Accounted for using the operating method, net of accumulated depreciation and amortization' not in str(soup) or
-              r"this, 'defref_gs_SecuritiesLoanedBS', window" in str(tds) or
-              r"this, 'defref_gs_PayablesToBrokerDealersAndClearingOrganizationsBS', window" in str(tds) or
-              r"this, 'defref_gs_PayablesToCustomersAndCounterparties', window" in str(tds) or
-              r"this, 'defref_gs_UnsecuredShortTermBorrowingsIncludingCurrentPortionOfUnsecuredLongTermBorrowings', window" in str(tds) or
-              r"this, 'defref_us-gaap_FinancialInstrumentsSoldNotYetPurchasedAtFairValue', window" in str(tds) or
-              r"this, 'defref_us-gaap_PayablesToBrokerDealersAndClearingOrganizations', window" in str(tds) or
-              r"this, 'defref_us-gaap_PayablesToCustomers', window" in str(tds) or
-              r"this, 'defref_ms_Payables', window" in str(tds) or
-              r"this, 'defref_us-gaap_ShortTermBorrowings', window" in str(tds) or
-              r"this, 'defref_us-gaap_ObligationToReturnSecuritiesReceivedAsCollateral', window" in str(tds) or
-              r"this, 'defref_us-gaap_InterestAndDividendsPayableCurrentAndNoncurrent', window" in str(tds) or
-              r"this, 'defref_us-gaap_InterestPayableCurrentAndNoncurrent', window" in str(tds)
+                cur_liabilities = round(check_neg(str(tds[colm]), cur_liabilities_calc) * (dollar_multiplier / 1_000_000), 2)
+        elif (r"this, 'defref_us-gaap_UnsecuredDebt', window" in str(tds[0]) or
+              r"this, 'defref_stor_AccruedExpensesDeferredRevenueAndOtherLiabilities', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_AccountsPayableAndAccruedLiabilitiesCurrentAndNoncurrent', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ConvertibleNotesPayable', window" in str(tds[0]) and 'Accounted for using the operating method, net of accumulated depreciation and amortization' not in str(soup) or
+              r"this, 'defref_us-gaap_AccountsPayableRelatedPartiesCurrentAndNoncurrent', window" in str(tds[0]) or
+              r"this, 'defref_abr_DueToBorrowers', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_AccountsPayableCurrentAndNoncurrent', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_AccruedLiabilitiesAndOtherLiabilities', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_DerivativeLiabilities', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_Deposits', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_SecuritiesSoldUnderAgreementsToRepurchase', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_SecuritiesLoaned', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_OtherSecuredFinancings', window" in str(tds[0]) or
+              r"this, 'defref_gs_CustomerAndOtherPayables', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_TradingLiabilities', window" in str(tds[0]) or
+              r"this, 'defref_gs_UnsecuredShortTermBorrowingsIncludingCurrentPortionOfUnsecuredLongTermBorrowings', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_OtherLiabilities', window" in str(tds[0]) and 'Capitalized mortgage servicing rights, net' not in str(soup) and 'Investments in real estate properties' not in str(soup) and 'Mortgages payable, including unamortized premium and net of unamortized debt costs' not in str(soup)  and 'Accounted for using the operating method, net of accumulated depreciation and amortization' not in str(soup) or
+              r"this, 'defref_gs_SecuritiesLoanedBS', window" in str(tds[0]) or
+              r"this, 'defref_gs_PayablesToBrokerDealersAndClearingOrganizationsBS', window" in str(tds[0]) or
+              r"this, 'defref_gs_PayablesToCustomersAndCounterparties', window" in str(tds[0]) or
+              r"this, 'defref_gs_UnsecuredShortTermBorrowingsIncludingCurrentPortionOfUnsecuredLongTermBorrowings', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_FinancialInstrumentsSoldNotYetPurchasedAtFairValue', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_PayablesToBrokerDealersAndClearingOrganizations', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_PayablesToCustomers', window" in str(tds[0]) or
+              r"this, 'defref_ms_Payables', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ShortTermBorrowings', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ObligationToReturnSecuritiesReceivedAsCollateral', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_InterestAndDividendsPayableCurrentAndNoncurrent', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_InterestPayableCurrentAndNoncurrent', window" in str(tds[0])
               ):
             if cur_liabilities == '---':
                 cur_liabilities_calc = html_re(str(tds[colm]))
                 if cur_liabilities_calc != '---':
-                    cur_liabilities_sum += round(check_neg(str(tds), cur_liabilities_calc) * (dollar_multiplier / 1_000_000), 2)
-        elif 'onclick="top.Show.showAR( this, \'defref_us-gaap_Liabilities\', window )' in str(tds):
+                    cur_liabilities_sum += round(check_neg(str(tds[colm]), cur_liabilities_calc) * (dollar_multiplier / 1_000_000), 2)
+        elif 'onclick="top.Show.showAR( this, \'defref_us-gaap_Liabilities\', window )' in str(tds[0]):
             liabilities_calc = html_re(str(tds[colm]))
             if liabilities_calc != '---':
-                liabilities = round(check_neg(str(tds), liabilities_calc) * (dollar_multiplier / 1_000_000), 2)
-        elif ('this, \'defref_us-gaap_LongTermDebtNoncurrent\', window' in str(tds) or
-              'this, \'defref_us-gaap_LongTermDebt\', window' in str(tds) or
-              'this, \'defref_us-gaap_LongTermDebtAndCapitalLeaseObligations\', window' in str(tds) or
-              r"this, 'defref_us-gaap_LineOfCredit', window" in str(tds) or
-              r"this, 'defref_us-gaap_UnsecuredLongTermDebt', window" in str(tds) or
-              r"this, 'defref_us-gaap_LongTermNotesPayable', window" in str(tds) or
-              r"this, 'defref_stor_NonRecourseDebtNet', window" in str(tds) or
-              r"this, 'defref_us-gaap_DebtInstrumentCarryingAmount', window" in str(tds) or
-              r"this, 'defref_us-gaap_DebtAndCapitalLeaseObligations', window" in str(tds) or
-              r"this, 'defref_us-gaap_ConvertibleDebt', window" in str(tds) or
-              r"this, 'defref_us-gaap_SecuredDebt', window" in str(tds) or
-              r"this, 'defref_us-gaap_SeniorNotes', window" in str(tds) or
-              r"this, 'defref_us-gaap_JuniorSubordinatedDebentureOwedToUnconsolidatedSubsidiaryTrust', window" in str(tds) or
-              r"this, 'defref_us-gaap_ConvertibleDebtNoncurrent', window" in str(tds) or
-              r"this, 'defref_us-gaap_ConvertibleLongTermNotesPayable', window" in str(tds) or
-              r"this, 'defref_us-gaap_LongTermLoansPayable', window" in str(tds) or
-              r"this, 'defref_us-gaap_LongTermLineOfCredit', window" in str(tds) or
-              r"this, 'defref_cat_LongTermDebtDueAfterOneYearMachineryEnergyTransNoncurrent', window" in str(tds) or
-              r"this, 'defref_cat_LongTermDebtDueAfterOneYearFinancialProducts', window" in str(tds) or
-              r"this, 'defref_us-gaap_LongTermNotesAndLoans', window" in str(tds) or
-              r"this, 'defref_kr_LongTermDebtAndFinanceLease', window" in str(tds) or
-              r"this, 'defref_us-gaap_DebtLongtermAndShorttermCombinedAmount', window" in str(tds) or
-              r"this, 'defref_us-gaap_NotesPayable', window" in str(tds) or
-              r"this, 'defref_us-gaap_ConvertibleNotesPayable', window" in str(tds)
+                liabilities = round(check_neg(str(tds[colm]), liabilities_calc) * (dollar_multiplier / 1_000_000), 2)
+        elif ('this, \'defref_us-gaap_LongTermDebtNoncurrent\', window' in str(tds[0]) or
+              'this, \'defref_us-gaap_LongTermDebt\', window' in str(tds[0]) or
+              'this, \'defref_us-gaap_LongTermDebtAndCapitalLeaseObligations\', window' in str(tds[0]) or
+              r"this, 'defref_us-gaap_LineOfCredit', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_UnsecuredLongTermDebt', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_LongTermNotesPayable', window" in str(tds[0]) or
+              r"this, 'defref_stor_NonRecourseDebtNet', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_DebtInstrumentCarryingAmount', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_DebtAndCapitalLeaseObligations', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ConvertibleDebt', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_SecuredDebt', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_SeniorNotes', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_JuniorSubordinatedDebentureOwedToUnconsolidatedSubsidiaryTrust', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ConvertibleDebtNoncurrent', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ConvertibleLongTermNotesPayable', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_LongTermLoansPayable', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_LongTermLineOfCredit', window" in str(tds[0]) or
+              r"this, 'defref_cat_LongTermDebtDueAfterOneYearMachineryEnergyTransNoncurrent', window" in str(tds[0]) or
+              r"this, 'defref_cat_LongTermDebtDueAfterOneYearFinancialProducts', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_LongTermNotesAndLoans', window" in str(tds[0]) or
+              r"this, 'defref_kr_LongTermDebtAndFinanceLease', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_DebtLongtermAndShorttermCombinedAmount', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_NotesPayable', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ConvertibleNotesPayable', window" in str(tds[0])
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
                 debt += round(result * (dollar_multiplier / 1_000_000), 2)
-        elif 'this, \'defref_us-gaap_LiabilitiesAndStockholdersEquity\', window' in str(tds) and tot_liabilities == '---':
+        elif 'this, \'defref_us-gaap_LiabilitiesAndStockholdersEquity\', window' in str(tds[0]) and tot_liabilities == '---':
             tot_liabilities_calc = html_re(str(tds[colm]))
             if tot_liabilities_calc != '---':
-                tot_liabilities = round(check_neg(str(tds), tot_liabilities_calc) * (dollar_multiplier / 1_000_000), 2)
-        elif ('this, \'defref_us-gaap_StockholdersEquity\', window' in str(tds) and equity =='---' or
-              'this, \'defref_us-gaap_StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest\', window' in str(tds) and equity == '---' or
-              r"this, 'defref_us-gaap_CommonStockholdersEquity', window" in str(tds) and equity =='---'
+                tot_liabilities = round(check_neg(str(tds[colm]), tot_liabilities_calc) * (dollar_multiplier / 1_000_000), 2)
+        elif ('this, \'defref_us-gaap_StockholdersEquity\', window' in str(tds[0]) and equity =='---' or
+              'this, \'defref_us-gaap_StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest\', window' in str(tds[0]) and equity == '---' or
+              r"this, 'defref_us-gaap_CommonStockholdersEquity', window" in str(tds[0]) and equity =='---'
               ):
             equity = html_re(str(tds[colm]))
             if equity != '---':
-                equity = round(check_neg(str(tds), equity) * (dollar_multiplier / 1_000_000), 2)    
+                equity = round(check_neg(str(tds[colm]), equity) * (dollar_multiplier / 1_000_000), 2)    
         elif '[Member]' in str(row) and cash != '---':
             break     
 
@@ -835,92 +843,94 @@ def cf_htm(cf_url, headers, per):
     # Loop through rows, search for row of interest
     for row in soup.table.find_all('tr'):
         tds = row.find_all('td')
+        if tds == []:
+            continue
         # Check for companies that report subsidiares and break when that starts
-        if r"this, 'defref_us-gaap_NetCashProvidedByUsedInOperatingActivitiesAbstract', window" in str(tds):
+        elif r"this, 'defref_us-gaap_NetCashProvidedByUsedInOperatingActivitiesAbstract', window" in str(tds[0]):
             if repeat_flag == True:
                 break
             else:
                 repeat_flag = True
-        elif ('Net cash from operations' in str(tds) or
-            'this, \'defref_us-gaap_NetCashProvidedByUsedInOperatingActivities\', window' in str(tds) or 
-            'this, \'defref_us-gaap_NetCashProvidedByUsedInOperatingActivitiesContinuingOperations\', window' in str(tds)
+        elif ('Net cash from operations' in str(tds[0]) or
+            'this, \'defref_us-gaap_NetCashProvidedByUsedInOperatingActivities\', window' in str(tds[0]) or 
+            'this, \'defref_us-gaap_NetCashProvidedByUsedInOperatingActivitiesContinuingOperations\', window' in str(tds[0])
             ): 
             cfo_calc = html_re(str(tds[colm]))
             if cfo_calc != '---':
-                cfo = round(check_neg(str(tds), cfo_calc) * (dollar_multiplier / 1_000_000), 2)
-        elif ('Additions to property and equipment' in str(tds) or
-              'this, \'defref_us-gaap_PaymentsToAcquireProductiveAssets\', window' in str(tds) or
-              'this, \'defref_us-gaap_PaymentsToAcquirePropertyPlantAndEquipment\', window' in str(tds) or
-              'this, \'defref_us-gaap_PaymentsForProceedsFromProductiveAssets\', window' in str(tds) or
-              r"this, 'defref_us-gaap_PaymentsToAcquireRealEstateHeldForInvestment', window" in str(tds) or
-              r"this, 'defref_us-gaap_PaymentsToAcquireOtherPropertyPlantAndEquipment', window" in str(tds)
+                cfo = round(check_neg(str(tds[colm]), cfo_calc) * (dollar_multiplier / 1_000_000), 2)
+        elif ('Additions to property and equipment' in str(tds[0]) or
+              'this, \'defref_us-gaap_PaymentsToAcquireProductiveAssets\', window' in str(tds[0]) or
+              'this, \'defref_us-gaap_PaymentsToAcquirePropertyPlantAndEquipment\', window' in str(tds[0]) or
+              'this, \'defref_us-gaap_PaymentsForProceedsFromProductiveAssets\', window' in str(tds[0]) or
+              r"this, 'defref_us-gaap_PaymentsToAcquireRealEstateHeldForInvestment', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_PaymentsToAcquireOtherPropertyPlantAndEquipment', window" in str(tds[0])
               ):
             capex_calc = html_re(str(tds[colm]))
             if capex_calc != '---':
                 capex = round(capex_calc * (dollar_multiplier / 1_000_000), 2)
                 capex_set.add(capex)
-        elif ('this, \'defref_us-gaap_RepaymentsOfDebtMaturingInMoreThanThreeMonths\', window' in str(tds) or
-              'this, \'defref_us-gaap_RepaymentsOfLongTermDebt\', window' in str(tds) or
-              'this, \'defref_us-gaap_RepaymentsOfDebtAndCapitalLeaseObligations\', window' in str(tds) or
-              'this, \'defref_us-gaap_InterestPaid\', window' in str(tds) or
-              'this, \'defref_us-gaap_RepaymentsOfDebt\', window' in str(tds) or
-              'RepaymentsOfShortTermAndLongTermBorrowings\', window' in str(tds) or
-              'this, \'defref_us-gaap_RepaymentsOfLongTermDebtAndCapitalSecurities\', window' in str(tds) or
-              'this, \'defref_us-gaap_InterestPaidNet\', window' in str(tds) or
-              r"this, 'defref_pld_RepurchaseOfAndRepaymentsOnDebtExcludingLineOfCredit', window" in str(tds) or
-              r"this, 'defref_us-gaap_ProceedsFromRepaymentsOfDebt', window" in str(tds) or
-              'Repayment of debt and commercial paper borrowings' in str(tds) or
-              r"this, 'defref_us-gaap_RepaymentsOfUnsecuredDebt', window" in str(tds) or
-              r"this, 'defref_us-gaap_RepaymentsOfOtherDebt', window" in str(tds) or
-              r"this, 'defref_vz_RepaymentsOfLongTermBorrowingsAndFinanceLeaseObligations', window" in str(tds) or
-              r"this, 'defref_cat_PaymentsMachineryEnergyandTransportation', window" in str(tds) or
-              r"this, 'defref_cat_PaymentsFinancialProducts', window" in str(tds) or
-              r"this, 'defref_gs_RepaymentsOfUnsecuredLongTermBorrowingsIncludingCurrentPortion', window" in str(tds)
+        elif ('this, \'defref_us-gaap_RepaymentsOfDebtMaturingInMoreThanThreeMonths\', window' in str(tds[0]) or
+              'this, \'defref_us-gaap_RepaymentsOfLongTermDebt\', window' in str(tds[0]) or
+              'this, \'defref_us-gaap_RepaymentsOfDebtAndCapitalLeaseObligations\', window' in str(tds[0]) or
+              'this, \'defref_us-gaap_InterestPaid\', window' in str(tds[0]) or
+              'this, \'defref_us-gaap_RepaymentsOfDebt\', window' in str(tds[0]) or
+              'RepaymentsOfShortTermAndLongTermBorrowings\', window' in str(tds[0]) or
+              'this, \'defref_us-gaap_RepaymentsOfLongTermDebtAndCapitalSecurities\', window' in str(tds[0]) or
+              'this, \'defref_us-gaap_InterestPaidNet\', window' in str(tds[0]) or
+              r"this, 'defref_pld_RepurchaseOfAndRepaymentsOnDebtExcludingLineOfCredit', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ProceedsFromRepaymentsOfDebt', window" in str(tds[0]) or
+              'Repayment of debt and commercial paper borrowings' in str(tds[0]) or
+              r"this, 'defref_us-gaap_RepaymentsOfUnsecuredDebt', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_RepaymentsOfOtherDebt', window" in str(tds[0]) or
+              r"this, 'defref_vz_RepaymentsOfLongTermBorrowingsAndFinanceLeaseObligations', window" in str(tds[0]) or
+              r"this, 'defref_cat_PaymentsMachineryEnergyandTransportation', window" in str(tds[0]) or
+              r"this, 'defref_cat_PaymentsFinancialProducts', window" in str(tds[0]) or
+              r"this, 'defref_gs_RepaymentsOfUnsecuredLongTermBorrowingsIncludingCurrentPortion', window" in str(tds[0])
               ):
             debt_payment = html_re(str(tds[colm]))
             if debt_payment != '---':
                 debt_pay_set.add(round(debt_payment * (dollar_multiplier / 1_000_000), 2))
-        elif ('Common stock repurchased' in str(tds) or
-              'this, \'defref_us-gaap_PaymentsForRepurchaseOfCommonStock\', window' in str(tds) and 'Redemption of common limited partnership units' not in str(tds) and 'Purchase of treasury stock' not in str(tds) or
-              'Shares repurchased under stock compensation plans' in str(tds) or
-              r"this, 'defref_us-gaap_PaymentsForRepurchaseOfEquity', window" in str(tds) or
-              r"this, 'defref_pld_PaymentsForRepurchaseOfPreferredStock', window" in str(tds) or
-              r"this, 'defref_us-gaap_ProceedsFromIssuanceOrSaleOfEquity', window" in str(tds) or
-              r"this, 'defref_us-gaap_PaymentsForRepurchaseOfPreferredStockAndPreferenceStock', window" in str(tds) or
-              r"this, 'defref_us-gaap_PaymentsForRepurchaseOfCommonStock', window" in str(tds)
+        elif ('Common stock repurchased' in str(tds[0]) or
+              'this, \'defref_us-gaap_PaymentsForRepurchaseOfCommonStock\', window' in str(tds[0]) and 'Redemption of common limited partnership units' not in str(tds[0]) and 'Purchase of treasury stock' not in str(tds[0]) or
+              'Shares repurchased under stock compensation plans' in str(tds[0]) or
+              r"this, 'defref_us-gaap_PaymentsForRepurchaseOfEquity', window" in str(tds[0]) or
+              r"this, 'defref_pld_PaymentsForRepurchaseOfPreferredStock', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ProceedsFromIssuanceOrSaleOfEquity', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_PaymentsForRepurchaseOfPreferredStockAndPreferenceStock', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_PaymentsForRepurchaseOfCommonStock', window" in str(tds[0])
               ):
             buyback_calc = html_re(str(tds[colm]))
             if buyback_calc != '---':
                 buyback = round(buyback_calc * (dollar_multiplier / 1_000_000), 2)
                 buyback_set.add(buyback)
-        elif ('this, \'defref_us-gaap_ProceedsFromStockOptionsExercised\', window' in str(tds) or
-              'this, \'defref_us-gaap_ProceedsFromIssuanceOfCommonStock\', window' in str(tds) or
-              'this, \'defref_us-gaap_ProceedsFromIssuanceOfSharesUnderIncentiveAndShareBasedCompensationPlansIncludingStockOptions\', window' in str(tds) or
-              r"this, 'defref_us-gaap_ProceedsFromIssuanceOfCommonStock', window" in str(tds) or
-              r"this, 'defref_us-gaap_ProceedsFromStockPlans', window" in str(tds) or
-              r"this, 'defref_doc_ProceedsFromPaymentsToFromSaleOfCommonSharesNet', window" in str(tds) or
-              r"this, 'defref_us-gaap_ProceedsFromIssuanceOfPreferredStockAndPreferenceStock', window" in str(tds) or
-              r"this, 'defref_us-gaap_ProceedsFromSaleOfTreasuryStock', window" in str(tds)
+        elif ('this, \'defref_us-gaap_ProceedsFromStockOptionsExercised\', window' in str(tds[0]) or
+              'this, \'defref_us-gaap_ProceedsFromIssuanceOfCommonStock\', window' in str(tds[0]) or
+              'this, \'defref_us-gaap_ProceedsFromIssuanceOfSharesUnderIncentiveAndShareBasedCompensationPlansIncludingStockOptions\', window' in str(tds[0]) or
+              r"this, 'defref_us-gaap_ProceedsFromIssuanceOfCommonStock', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ProceedsFromStockPlans', window" in str(tds[0]) or
+              r"this, 'defref_doc_ProceedsFromPaymentsToFromSaleOfCommonSharesNet', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ProceedsFromIssuanceOfPreferredStockAndPreferenceStock', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ProceedsFromSaleOfTreasuryStock', window" in str(tds[0])
               ):
             share_issue_rtn = html_re(str(tds[colm]))
             if share_issue_rtn != '---':
                 share_issue += round(share_issue_rtn * (dollar_multiplier / 1_000_000), 2)
-        elif ('Common stock cash dividends paid' in str(tds) or
-              'this, \'defref_us-gaap_PaymentsOfDividends\', window' in str(tds) and 'Dividend to former parent in connection with spin-off' not in str(tds) or
-              'PaymentsOfDividendsAndDividendEquivalentsOnCommonStockAndRestrictedStockUnits\', window' in str(tds) or
-              'this, \'defref_us-gaap_PaymentsOfDividendsCommonStock\', window' in str(tds) or
-              r"this, 'defref_us-gaap_Dividends', window" in str(tds) or
-              r"this, 'defref_us-gaap_PaymentsOfOrdinaryDividends', window" in str(tds) or
-              r"this, 'defref_us-gaap_PaymentsOfDividendsCommonStock', window" in str(tds) or
-              r"this, 'defref_frt_DividendsPaidToCommonAndPreferredShareholders', window" in str(tds)
+        elif ('Common stock cash dividends paid' in str(tds[0]) or
+              'this, \'defref_us-gaap_PaymentsOfDividends\', window' in str(tds) and 'Dividend to former parent in connection with spin-off' not in str(tds[0]) or
+              'PaymentsOfDividendsAndDividendEquivalentsOnCommonStockAndRestrictedStockUnits\', window' in str(tds[0]) or
+              'this, \'defref_us-gaap_PaymentsOfDividendsCommonStock\', window' in str(tds[0]) or
+              r"this, 'defref_us-gaap_Dividends', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_PaymentsOfOrdinaryDividends', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_PaymentsOfDividendsCommonStock', window" in str(tds[0]) or
+              r"this, 'defref_frt_DividendsPaidToCommonAndPreferredShareholders', window" in str(tds[0])
               ):
             divpaid_calc = html_re(str(tds[colm]))
             if divpaid_calc != '---' and divpaid_calc != 0:
                 divpaid = round(divpaid_calc * (dollar_multiplier / 1_000_000), 2)
-        elif ('this, \'defref_us-gaap_ShareBasedCompensation\', window' in str(tds) or
-              'this, \'defref_us-gaap_AllocatedShareBasedCompensationExpense\', window' in str(tds) or
-              r"this, 'defref_epr_ShareBasedPaymentArrangementNoncashExpenseManagementAndTrustees', window" in str(tds) or
-              r"this, 'defref_us-gaap_EmployeeBenefitsAndShareBasedCompensation', window" in str(tds)
+        elif ('this, \'defref_us-gaap_ShareBasedCompensation\', window' in str(tds[0]) or
+              'this, \'defref_us-gaap_AllocatedShareBasedCompensationExpense\', window' in str(tds[0]) or
+              r"this, 'defref_epr_ShareBasedPaymentArrangementNoncashExpenseManagementAndTrustees', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_EmployeeBenefitsAndShareBasedCompensation', window" in str(tds[0])
               ):
             sbc_calc = html_re(str(tds[colm]))
             if sbc_calc != '---':
@@ -978,21 +988,22 @@ def div_htm(div_url, headers, per):
         ):
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
-            
+            if tds == []:
+                continue
             # Find where quarterly data ends
-            if 'onclick="top.Show.showAR( this, \'defref_us-gaap_DividendsPayableDateDeclaredDayMonthAndYear\', window )' in str(tds):
+            if 'onclick="top.Show.showAR( this, \'defref_us-gaap_DividendsPayableDateDeclaredDayMonthAndYear\', window )' in str(tds[0]):
                 for index, row in enumerate(tds):
                     if not re.findall(r'\d', str(row)):
                         break
             if 'Distributions (Details)' not in str(head):
-                if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds) and 'Capital Stock (Narrative) (Details) (USD $)' not in str(head) or
-                    r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds)
+                if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds[0]) and 'Capital Stock (Narrative) (Details) (USD $)' not in str(head) or
+                    r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds[0])
                     ):
                     try:
                         div = html_re(str(tds[index]))
                     except:
                         div = html_re(str(tds[colm]))
-                    if div != '---' and r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" not in str(soup) and r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds):
+                    if div != '---' and r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" not in str(soup) and r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds[0]):
                         return div
 
         if 'onclick="top.Show.showAR( this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window )' in str(soup) and 'Distributions (Details) (USD $)' in str(soup):
@@ -1013,7 +1024,9 @@ def div_htm(div_url, headers, per):
             # Find row with div data
             for row in soup.table.find_all('tr'):
                 tds = row.find_all('td')
-                if r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds):
+                if tds == []:
+                    continue
+                if r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds[0]):
                     div = html_re(str(tds[div_index]))
                     return div
 
@@ -1026,7 +1039,9 @@ def div_htm(div_url, headers, per):
         if div == '---' and 'Supplementary Financial Information' in str(soup):
             for row in soup.table.find_all('tr'):
                 tds = row.find_all('td')
-                if r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds):
+                if tds == []:
+                    continue
+                if r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds[0]):
                     div_list = re.findall(r'(?:<td class=\"nump\">\$ )(\d\d?\.\d\d?)(?:<span>)', str(tds), re.M)
                     if div_list != []:
                         div = sum(map(float, div_list[0:4]))
@@ -1106,8 +1121,10 @@ def div_htm(div_url, headers, per):
         # Find div
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
-            if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds) or
-                r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds)
+            if tds == []:
+                continue
+            if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds[0]) or
+                r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds[0])
                 ):
                 div = html_re(str(tds[colm]))
                 if div is not None and div != '---':
@@ -1117,8 +1134,10 @@ def div_htm(div_url, headers, per):
         if div == '---' and '3 Months Ended' in str(head):
             for row in soup.table.find_all('tr'):
                 tds = row.find_all('td')
-                if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds) or
-                    r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds)
+                if tds == []:
+                    continue
+                if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds[0]) or
+                    r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds[0])
                     ):
                     if r'toggleNextSibling(this)' in str(tds):
                         obj = re.findall(r'(?:\">\$ )(\d?\d\.\d\d?\d?)(?:</a><span)', str(tds), re.M)
@@ -1143,13 +1162,15 @@ def div_htm(div_url, headers, per):
         # Find row with div data
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
-            if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds) or
-                r"this, 'defref_cor_DistributionsPerShare', window" in str(tds) or
-                r"this, 'defref_cor_DistributionsPerShare', window" in str(tds) or
-                r"this, 'defref_dlr_CommonStockDividendRatePerDollarAmount', window" in str(tds) or
-                r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds) or
-                r"this, 'defref_us-gaap_DividendsPayableAmountPerShare', window" in str(tds) or
-                r"this, 'defref_gs_DividendsDeclaredPerCommonShare', window" in str(tds)
+            if tds == []:
+                continue
+            if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds[0]) or
+                r"this, 'defref_cor_DistributionsPerShare', window" in str(tds[0]) or
+                r"this, 'defref_cor_DistributionsPerShare', window" in str(tds[0]) or
+                r"this, 'defref_dlr_CommonStockDividendRatePerDollarAmount', window" in str(tds[0]) or
+                r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds[0]) or
+                r"this, 'defref_us-gaap_DividendsPayableAmountPerShare', window" in str(tds[0]) or
+                r"this, 'defref_gs_DividendsDeclaredPerCommonShare', window" in str(tds[0])
                 ):
                 # Pull div
                 div = html_re(str(tds[colm]))
@@ -1160,7 +1181,9 @@ def div_htm(div_url, headers, per):
         if 'Equity And Accumulated Other Comprehensive' in str(head) and div == '---':
             for row in soup.table.find_all('tr'):
                 tds = row.find_all('td')
-                if r"this, 'defref_dlr_CommonStockDividendRatePerDollarAmount', window" in str(tds):
+                if tds == []:
+                    continue
+                if r"this, 'defref_dlr_CommonStockDividendRatePerDollarAmount', window" in str(tds[0]):
                     # Pull div
                     result = re.search(r'(?:<td class=\"nump\">\$ )(\d?\d\.\d\d?\d?)', str(tds), re.M)
                     if result is not None:
@@ -1191,8 +1214,10 @@ def div_htm(div_url, headers, per):
         if r'onclick="toggleNextSibling(this);' in str(soup):
             for row in soup.table.find_all('tr'):
                 tds = row.find_all('td')
-                if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds) or
-                    r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds)
+                if tds == []:
+                    continue
+                if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds[0]) or
+                    r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds[0])
                     ):
                     # Find special div if present
                     if spec_div == '---':
@@ -1213,8 +1238,10 @@ def div_htm(div_url, headers, per):
         else:
             for row in soup.table.find_all('tr'):
                 tds = row.find_all('td')
-                if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds) or
-                    r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds)
+                if tds == []:
+                    continue
+                if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds[0]) or
+                    r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds[0])
                     ):
                     # Find special div if present
                     spec_result = re.search(r'(?:<td class=\"nump\">\$ )(\d?\d\.\d\d?\d?)(?:<span>)', str(tds[spec_index]))
@@ -1237,8 +1264,10 @@ def div_htm(div_url, headers, per):
             ):
             for row in soup.table.find_all('tr'):
                 tds = row.find_all('td')
-                if ('this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds) or
-                    r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds)
+                if tds == []:
+                    continue
+                if ('this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds[0]) or
+                    r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds[0])
                     ):
                     div = float(re.findall(r'\d+\.\d+', str(tds))[0])
             return div
@@ -1258,8 +1287,10 @@ def div_htm(div_url, headers, per):
                     tds = row.find_all('td')
                     if new_per in str(row):
                         period_found = True
-                    elif ('this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds) and period_found == True or
-                          r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds) and period_found == True
+                    if tds == []:
+                        continue
+                    elif ('this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds[0]) and period_found == True or
+                          r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds[0]) and period_found == True
                           ):
                         div = re.findall(r'\d+\.\d+', str(tds))[0:4]
                         div = sum(list(map(float, div)))
@@ -1296,10 +1327,12 @@ def div_htm(div_url, headers, per):
                 spec_div = True
             for row in soup.table.find_all('tr'):
                 tds = row.find_all('td')
-                if ('this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds) or
-                    'this, \'defref_us-gaap_CommonStockDividendsPerShareCashPaid\', window' in str(tds) or
-                    r"this, 'defref_cor_DistributionsPerShare', window" in str(tds) or
-                    r"this, 'defref_nem_DividendsPayableCashAmountPerShare', window" in str(tds)
+                if tds == []:
+                    continue
+                if ('this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds[0]) or
+                    'this, \'defref_us-gaap_CommonStockDividendsPerShareCashPaid\', window' in str(tds[0]) or
+                    r"this, 'defref_cor_DistributionsPerShare', window" in str(tds[0]) or
+                    r"this, 'defref_nem_DividendsPayableCashAmountPerShare', window" in str(tds[0])
                     ):
                     div_result = html_re(str(tds[colm]))
                     if div_result != '---':
@@ -1309,8 +1342,8 @@ def div_htm(div_url, headers, per):
                     else:
                         continue
                 if spec_div == True:        
-                    if (r"this, 'defref_ldos_SpecialDividendPerShareDeclared', window" in str(tds) or
-                        r"this, 'defref_nem_DividendsPayableSpecialAmountPerShare', window" in str(tds)
+                    if (r"this, 'defref_ldos_SpecialDividendPerShareDeclared', window" in str(tds[0]) or
+                        r"this, 'defref_nem_DividendsPayableSpecialAmountPerShare', window" in str(tds[0])
                         ):
                         spec_div_float = html_re(str(tds[colm]))
                         if div != '---' and spec_div_float != '---':
@@ -1331,9 +1364,10 @@ def div_htm(div_url, headers, per):
             # Find div data
             for row in soup.table.find_all('tr'):
                 tds = row.find_all('td')
-                
-                if ('this, \'defref_v_Cashdividendsdeclaredandpaidquarterlyperasconvertedshare\', window' in str(tds) or
-                    'this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds) and 'quarterly' in str(tds)):
+                if tds == []:
+                    continue
+                if ('this, \'defref_v_Cashdividendsdeclaredandpaidquarterlyperasconvertedshare\', window' in str(tds[0]) or
+                    'this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds[0]) and 'quarterly' in str(tds[0])):
                     div = multiplier * html_re(str(tds[colm]))
                     if multiplier == 3:
                         div += float(''.join(re.findall(r'\d+\.\d+', tds[1].text.strip())))
@@ -1504,17 +1538,19 @@ def eps_catch_htm(catch_url, headers, per):
         dollar_multiplier, share_multiplier = multiple_extractor(str(head), shares=True)
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
-            if ('EarningsPerShareDiluted' in str(tds) and eps == '---' or
-                'this, \'defref_us-gaap_EarningsPerShareBasicAndDiluted\', window' in str(tds) and eps == '---' or
-                r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsPerBasicAndDilutedShare', window" in str(tds) and eps == '---' or
-                r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsPerDilutedShare', window" in str(tds) and eps == '---'
+            if tds == []:
+                continue
+            if ('EarningsPerShareDiluted' in str(tds[0]) and eps == '---' or
+                'this, \'defref_us-gaap_EarningsPerShareBasicAndDiluted\', window' in str(tds[0]) and eps == '---' or
+                r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsPerBasicAndDilutedShare', window" in str(tds[0]) and eps == '---' or
+                r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsPerDilutedShare', window" in str(tds[0]) and eps == '---'
                 ):
                 result = html_re(str(tds[colm]))
                 if result != '---':
-                    eps = check_neg(str(tds), result)
-            elif (r"this, 'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding', window" in str(tds) or
-                  r"this, 'defref_us-gaap_WeightedAverageNumberOfShareOutstandingBasicAndDiluted', window" in str(tds) or
-                  r"this, 'defref_tsla_WeightedAverageNumberOfSharesOutstandingBasicAndDilutedOne', window" in str(tds)
+                    eps = check_neg(str(tds[colm]), result)
+            elif (r"this, 'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding', window" in str(tds[0]) or
+                  r"this, 'defref_us-gaap_WeightedAverageNumberOfShareOutstandingBasicAndDiluted', window" in str(tds[0]) or
+                  r"this, 'defref_tsla_WeightedAverageNumberOfSharesOutstandingBasicAndDilutedOne', window" in str(tds[0])
                   ):
                 shares_calc = html_re(str(tds[colm]))
                 if shares_calc != '---':
@@ -1558,21 +1594,23 @@ def share_catch_htm(catch_url, headers, per):
     # Loop through rows, search for row of interest
     for row in soup.table.find_all('tr'):
         tds = row.find_all('td')
-        if (r"this, 'defref_us-gaap_CommonStockSharesOutstanding', window" in str(tds) or
-            r"this, 'defref_us-gaap_CommonStockValueOutstanding', window" in str(tds) or
-            r"this, 'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding', window" in str(tds)
+        if tds == []:
+            continue
+        if (r"this, 'defref_us-gaap_CommonStockSharesOutstanding', window" in str(tds[0]) or
+            r"this, 'defref_us-gaap_CommonStockValueOutstanding', window" in str(tds[0]) or
+            r"this, 'defref_us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding', window" in str(tds[0])
             ):
             shares_calc = html_re(str(tds[colm]))
             if shares_calc != '---':
                 shares = round(shares_calc * (share_multiplier / 1_000), 2)
                 share_set.add(shares)
-        elif (r"this, 'defref_us-gaap_CommonStockSharesIssued', window" in str(tds)
+        elif (r"this, 'defref_us-gaap_CommonStockSharesIssued', window" in str(tds[0])
             ):
             shares_issued_calc = html_re(str(tds[colm]))
             if shares_issued_calc != '---':
                 shares_issued = round(shares_issued_calc * (share_multiplier / 1_000), 2)
                 shares_issued_set.add(shares_issued)
-        elif (r"this, 'defref_us-gaap_TreasuryStockShares', window" in str(tds)
+        elif (r"this, 'defref_us-gaap_TreasuryStockShares', window" in str(tds[0])
             ):
             shares_repurchased_calc = html_re(str(tds[colm]))
             if shares_repurchased_calc != '---':
@@ -1719,7 +1757,7 @@ def rev_xml(rev_url, headers):
 
     # Initial values
     gross = oi = net = eps = cost = shares = div = '---'
-    rev = cost_sum = share_sum = research = op_exp = dep_am = impairment = disposition = ffo = 0
+    rev = share_sum = research = op_exp = dep_am = impairment = disposition = ffo = 0
     net_check = False
 
     # Find which column has 12 month data
@@ -1733,81 +1771,95 @@ def rev_xml(rev_url, headers):
     rows = soup.find_all('Row')
     for row in rows:
         cells = row.find_all('Cell')
-        if (r'<ElementName>us-gaap_Revenues</ElementName>' in str(row) or
-            r'us-gaap_SalesRevenueNet' in str(row) or
-            r'<ElementName>us-gaap_SalesRevenueGoodsNet</ElementName>' in str(row) or
-            r'<ElementName>us-gaap_ElectricUtilityRevenue</ElementName>' in str(row) or
-            r'<ElementName>us-gaap_UtilityRevenue</ElementName>' in str(row) or
-            r'<ElementName>us-gaap_RealEstateRevenueNet</ElementName>' in str(row) or
-            r'<ElementName>gs_NetRevenuesIncludingNetInterestIncome</ElementName>' in str(row) or
-            r'<ElementName>us-gaap_SalesRevenueServicesNet</ElementName>' in str(row) or
-            r'<ElementName>us-gaap_RevenueMineralSales</ElementName>' in str(row)
+        
+        if (r'us-gaap_Revenues<' in str(row.ElementName) or
+            r'us-gaap_SalesRevenueNet<' in str(row.ElementName) or
+            r'us-gaap_SalesRevenueGoodsNet<' in str(row.ElementName) or
+            r'us-gaap_ElectricUtilityRevenue<' in str(row.ElementName) or
+            r'us-gaap_UtilityRevenue<' in str(row.ElementName) or
+            r'us-gaap_RealEstateRevenueNet<' in str(row.ElementName) or
+            r'gs_NetRevenuesIncludingNetInterestIncome<' in str(row.ElementName) or
+            r'us-gaap_SalesRevenueServicesNet<' in str(row.ElementName) or
+            r'us-gaap_RevenueMineralSales<' in str(row.ElementName)
             ):
-            rev = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)
-        elif r'us-gaap_GrossProfit' in str(row):
-            result = xml_re(str(cells[colm]))
+            rev = round(xml_re(str(cells[colm].RoundedNumericAmount)) * (dollar_multiplier / 1_000_000), 2)
+
+        elif r'us-gaap_GrossProfit<' in str(row.ElementName):
+            result = xml_re(str(cells[colm].RoundedNumericAmount))
             if result != '---':
-                gross = round(check_neg(str(row), result, 'xml')    * (dollar_multiplier / 1_000_000), 2)     
-        elif (r'us-gaap_CostOfRevenue' in str(row) and cost == '---' or
-              r'us-gaap_CostOfGoodsAndServicesSold' in str(row) and cost == '---' or
-              r'us-gaap_CostOfGoodsSold' in str(row) and cost == '---' or
-              r'CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets' in str(row) and cost == '---' or
-              r'<ElementName>us-gaap_CostOfGoodsAndServicesEnergyCommoditiesAndServices</ElementName>' in str(row) and cost == '---' or
-              r'<ElementName>gs_BrokerageClearingExchangeAndDistributionFees</ElementName>' in str(row) and cost == '---' or
-              r'<ElementName>irm_CostOfSalesExcludingDepreciationAndAmortization</ElementName>' in str(row) and cost == '---' or
-              r'<ElementName>us-gaap_DirectOperatingCosts</ElementName>' in str(row) and cost == '---' or
-              r'<ElementName>us-gaap_MineralExtractionProcessingAndMarketingCosts</ElementName>' in str(row) and cost == '---'
+                gross = round(check_neg(str(cells[colm].RoundedNumericAmount), result, 'xml')    * (dollar_multiplier / 1_000_000), 2)  
+
+        elif (r'us-gaap_CostOfRevenue<' in str(row.ElementName) and cost == '---' or
+              r'us-gaap_CostOfGoodsAndServicesSold<' in str(row.ElementName) and cost == '---' or
+              r'us-gaap_CostOfGoodsSold<' in str(row.ElementName) and cost == '---' or
+              r'CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets<' in str(row.ElementName) and cost == '---' or
+              r'us-gaap_CostOfGoodsAndServicesEnergyCommoditiesAndServices<' in str(row.ElementName) and cost == '---' or
+              r'gs_BrokerageClearingExchangeAndDistributionFees<' in str(row.ElementName) and cost == '---' or
+              r'irm_CostOfSalesExcludingDepreciationAndAmortization<' in str(row.ElementName) and cost == '---' or
+              r'us-gaap_DirectOperatingCosts<' in str(row.ElementName) and cost == '---' or
+              r'us-gaap_MineralExtractionProcessingAndMarketingCosts<' in str(row.ElementName) and cost == '---'
               ):
-            cost = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2) 
-        elif r'us-gaap_ResearchAndDevelopmentExpense' in str(row):
-            research = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)    
-        elif (r'<ElementName>de_CostsAndExpensesIncludingInterest</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_NoninterestExpense</ElementName>' in str(row)
+            cost = round(xml_re(str(cells[colm].RoundedNumericAmount)) * (dollar_multiplier / 1_000_000), 2) 
+
+        elif (r'us-gaap_ResearchAndDevelopmentExpense<' in str(row.ElementName) or
+              r'us-gaap_ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost' in str(row.ElementName)
               ):
-            op_exp = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)                  
-        elif (r'us-gaap_OperatingIncomeLoss' in str(row) or
-              r'<ElementName>us-gaap_IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments</ElementName>' in str(row) and oi == '---' or
-              r'<ElementName>us-gaap_OperatingIncomeLoss</ElementName>' in str(row) or
-              r'<ElementName>hrl_OperatingIncomeLossIncludingEquityMethodInvestments</ElementName>' in str(row)
+            research = round(xml_re(str(cells[colm].RoundedNumericAmount)) * (dollar_multiplier / 1_000_000), 2)  
+
+        elif (r'de_CostsAndExpensesIncludingInterest<' in str(row.ElementName) or
+              r'us-gaap_NoninterestExpense<' in str(row.ElementName)
               ):
-            result = xml_re(str(cells[colm]))
+            op_exp = round(xml_re(str(cells[colm].RoundedNumericAmount)) * (dollar_multiplier / 1_000_000), 2) 
+
+        elif (r'us-gaap_OperatingIncomeLoss<' in str(row.ElementName) or
+              r'us-gaap_IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments<' in str(row.ElementName) and oi == '---' or
+              r'us-gaap_OperatingIncomeLoss<' in str(row.ElementName) or
+              r'hrl_OperatingIncomeLossIncludingEquityMethodInvestments<' in str(row.ElementName)
+              ):
+            result = xml_re(str(cells[colm].RoundedNumericAmount))
             if result != '---':
-                oi = round(check_neg(str(row), result, 'xml') * (dollar_multiplier / 1_000_000), 2)      
-        elif (r'>us-gaap_NetIncomeLoss<' in str(row) and net_check == False or
-              r'<ElementName>us-gaap_ProfitLoss</ElementName>' in str(row) and net == '---' and 'including non-controlling interest' not in str(row) and 'including noncontrolling interests' not in str(row) or
-              r'<ElementName>us-gaap_NetIncomeLossAvailableToCommonStockholdersBasic</ElementName>' in str(row) and 'Net earnings attributable to common stockholders' in str(row)
+                oi = round(check_neg(str(cells[colm].RoundedNumericAmount), result, 'xml') * (dollar_multiplier / 1_000_000), 2)  
+
+        elif (r'us-gaap_NetIncomeLoss<' in str(row.ElementName) and net_check == False or
+              r'us-gaap_ProfitLoss<' in str(row.ElementName) and net == '---' and 'including non-controlling interest' not in str(row) and 'including noncontrolling interests' not in str(row) or
+              r'us-gaap_NetIncomeLossAvailableToCommonStockholdersBasic<' in str(row.ElementName) and 'Net earnings attributable to common stockholders' in str(row)
               ):
-            result = xml_re(str(cells[colm]))
+            result = xml_re(str(cells[colm].RoundedNumericAmount))
             if result != '---':
-                net = round(check_neg(str(row), result, 'xml') * (dollar_multiplier / 1_000_000), 2)    
-            if r'>us-gaap_NetIncomeLoss<' in str(row):
+                net = round(check_neg(str(cells[colm].RoundedNumericAmount), result, 'xml') * (dollar_multiplier / 1_000_000), 2)    
+            if r'us-gaap_NetIncomeLoss<' in str(row.ElementName):
                 net_check = True
-        elif r'<ElementName>us-gaap_EarningsPerShareDiluted</ElementName>' in str(row) and eps == '---':
-            result = xml_re(str(cells[colm]))
+
+        elif r'us-gaap_EarningsPerShareDiluted<' in str(row.ElementName) and eps == '---':
+            result = xml_re(str(cells[colm].RoundedNumericAmount))
             if result != '---':
-                eps = check_neg(str(row), result, 'xml')
-        elif r'us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding' in str(row):
-            shares = round(xml_re(str(cells[colm])) * (share_multiplier / 1_000))
+                eps = check_neg(str(cells[colm].RoundedNumericAmount), result, 'xml')
+
+        elif r'us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding<' in str(row.ElementName):
+            shares = round(xml_re(str(cells[colm].RoundedNumericAmount)) * (share_multiplier / 1_000))
             share_sum = float(round(share_sum + shares, 2))
-        elif (r'us-gaap_CommonStockDividendsPerShareCashPaid' in str(row) or
-              r'us-gaap_CommonStockDividendsPerShareDeclared' in str(row)):
-            div = xml_re(str(cells[colm])) 
-        elif (r'<ElementName>us-gaap_DepreciationAmortizationAndAccretionNet</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_DepreciationDepletionAndAmortization</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_DepreciationAndAmortization</ElementName>' in str(row)
+
+        elif (r'us-gaap_CommonStockDividendsPerShareCashPaid<' in str(row.ElementName) or
+              r'us-gaap_CommonStockDividendsPerShareDeclared<' in str(row.ElementName)
               ):
-            dep_am = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)  
-        elif (r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(row) or
-              r'<ElementName>us-gaap_GoodwillImpairmentLoss</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_AssetImpairmentCharges</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_ImpairmentOfRetainedInterest</ElementName>' in str(row)
+            div = xml_re(str(cells[colm].RoundedNumericAmount)) 
+
+        elif (r'us-gaap_DepreciationAmortizationAndAccretionNet<' in str(row.ElementName) or
+              r'us-gaap_DepreciationDepletionAndAmortization<' in str(row.ElementName) or
+              r'us-gaap_DepreciationAndAmortization<' in str(row.ElementName)
+              ):
+            dep_am = round(xml_re(str(cells[colm].RoundedNumericAmount)) * (dollar_multiplier / 1_000_000), 2)  
+
+        elif (r'us-gaap_GoodwillImpairmentLoss<' in str(row.ElementName) or
+              r'us-gaap_AssetImpairmentCharges<' in str(row.ElementName) or
+              r'us-gaap_ImpairmentOfRetainedInterest<' in str(row.ElementName)
               ):  
-            impairment += round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)    
-        elif (r"this, 'defref_us-gaap_GainsLossesOnSalesOfInvestmentRealEstate', window" in str(row) or
-              r'<ElementName>irm_GainLossOnDispositionAndImpairmentOfAssets</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_GainLossOnDispositionOfOtherAssets</ElementName>' in str(row)
+            impairment += round(xml_re(str(cells[colm].RoundedNumericAmount)) * (dollar_multiplier / 1_000_000), 2)   
+
+        elif (r'irm_GainLossOnDispositionAndImpairmentOfAssets<' in str(row.ElementName) or
+              r'us-gaap_GainLossOnDispositionOfOtherAssets<' in str(row.ElementName)
               ): 
-            result = xml_re(str(cells[colm]))
+            result = xml_re(str(cells[colm].RoundedNumericAmount))
             if result != '---':
                 disposition = round(check_neg(str(row), result, 'xml') * (dollar_multiplier / 1_000_000), 2)  
 
@@ -1871,96 +1923,109 @@ def bs_xml(bs_url, headers):
     rows = soup.find_all('Row')
     for row in rows:
         cells = row.find_all('Cell')
-        if ('us-gaap_CashCashEquivalentsAndShortTermInvestments' in str(row) or
-            'us-gaap_CashAndCashEquivalentsAtCarryingValue' in str(row) or
-            r'<ElementName>us-gaap_Cash</ElementName>' in str(row) or
-            r'<ElementName>us-gaap_CashEquivalentsAtCarryingValue</ElementName>' in str(row) or
-            r'<ElementName>gs_CashAndCashEquivalents</ElementName>' in str(row)
+        
+        if ('us-gaap_CashCashEquivalentsAndShortTermInvestments<' in str(row.ElementName) or
+            'us-gaap_CashAndCashEquivalentsAtCarryingValue<' in str(row.ElementName) or
+            r'us-gaap_Cash<' in str(row.ElementName) or
+            r'us-gaap_CashEquivalentsAtCarryingValue<' in str(row.ElementName) or
+            r'gs_CashAndCashEquivalents<' in str(row.ElementName)
             ):
-            cash = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2) 
-        elif (r'<ElementName>us-gaap_CashAndDueFromBanks</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_InterestBearingDepositsInBanks</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_CashReserveDepositRequiredAndMade</ElementName>' in str(row)
+            cash = round(xml_re(str(cells[colm].RoundedNumericAmount)) * (dollar_multiplier / 1_000_000), 2) 
+
+        elif (r'us-gaap_CashAndDueFromBanks<' in str(row.ElementName) or
+              r'us-gaap_InterestBearingDepositsInBanks<' in str(row.ElementName) or
+              r'us-gaap_CashReserveDepositRequiredAndMade<' in str(row.ElementName)
               ):
-            cash_calc = xml_re(str(cells[colm]))
+            cash_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if cash_calc != '---':
                 cash_sum += round(cash_calc * (dollar_multiplier / 1_000_000), 2)
-        elif 'us-gaap_Goodwill' in str(row):
-            goodwill = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)               
-        elif r'us-gaap_IntangibleAssetsNetExcludingGoodwill' in str(row):
-            intangible_assets = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)
-        elif r'<ElementName>us-gaap_Assets</ElementName>' in str(row):
-            assets = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)   
-        elif r'<ElementName>us-gaap_AssetsCurrent</ElementName>' in str(row):
-            cur_assets = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)  
-        elif (r'<ElementName>us-gaap_AccountsReceivableNet</ElementName>' in str(row) or
-              r'<ElementName>gs_CashAndSecuritiesSegregatedForRegulatoryAndOtherPurposes</ElementName>' in str(row) or
-              r'<ElementName>gs_SecuritiesPurchasedUnderAgreementsToResellAndFederalFundsSold</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_SecuritiesBorrowed</ElementName>' in str(row) or
-              r'<ElementName>gs_ReceivablesFromBrokersDealersAndClearingOrganizationsBS</ElementName>' in str(row) or
-              r'<ElementName>gs_ReceivablesFromCustomersAndCounterparties</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_ReceivablesFromBrokersDealersAndClearingOrganizations</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_AccruedFeesAndOtherRevenueReceivable</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_NotesAndLoansReceivableNetNoncurrent</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_FederalFundsSoldAndSecuritiesPurchasedUnderAgreementsToResell</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_SecuritiesReceivedAsCollateral</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_LoansAndLeasesReceivableNetReportedAmount</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_InterestsContinuedToBeHeldByTransferorFairValue</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_AccountsAndNotesReceivableNet</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_DeferredRentReceivablesNet</ElementName>' in str(row)
+
+        elif 'us-gaap_Goodwill' in str(row.ElementName):
+            goodwill = round(xml_re(str(cells[colm].RoundedNumericAmount)) * (dollar_multiplier / 1_000_000), 2)  
+
+        elif r'us-gaap_IntangibleAssetsNetExcludingGoodwill<' in str(row.ElementName):
+            intangible_assets = round(xml_re(str(cells[colm].RoundedNumericAmount)) * (dollar_multiplier / 1_000_000), 2)
+
+        elif r'us-gaap_Assets<' in str(row.ElementName):
+            assets = round(xml_re(str(cells[colm].RoundedNumericAmount)) * (dollar_multiplier / 1_000_000), 2)   
+
+        elif r'us-gaap_AssetsCurrent<' in str(row.ElementName):
+            cur_assets = round(xml_re(str(cells[colm].RoundedNumericAmount)) * (dollar_multiplier / 1_000_000), 2) 
+        
+        elif (r'us-gaap_AccountsReceivableNet<' in str(row.ElementName) or
+              r'gs_CashAndSecuritiesSegregatedForRegulatoryAndOtherPurposes<' in str(row.ElementName) or
+              r'gs_SecuritiesPurchasedUnderAgreementsToResellAndFederalFundsSold<' in str(row.ElementName) or
+              r'us-gaap_SecuritiesBorrowed<' in str(row.ElementName) or
+              r'gs_ReceivablesFromBrokersDealersAndClearingOrganizationsBS<' in str(row.ElementName) or
+              r'gs_ReceivablesFromCustomersAndCounterparties<' in str(row.ElementName) or
+              r'us-gaap_ReceivablesFromBrokersDealersAndClearingOrganizations<' in str(row.ElementName) or
+              r'us-gaap_AccruedFeesAndOtherRevenueReceivable<' in str(row.ElementName) or
+              r'us-gaap_NotesAndLoansReceivableNetNoncurrent<' in str(row.ElementName) or
+              r'us-gaap_FederalFundsSoldAndSecuritiesPurchasedUnderAgreementsToResell<' in str(row.ElementName) or
+              r'us-gaap_SecuritiesReceivedAsCollateral<' in str(row.ElementName) or
+              r'us-gaap_LoansAndLeasesReceivableNetReportedAmount<' in str(row.ElementName) or
+              r'us-gaap_InterestsContinuedToBeHeldByTransferorFairValue<' in str(row.ElementName) or
+              r'us-gaap_AccountsAndNotesReceivableNet<' in str(row.ElementName) or
+              r'us-gaap_DeferredRentReceivablesNet<' in str(row.ElementName)
               ):
-            recievables_calc = xml_re(str(cells[colm]))
+            recievables_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if recievables_calc != '---':
-                recievables += round(recievables_calc * (dollar_multiplier / 1_000_000), 2)               
-        elif (r'us-gaap_LongTermDebtNoncurrent' in str(row) or
-              r'us-gaap_LongTermDebtAndCapitalLeaseObligations' in str(row) or
-              r'<ElementName>us-gaap_LongTermDebt</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_LongTermLoansPayable</ElementName>' in str(row) or
-              r'<ElementName>cat_LongTermDebtDueAfterOneYearMachineryAndEnginesNoncurrent</ElementName>' in str(row) or
-              r'<ElementName>cat_LongTermDebtDueAfterOneYearFinancialProducts</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_UnsecuredLongTermDebt</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_LongTermNotesAndLoans</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_LineOfCredit</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_SecuredDebt</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_ConvertibleNotesPayable</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_NotesPayable</ElementName>' in str(row)
+                recievables += round(recievables_calc * (dollar_multiplier / 1_000_000), 2) 
+
+        elif (r'us-gaap_LongTermDebtNoncurrent<' in str(row.ElementName) or
+              r'us-gaap_LongTermDebtAndCapitalLeaseObligations<' in str(row.ElementName) or
+              r'us-gaap_LongTermDebt<' in str(row.ElementName) or
+              r'us-gaap_LongTermLoansPayable<' in str(row.ElementName) or
+              r'cat_LongTermDebtDueAfterOneYearMachineryAndEnginesNoncurrent<' in str(row.ElementName) or
+              r'cat_LongTermDebtDueAfterOneYearFinancialProducts<' in str(row.ElementName) or
+              r'us-gaap_UnsecuredLongTermDebt<' in str(row.ElementName) or
+              r'us-gaap_LongTermNotesAndLoans<' in str(row.ElementName) or
+              r'us-gaap_LineOfCredit<' in str(row.ElementName) or
+              r'us-gaap_SecuredDebt<' in str(row.ElementName) or
+              r'us-gaap_ConvertibleNotesPayable<' in str(row.ElementName) or
+              r'us-gaap_NotesPayable<' in str(row.ElementName)
               ):
-            debt_calc = xml_re(str(cells[colm]))
+            debt_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if debt_calc != '---':
                 debt_set.add(round(debt_calc * (dollar_multiplier / 1_000_000), 2))
-        elif r'<ElementName>us-gaap_LiabilitiesCurrent</ElementName>' in str(row):
-            cur_liabilities = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)
-        elif (r'<ElementName>us-gaap_AccountsPayableAndAccruedLiabilitiesCurrentAndNoncurrent</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>us-gaap_UnsecuredDebt</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>us-gaap_Deposits</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>us-gaap_SecuritiesSoldUnderAgreementsToRepurchase</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>gs_SecuritiesLoanedBS</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>us-gaap_OtherSecuredFinancings</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>gs_PayablesToBrokerDealersAndClearingOrganizationsBS</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>gs_PayablesToCustomersAndCounterparties</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>us-gaap_FinancialInstrumentsSoldNotYetPurchasedAtFairValue</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>gs_UnsecuredShortTermBorrowingsIncludingCurrentPortionOfUnsecuredLongTermBorrowings</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>gs_OtherLiabilitiesAndAccruedExpenses</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>us-gaap_ShortTermBorrowings</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>us-gaap_ObligationToReturnSecuritiesReceivedAsCollateral</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>us-gaap_SecuritiesLoaned</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>us-gaap_AccountsPayableCurrentAndNoncurrent</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>us-gaap_PayablesToBrokerDealersAndClearingOrganizations</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>us-gaap_InterestAndDividendsPayableCurrentAndNoncurrent</ElementName>' in str(row) and cur_liabilities == '---' or
-              r'<ElementName>us-gaap_OtherLiabilities</ElementName>' in str(row) and cur_liabilities == '---' and 'Mortgages, notes and accrued interest receivable, net of allowance' not in str(soup) or
-              r'<ElementName>us-gaap_InterestPayableCurrentAndNoncurrent</ElementName>' in str(row) and cur_liabilities == '---'
+
+        elif r'us-gaap_LiabilitiesCurrent<' in str(row.ElementName):
+            cur_liabilities = round(xml_re(str(cells[colm].RoundedNumericAmount)) * (dollar_multiplier / 1_000_000), 2)
+
+        elif (r'us-gaap_AccountsPayableAndAccruedLiabilitiesCurrentAndNoncurrent<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'us-gaap_UnsecuredDebt<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'us-gaap_Deposits<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'us-gaap_SecuritiesSoldUnderAgreementsToRepurchase<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'gs_SecuritiesLoanedBS<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'us-gaap_OtherSecuredFinancings<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'gs_PayablesToBrokerDealersAndClearingOrganizationsBS<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'gs_PayablesToCustomersAndCounterparties<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'us-gaap_FinancialInstrumentsSoldNotYetPurchasedAtFairValue<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'gs_UnsecuredShortTermBorrowingsIncludingCurrentPortionOfUnsecuredLongTermBorrowings<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'gs_OtherLiabilitiesAndAccruedExpenses<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'us-gaap_ShortTermBorrowings<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'us-gaap_ObligationToReturnSecuritiesReceivedAsCollateral<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'us-gaap_SecuritiesLoaned<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'us-gaap_AccountsPayableCurrentAndNoncurrent<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'us-gaap_PayablesToBrokerDealersAndClearingOrganizations<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'us-gaap_InterestAndDividendsPayableCurrentAndNoncurrent<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'us-gaap_OtherLiabilities<' in str(row.ElementName) and cur_liabilities == '---' and 'Mortgages, notes and accrued interest receivable, net of allowance' not in str(soup) or
+              r'us-gaap_InterestPayableCurrentAndNoncurrent<' in str(row.ElementName) and cur_liabilities == '---'
               ):
-            liabilities_calc = xml_re(str(cells[colm]))
+            liabilities_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if liabilities_calc != '---':              
                 cur_liabilities_sum += round(liabilities_calc * (dollar_multiplier / 1_000_000), 2)
-        elif r'<ElementName>us-gaap_Liabilities</ElementName>' in str(row):
-            liabilities = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)
-        elif r'us-gaap_LiabilitiesAndStockholdersEquity' in str(row) and liabilities == '---':
-            tot_liabilities = round(xml_re(str(cells[colm])) * (dollar_multiplier / 1_000_000), 2)
-        elif (r'<ElementName>us-gaap_StockholdersEquity</ElementName>' in str(row) or
-              r'<ElementName>us-gaap_StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest</ElementName>' in str(row) and equity == '---'
+
+        elif r'us-gaap_Liabilities<' in str(row.ElementName):
+            liabilities = round(xml_re(str(cells[colm].RoundedNumericAmount)) * (dollar_multiplier / 1_000_000), 2)
+
+        elif r'us-gaap_LiabilitiesAndStockholdersEquity<' in str(row.ElementName) and liabilities == '---':
+            tot_liabilities = round(xml_re(str(cells[colm].RoundedNumericAmount)) * (dollar_multiplier / 1_000_000), 2)
+
+        elif (r'us-gaap_StockholdersEquity<' in str(row.ElementName) or
+              r'us-gaap_StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest<' in str(row.ElementName) and equity == '---'
               ):
-            equity = xml_re(str(cells[colm])) 
+            equity = xml_re(str(cells[colm].RoundedNumericAmount)) 
             if equity != '---':
                 equity = round(check_neg(str(row), equity, 'xml') * (dollar_multiplier / 1_000_000), 2)                                                 
 
@@ -2024,53 +2089,60 @@ def cf_xml(cf_url, headers):
     rows = soup.find_all('Row')
     for row in rows:
         cells = row.find_all('Cell')
-        if (r'<ElementName>us-gaap_NetCashProvidedByUsedInOperatingActivities</ElementName>' in str(row) or
-            r'<ElementName>us-gaap_NetCashProvidedByUsedInOperatingActivitiesContinuingOperations</ElementName>' in str(row)
+
+        if (r'us-gaap_NetCashProvidedByUsedInOperatingActivities' in str(row.ElementName) or
+            r'us-gaap_NetCashProvidedByUsedInOperatingActivitiesContinuingOperations' in str(row.ElementName)
             ):
-            cfo_calc = xml_re(str(cells[colm]))
+            cfo_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if cfo_calc != '---':
-                cfo = round(check_neg(str(row), cfo_calc, 'xml') * (dollar_multiplier / 1_000_000), 2) 
-        elif (r'us-gaap_PaymentsToAcquirePropertyPlantAndEquipment' in str(row) or
-              r'us-gaap_PaymentsToAcquireProductiveAssets' in str(row)
+                cfo = round(check_neg(str(cells[colm].RoundedNumericAmount), cfo_calc, 'xml') * (dollar_multiplier / 1_000_000), 2) 
+
+        elif (r'us-gaap_PaymentsToAcquirePropertyPlantAndEquipment' in str(row.ElementName) or
+              r'us-gaap_PaymentsToAcquireProductiveAssets' in str(row.ElementName)
               ):
-            capex_calc = xml_re(str(cells[colm]))
+            capex_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if capex_calc != '---':
                 capex = round(capex_calc * (dollar_multiplier / 1_000_000), 2) 
-        elif (r'us-gaap_ProceedsFromRepaymentsOfShortTermDebtMaturingInThreeMonthsOrLess' in str(row) or
-              r'RepaymentsOfShortTermAndLongTermBorrowings' in str(row) or
-              r'us-gaap_RepaymentsOfLongTermDebtAndCapitalSecurities' in str(row) or
-              r'us-gaap_InterestPaid' in str(row) or
-              r'us-gaap_RepaymentsOfLongTermDebt' in str(row) or
-              r'us-gaap_RepaymentsOfOtherDebt' in str(row) or
-              r'<ElementName>cat_PaymentsMachineryAndEngines</ElementName>' in str(row) or
-              r'<ElementName>cat_PaymentsFinancialProducts</ElementName>' in str(row)
+
+        elif (r'us-gaap_ProceedsFromRepaymentsOfShortTermDebtMaturingInThreeMonthsOrLess' in str(row.ElementName) or
+              r'RepaymentsOfShortTermAndLongTermBorrowings' in str(row.ElementName) or
+              r'us-gaap_RepaymentsOfLongTermDebtAndCapitalSecurities' in str(row.ElementName) or
+              r'us-gaap_InterestPaid' in str(row.ElementName) or
+              r'us-gaap_RepaymentsOfLongTermDebt' in str(row.ElementName) or
+              r'us-gaap_RepaymentsOfOtherDebt' in str(row.ElementName) or
+              r'cat_PaymentsMachineryAndEngines' in str(row.ElementName) or
+              r'cat_PaymentsFinancialProducts' in str(row.ElementName)
               ):
-            debt_pay_calc = xml_re(str(cells[colm]))
+            debt_pay_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if debt_pay_calc != '---':
-                debt_pay += round(debt_pay_calc * (dollar_multiplier / 1_000_000), 2)                            
-        elif (r'us-gaap_PaymentsForRepurchaseOfCommonStock' in str(row) or
-              r'<ElementName>us-gaap_PaymentsForRepurchaseOfEquity</ElementName>' in str(row)
+                debt_pay += round(debt_pay_calc * (dollar_multiplier / 1_000_000), 2)  
+
+        elif (r'us-gaap_PaymentsForRepurchaseOfCommonStock' in str(row.ElementName) or
+              r'us-gaap_PaymentsForRepurchaseOfEquity' in str(row.ElementName)
               ):
-            buyback_calc = xml_re(str(cells[colm]))
+            buyback_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if buyback_calc != '---':
                 buyback += round(buyback_calc * (dollar_multiplier / 1_000_000), 2) 
-        elif (r'us-gaap_ProceedsFromStockOptionsExercised' in str(row) or
-              r'us-gaap_ProceedsFromIssuanceOfCommonStock' in str(row) or
-              r'cost_ProceedsFromStockbasedAwardsNet' in str(row) or
-              r'us-gaap_ProceedsFromIssuanceOrSaleOfEquity' in str(row)
+
+        elif (r'us-gaap_ProceedsFromStockOptionsExercised' in str(row.ElementName) or
+              r'us-gaap_ProceedsFromIssuanceOfCommonStock' in str(row.ElementName) or
+              r'cost_ProceedsFromStockbasedAwardsNet' in str(row.ElementName) or
+              r'us-gaap_ProceedsFromIssuanceOrSaleOfEquity' in str(row.ElementName)
               ):
-            share_issue_calc = xml_re(str(cells[colm]))
+            share_issue_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if share_issue_calc != '---':
-                share_issue += round(share_issue_calc * (dollar_multiplier / 1_000_000), 2)               
-        elif (r'us-gaap_PaymentsOfDividendsCommonStock' in str(row) and divpaid == 0 or
-              r'us-gaap_PaymentsOfDividends' in str(row) and divpaid == 0 or
-              r'<ElementName>frt_DividendsPaidToCommonAndPreferredShareholders</ElementName>' in str(row) and divpaid == 0
+                share_issue += round(share_issue_calc * (dollar_multiplier / 1_000_000), 2) 
+
+        elif (r'us-gaap_PaymentsOfDividendsCommonStock' in str(row.ElementName) and divpaid == 0 or
+              r'us-gaap_PaymentsOfDividends' in str(row.ElementName) and divpaid == 0 or
+              r'frt_DividendsPaidToCommonAndPreferredShareholders' in str(row.ElementName) and divpaid == 0
               ):
-            divpaid_calc = xml_re(str(cells[colm]))
+            divpaid_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if divpaid_calc != '---':
-                divpaid += round(divpaid_calc * (dollar_multiplier / 1_000_000), 2)       
-        elif r'us-gaap_ShareBasedCompensation' in str(row):
-            sbc_calc = xml_re(str(cells[colm]))
+                divpaid += round(divpaid_calc * (dollar_multiplier / 1_000_000), 2)  
+
+        elif r'us-gaap_ShareBasedCompensation' in str(row.ElementName):
+            sbc_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if sbc_calc != '---':
                 sbc += round(sbc_calc * (dollar_multiplier / 1_000_000), 2) 
     
@@ -2109,9 +2181,10 @@ def div_xml(div_url, headers):
         ):
         rows = soup.find_all('Row')
         for row in rows:
-            if (r'>us-gaap_CommonStockDividendsPerShareDeclared' in str(row) or
-                r'us-gaap_CommonStockDividendsPerShareCashPaid' in str(row) or
-                r'<ElementName>us-gaap_DividendsPayableAmountPerShare</ElementName>' in str(row)
+            
+            if (r'>us-gaap_CommonStockDividendsPerShareDeclared' in str(row.ElementName) or
+                r'us-gaap_CommonStockDividendsPerShareCashPaid' in str(row.ElementName) or
+                r'us-gaap_DividendsPayableAmountPerShare' in str(row.ElementName)
                 ):
                 cells = row.find_all('Cell')
                 obj = re.findall(r'(?:<RoundedNumericAmount>-?)(.*?)(?:</RoundedNumericAmount>)', str(cells), re.M)
@@ -2131,12 +2204,13 @@ def div_xml(div_url, headers):
     # Go to cell with 12 month data and pull div
     rows = soup.find_all('Row')
     for row in rows:
-        if (r'>us-gaap_CommonStockDividendsPerShareDeclared' in str(row) or
-            r'us-gaap_CommonStockDividendsPerShareCashPaid' in str(row)  or
-            r'<ElementName>us-gaap_DividendsPayableAmountPerShare</ElementName>' in str(row)
+
+        if (r'>us-gaap_CommonStockDividendsPerShareDeclared' in str(row.ElementName) or
+            r'us-gaap_CommonStockDividendsPerShareCashPaid' in str(row.ElementName)  or
+            r'us-gaap_DividendsPayableAmountPerShare' in str(row.ElementName)
             ):
             cells = row.find_all('Cell')
-            div_calc = xml_re(str(cells[colm]))
+            div_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if div_calc != None and div_calc != 0:
                 div = div_calc
             break
@@ -2172,7 +2246,7 @@ def eps_catch_xml(catch_url, headers):
     # Find table
     rows = soup.find_all('Row')
     for row in rows:
-        if r'<ElementName>us-gaap_EarningsPerShareTextBlock</ElementName>' in str(row):
+        if r'us-gaap_EarningsPerShareTextBlock' in str(row.ElementName):
             cells = row.find_all('Cell')
             
             # Find eps
@@ -2184,9 +2258,9 @@ def eps_catch_xml(catch_url, headers):
             obj = re.search(r'(?:Less Dividends)(?:.|\n)*?(\d?\d.\d\d)', str(cells[0]))
             if obj is not None:
                 div = float(obj.group(1))
-        elif r'<ElementName>us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding</ElementName>' in str(row):
+        elif r'us-gaap_WeightedAverageNumberOfDilutedSharesOutstanding' in str(row.ElementName):
             cells = row.find_all('Cell')
-            share_calc = xml_re(str(cells[colm]))
+            share_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if share_calc != '---':
                 shares = round(share_calc * (share_multiplier / 1_000), 2) 
 
@@ -2235,21 +2309,24 @@ def share_catch_xml(catch_url, headers, per):
     rows = soup.find_all('Row')
     for row in rows:
         cells = row.find_all('Cell')
-        if (r'<ElementName>us-gaap_CommonStockSharesOutstanding</ElementName>' in str(row)
+
+        if (r'us-gaap_CommonStockSharesOutstanding' in str(row.ElementName)
             ):
             if multiple_classes == True:
                 for colm in colms:
-                    share_sum += round(xml_re(str(cells[colm])) * (share_multiplier / 1_000), 2)
+                    share_sum += round(xml_re(str(cells[colm].RoundedNumericAmount)) * (share_multiplier / 1_000), 2)
                 shares = share_sum
             else:
-                shares = round(xml_re(str(cells[colm])) * (share_multiplier / 1_000), 2)
+                shares = round(xml_re(str(cells[colm].RoundedNumericAmount)) * (share_multiplier / 1_000), 2)
             break
-        elif (r"<ElementName>us-gaap_CommonStockSharesIssued</ElementName>" in str(row)
+
+        elif (r"us-gaap_CommonStockSharesIssued" in str(row.ElementName)
             ):
-            shares_issued = xml_re(str(cells[colm]))
-        elif (r"<ElementName>us-gaap_TreasuryStockShares</ElementName>" in str(row)
+            shares_issued = xml_re(str(cells[colm].RoundedNumericAmount))
+
+        elif (r"us-gaap_TreasuryStockShares" in str(row.ElementName)
             ):
-            shares_repurchased = xml_re(str(cells[colm]))
+            shares_repurchased = xml_re(str(cells[colm].RoundedNumericAmount))
 
     if shares == '---' and shares_issued != '---' and shares_repurchased != '---':
         shares = round((shares_issued - shares_repurchased) * (share_multiplier / 1_000), 2)
