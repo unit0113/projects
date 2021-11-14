@@ -372,7 +372,8 @@ def rev_htm(rev_url, headers, per):
                 rev_calc = round(rev_calc * (dollar_multiplier / 1_000_000), 2)
                 if rev_calc > rev:
                     rev = rev_calc
-        elif (r"this, 'defref_us-gaap_InterestIncomeOperating', window" in str(tds[0])
+        elif (r"this, 'defref_us-gaap_InterestIncomeOperating', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_InterestAndDividendIncomeOperating', window" in str(tds[0])
               ):
             int_rev_calc = html_re(str(tds[colm]))
             if int_rev_calc != '---':
@@ -380,11 +381,12 @@ def rev_htm(rev_url, headers, per):
         elif (r"this, 'defref_us-gaap_NoninterestIncome', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_OtherIncome', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_ContractuallySpecifiedServicingFeesLateFeesAndAncillaryFeesEarnedInExchangeForServicingFinancialAssets', window" in str(tds[0]) or
-              r"this, 'defref_nrz_GainLossOnSaleOfOriginatedMortgageLoansHeldForSaleNet', window" in str(tds[0])
+              r"this, 'defref_nrz_GainLossOnSaleOfOriginatedMortgageLoansHeldForSaleNet', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_NonoperatingGainsLosses', window" in str(tds[0])
               ):
             oth_rev_calc = html_re(str(tds[colm]))
             if oth_rev_calc != '---':
-                oth_rev += round(oth_rev_calc * (dollar_multiplier / 1_000_000), 2)
+                oth_rev += round(check_neg(str(tds[colm]), oth_rev_calc) * (dollar_multiplier / 1_000_000), 2)
         elif r'defref_us-gaap_GrossProfit' in str(tds[0]):
             gross = html_re(str(tds[colm]))
             if gross != '---':
@@ -511,7 +513,10 @@ def rev_htm(rev_url, headers, per):
                 dep_am = round(check_neg(str(tds[colm]), result) * (dollar_multiplier / 1_000_000), 2) 
         elif (r"this, 'defref_us-gaap_AssetImpairmentCharges', window" in str(tds[0]) or
               r"this, 'defref_nnn_ImpairmentLossesAndOtherChargesNetOfRecoveries', window" in str(tds[0]) or
-              r"this, 'defref_nrz_TotalImpairmentCharges', window" in str(tds[0])
+              r"this, 'defref_nrz_TotalImpairmentCharges', window" in str(tds[0]) or
+              r"this, 'defref_nrz_ImpairmentNetOfTheReversalOfPriorValuationAllowancesOnLoans', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_OtherThanTemporaryImpairmentLossesInvestmentsAvailableforsaleSecurities', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ProvisionForLoanLeaseAndOtherLosses', window" in str(tds[0])
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -692,7 +697,14 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_us-gaap_NotesAndLoansReceivableNetNoncurrent', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_AccountsAndNotesReceivableNet', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_DeferredRentReceivablesNet', window" in str(tds[0]) or
-              r"this, 'defref_us-gaap_InterestsContinuedToBeHeldByTransferorFairValue', window" in str(tds[0])
+              r"this, 'defref_us-gaap_InterestsContinuedToBeHeldByTransferorFairValue', window" in str(tds[0]) or
+              r"this, 'defref_nrz_ExcessMortgageServicingRightsFairValue', window" in str(tds[0]) or
+              r"this, 'defref_nrz_MortgageServicingRightsFairValue', window" in str(tds[0]) or
+              r"this, 'defref_nrz_MortgageServicingRightsFinancingReceivableatFairValue', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_RestrictedCashAndCashEquivalents', window" in str(tds[0]) or
+              r"this, 'defref_nrz_ResidentialMortgageLoansHeldforinvestment', window" in str(tds[0]) or
+              r"this, 'defref_nrz_ResidentialMortgageLoansSubjectToRepurchase', window" in str(tds[0]) or
+              r"this, 'defref_nrz_ServicerAdvancesReceivableNet', window" in str(tds[0])
               ):
             if cur_assets == '---':
                 recievables_calc = html_re(str(tds[colm]))
@@ -702,7 +714,7 @@ def bs_htm(bs_url, headers, per):
             cur_liabilities_calc = html_re(str(tds[colm]))
             if cur_liabilities_calc != '---':
                 cur_liabilities = round(check_neg(str(tds[colm]), cur_liabilities_calc) * (dollar_multiplier / 1_000_000), 2)
-        elif (r"this, 'defref_us-gaap_UnsecuredDebt', window" in str(tds[0]) or
+        elif (r"this, 'defref_us-gaap_UnsecuredDebt', window" in str(tds[0]) and 'nrz' not in str(soup) or
               r"this, 'defref_stor_AccruedExpensesDeferredRevenueAndOtherLiabilities', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_AccountsPayableAndAccruedLiabilitiesCurrentAndNoncurrent', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_ConvertibleNotesPayable', window" in str(tds[0]) and 'Accounted for using the operating method, net of accumulated depreciation and amortization' not in str(soup) or
@@ -730,7 +742,9 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_us-gaap_ShortTermBorrowings', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_ObligationToReturnSecuritiesReceivedAsCollateral', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_InterestAndDividendsPayableCurrentAndNoncurrent', window" in str(tds[0]) or
-              r"this, 'defref_us-gaap_InterestPayableCurrentAndNoncurrent', window" in str(tds[0])
+              r"this, 'defref_us-gaap_InterestPayableCurrentAndNoncurrent', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_DividendsPayableCurrentAndNoncurrent', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_DueToAffiliateCurrentAndNoncurrent', window" in str(tds[0])
               ):
             if cur_liabilities == '---':
                 cur_liabilities_calc = html_re(str(tds[colm]))
@@ -763,7 +777,9 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_kr_LongTermDebtAndFinanceLease', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_DebtLongtermAndShorttermCombinedAmount', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_NotesPayable', window" in str(tds[0]) or
-              r"this, 'defref_us-gaap_ConvertibleNotesPayable', window" in str(tds[0])
+              r"this, 'defref_us-gaap_ConvertibleNotesPayable', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_UnsecuredDebt', window" in str(tds[0]) and 'nrz' in str(soup) or
+              r"this, 'defref_nrz_ResidentialMortgageLoansRepurchaseLiability', window" in str(tds[0])
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
