@@ -12,19 +12,24 @@ global headers
 headers = {}
 
 
-@edgarquery.network_check_decorator(1)
+#@edgarquery.network_check_decorator(1)
 def get_CIK_list():
     """ Webscrape list of stock tickers and their CIK numbers, ouputs into a dictionary
 
     Returns:
         cikList (dict): dictionary of pairs of stock tickers and CIK numbers
     """
-    cikData = urllib.request.urlopen("https://www.sec.gov/include/ticker.txt") 
+
+    # Pull data from EDGAR
+    cik_data = urllib.request.urlopen("https://www.sec.gov/files/company_tickers.json") 
+    cik_data = json.load(cik_data)
+
     # Parse into dict
     cik_list = {}
-    for line in cikData:
-        line = line.decode("utf-8")
-        (key, val) = line.split()
+    for line in cik_data:
+        data = cik_data[line]
+        val = data['cik_str']
+        key = data['ticker']
         cik_list[key] = val
 
     return cik_list   
@@ -218,7 +223,7 @@ def get_tickers(cikList):
             cik1 = ""
         else:
             try:
-                ticker1 = ticker1_entry.get().lower()
+                ticker1 = ticker1_entry.get().upper()
                 cik1 = int(cikList[ticker1])
             except:
                 tk.messagebox.showwarning(title="Invalid Ticker", message="Ticker 1 is invalid, please enter a valid ticker")
@@ -232,7 +237,7 @@ def get_tickers(cikList):
             cik2 = ""
         else:
             try:
-                ticker2 = ticker2_entry.get().lower()
+                ticker2 = ticker2_entry.get().upper()
                 cik2 = int(cikList[ticker2])
             except:
                 tk.messagebox.showwarning(title="Invalid Ticker", message="Ticker 2 is invalid, please enter a valid ticker")

@@ -102,7 +102,7 @@ def column_finder_annual_htm(soup, per):
     head = soup.table.find_all('tr')[0]
     head2 = soup.table.find_all('tr')[1]
     first_cell = soup.table.find_all('tr')[2]
-    
+
     # Identify next FY in case there is a more recent date than the relevant period
     next_year = str(int(per[-4:]) + 1)
     weird_colm = False
@@ -130,7 +130,7 @@ def column_finder_annual_htm(soup, per):
                         tweleve_month_prior = True
                     # Restart loop if data doesn't end on FY data, else, get new index and start loop over
                     if col_index > index:
-                        if ('3 Months Ended' in str(row2) or
+                        if ('3 Months Ended' in str(row2) and ('12 Months Ended' in str(head) or '11 Months Ended' in str(head)) or
                             '4 Months Ended' in str(row2) or
                             '1 Months Ended' in str(row2) and '11 Months Ended' not in str(row2) or
                             '0 Months Ended' in str(row2) or
@@ -368,6 +368,10 @@ def rev_htm(rev_url, headers, per):
             r"this, 'defref_us-gaap_RevenueMineralSales', window" in str(tds[0])
             ):
             rev_calc = html_re(str(tds[colm]))
+            if rev_calc == '---':
+                rev_calc = html_re(str(tds[1]))
+                if rev_calc != '---':
+                    colm = 1
             if rev_calc != '---':
                 rev_calc = round(rev_calc * (dollar_multiplier / 1_000_000), 2)
                 if rev_calc > rev:
@@ -429,7 +433,7 @@ def rev_htm(rev_url, headers, per):
         elif ('this, \'defref_us-gaap_NetIncomeLoss\', window' in str(tds[0]) and net == '---' or
               'this, \'defref_us-gaap_NetIncomeLoss\', window' in str(tds[0]) and net_actual == False or
               'this, \'defref_us-gaap_ProfitLoss\', window' in str(tds[0]) and net == '---' or
-              r"this, 'defref_us-gaap_NetIncomeLossAvailableToCommonStockholdersBasic', window" in str(tds[0]) and net == '---' or
+              r"this, 'defref_us-gaap_NetIncomeLossAvailableToCommonStockholdersBasic', window" in str(tds[0]) and net_actual == False or
               r"this, 'defref_us-gaap_IncomeLossFromContinuingOperations', window" in str(tds[0]) and net == '---' or
               r"this, 'defref_us-gaap_IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest', window" in str(tds[0]) and net == '---' or
               r"this, 'defref_us-gaap_NetIncomeLossAvailableToCommonStockholdersBasic', window" in str(tds[0]) and ('>Net earnings attributable to common stockholders<' in str(tds[0]) or 'Net income (loss) attributable to common stockholders' in str(tds[0]) or '>Net earnings available to common stockholders<' in str(tds[0]))
@@ -506,7 +510,8 @@ def rev_htm(rev_url, headers, per):
               ):
             div = html_re(str(tds[colm]))
         elif (r"this, 'defref_us-gaap_DepreciationAndAmortization', window" in str(tds[0]) or
-              r"this, 'defref_us-gaap_DepreciationDepletionAndAmortization', window" in str(tds[0])
+              r"this, 'defref_us-gaap_DepreciationDepletionAndAmortization', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_Depreciation', window" in str(tds[0])
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -526,7 +531,9 @@ def rev_htm(rev_url, headers, per):
             if result != '---':
                 disposition = round(check_neg(str(tds[colm]), result) * (dollar_multiplier / 1_000_000), 2)  
       
-        elif '[Member]' in str(row) and rev != 0:
+        elif ('[Member]' in str(row) and rev != 0 or
+              'Successor' in str(row) and rev != 0
+              ):
             break   
 
     # Check for gross data in member section
@@ -1308,7 +1315,10 @@ def div_htm(div_url, headers, per):
                     elif ('this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(tds[0]) and period_found == True or
                           r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds[0]) and period_found == True
                           ):
-                        div = re.findall(r'\d+\.\d+', str(tds))[0:4]
+                        if html_re(str(tds[colm])) == '---':
+                            div = re.findall(r'\d+\.\d+', str(tds))[0:4]
+                        else:
+                            div = re.findall(r'\d+\.\d+', str(tds[colm:colm + 4]))[0:4]
                         div = sum(list(map(float, div)))
                         return round(div, 3)
             elif '>CONSOLIDATED STATEMENT OF SHAREOWNERS EQUITY - USD ($)' in str(head):
