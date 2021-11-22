@@ -115,7 +115,9 @@ def column_finder_annual_htm(soup, per):
             tweleve_month_prior = False
             # If extra/next FY in table
             if next_year in str(row1) or 'Minimum' in str(row1):
-                if 'Subsequent Event [Member]' not in str(soup):
+                if ('Subsequent Event [Member]' not in str(soup) and
+                    'Shareholders\' Equity - Dividends Declared (Details)' not in str(head)
+                    ):
                     weird_colm = True         
             elif per in str(row1):
                 # Find correct column if multiple things before 12 months data
@@ -405,7 +407,8 @@ def rev_htm(rev_url, headers, per):
                 research = round(research_calc * (dollar_multiplier / 1_000_000), 2)
         elif (r"this, 'defref_us-gaap_CostsAndExpenses', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_OperatingExpenses', window" in str(tds[0]) or
-              r"this, 'defref_us-gaap_NoninterestExpense', window" in str(tds[0])
+              r"this, 'defref_us-gaap_NoninterestExpense', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_OperatingCostsAndExpenses', window" in str(tds[0])
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -933,7 +936,8 @@ def cf_htm(cf_url, headers, per):
               r"this, 'defref_us-gaap_ProceedsFromStockPlans', window" in str(tds[0]) or
               r"this, 'defref_doc_ProceedsFromPaymentsToFromSaleOfCommonSharesNet', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_ProceedsFromIssuanceOfPreferredStockAndPreferenceStock', window" in str(tds[0]) or
-              r"this, 'defref_us-gaap_ProceedsFromSaleOfTreasuryStock', window" in str(tds[0])
+              r"this, 'defref_us-gaap_ProceedsFromSaleOfTreasuryStock', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ProceedsFromIssuanceInitialPublicOffering', window" in str(tds[0])
               ):
             share_issue_rtn = html_re(str(tds[colm]))
             if share_issue_rtn != '---':
@@ -956,6 +960,10 @@ def cf_htm(cf_url, headers, per):
               r"this, 'defref_us-gaap_EmployeeBenefitsAndShareBasedCompensation', window" in str(tds[0])
               ):
             sbc_calc = html_re(str(tds[colm]))
+            if sbc_calc == '---':
+                sbc_calc = html_re(str(tds[1]))
+                if sbc_calc != '---':
+                    colm = 1
             if sbc_calc != '---':
                 sbc = round(sbc_calc * (dollar_multiplier / 1_000_000), 2)
         elif '[Member]' in str(row) and cfo != '---':
@@ -1180,7 +1188,8 @@ def div_htm(div_url, headers, per):
           "Shareholders' Equity (Narrative) (Details)" in str(head) and '12 Months Ended' in str(head) or
           "Shareholders' Equity - Additional Information (Detail)" in str(head) and '12 Months Ended' in str(head) or
           ">Shareholders' Equity (Details 3)" in str(head) and '12 Months Ended' in str(head) or
-          "Total Equity" in str(head) and '12 Months Ended' in str(head)
+          "Total Equity" in str(head) and '12 Months Ended' in str(head) or
+          "Shareholders' Equity - Dividends Declared (Details)" in str(head) and '12 Months Ended' in str(head)
           ):      
         # Find row with div data
         for row in soup.table.find_all('tr'):
@@ -1298,7 +1307,8 @@ def div_htm(div_url, headers, per):
         # If no 12 month data, for divs broken out by quarter
         elif ('12 Months Ended' not in str(head) and 'ABSTRACT' not in str(head).upper() or
               'Stockholders\' equity (Details Textual)' in str(head) and '3 Months Ended' in str(head) or
-              'Stockholders\' equity (Details Textual)' in str(head) and '0 Months Ended' in str(head)
+              'Stockholders\' equity (Details Textual)' in str(head) and '0 Months Ended' in str(head) or
+              'Shareholders\' Equity - Dividends Declared (Details' in str(head) and '3 Months Ended' in str(head)
               ):
             if ('this, \'defref_us-gaap_CommonStockDividendsPerShareDeclared\', window' in str(soup) or
                 r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(soup)

@@ -918,7 +918,7 @@ if __name__ == "__main__":
 pull quarter data from 10-k
 complete comment strings
 corr() to find highest correlated with share price
-figure out how to get SBC from table
 find a way to parse for companies that don't report an xml summary (MAIN)
 determine avg price per FY for use in price to whatever calcs
+calculate relative price to indexes chart data
 '''

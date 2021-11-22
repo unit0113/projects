@@ -68,10 +68,10 @@ rev_answers_htm = [[168088.0, 115856.0, 20716.0, 69916.0, 61271.0, 8.05, 7608000
                    [8322.0, 3136.0, 222.0, -3631.0, -2462.0, -4.94, '---', 1.225, -1100.0], [660.68, 593.03, 0, 374.49, 210.86, 1.22, 172217.08, '---', 428.68], [622.66, 568.34, 0, 424.76, 258.12, 1.65, 156295.62, '---', 460.73],
                    [2585.64, 1651.89, 0, 1606.62, 550.01, 1.34, 408990.11, 2.0, 585.59]]
 
-rev_url = r'https://www.sec.gov/Archives/edgar/data/1553023/000155302316000152/R4.htm'
+rev_url = r'https://www.sec.gov/Archives/edgar/data/1705696/000170569621000030/R4.htm'
 
 # Rev Test
-print(sp.rev_htm(rev_url, headers, get_sum_per(rev_url)))
+#print(sp.rev_htm(rev_url, headers, get_sum_per(rev_url)))
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
@@ -110,7 +110,7 @@ bs_answers_htm = [[16289.0, 27645.0, 37201.0, 21071.0, 14510.0, 44709.0, 36210.0
                   [110051.0, 572442.0, 916776.0, 217687.0, 616846.0, 834533.0, 82243.0], [82171.0, 463227.0, 886179.0, 192627.0, 620105.0, 812732.0, 81549.0], [87591.0, 444441.0, 791763.0, 152772.0, 576634.0, 729406.0, 70900.0],
                   [1.11, 32.88, 7434.87, 2988.36, 18.25, 3103.18, 4331.68], [2.08, 71.52, 3988.03, 1586.96, 17.53, 1690.44, 2296.28]]
 
-bs_url = r'https://www.sec.gov/Archives/edgar/data/1556593/000155659321000004/R2.htm'
+bs_url = r'https://www.sec.gov/Archives/edgar/data/1705696/000170569621000030/R2.htm'
 
 
 # BS Test
@@ -147,7 +147,7 @@ cf_answers_htm = [[23907.0, 4461.0, 4846.0, 0.0, 7679.0], [9704.0, 537.0, 7924.0
                   [331.0, 86.0, -2.0, 0, 42.0], [27455.0, 39964.0, 1524.0, 14956.0, 0], [505.9, 255.81, -272.76, 318.7, 0],
                   [-1051.0, 6692.0, -2745.0, 2812.0, 0]]
 
-cf_url = r'https://www.sec.gov/Archives/edgar/data/63754/000006375418000008/R6.htm'
+cf_url = r'https://www.sec.gov/Archives/edgar/data/1705696/000170569618000015/R7.htm'
 
 # CF Test
 #print(sp.cf_htm(cf_url, headers, get_sum_per(cf_url)))
@@ -178,7 +178,7 @@ div_url_list_htm = [r'https://www.sec.gov/Archives/edgar/data/1403161/0001403161
                     r'https://www.sec.gov/Archives/edgar/data/886982/000119312512085822/R26.htm', r'https://www.sec.gov/Archives/edgar/data/55785/000005578512000021/R119.htm', r'https://www.sec.gov/Archives/edgar/data/1336920/000133692017000014/R8.htm',
                     r'https://www.sec.gov/Archives/edgar/data/1336920/000133692016000076/R7.htm', r'https://www.sec.gov/Archives/edgar/data/59478/000005947818000089/R92.htm', r'https://www.sec.gov/Archives/edgar/data/59478/000005947813000007/R35.htm',
                     r'https://www.sec.gov/Archives/edgar/data/1059556/000119312518058986/R117.htm', r'https://www.sec.gov/Archives/edgar/data/1059556/000119312512081639/R111.htm', r'https://www.sec.gov/Archives/edgar/data/1164727/000155837020001041/R11.htm',
-                    r'https://www.sec.gov/Archives/edgar/data/1705696/000170569619000064/R77.htm']
+                    r'https://www.sec.gov/Archives/edgar/data/1705696/000170569619000064/R77.htm', r'https://www.sec.gov/Archives/edgar/data/1705696/000170569620000048/R95.htm']
 
 div_answers_htm = [1.2, 1.0, 0.825,
                    0.48, 0.88, 1.6,
@@ -204,9 +204,9 @@ div_answers_htm = [1.2, 1.0, 0.825,
                    '---', 2.8, 14.92,
                    1.28, 2.08, 1.96,
                    1.52, '---', 1.44,
-                   0.997]
+                   0.997, 1.17]
 
-div_url = r'https://www.sec.gov/Archives/edgar/data/318154/000031815418000004/R92.htm'
+div_url = r'https://www.sec.gov/Archives/edgar/data/1705696/000170569620000048/R95.htm'
 
 def get_sum_per_div(url):
     obj = re.search(r'(/R\d?\d?\d\.htm)', str(url))
@@ -217,7 +217,7 @@ def get_sum_per_div(url):
     return per
 
 # Div Test
-#print(sp.div_htm(div_url, headers, get_sum_per_div(div_url)))
+print(sp.div_htm(div_url, headers, get_sum_per_div(div_url)))
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
@@ -420,7 +420,7 @@ def yf_div_catch_test(ticker, divpaid, divs, pers):
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
 # Div finder
-base_url = 'https://www.sec.gov/Archives/edgar/data/59478/000005947818000089/'
+base_url = 'https://www.sec.gov/Archives/edgar/data/1705696/000170569618000015/'
 div = 2.123
 def div_finder_htm(base_url, div):
     for i in range(150):
