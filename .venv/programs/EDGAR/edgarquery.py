@@ -507,7 +507,7 @@ def parse_filings(filings, type, headers, splits):
     # Define statements to Parse
     intro_list = ['DOCUMENT AND ENTITY INFORMATION', 'COVER PAGE', 'COVER', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT', 'COVER PAGE COVER PAGE', 'DEI DOCUMENT', 'COVER DOCUMENT', 'DOCUMENT INFORMATION STATEMENT',
                   'DOCUMENT ENTITY INFORMATION', 'DOCUMENT AND ENTITY INFORMATION DOCUMENT AND ENTITY INFORMATION', 'COVER COVER', 'DOCUMENT', 'DOCUMENT ENTITY INFORMATION DOCUMENT',
-                  'DOCUMENT AND ENTITY INFORMATION (PARENTHETICALS)']
+                  'DOCUMENT AND ENTITY INFORMATION (PARENTHETICALS)', 'ENTITY INFORMATION']
     income_list = ['CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF INCOME ALTERNATIVE', 'CONSOLIDATED STATEMENT OF INCOME', 'INCOME STATEMENTS', 'STATEMENT OF INCOME', 'CONDENSED CONSOLIDATED INCOME STATEMENT',
                    'CONSOLIDATED STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED INCOME', 'CONSOLIDATED STATEMENTS OF INCOME', 'CONSOLIDATED STATEMENT OF OPERATIONS', 
                    'CONSOLIDATED STATEMENTS OF EARNINGS (LOSSES)', 'CONSOLIDATED INCOME STATEMENTS', 'CONSOLIDATED STATEMENTS OF OPERATIONS CONSOLIDATED STATEMENTS OF OPERATIONS',
@@ -558,8 +558,11 @@ def parse_filings(filings, type, headers, splits):
                 'CONSOLIDATED STATEMENTS OF CHANGES IN SHAREOWNERS\' EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF  EQUITY (PARENTHETICAL)', 'SELECTED QUARTERLY DATA (UNAUDITED) (DETAILS)', 'SELECTED QUARTERLY DATA (DETAILS)',
                 'CAPITAL STOCK - DIVIDENDS PAID (DETAIL)', 'DIVIDENDS PAID (DETAIL)', 'CAPITAL STOCK (SCHEDULE OF DIVIDENDS PAID BY COMPANY) (DETAILS)', 'CAPITAL STOCK (NARRATIVE) (DETAILS)',
                 'SELECTED QUARTERLY DATA (SCHEDULED OF QUARTERLY FINANCIAL INFORMATION) (DETAILS)', 'TOTAL EQUITY - DIVIDENDS (DETAILS)', 'TOTAL EQUITY - COMMON STOCK DIVIDENDS PER SHARE (DETAILS)',
-                'TOTAL EQUITY (DIVIDENDS AND SHARE REPURCHASES) (DETAILS)', 'QUARTERLY RESULTS (DETAILS)', 'QUARTERLY RESULTS (UNAUDITED) - (QUARTERLY RESULTS) (DETAILS)', 'SHAREHOLDERS\' EQUITY - DIVIDENDS DECLARED (DETAILS)']
-    eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)', 'EARNINGS PER SHARE (DETAIL)', 'EARNING PER SHARE (DETAIL)', 'EARNINGS PER SHARE (BASIC AND DILUTED WEIGHTED AVERAGE SHARES OUTSTANDING) (DETAILS)']
+                'TOTAL EQUITY (DIVIDENDS AND SHARE REPURCHASES) (DETAILS)', 'QUARTERLY RESULTS (DETAILS)', 'QUARTERLY RESULTS (UNAUDITED) - (QUARTERLY RESULTS) (DETAILS)', 'SHAREHOLDERS\' EQUITY - DIVIDENDS DECLARED (DETAILS)',
+                'DISTRIBUTIONS PAID AND PAYABLE - DISTRIBUTIONS TO COMMON STOCKHOLDERS (DETAILS)', 'DISTRIBUTIONS PAID AND PAYABLE - COMMON STOCK (DETAILS)', 'DISTRIBUTIONS PAID AND PAYABLE (DETAILS)', 'DISTRIBUTIONS PAID AND PAYABLE (DETAIL)',
+                'STOCKHOLDERS EQUITY (PER SHARE DISTRIBUTIONS) (DETAIL)', 'DIVIDENDS (PER SHARE DISTRIBUTIONS) (DETAIL)', 'DIVIDENDS (DETAILS 1)', 'DIVIDENDS (DETAIL)']
+    eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)', 'EARNINGS PER SHARE (DETAIL)', 'EARNING PER SHARE (DETAIL)', 'EARNINGS PER SHARE (BASIC AND DILUTED WEIGHTED AVERAGE SHARES OUTSTANDING) (DETAILS)',
+                      'EARNINGS PER SHARE (SCHEDULE OF COMPUTATION OF BASIC AND DILUTED EARNINGS PER SHARE) (DETAIL)']
     share_catch_list = ['CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEET (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEETS (PARANTHETICAL)', 'CONSOLIDATED BALANCE SHEET CONSOLIDATED BALANCE SHEET (PARENTHETICAL)',
                         'CONSOLIDATED BALANCE SHEET (PARENTHETICALS)', 'CONDENSED CONSOLIDATED BALANCE SHEET (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEETS - PARENTHETICAL INFO', 'CONSOLIDATED BALANCE SHEETS']
 
@@ -622,7 +625,7 @@ def parse_filings(filings, type, headers, splits):
         reports = pull_filing_2(xml_summary)
         
         # Initial values
-        fy = period_end = name = rev = gross = research = oi = net = eps = shares = div = ffo = cash = cur_assets = assets = debt = cur_liabilities = liabilities = equity = fcf = debt_pay = buyback = divpaid = sbc = '---'
+        fy = period_end = name = rev = gross = research = oi = net = eps = shares = div = ffo = cash = cur_assets = assets = debt = cur_liabilities = liabilities = equity = fcf = buyback = divpaid = sbc = '---'
         diff_comp_flag = False
 
         # Loop through each report with the 'myreports' tag but avoid the last one as this will cause an error
@@ -681,10 +684,10 @@ def parse_filings(filings, type, headers, splits):
                 # Create URL and call parser function
                 try:
                     cf_url = base_url + report.htmlfilename.text
-                    fcf, debt_pay, buyback, divpaid, sbc = sp.cf_htm(cf_url, headers, period_end)
+                    fcf, buyback, divpaid, sbc = sp.cf_htm(cf_url, headers, period_end)
                 except:
                     cf_url = base_url + report.xmlfilename.text
-                    fcf, debt_pay, buyback, divpaid, sbc = sp.cf_xml(cf_url, headers)
+                    fcf, buyback, divpaid, sbc = sp.cf_xml(cf_url, headers)
             
             # Dividends
             elif report.shortname.text.upper() in div_list and div == '---':
@@ -697,7 +700,7 @@ def parse_filings(filings, type, headers, splits):
                     div = sp.div_xml(div_url, headers)
 
             # EPS/div catcher
-            elif report.shortname.text.upper() in eps_catch_list and div == '---' and divpaid != 0 or report.shortname.text.upper() in eps_catch_list and eps == '---' or report.shortname.text.upper() in eps_catch_list and shares == '---':
+            elif report.shortname.text.upper() in eps_catch_list and (div == '---' and divpaid != 0 or eps == '---' or shares == '---'):
                 # Create URL and call parser function
                     try:
                         catch_url = base_url + report.htmlfilename.text
@@ -763,7 +766,6 @@ def parse_filings(filings, type, headers, splits):
         Total_Liabilities.append(liabilities)
         SH_Equity.append(equity)
         Free_Cash_Flow.append(fcf)
-        Debt_Repayment.append(debt_pay)
         Share_Buybacks.append(buyback)
         Dividend_Payments.append(divpaid)
         Share_Based_Comp.append(sbc)
@@ -772,7 +774,7 @@ def parse_filings(filings, type, headers, splits):
 
         everything = {'FY': Fiscal_Period, 'Per': Period_End, 'Rev': Revenue, 'Gross': Gross_Profit, 'R&D': Research, 'OI': Operating_Income, 'Net': Net_Profit, 'EPS': Earnings_Per_Share,
                       'Shares': Shares_Outstanding, 'FFO': Funds_From_Operations, 'Cash': Cash, 'Current Assets': Current_Assets, 'Assets': Total_Assets, 'Debt': Total_Debt, 'Current Liabilities': Current_Liabilities, 'Liabilities': Total_Liabilities, 'SH_Equity': SH_Equity, 'FCF': Free_Cash_Flow,
-                      'Debt_Repayment': Debt_Repayment, 'Buybacks': Share_Buybacks, 'Div_Paid': Dividend_Payments, 'SBC': Share_Based_Comp, 'Div': Dividends}
+                      'Buybacks': Share_Buybacks, 'Div_Paid': Dividend_Payments, 'SBC': Share_Based_Comp, 'Div': Dividends}
         print(everything)
         print('-'*100)
     
@@ -823,7 +825,7 @@ def parse_filings(filings, type, headers, splits):
 
     everything = {'FY': Fiscal_Period, 'Per': Period_End, 'Rev': Revenue, 'Gross': Gross_Profit, 'R&D': Research, 'OI': Operating_Income, 'Net': Net_Profit, 'EPS': Earnings_Per_Share,
                     'Shares': Shares_Outstanding, 'FFO': Funds_From_Operations, 'Cash': Cash, 'Current Assets': Current_Assets, 'Assets': Total_Assets, 'Debt': Total_Debt, 'Current Liabilities': Current_Liabilities, 'Liabilities': Total_Liabilities, 'SH_Equity': SH_Equity, 'FCF': Free_Cash_Flow,
-                    'Debt_Repayment': Debt_Repayment, 'Buybacks': Share_Buybacks, 'Div_Paid': Dividend_Payments, 'SBC': Share_Based_Comp, 'Div': Dividends, 'Revenue Per Share': Revenue_Per_Share, 'FFO Per Share': FFO_Per_Share,
+                    'Buybacks': Share_Buybacks, 'Div_Paid': Dividend_Payments, 'SBC': Share_Based_Comp, 'Div': Dividends, 'Revenue Per Share': Revenue_Per_Share, 'FFO Per Share': FFO_Per_Share,
                     'Free Cash Flow Per Share': FCF_Per_Share, 'Earnings Payout Ratio': Earning_Payout_Ratio, 'FCF Payout Ratio': FCF_Payout_Ratio, 'FFO Payout Ratio': FFO_Payout_Ratio, 'Gross Margin': Gross_Margin,
                     'Operating Margin': Operating_Margin, 'Net Margin': Net_Margin, 'FFO Margin': FFO_Margin, 'FCF Margin': FCF_Margin, 'SBC Margin': SBC_Margin, 'R&D Margin': Research_Margin, 'ROA': Return_on_Assets,
                     'ROE': Return_on_Equity, 'ROIC': Return_on_Invested_Capital, 'ROCE': Return_on_Captial_Employed, 'Book Value': Book_Value, 'Book Value Per Share': Book_Value_Per_Share, 'Debt to Profit Ratio': Debt_to_Profit_Ratio,
@@ -921,4 +923,5 @@ corr() to find highest correlated with share price
 find a way to parse for companies that don't report an xml summary (MAIN)
 determine avg price per FY for use in price to whatever calcs
 calculate relative price to indexes chart data
+percent increase/decrease from starting point for comparision (shares, eps, fcf, etc...)
 '''
