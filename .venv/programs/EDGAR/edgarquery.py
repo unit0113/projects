@@ -560,7 +560,8 @@ def parse_filings(filings, type, headers, splits):
                 'SELECTED QUARTERLY DATA (SCHEDULED OF QUARTERLY FINANCIAL INFORMATION) (DETAILS)', 'TOTAL EQUITY - DIVIDENDS (DETAILS)', 'TOTAL EQUITY - COMMON STOCK DIVIDENDS PER SHARE (DETAILS)',
                 'TOTAL EQUITY (DIVIDENDS AND SHARE REPURCHASES) (DETAILS)', 'QUARTERLY RESULTS (DETAILS)', 'QUARTERLY RESULTS (UNAUDITED) - (QUARTERLY RESULTS) (DETAILS)', 'SHAREHOLDERS\' EQUITY - DIVIDENDS DECLARED (DETAILS)',
                 'DISTRIBUTIONS PAID AND PAYABLE - DISTRIBUTIONS TO COMMON STOCKHOLDERS (DETAILS)', 'DISTRIBUTIONS PAID AND PAYABLE - COMMON STOCK (DETAILS)', 'DISTRIBUTIONS PAID AND PAYABLE (DETAILS)', 'DISTRIBUTIONS PAID AND PAYABLE (DETAIL)',
-                'STOCKHOLDERS EQUITY (PER SHARE DISTRIBUTIONS) (DETAIL)', 'DIVIDENDS (PER SHARE DISTRIBUTIONS) (DETAIL)', 'DIVIDENDS (DETAILS 1)', 'DIVIDENDS (DETAIL)']
+                'STOCKHOLDERS EQUITY (PER SHARE DISTRIBUTIONS) (DETAIL)', 'DIVIDENDS (PER SHARE DISTRIBUTIONS) (DETAIL)', 'DIVIDENDS (DETAILS 1)', 'DIVIDENDS (DETAIL)', 'EARNINGS PER COMMON SHARE ATTRIBUTABLE TO PFIZER INC. COMMON SHAREHOLDERS (TABLES)',
+                'CONSOLIDATED STATEMENTS OF STOCKHOLDERS\' (DEFICIT) EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF STOCKHOLDERS (DEFICIT) EQUITY (PARENTHETICAL)', 'QUARTERLY FINANCIAL DATA (TABLES)']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)', 'EARNINGS PER SHARE (DETAIL)', 'EARNING PER SHARE (DETAIL)', 'EARNINGS PER SHARE (BASIC AND DILUTED WEIGHTED AVERAGE SHARES OUTSTANDING) (DETAILS)',
                       'EARNINGS PER SHARE (SCHEDULE OF COMPUTATION OF BASIC AND DILUTED EARNINGS PER SHARE) (DETAIL)']
     share_catch_list = ['CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEET (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEETS (PARANTHETICAL)', 'CONSOLIDATED BALANCE SHEET CONSOLIDATED BALANCE SHEET (PARENTHETICAL)',
@@ -626,6 +627,7 @@ def parse_filings(filings, type, headers, splits):
         
         # Initial values
         fy = period_end = name = rev = gross = research = oi = net = eps = shares = div = ffo = cash = cur_assets = assets = debt = cur_liabilities = liabilities = equity = fcf = buyback = divpaid = sbc = '---'
+        div_prob = 0
         diff_comp_flag = False
 
         # Loop through each report with the 'myreports' tag but avoid the last one as this will cause an error
@@ -694,7 +696,11 @@ def parse_filings(filings, type, headers, splits):
                 # Create URL and call parser function
                 try:
                     div_url = base_url + report.htmlfilename.text
-                    div = sp.div_htm(div_url, headers, period_end)
+                    div_result = sp.div_htm(div_url, headers, period_end)
+                    if div_result != '---' and len(Dividends) > 1 and 'EQUITY' in report.shortname.text.upper() and (div_result == Dividends[-1] or div_result / Dividends[-1] < 0.8):
+                        div_prob = max(div_result, div_prob)
+                    else:
+                        div = div_result
                 except:
                     div_url = base_url + report.xmlfilename.text
                     div = sp.div_xml(div_url, headers)
@@ -746,6 +752,10 @@ def parse_filings(filings, type, headers, splits):
         # Check for name/company difference
         if diff_comp_flag == True:
             break
+
+        # Set div equal to found div when it's the same as previous and no better value found
+        if div == '---' and div_prob != 0:
+            div = div_prob
 
         # Add parsed data to lists for data frame
         Fiscal_Period.append(fy)

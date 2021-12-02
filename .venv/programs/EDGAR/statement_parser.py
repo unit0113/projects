@@ -836,7 +836,7 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_us-gaap_OtherLoansPayable', window" in str(tds[0]) or
               r"this, 'defref_ohi_TermLoan', window" in str(tds[0]) or
               r"this, 'defref_ohi_UnsecuredDebtExcludingRevolvingCreditFacilityAndTermLoan', window" in str(tds[0]) or
-              r"this, 'defref_ohi_UnsecuredDebtExcludingRevolvingCreditFacility', window" in str(tds[0]) or
+              r"this, 'defref_ohi_UnsecuredDebtExcludingRevolvingCreditFacility', window" in str(tds[0])
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -1052,7 +1052,9 @@ def div_htm(div_url, headers, per):
         'SELECTED QUARTERLY DATA (UNAUDITED) (DETAILS)' not in str(head).upper() and
         'SELECTED QUARTERLY DATA (DETAILS)' not in str(head).upper() and
         'QUARTERLY RESULTS (DETAILS)' not in str(head).upper() and
-        'DIVIDENDS (Details)' not in str(head)
+        'DIVIDENDS (Details)' not in str(head) and
+        'Earnings Per Common Share Attributable to Pfizer Inc. Common Shareholders (Tables)' not in str(head) and
+        'Quarterly Financial Data (Tables)' not in str(head)
         ):
         for row in soup.table.find_all('tr'):
             tds = row.find_all('td')
@@ -1072,7 +1074,7 @@ def div_htm(div_url, headers, per):
                     except:
                         div = html_re(str(tds[colm]))
                     if (div != '---' and r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" not in str(soup) and r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds[0]) or
-                        div != 0 and ('DIVIDENDS (Per Share Distributions) (Detail)' in str(head) or 'DIVIDENDS (Detail' in str(head))
+                        div != '---' and div!= 0 and ('DIVIDENDS (Per Share Distributions) (Detail)' in str(head) or 'DIVIDENDS (Detail' in str(head))
                         ):
                         return div
 
@@ -1415,7 +1417,7 @@ def div_htm(div_url, headers, per):
                     div_result = html_re(str(tds[colm]))
                     if div_result != '---':
                         div = div_result
-                    if spec_div == False:
+                    if spec_div == False and div != '---':
                         return div
                     else:
                         continue
@@ -1471,11 +1473,23 @@ def div_htm(div_url, headers, per):
         for table in panda:
             if ('Dividends Per Share' in table.values or
                 'DividendsPer Share' in table.values or
-                'Cash dividends per share'in table.values
+                'Cash dividends per share' in table.values or
+                'Cash dividends declared per share' in table.values or
+                'Dividends declared' in table.values
                 ):                    
                 # Find row with div data and pull
-                row = table.loc[table[0] == 'Cash dividends per share']
-                div = float(re.findall(r'\d+\.\d\d', str(row))[0])
+                row_list = ['Cash dividends per share', 'Cash dividends declared per share', 'Dividends declared']
+                for name in row_list:
+                    row = table.loc[table[0] == name]
+                    if not row.empty:
+                        break
+                if 'Quarterly Financial Data (Tables)' in str(head):
+                    div_sum = re.findall(r'\d+\.\d\d', str(row))[0:4]
+                    div = round(sum(map(float, div_sum)), 3)
+                else:
+                    div = float(re.findall(r'\d+\.\d\d', str(row))[0])
+                if div != '---':
+                    return div
                 break
             
             elif 'Distributionper share' in table.values:
@@ -2217,7 +2231,8 @@ def cf_xml(cf_url, headers):
 
         elif (r'us-gaap_PaymentsOfDividendsCommonStock' in str(row.ElementName) and divpaid == 0 or
               r'us-gaap_PaymentsOfDividends' in str(row.ElementName) and divpaid == 0 or
-              r'frt_DividendsPaidToCommonAndPreferredShareholders' in str(row.ElementName) and divpaid == 0
+              r'frt_DividendsPaidToCommonAndPreferredShareholders' in str(row.ElementName) and divpaid == 0 or
+              r'us-gaap_PaymentsOfOrdinaryDividends<' in str(row.ElementName) and divpaid == 0
               ):
             divpaid_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if divpaid_calc != '---':
