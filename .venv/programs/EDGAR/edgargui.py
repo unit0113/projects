@@ -36,7 +36,7 @@ def get_CIK_list():
 
 
 def get_tickers(cikList):
-    """ Function to open up a GUI that allows the user to select options. Can input one ticker for single stock DD.
+    """ Opens up a GUI that allows the user to select options. Can input one ticker for single stock DD.
     Can input two tickers for comparision. Can select a flag that will create a CSV for inport into excel dashboard. Functionality for creating a User Agent. 
     Also a quit option to abort execution of program
 
@@ -61,8 +61,15 @@ def get_tickers(cikList):
     y = (screenHeight / 2) - (gui_height / 2)
     root.geometry(f'{gui_width}x{gui_height}+{int(x)}+{int(y)}')
 
-    # Imports User-Agent to program to allow access to EDGAR. Returns User-Agent as specified at https://www.sec.gov/os/webmaster-faq
+
     def import_user_agent():
+        """ Validates user agent for SEC EDGAR website access.
+        User agent is as specified at https://www.sec.gov/os/webmaster-faq
+
+        Returns:
+            None
+        """ 
+        
         global headers
         canvas.delete("agent_tag")
         # Open file
@@ -81,21 +88,35 @@ def get_tickers(cikList):
             canvas.create_text(335, 480, text="Invalid User agent", anchor="center", justify='center', fill="red", tag="agent_tag", font=("Helvetica", 12, "bold"))
 
 
-    # Function for exiting GUI
     def clickExitButton():
+        """ Exits program on click
+
+        Returns:
+            None
+        """ 
+
         sys.exit()
 
 
-    # Delete contents of entry boxes when clicked on
     def entry_clear(e):
+        """ Delete contents of entry boxes when clicked on
+
+        Returns:
+            None
+        """ 
+
         if ticker1_entry.get() == "Ticker 1":
             ticker1_entry.delete(0, tk.END)
         if ticker2_entry.get() == "Ticker 2":
             ticker2_entry.delete(0, tk.END)
     
 
-    # Update autocomplete list box
     def update(data, src):
+        """ Updates autocomplete list box 
+
+        Returns:
+            None
+        """         
         
         # Clear list box
         src.delete(0,tk.END)
@@ -105,8 +126,12 @@ def get_tickers(cikList):
             src.insert(tk.END, ticker.upper())
     
 
-    # Fill entry box from selection in list box
     def fillout(e, src, src2):
+        """ Allows user to click on ticker in list box to import into entry block
+
+        Returns:
+            None
+        """ 
         
         # Delete current entry
         src.delete(0,tk.END)
@@ -117,8 +142,11 @@ def get_tickers(cikList):
         #ticker1Entry.insert(0, ticker1List.get(tk.ACTIVE))
     
 
-    # Autocomplete
     def autocomplete(e, src, src2):
+        """ Updates list box based on item entered into entry box
+        Returns:
+            None
+        """ 
         
         # Grab typed data
         typed= src2.get()
@@ -136,15 +164,24 @@ def get_tickers(cikList):
         update(data, src)    
     
 
-    # Browse for User Agent
     def browse():
+        """ Allows user to import user agent if stored elsewhere
+
+        Returns:
+            None
+        """ 
+
         file = (tkinter.filedialog.askopenfilename())
         copyfile(file, r'C:\Users\unit0\Desktop\EDGAR\user_agent.txt')
         import_user_agent()
 
 
-    # Create new User Agent
     def create():
+        """ Allows user to create new user agent and stores that at the default location
+
+        Returns:
+            None
+        """ 
         
         def create_new_agent():
             # Pull data

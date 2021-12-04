@@ -518,7 +518,8 @@ def rev_htm(rev_url, headers, per):
               r"this, 'defref_us-gaap_PolicyholderBenefitsAndClaimsIncurredNet', window" in str(tds[0]) and cost == 0 and oi == '---' or
               r"this, 'defref_us-gaap_InterestCreditedToPolicyholdersAccountBalances', window" in str(tds[0]) and cost == 0 and oi == '---' or
               r"this, 'defref_us-gaap_PolicyholderDividends', window" in str(tds[0]) and cost == 0 and oi == '---' or
-              r"this, 'defref_us-gaap_DeferredPolicyAcquisitionCostAmortizationExpense', window" in str(tds[0]) and cost == 0 and oi == '---'
+              r"this, 'defref_us-gaap_DeferredPolicyAcquisitionCostAmortizationExpense', window" in str(tds[0]) and cost == 0 and oi == '---' or
+              r"this, 'defref_us-gaap_DirectCostsOfLeasedAndRentedPropertyOrEquipment', window" in str(tds[0]) and cost == 0 and oi == '---'
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -608,8 +609,8 @@ def rev_htm(rev_url, headers, per):
     elif oi == '---' and op_exp > 0:
         oi = round(rev - credit_loss_provision - op_exp, 2)
 
-    # Calculate Gross if OI is given
-    if cost == 0 and oi != '---' and operating_exp != 0:
+    # Calculate Gross if operating expenses are given
+    if cost == 0 and operating_exp != 0:
         cost = operating_exp - op_exp
         gross = round(rev - cost, 2)
 
@@ -777,7 +778,7 @@ def bs_htm(bs_url, headers, per):
             if cur_liabilities_calc != '---':
                 cur_liabilities = round(check_neg(str(tds[colm]), cur_liabilities_calc) * (dollar_multiplier / 1_000_000), 2)
 
-        elif (r"this, 'defref_us-gaap_UnsecuredDebt', window" in str(tds[0]) and 'nrz' not in str(soup) or
+        elif (r"this, 'defref_us-gaap_UnsecuredDebt', window" in str(tds[0]) and ('nrz' not in str(soup) and 'Real estate facilities' not in str(soup) and 'Storage' not in str(soup)) or
               r"this, 'defref_stor_AccruedExpensesDeferredRevenueAndOtherLiabilities', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_AccountsPayableAndAccruedLiabilitiesCurrentAndNoncurrent', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_ConvertibleNotesPayable', window" in str(tds[0]) and 'Accounted for using the operating method, net of accumulated depreciation and amortization' not in str(soup) or
@@ -811,7 +812,8 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_us-gaap_LiabilityForFuturePolicyBenefitsAndUnpaidClaimsAndClaimsAdjustmentExpense', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_PolicyholderContractDeposits', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_DebtCurrent', window" in str(tds[0]) or
-              r"this, 'defref_us-gaap_OtherPolicyholderFunds', window" in str(tds[0])
+              r"this, 'defref_us-gaap_OtherPolicyholderFunds', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_AccruedLiabilitiesCurrentAndNoncurrent', window" in str(tds[0])
               ):
             if cur_liabilities == '---':
                 cur_liabilities_calc = html_re(str(tds[colm]))
@@ -847,7 +849,7 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_us-gaap_DebtLongtermAndShorttermCombinedAmount', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_NotesPayable', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_ConvertibleNotesPayable', window" in str(tds[0]) or
-              r"this, 'defref_us-gaap_UnsecuredDebt', window" in str(tds[0]) and 'nrz' in str(soup) or
+              r"this, 'defref_us-gaap_UnsecuredDebt', window" in str(tds[0]) or
               r"this, 'defref_nrz_ResidentialMortgageLoansRepurchaseLiability', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_LoansPayable', window" in str(tds[0]) or
               r"this, 'defref_o_NotesPayableNet', window" in str(tds[0]) or
@@ -857,7 +859,10 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_us-gaap_OtherLoansPayable', window" in str(tds[0]) or
               r"this, 'defref_ohi_TermLoan', window" in str(tds[0]) or
               r"this, 'defref_ohi_UnsecuredDebtExcludingRevolvingCreditFacilityAndTermLoan', window" in str(tds[0]) or
-              r"this, 'defref_ohi_UnsecuredDebtExcludingRevolvingCreditFacility', window" in str(tds[0])
+              r"this, 'defref_ohi_UnsecuredDebtExcludingRevolvingCreditFacility', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_LoansPayableToBank', window" in str(tds[0]) or
+              r"this, 'defref_cube_UnsecuredSeniorNotesNet', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_NotesAndLoansPayable', window" in str(tds[0])
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -876,7 +881,7 @@ def bs_htm(bs_url, headers, per):
             if equity != '---':
                 equity = round(check_neg(str(tds[colm]), equity) * (dollar_multiplier / 1_000_000), 2)    
 
-        elif ('[Member]' in str(tds[0]) or 'VIEs' in str(tds[0])) and cash != '---':
+        elif ('[Member]' in str(tds[0]) or 'VIEs' in str(tds[0])) and cash != '---' and equity != '---' and (liabilities != '---' or tot_liabilities != '---'):
             break     
 
     # Use cash sum if cash total not found
@@ -1005,7 +1010,8 @@ def cf_htm(cf_url, headers, per):
               r"this, 'defref_us-gaap_Dividends', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_PaymentsOfOrdinaryDividends', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_PaymentsOfDividendsCommonStock', window" in str(tds[0]) or
-              r"this, 'defref_frt_DividendsPaidToCommonAndPreferredShareholders', window" in str(tds[0])
+              r"this, 'defref_frt_DividendsPaidToCommonAndPreferredShareholders', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_PaymentsOfCapitalDistribution', window" in str(tds[0])
               ):
             divpaid_calc = html_re(str(tds[colm]))
             if divpaid_calc != '---' and divpaid_calc != 0:
@@ -1970,7 +1976,8 @@ def rev_xml(rev_url, headers):
 
         elif (r'us-gaap_PolicyholderBenefitsAndClaimsIncurredNet<' in str(row.ElementName) and cost == 0 or
               r'us-gaap_InterestCreditedToPolicyholdersAccountBalances<' in str(row.ElementName) and cost == 0 or
-              r'us-gaap_PolicyholderDividends<' in str(row.ElementName) and cost == 0
+              r'us-gaap_PolicyholderDividends<' in str(row.ElementName) and cost == 0 or
+              r'us-gaap_DirectCostsOfLeasedAndRentedPropertyOrEquipment<' in str(row.ElementName) and cost == 0
               ):
             result = xml_re(str(cells[colm].RoundedNumericAmount))
             if result != '---':
@@ -2143,7 +2150,8 @@ def bs_xml(bs_url, headers):
               r'us-gaap_LoansAndLeasesReceivableNetReportedAmount<' in str(row.ElementName) or
               r'us-gaap_InterestsContinuedToBeHeldByTransferorFairValue<' in str(row.ElementName) or
               r'us-gaap_AccountsAndNotesReceivableNet<' in str(row.ElementName) or
-              r'us-gaap_DeferredRentReceivablesNet<' in str(row.ElementName)
+              r'us-gaap_DeferredRentReceivablesNet<' in str(row.ElementName) or
+              r'us-gaap_DueFromRelatedParties<' in str(row.ElementName)
               ):
             recievables_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if recievables_calc != '---':
@@ -2302,7 +2310,8 @@ def cf_xml(cf_url, headers):
         elif (r'us-gaap_PaymentsOfDividendsCommonStock' in str(row.ElementName) and divpaid == 0 or
               r'us-gaap_PaymentsOfDividends' in str(row.ElementName) and divpaid == 0 or
               r'frt_DividendsPaidToCommonAndPreferredShareholders' in str(row.ElementName) and divpaid == 0 or
-              r'us-gaap_PaymentsOfOrdinaryDividends<' in str(row.ElementName) and divpaid == 0
+              r'us-gaap_PaymentsOfOrdinaryDividends<' in str(row.ElementName) and divpaid == 0 or
+              r'us-gaap_PaymentsOfCapitalDistribution<' in str(row.ElementName) and divpaid == 0
               ):
             divpaid_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if divpaid_calc != '---':
