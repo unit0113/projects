@@ -434,7 +434,8 @@ def rev_htm(rev_url, headers, per):
               r"this, 'defref_us-gaap_GeneralAndAdministrativeExpense', window" in str(tds[0]) and oi == '---' or
               r"this, 'defref_abr_PropertyOperatingExpense', window" in str(tds[0]) and oi == '---' or
               r"this, 'defref_us-gaap_LaborAndRelatedExpense', window" in str(tds[0]) and oi == '---' or
-              r"this, 'defref_tmo_RestructuringAndOtherCostsIncomeNet', window" in str(tds[0]) and oi == '---'
+              r"this, 'defref_tmo_RestructuringAndOtherCostsIncomeNet', window" in str(tds[0]) and oi == '---' or
+              r"this, 'defref_rok_OtherIncomeExpense', window " in str(tds[0]) and oi == '---'
               ):
             op_exp_calc = html_re(str(tds[colm]))
             if op_exp_calc != '---':
@@ -493,8 +494,8 @@ def rev_htm(rev_url, headers, per):
             if result != '---' and result != 0:
                 eps = check_neg(str(tds[colm]), result)
 
-        elif (r"this, 'defref_us-gaap_CostOfRevenue', window" in str(tds[0]) and net == '---' or
-              r"this, 'defref_us-gaap_CostOfGoodsSold', window" in str(tds[0]) and cost == 0 or
+        elif (r"this, 'defref_us-gaap_CostOfRevenue', window" in str(tds[0]) and (cost == 0 or 'Total cost<' in str(tds[0])) or
+              r"this, 'defref_us-gaap_CostOfGoodsSold', window" in str(tds[0]) and cost == 0 and 'Products and solutions<' not in str(tds[0]) or
               r"this, 'defref_us-gaap_CostOfGoodsAndServicesSold', window" in str(tds[0]) and cost == 0 or
               r"this, 'defref_amgn_CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets', window" in str(tds[0]) and cost == 0 or
               r"this, 'defref_nee_FuelPurchasedPowerAndInterchangeExpense', window" in str(tds[0]) and cost == 0 or
@@ -541,7 +542,8 @@ def rev_htm(rev_url, headers, per):
 
         elif (r"this, 'defref_us-gaap_DepreciationAndAmortization', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_DepreciationDepletionAndAmortization', window" in str(tds[0]) or
-              r"this, 'defref_us-gaap_Depreciation', window" in str(tds[0])
+              r"this, 'defref_us-gaap_Depreciation', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_DepreciationAmortizationAndAccretionNet', window" in str(tds[0])
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -553,7 +555,8 @@ def rev_htm(rev_url, headers, per):
               r"this, 'defref_nrz_ImpairmentNetOfTheReversalOfPriorValuationAllowancesOnLoans', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_OtherThanTemporaryImpairmentLossesInvestmentsAvailableforsaleSecurities', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_ProvisionForLoanLeaseAndOtherLosses', window" in str(tds[0]) or
-              r"this, 'defref_us-gaap_ImpairmentOfRealEstate', window" in str(tds[0])
+              r"this, 'defref_us-gaap_ImpairmentOfRealEstate', window" in str(tds[0]) or
+              r"this, 'defref_sbac_AssetImpairmentAndDecommissionCosts', window" in str(tds[0])
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -1066,8 +1069,27 @@ def div_htm(div_url, headers, per):
     # Initial value
     div = '---'
     
+    if 'Schedule of Dividends Paid and Dividends Declared' in str(head):
+        div_calc = counter = 0
+        for row in soup.table.find_all('tr'):
+            tds = row.find_all('td')
+            if tds == []:
+                continue
+
+            elif r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds[0]):
+                result = html_re(str(tds[colm]))
+                if result != '---':
+                    div_calc += result
+                    counter += 1
+            
+            if counter > 3:
+                break
+
+        if div_calc > 0:
+            return round(div_calc, 3)        
+
     # If company has seperate div table
-    if ('EQUITY' not in str(head).upper() and
+    elif ('EQUITY' not in str(head).upper() and
         'QUARTERLY FINANCIAL INFORMATION' not in str(head).upper() and
         'QUARTERLY RESULTS OF OPERATIONS' not in str(head).upper() and
         'UNAUDITED QUARTERLY DATA (DETAILS)' not in str(head).upper() and
@@ -2015,7 +2037,8 @@ def rev_xml(rev_url, headers):
                 net_check = True
 
         elif (r'us-gaap_EarningsPerShareDiluted<' in str(row.ElementName) and eps == '---' or
-              r'o_Diluted<' in str(row.ElementName) and eps == '---'
+              r'o_Diluted<' in str(row.ElementName) and eps == '---' or
+              r"sbac_EarningsPerShareBasicAndDiluted<" in str(row.ElementName) and eps == '---'
               ):
             result = xml_re(str(cells[colm].RoundedNumericAmount))
             if result != '---':
