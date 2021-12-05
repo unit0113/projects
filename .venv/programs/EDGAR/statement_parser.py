@@ -500,7 +500,8 @@ def rev_htm(rev_url, headers, per):
               r"this, 'defref_amgn_CostOfGoodsSoldExcludingAmortizationOfAcquiredIntangibleAssets', window" in str(tds[0]) and cost == 0 or
               r"this, 'defref_nee_FuelPurchasedPowerAndInterchangeExpense', window" in str(tds[0]) and cost == 0 or
               r"this, 'defref_us-gaap_CostOfGoodsAndServicesEnergyCommoditiesAndServices', window" in str(tds[0]) and cost == 0 or
-              r"this, 'defref_us-gaap_MineralExtractionProcessingAndMarketingCosts', window" in str(tds[0]) and cost == 0
+              r"this, 'defref_us-gaap_MineralExtractionProcessingAndMarketingCosts', window" in str(tds[0]) and cost == 0 or
+              r"this, 'defref_us-gaap_ProductionAndDistributionCosts', window" in str(tds[0]) and cost == 0
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -769,7 +770,9 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_nrz_ServicerAdvancesReceivableNet', window" in str(tds[0]) or
               r"o_AccountsReceivable" in str(tds[0]) or
               r"this, 'defref_us-gaap_ContractWithCustomerAssetNet', window" in str(tds[0]) or
-              r"this, 'defref_us-gaap_MortgageLoansOnRealEstateCommercialAndConsumerNet', window" in str(tds[0])
+              r"this, 'defref_us-gaap_MortgageLoansOnRealEstateCommercialAndConsumerNet', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_CashAndSecuritiesSegregatedUnderFederalAndOtherRegulations', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_FinancialInstrumentsOwnedAtFairValue', window" in str(tds[0]) and 'Consolidated Statements of Financial Condition' not in str(head)
               ):
             if cur_assets == '---':
                 recievables_calc = html_re(str(tds[colm]))
@@ -816,7 +819,8 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_us-gaap_PolicyholderContractDeposits', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_DebtCurrent', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_OtherPolicyholderFunds', window" in str(tds[0]) or
-              r"this, 'defref_us-gaap_AccruedLiabilitiesCurrentAndNoncurrent', window" in str(tds[0])
+              r"this, 'defref_us-gaap_AccruedLiabilitiesCurrentAndNoncurrent', window" in str(tds[0]) or
+              r"this, 'defref_srt_PayablesToCustomers', window" in str(tds[0])
               ):
             if cur_liabilities == '---':
                 cur_liabilities_calc = html_re(str(tds[colm]))
@@ -1385,7 +1389,8 @@ def div_htm(div_url, headers, per):
     else:
         # If contained in equity increase/decrease statement
         if ('defref_us-gaap_IncreaseDecreaseInStockholdersEquityRollForward' in str(soup) or
-            'Balance at, beginning of period at' in str(soup)
+            'Balance at, beginning of period at' in str(soup) or
+            'Balance, Amount at' in str(soup)
             ):
             for row in soup.table.find_all('tr'):
                 tds = row.find_all('td')
@@ -2220,7 +2225,8 @@ def bs_xml(bs_url, headers):
               r'us-gaap_InterestAndDividendsPayableCurrentAndNoncurrent<' in str(row.ElementName) and cur_liabilities == '---' or
               r'us-gaap_InterestPayableCurrentAndNoncurrent<' in str(row.ElementName) and cur_liabilities == '---' or
               r'us-gaap_LiabilityForFuturePolicyBenefitsAndUnpaidClaimsAndClaimsAdjustmentExpense<' in str(row.ElementName) and cur_liabilities == '---' or
-              r'us-gaap_OtherPolicyholderFunds' in str(row.ElementName) and cur_liabilities == '---'
+              r'us-gaap_OtherPolicyholderFunds' in str(row.ElementName) and cur_liabilities == '---' or
+              r'us-gaap_PayablesToCustomers<' in str(row.ElementName) and cur_liabilities == '---'
               ):
             liabilities_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if liabilities_calc != '---':              
@@ -2376,7 +2382,8 @@ def div_xml(div_url, headers):
 
     # Pull div if reported by quarter
     if ('Unaudited Quarterly Data (Details)' in str(name) or
-        'Quarterly Results (unaudited) - (Quarterly Results) (Details)' in str(name)
+        'Quarterly Results (unaudited) - (Quarterly Results) (Details)' in str(name) or
+        'Quarterly Financial Information (Detail)' in str(name)
         ):
         rows = soup.find_all('Row')
         for row in rows:

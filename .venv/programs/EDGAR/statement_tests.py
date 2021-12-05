@@ -68,7 +68,7 @@ rev_answers_htm = [[168088.0, 115856.0, 20716.0, 69916.0, 61271.0, 8.05, 7608000
                    [8322.0, 3136.0, 222.0, -3631.0, -2462.0, -4.94, '---', 1.225, -1100.0], [660.68, 593.03, 0, 374.49, 210.86, 1.22, 172217.08, '---', 428.68], [622.66, 597.56, 0, 424.76, 258.12, 1.65, 156295.62, '---', 460.73],
                    [2585.64, 1651.89, 0, 1606.62, 550.01, 1.34, 408990.11, 2.0, 585.59], [1651.62, 1237.68, 0, 325.5, 394.47, 1.14, 345415.26, '---', 1218.74], [54105.0, 13566.0, 0, 1759.0, 1381.0, 3.23, '---', 2.17, 1381.0]]
 
-rev_url = r'https://www.sec.gov/Archives/edgar/data/51143/000104746918001117/R2.htm'
+rev_url = r'https://www.sec.gov/Archives/edgar/data/829224/000082922421000086/R2.htm'
 
 # Rev Test
 #print(sp.rev_htm(rev_url, headers, get_sum_per(rev_url)))
@@ -181,7 +181,7 @@ div_url_list_htm = [r'https://www.sec.gov/Archives/edgar/data/1403161/0001403161
                     r'https://www.sec.gov/Archives/edgar/data/1059556/000119312518058986/R117.htm', r'https://www.sec.gov/Archives/edgar/data/1059556/000119312512081639/R111.htm', r'https://www.sec.gov/Archives/edgar/data/1164727/000155837020001041/R11.htm',
                     r'https://www.sec.gov/Archives/edgar/data/1705696/000170569619000064/R77.htm', r'https://www.sec.gov/Archives/edgar/data/1705696/000170569620000048/R95.htm', r'https://www.sec.gov/Archives/edgar/data/888491/000088849120000007/R115.htm',
                     r'https://www.sec.gov/Archives/edgar/data/888491/000088849119000006/R116.htm', r'https://www.sec.gov/Archives/edgar/data/78003/000007800320000014/R42.htm', r'https://www.sec.gov/Archives/edgar/data/1413329/000141332913000019/R49.htm',
-                    r'https://www.sec.gov/Archives/edgar/data/1034054/000103405421000003/R87.htm']
+                    r'https://www.sec.gov/Archives/edgar/data/1034054/000103405421000003/R87.htm', r'https://www.sec.gov/Archives/edgar/data/829224/000082922421000086/R5.htm']
 
 div_answers_htm = [1.2, 1.0, 0.825,
                    0.48, 0.88, 1.6,
@@ -209,9 +209,9 @@ div_answers_htm = [1.2, 1.0, 0.825,
                    1.52, '---', 1.44,
                    0.997, 1.17, '---',
                    2.64, 1.46, 3.24,
-                   1.86]
+                   1.86, 2.29]
 
-div_url = r'https://www.sec.gov/Archives/edgar/data/1034054/000103405420000003/R87.htm'
+div_url = r'https://www.sec.gov/Archives/edgar/data/825542/000154638021000037/R91.htm'
 
 def get_sum_per_div(url):
     obj = re.search(r'(/R\d?\d?\d\.htm)', str(url))
@@ -323,13 +323,15 @@ cf_url = r'https://www.sec.gov/Archives/edgar/data/78003/000119312511048877/R6.x
 
 div_url_list_xml = [r'https://www.sec.gov/Archives/edgar/data/789019/000119312510171791/R101.xml', r'https://www.sec.gov/Archives/edgar/data/1403161/000119312510265236/R6.xml', r'https://www.sec.gov/Archives/edgar/data/354950/000119312511076501/R6.xml',
                     r'https://www.sec.gov/Archives/edgar/data/2969/000119312510266784/R158.xml', r'https://www.sec.gov/Archives/edgar/data/825542/000095012310108803/R8.xml', r'https://www.sec.gov/Archives/edgar/data/1045450/000119312511051389/R30.xml',
-                    r'https://www.sec.gov/Archives/edgar/data/40533/000119312511039769/R68.xml', r'https://www.sec.gov/Archives/edgar/data/55785/000119312511043300/R122.xml', r'https://www.sec.gov/Archives/edgar/data/895421/000119312511050049/R172.xml']
+                    r'https://www.sec.gov/Archives/edgar/data/40533/000119312511039769/R68.xml', r'https://www.sec.gov/Archives/edgar/data/55785/000119312511043300/R122.xml', r'https://www.sec.gov/Archives/edgar/data/895421/000119312511050049/R172.xml',
+                    r'https://www.sec.gov/Archives/edgar/data/316709/000119312511046932/R116.xml']
 
 div_answers_xml = [0.52, 0.5, 0.945,
                    1.92, 0.625, '---',
-                   1.68, 2.64, 0.2]
+                   1.68, 2.64, 0.2,
+                   0.24]
 
-div_url = r'https://www.sec.gov/Archives/edgar/data/726728/000072672811000013/R14.xml'
+div_url = r'https://www.sec.gov/Archives/edgar/data/316709/000119312511046932/R116.xml'
 
 # XML Div test
 #print(sp.div_xml(div_url, headers))
@@ -431,8 +433,8 @@ def yf_div_catch_test(ticker, divpaid, divs, pers):
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
 # Div finder
-base_url = 'https://www.sec.gov/Archives/edgar/data/1298675/000129867519000009/'
-div = 1.25
+base_url = 'https://www.sec.gov/Archives/edgar/data/829224/000082922417000049/'
+div = 1.05
 def div_finder_htm(base_url, div):
     for i in range(150):
         url = base_url + 'R' + str(i) + '.htm'
