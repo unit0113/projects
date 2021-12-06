@@ -57,15 +57,10 @@ def result(board, action):
     """
     # Initialize deep copy of board and row and column indecies
     new_board = copy.deepcopy(board)
-    x, y = action
 
-    # Check if board is legal
-    if new_board[x][y] != EMPTY:
-        raise InvalidMoveError
-
-    else:
+    if new_board[action[0]][action[1]] == EMPTY:
         # Set cell to current player
-        new_board[x][y] = player(board)
+        new_board[action[0]][action[1]] = player(board)
 
     return new_board
 
@@ -87,7 +82,7 @@ def winner(board):
     for row in board:
         for player in players:
             if row.count(player) == 3:
-                print(player)
+                return player
 
     # Transpose board to get each column in own list
     columns = list(map(list, zip(*board)))
@@ -96,7 +91,7 @@ def winner(board):
     for colm in columns:
         for player in players:
             if colm.count(player) == 3:
-                print(player)
+                return player
 
     return None
 
@@ -132,15 +127,15 @@ def minimax(board, alpha, beta):
     Returns the optimal action for the current player on the board.
     """
 
-    # Check if terminal and return value if true
-    if terminal(board):
-        return utility(board)
+    results = []
 
-    # for X player
-    if player(board) == X:
+    # find the max tree
+    def find_max(board, alpha, beta):
+        if terminal(board):
+            return utility(board)
         max_eval = -math.inf
         for move in actions(board):
-            value = minimax(result(board, move), alpha, beta)
+            value = find_min(result(board, move), alpha, beta)
             max_eval = max(max_eval, value)
             alpha = max(alpha, value)
             if beta <= alpha:
@@ -148,14 +143,29 @@ def minimax(board, alpha, beta):
 
         return max_eval
 
-    # for O player
-    else:
+
+    # find the min tree
+    def find_min(board, alpha, beta):
+        if terminal(board):
+            return utility(board)
         min_eval = math.inf
         for move in actions(board):
-            value = minimax(result(board, move), alpha, beta)
-            min_eval = min(max_eval, value)
+            value = find_max(result(board, move), alpha, beta)
+            min_eval = min(min_eval, value)
             beta = min(beta, value)
             if beta <= alpha:
                 break
 
         return min_eval
+
+    # Actually run the algo
+    if player(board) == X:
+        for move in actions(board):
+            results.append([find_min(result(board, move), alpha, beta), move])
+        return sorted(results, key=lambda x: x[0], reverse=True)[0][1]
+
+    # run for O player
+    else:
+        for move in actions(board):
+            results.append([find_max(result(board, move), alpha, beta), move])
+        return sorted(results, key=lambda x: x[0])[0][1]
