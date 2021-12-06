@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+        <link href="styles.css" rel="stylesheet">
+        <title>Final Project</title>
+    </head>
+
+    <script>
+            document.addEventListener('DOMContentLoaded', function(){
+
+                // Drop Down Code
+                var acc = document.getElementsByClassName("accordion");
+                var i;
+
+                for (i = 0; i < acc.length; i++) {
+                    acc[i].addEventListener("click", function() {
+                    this.classList.toggle("active");
+                    var panel = this.nextElementSibling;
+                    if (panel.style.maxHeight) {
+                        panel.style.maxHeight = null;
+                    } else {
+                        panel.style.maxHeight = panel.scrollHeight + "px";
+                    }
+                  });
+                }
+
+
+            });
+
+    </script>
+
+    <body>
+        <div clas='main'>
+            <div class="title">
+                <h2><b>Final Project Overview and To-Do List</b></h2>
+            </div>
+            <br><br><br><br>
+            <div class="container">
+                <div class="section">
+                    <h3>Introduction</h3>
+                    <p>I'm going to use this as a scratch pad for jotting down ideas for the final project. I mostly (think) I know what I want to do, but I've always found that writting it down help organize my thoughts</p>
+                </div>
+            </div>
+
+            <div class="container">
+                <div class="section">
+                    <h3>Project Overview</h3>
+                    <p>My goal is to create a python program which will conduct data gathering and analysis for the purposes of doing basic Due Dilligence (DD) on stocks. The current plan is for the program to have three possible outputs:</p>
+                </div>
+
+                <div class="section">
+                    <ul>
+                        <li>Output a visualization of important annual and quarterly data</li>
+                        <li>Output a .csv file for easy copy/past into my own financial dashboard</li>
+                        <li>Enable a comparison between two stocks, visualizing the same data as the first option, but adding in over/under data inbetween the two</li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <p>The insperation for this project came from a user on reddit who posted their own attempt at this. Their examples (at least the ones that I ran across) look like this</p>
+                </div>
+            </div>
+
+            <!-- Reference Images -->
+            <div class="row">
+                <div class="column">
+                    <img src="COST.jpg" alt="COSTCO Stock Analysis" style="width:100%">
+                </div>
+                <div class="column">
+                    <img src="KO.jpg" alt="Coca Cola Stock Analysis" style="width:100%">
+                </div>
+            </div>
+
+            <p style="text-align:center"><i>Reference Images</i></p>
+            <hr class="rounded">
+
+            <!-- Goals -->
+
+            <div class='container'>
+                <h3>Goals</h3>
+                <ol>
+                    <li>Have everything be in a .exe to make running easy</li>
+                    <li>Open with simple UI. This should allow the user to select between a single stock analysis and a comparison.
+                    If selecting a single stock, give the user the option to output relevent data in a .csv or some other file type that can be imported into excel</li>
+                    <li>Web scrape EDGAR (SEC filings database) for relevant annual and quarterly reports</li>
+                    <li>Display the data in useful charts</li>
+                    <li>Don't spend six months trying to figure out how to do this</li>
+                </ol>
+            </div>
+
+            <div class='container'>
+                <h3>To-Do</h3>
+                <button class="accordion"><b>Prior to coding</b></button>
+                <div class="panel">
+                    <ul>-Learn more python</ul>
+                    <ul>-Identify and practice with relevant libraries</ul>
+                    <ul>-Determine what I want my finished product to actually contain
+                    (a lot of the data from the reference image isn't very useful, more emphasis on percentages and growth, and I can easily eliminate all of the technical analysis nonsense</ul>
+                    <ul>-Finish CS50 (priorites)</ul>
+                </div>
+
+                <button class="accordion"><b>Pseudo Code</b></button>
+                <div class="panel">
+                    <ul>-Work backwards</ul>
+                    <ul>-Basic webscraping</ul>
+                    <ul>-Webscarping of desired reports</ul>
+                    <ul>-Putting it in charts</ul>
+                    <ul>-Putting multiple charts in one output</ul>
+                    <ul>-UI for determining output</ul>
+                </div>
+
+                <button class="accordion"><b>Big Sticks</b></button>
+                <div class="panel">
+                    <ul>-Error checking is going to be a huge issue, not all companies are going to report the same thing.
+                    Ensuring that the code can handle the irregularities without breaking is going to be hugely important</ul>
+                    <ul>-Ensuring that ratios (current, ROIC, etc...) and growth rates are calculated correctly</ul>
+                    <ul>-Transitioning to VS Code (can't use the CS50 IDE forever sadly)</ul>
+                    <ul>-Dealing with amended filings. Multiple reports for the same period and the program will have to ID use the updated one</ul>
+                </div>
+            </div>
+
+            <div class='container'>
+                <h3>Current Status</h3>
+                <p>Still conceptualizing everything. 0 coding accomplished</p>
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" style="width: 1%;" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100">1%</div>
+                </div>
+            </div>
+
+            <hr class="rounded">
+
+            <div class='container'>
+                <h3>Other Projects</h3>
+                <p>There are several other projects that I want to attempt. These will be mostly for work, and also a little for just me learning.
+                The first one, and hopefully the easier one is to make study quizzes for each of the lessons that they will encounter (I'm an instructor).
+                The goal is to renforce the instruction they've already received and serve as a useful study guide for the post-course assesment.</p>
+                <p>The second project will be more difficult. I want to create a mechansum that will allow students to provide feedback to their instructors after each event.
+                This will have at least two components. The first is a method for students to provide feedback and the second is a program to aggregate that data and allow us to visualize it and identify trends and weak points.
+                Based on this week's lesson, HTML should suffice for the first part, as long as we can figure out how to make it output .csv's.
+                Excel and VBA will probably do the heavily lifting on part two, mostly due to this having to run on government computers.
+                The trick for this process is to automate as much of the operation as possible to ensure easy of use. We'll also have to make it easy to fix when links and folders get moved around.</p>
+            </div>
+
+            <div class='container'>
+                <h3>Conclusion</h3>
+                <p>So that's the plan, hopefully it doesn't turn out terribly!</p>
+            </div>
+
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+          <a href="index.html">Home</a>
+          <a href="EDGAR.html">EDGAR</a>
+          <a href="resources.html">Resources</a>
+          <a href="motivation.html">Motivation</a>
+        </div>
+
+    </body>
+</html>
