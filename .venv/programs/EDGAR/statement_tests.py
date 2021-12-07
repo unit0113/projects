@@ -68,7 +68,7 @@ rev_answers_htm = [[168088.0, 115856.0, 20716.0, 69916.0, 61271.0, 8.05, 7608000
                    [8322.0, 3136.0, 222.0, -3631.0, -2462.0, -4.94, '---', 1.225, -1100.0], [660.68, 593.03, 0, 374.49, 210.86, 1.22, 172217.08, '---', 428.68], [622.66, 597.56, 0, 424.76, 258.12, 1.65, 156295.62, '---', 460.73],
                    [2585.64, 1651.89, 0, 1606.62, 550.01, 1.34, 408990.11, 2.0, 585.59], [1651.62, 1237.68, 0, 325.5, 394.47, 1.14, 345415.26, '---', 1218.74], [54105.0, 13566.0, 0, 1759.0, 1381.0, 3.23, '---', 2.17, 1381.0]]
 
-rev_url = r'https://www.sec.gov/Archives/edgar/data/829224/000082922421000086/R2.htm'
+rev_url = r'https://www.sec.gov/Archives/edgar/data/92122/000009212217000007/R2.htm'
 
 # Rev Test
 #print(sp.rev_htm(rev_url, headers, get_sum_per(rev_url)))
@@ -92,7 +92,8 @@ bs_url_list_htm = [r'https://www.sec.gov/Archives/edgar/data/1403161/00014031612
                    r'https://www.sec.gov/Archives/edgar/data/1574540/000110465914021828/R2.htm', r'https://www.sec.gov/Archives/edgar/data/886982/000119312521049380/R4.htm', r'https://www.sec.gov/Archives/edgar/data/886982/000119312513085474/R4.htm',
                    r'https://www.sec.gov/Archives/edgar/data/886982/000119312518056383/R4.htm', r'https://www.sec.gov/Archives/edgar/data/895421/000089542120000265/R4.htm', r'https://www.sec.gov/Archives/edgar/data/895421/000119312515071980/R2.htm',
                    r'https://www.sec.gov/Archives/edgar/data/751364/000075136420000021/R2.htm', r'https://www.sec.gov/Archives/edgar/data/751364/000075136413000007/R2.htm', r'https://www.sec.gov/Archives/edgar/data/888491/000088849121000006/R2.htm',
-                   r'https://www.sec.gov/Archives/edgar/data/1137774/000113777421000049/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1393311/000139331117000008/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1298675/000129867521000006/R2.htm']
+                   r'https://www.sec.gov/Archives/edgar/data/1137774/000113777421000049/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1393311/000139331117000008/R2.htm', r'https://www.sec.gov/Archives/edgar/data/1298675/000129867521000006/R2.htm',
+                   r'https://www.sec.gov/Archives/edgar/data/92122/000009212220000017/R8.htm']
 
 bs_answers_htm = [[16289.0, 27645.0, 37201.0, 21071.0, 14510.0, 44709.0, 36210.0], [8162.0, 18216.0, 26473.0, 16630.0, 11305.0, 35219.0, 34006.0], [5619.0, 14313.0, 21735.0, 15882.0, 8046.0, 31123.0, 32912.0],
                   [1971.0, 9562.0, 15405.0, 0, 6006.0, 11156.0, 27413.0], [2127.0, 9190.0, 11656.0, 0, 3451.0, 8323.0, 26437.0], [130334.0, 184406.0, 276268.0, 50074.0, 88657.0, 191791.0, 141988.0],
@@ -110,9 +111,10 @@ bs_answers_htm = [[16289.0, 27645.0, 37201.0, 21071.0, 14510.0, 44709.0, 36210.0
                   [56.48, 57.32, 269.75, 42.82, 9.21, 52.02, 212.3], [155842.0, 643508.0, 1163028.0, 213481.0, 831164.0, 1067096.0, 95932.0], [72669.0, 491921.0, 938555.0, 167305.0, 653139.0, 862839.0, 75716.0],
                   [110051.0, 572442.0, 916776.0, 217687.0, 599924.0, 834533.0, 82243.0], [82171.0, 463227.0, 886179.0, 192627.0, 620105.0, 812732.0, 81549.0], [87591.0, 444441.0, 791763.0, 152772.0, 576634.0, 729406.0, 70900.0],
                   [1.11, 32.88, 7434.87, 2988.36, 18.25, 3103.18, 4331.68], [2.08, 71.52, 3988.03, 1586.96, 17.53, 1690.44, 2296.28], [163.53, 1297.94, 8845.71, 5169.25, 280.82, 5460.84, 3841.88],
-                  [13701.0, 13701.0, 940722.0, 19718.0, 483343.0, 872512.0, 67425.], [183.69, 183.69, 9917.62, 390.75, 297.94, 688.68, 9411.91], [3.59, 6.23, 4778.14, 2364.67, 227.44, 2687.88, 1832.22]]
+                  [13701.0, 13701.0, 940722.0, 19718.0, 483343.0, 872512.0, 67425.], [183.69, 183.69, 9917.62, 390.75, 297.94, 688.68, 9411.91], [3.59, 6.23, 4778.14, 2364.67, 227.44, 2687.88, 1832.22],
+                  [1975.0, 9817.0, 112884.0, 41798.0, 12546.0, 86650.0, 27505.0]]
 
-bs_url = r'https://www.sec.gov/Archives/edgar/data/1298675/000129867519000009/R2.htm'
+bs_url = r'https://www.sec.gov/Archives/edgar/data/92122/000009212220000017/R8.htm'
 
 # BS Test
 #print(sp.bs_htm(bs_url, headers, get_sum_per(bs_url)))
@@ -211,7 +213,7 @@ div_answers_htm = [1.2, 1.0, 0.825,
                    2.64, 1.46, 3.24,
                    1.86, 2.29]
 
-div_url = r'https://www.sec.gov/Archives/edgar/data/825542/000154638021000037/R91.htm'
+div_url = r'https://www.sec.gov/Archives/edgar/data/92122/000009212214000012/R94.htm'
 
 def get_sum_per_div(url):
     obj = re.search(r'(/R\d?\d?\d\.htm)', str(url))
@@ -433,8 +435,8 @@ def yf_div_catch_test(ticker, divpaid, divs, pers):
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
 # Div finder
-base_url = 'https://www.sec.gov/Archives/edgar/data/829224/000082922417000049/'
-div = 1.05
+base_url = 'https://www.sec.gov/Archives/edgar/data/92122/000009212215000015/'
+div = 2.0825
 def div_finder_htm(base_url, div):
     for i in range(150):
         url = base_url + 'R' + str(i) + '.htm'
@@ -459,3 +461,27 @@ def div_finder_xml(base_url, div):
             print(url)
 
 #div_finder_xml(base_url, div)
+
+'''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
+
+# Report name finder
+
+def pull_filing_2(xml_summary):
+    content = requests.get(xml_summary, headers=headers).content
+    soup = BeautifulSoup(content, 'lxml')
+
+    # Find the all of the individual reports submitted
+    reports = soup.find('myreports')
+    assert reports != None
+    return reports
+
+
+def name_finder(xml_summary):
+    reports = pull_filing_2(xml_summary)
+    for report in reports.find_all('report')[:-1]:
+        print(report.shortname.text.upper())
+
+
+xml_summary = r'https://www.sec.gov/Archives/edgar/data/91440/000119312513058193/FilingSummary.xml'
+
+#print(name_finder(xml_summary))

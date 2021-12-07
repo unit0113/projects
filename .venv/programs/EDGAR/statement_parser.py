@@ -136,7 +136,8 @@ def column_finder_annual_htm(soup, per):
                             '4 Months Ended' in str(row2) or
                             '1 Months Ended' in str(row2) and '11 Months Ended' not in str(row2) or
                             '0 Months Ended' in str(row2) or
-                            'Months Ended' not in str(row2) and '12 Months Ended' in str(head) and tweleve_month_prior == False
+                            'Months Ended' not in str(row2) and '12 Months Ended' in str(head) and tweleve_month_prior == False or
+                            '6 Months Ended' in str(row2) and '12 Months Ended' not in str(row2)
                             ):
                             break 
                         else:
@@ -358,19 +359,19 @@ def rev_htm(rev_url, headers, per):
             continue
 
         elif (r"this, 'defref_us-gaap_Revenues', window" in str(tds[0]) or
-            r"this, 'defref_us-gaap_SalesRevenueNet', window" in str(tds[0]) or
-            r'defref_us-gaap_RevenueFromContractWithCustomerExcludingAssessedTax' in str(tds[0]) or
-            r"this, 'defref_us-gaap_SalesRevenueGoodsNet', window" in str(tds[0]) or
-            r"this, 'defref_us-gaap_RealEstateRevenueNet', window" in str(tds[0]) or
-            r"this, 'defref_us-gaap_RevenueFromContractWithCustomerIncludingAssessedTax', window" in str(tds[0]) or
-            r"this, 'defref_us-gaap_RegulatedAndUnregulatedOperatingRevenue', window" in str(tds[0]) or
-            r"this, 'defref_us-gaap_SalesRevenueServicesNet', window" in str(tds[0]) or
-            r"this, 'defref_us-gaap_ElectricUtilityRevenue', window" in str(tds[0]) or
-            r"this, 'defref_us-gaap_UtilityRevenue', window" in str(tds[0]) or
-            r"this, 'defref_us-gaap_RevenuesNetOfInterestExpense', window" in str(tds[0]) or
-            r"this, 'defref_gs_NetRevenuesIncludingNetInterestIncome', window" in str(tds[0]) or
-            r"this, 'defref_us-gaap_RevenueMineralSales', window" in str(tds[0])
-            ):
+              r"this, 'defref_us-gaap_SalesRevenueNet', window" in str(tds[0]) or
+              r'defref_us-gaap_RevenueFromContractWithCustomerExcludingAssessedTax' in str(tds[0]) or
+              r"this, 'defref_us-gaap_SalesRevenueGoodsNet', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_RealEstateRevenueNet', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_RevenueFromContractWithCustomerIncludingAssessedTax', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_RegulatedAndUnregulatedOperatingRevenue', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_SalesRevenueServicesNet', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ElectricUtilityRevenue', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_UtilityRevenue', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_RevenuesNetOfInterestExpense', window" in str(tds[0]) or
+              r"this, 'defref_gs_NetRevenuesIncludingNetInterestIncome', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_RevenueMineralSales', window" in str(tds[0])
+              ):
             rev_calc = html_re(str(tds[colm]))
             if rev_calc == '---':
                 rev_calc = html_re(str(tds[1]))
@@ -521,7 +522,8 @@ def rev_htm(rev_url, headers, per):
               r"this, 'defref_us-gaap_InterestCreditedToPolicyholdersAccountBalances', window" in str(tds[0]) and cost == 0 and oi == '---' or
               r"this, 'defref_us-gaap_PolicyholderDividends', window" in str(tds[0]) and cost == 0 and oi == '---' or
               r"this, 'defref_us-gaap_DeferredPolicyAcquisitionCostAmortizationExpense', window" in str(tds[0]) and cost == 0 and oi == '---' or
-              r"this, 'defref_us-gaap_DirectCostsOfLeasedAndRentedPropertyOrEquipment', window" in str(tds[0]) and cost == 0 and oi == '---'
+              r"this, 'defref_us-gaap_DirectCostsOfLeasedAndRentedPropertyOrEquipment', window" in str(tds[0]) and cost == 0 and oi == '---' or
+              r"this, 'defref_us-gaap_UtilitiesOperatingExpenseMaintenanceAndOperations', window" in str(tds[0]) and cost == 0 and oi == '---'
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -880,15 +882,16 @@ def bs_htm(bs_url, headers, per):
             if tot_liabilities_calc != '---':
                 tot_liabilities = round(check_neg(str(tds[colm]), tot_liabilities_calc) * (dollar_multiplier / 1_000_000), 2)
 
-        elif ('this, \'defref_us-gaap_StockholdersEquity\', window' in str(tds[0]) and equity =='---' or
+        elif ('this, \'defref_us-gaap_StockholdersEquity\', window' in str(tds[0]) and equity == '---' or
               'this, \'defref_us-gaap_StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest\', window' in str(tds[0]) and equity == '---' or
-              r"this, 'defref_us-gaap_CommonStockholdersEquity', window" in str(tds[0]) and equity =='---'
+              r"this, 'defref_us-gaap_CommonStockholdersEquity', window" in str(tds[0]) and equity == '---'
               ):
             equity = html_re(str(tds[colm]))
             if equity != '---':
                 equity = round(check_neg(str(tds[colm]), equity) * (dollar_multiplier / 1_000_000), 2)    
 
-        elif ('[Member]' in str(tds[0]) or 'VIEs' in str(tds[0])) and cash != '---' and equity != '---' and (liabilities != '---' or tot_liabilities != '---'):
+        elif (('[Member]' in str(tds[0]) or 'Alabama Power' in str(tds[0]) or 'Redeemable Preferred Stock, $100 par or stated value' in str(tds[0]) or 'VIEs' in str(tds[0])) and cash != '---' and equity != '---' and (liabilities != '---' or tot_liabilities != '---')
+               ):
             break     
 
     # Use cash sum if cash total not found
@@ -1270,7 +1273,7 @@ def div_htm(div_url, headers, per):
                     if r'toggleNextSibling(this)' in str(tds):
                         obj = re.findall(r'(?:\">\$ )(\d?\d\.\d\d?\d?)(?:</a><span)', str(tds), re.M)
                     else:
-                        obj = re.findall(r'(?:<td class=\"nump\">\$? ?)(\d?\d\.\d\d?\d?)(?:<span>)', str(tds), re.M)
+                        obj = re.findall(r'(?:<td class=\"nump\">\$? ?)(\d?\d\.\d\d?\d?\d?)(?:<span>)', str(tds), re.M)
                     if obj != [] and len(obj) >= 4:
                         div = sum(list(map(float, obj[:4])))
                         return round(div, 3)
@@ -2004,7 +2007,8 @@ def rev_xml(rev_url, headers):
         elif (r'us-gaap_PolicyholderBenefitsAndClaimsIncurredNet<' in str(row.ElementName) and cost == 0 or
               r'us-gaap_InterestCreditedToPolicyholdersAccountBalances<' in str(row.ElementName) and cost == 0 or
               r'us-gaap_PolicyholderDividends<' in str(row.ElementName) and cost == 0 or
-              r'us-gaap_DirectCostsOfLeasedAndRentedPropertyOrEquipment<' in str(row.ElementName) and cost == 0
+              r'us-gaap_DirectCostsOfLeasedAndRentedPropertyOrEquipment<' in str(row.ElementName) and cost == 0 or
+              r'us-gaap_UtilitiesOperatingExpenseMaintenanceAndOperations<' in str(row.ElementName) and cost == 0
               ):
             result = xml_re(str(cells[colm].RoundedNumericAmount))
             if result != '---':
