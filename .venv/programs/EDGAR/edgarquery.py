@@ -566,7 +566,7 @@ def parse_filings(filings, type, headers, splits):
                 'CONSOLIDATED STATEMENT OF SHAREOWNERS\' EQUITY (PARENTHETICAL)', 'SHAREHOLDERS\' EQUITY (SCHEDULE OF DIVIDENDS PAID AND DIVIDENDS DECLARED) (DETAILS)', 'CONSOLIDATED STATEMENTS OF EQUITY',
                 'EQUITY - DIVIDENDS (DETAILS)', 'CONSOLIDATED STATEMENTS OF EQUITY (USD $) (PARENTHETICAL)', 'QUARTERLY FINANCIAL INFORMATION (UNAUDITED) (DETAILS)']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)', 'EARNINGS PER SHARE (DETAIL)', 'EARNING PER SHARE (DETAIL)', 'EARNINGS PER SHARE (BASIC AND DILUTED WEIGHTED AVERAGE SHARES OUTSTANDING) (DETAILS)',
-                      'EARNINGS PER SHARE (SCHEDULE OF COMPUTATION OF BASIC AND DILUTED EARNINGS PER SHARE) (DETAIL)']
+                      'EARNINGS PER SHARE (SCHEDULE OF COMPUTATION OF BASIC AND DILUTED EARNINGS PER SHARE) (DETAIL)', 'PER SHARE AND PER UNIT DATA (DETAILS)', 'PER SHARE DATA (DETAILS)']
     share_catch_list = ['CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEET (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEETS (PARANTHETICAL)', 'CONSOLIDATED BALANCE SHEET CONSOLIDATED BALANCE SHEET (PARENTHETICAL)',
                         'CONSOLIDATED BALANCE SHEET (PARENTHETICALS)', 'CONDENSED CONSOLIDATED BALANCE SHEET (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEETS - PARENTHETICAL INFO', 'CONSOLIDATED BALANCE SHEETS',
                         'EQUITY (COMMON STOCK AND CLASS B STOCK CHANGES IN NUMBER OF SHARES ISSUED, HELD IN TREASURY AND OUTSTANDING) (DETAILS)', 'EQUITY (COMMON STOCK CHANGES IN NUMBER OF SHARES ISSUED, HELD IN TREASURY AND OUTSTANDING) (DETAILS)']
@@ -727,7 +727,7 @@ def parse_filings(filings, type, headers, splits):
                             shares = share_result
                 
             # Shares if not reported on income statement
-            if report.shortname.text.upper() in share_catch_list and shares == '---' or report.shortname.text.upper() in share_catch_list and shares == 0:
+            if report.shortname.text.upper() in share_catch_list and shares == '---' or report.shortname.text.upper() in share_catch_list and shares > 1:
                 # Create URL and call parser function
                 try:
                     catch_url = base_url + report.htmlfilename.text

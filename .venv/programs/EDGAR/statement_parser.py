@@ -107,6 +107,17 @@ def column_finder_annual_htm(soup, per):
     next_year = str(int(per[-4:]) + 1)
     weird_colm = False
 
+    # Identify range of three month data
+    three_mon_data = 0
+    if '3 Months Ended' in str(head) and '12 Months Ended' in str(head) and '9 Months Ended' not in str(head) and '<sup>[1]' not in str(head2):
+        for row in head:
+            if '12 Months Ended' not in str(row):
+                result = re.search(r'(?:colspan=\"(\d\d?)\")', str(row), re.M)
+                if result != None:
+                    three_mon_data += int(result.group(1))
+            else:
+                break
+
     # Find index for period end
     if per in str(head2):
         rows = head2.find_all('th')
@@ -131,7 +142,7 @@ def column_finder_annual_htm(soup, per):
                     if '12 Months Ended' in str(row2):
                         tweleve_month_prior = True
                     # Restart loop if data doesn't end on FY data, else, get new index and start loop over
-                    if col_index > index:
+                    if col_index > max(index, three_mon_data):
                         if ('3 Months Ended' in str(row2) and ('12 Months Ended' in str(head) or '11 Months Ended' in str(head)) or
                             '4 Months Ended' in str(row2) or
                             '1 Months Ended' in str(row2) and '11 Months Ended' not in str(row2) or
@@ -183,14 +194,13 @@ multiplier_list_1 = ['shares in Millions, $ in Millions', 'In Millions, except P
 
 multiplier_list_2 = ['shares in Thousands, $ in Millions', 'In Millions, except Share data in Thousands, unless otherwise specified']
 
-multiplier_list_3 = ['shares in Thousands, $ in Thousands', 'In Thousands, except Per Share data, unless otherwise specified', 'In Thousands, except Per Share data', 'In Thousands, unless otherwise specified', 'In Thousands', '$ / shares in Units, shares in Thousands, $ in Thousands',
-                     '$ / shares in Units, $ in Thousands']
+multiplier_list_3 = ['shares in Thousands, $ in Thousands', 'In Thousands, except Per Share data, unless otherwise specified', 'In Thousands, except Per Share data', 'In Thousands, unless otherwise specified', 'In Thousands', '$ / shares in Units, shares in Thousands, $ in Thousands']
 
 multiplier_list_4 = ['In Thousands, except Share data, unless otherwise specified', 'In Thousands, except Share data']
 
 multiplier_list_5 = ['$ in Millions', '$ in Millions, ¥ in Billions', 'In Millions, except Share data', 'In Millions, except Share data, unless otherwise specified', '€ in Millions, $ in Millions']
 
-multiplier_list_6 = ['$ in Thousands']
+multiplier_list_6 = ['$ in Thousands', '$ / shares in Units, $ in Thousands']
 
 multiplier_list_7 = ['shares in Thousands']
 
@@ -523,7 +533,9 @@ def rev_htm(rev_url, headers, per):
               r"this, 'defref_us-gaap_PolicyholderDividends', window" in str(tds[0]) and cost == 0 and oi == '---' or
               r"this, 'defref_us-gaap_DeferredPolicyAcquisitionCostAmortizationExpense', window" in str(tds[0]) and cost == 0 and oi == '---' or
               r"this, 'defref_us-gaap_DirectCostsOfLeasedAndRentedPropertyOrEquipment', window" in str(tds[0]) and cost == 0 and oi == '---' or
-              r"this, 'defref_us-gaap_UtilitiesOperatingExpenseMaintenanceAndOperations', window" in str(tds[0]) and cost == 0 and oi == '---'
+              r"this, 'defref_us-gaap_UtilitiesOperatingExpenseMaintenanceAndOperations', window" in str(tds[0]) and cost == 0 and oi == '---' or
+              r"his, 'defref_us-gaap_RealEstateTaxExpense', window" in str(tds[0]) and cost == 0 and oi == '---' or
+              r"this, 'defref_us-gaap_CostOfPropertyRepairsAndMaintenance', window" in str(tds[0]) and cost == 0 and oi == '---'
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -774,7 +786,8 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_us-gaap_ContractWithCustomerAssetNet', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_MortgageLoansOnRealEstateCommercialAndConsumerNet', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_CashAndSecuritiesSegregatedUnderFederalAndOtherRegulations', window" in str(tds[0]) or
-              r"this, 'defref_us-gaap_FinancialInstrumentsOwnedAtFairValue', window" in str(tds[0]) and 'Consolidated Statements of Financial Condition' not in str(head)
+              r"this, 'defref_us-gaap_FinancialInstrumentsOwnedAtFairValue', window" in str(tds[0]) and 'Consolidated Statements of Financial Condition' not in str(head) or
+              r"this, 'defref_us-gaap_NotesReceivableRelatedParties', window " in str(tds[0])
               ):
             if cur_assets == '---':
                 recievables_calc = html_re(str(tds[colm]))
@@ -822,7 +835,8 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_us-gaap_DebtCurrent', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_OtherPolicyholderFunds', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_AccruedLiabilitiesCurrentAndNoncurrent', window" in str(tds[0]) or
-              r"this, 'defref_srt_PayablesToCustomers', window" in str(tds[0])
+              r"this, 'defref_srt_PayablesToCustomers', window" in str(tds[0]) or
+              r"this, 'defref_spg_AccountsPayableAccruedExpensesIntangiblesAndDeferredRevenues', window" in str(tds[0])
               ):
             if cur_liabilities == '---':
                 cur_liabilities_calc = html_re(str(tds[colm]))
@@ -890,7 +904,7 @@ def bs_htm(bs_url, headers, per):
             if equity != '---':
                 equity = round(check_neg(str(tds[colm]), equity) * (dollar_multiplier / 1_000_000), 2)    
 
-        elif (('[Member]' in str(tds[0]) or 'Alabama Power' in str(tds[0]) or 'Redeemable Preferred Stock, $100 par or stated value' in str(tds[0]) or 'VIEs' in str(tds[0])) and cash != '---' and equity != '---' and (liabilities != '---' or tot_liabilities != '---')
+        elif (('[Member]' in str(tds[0]) or 'Alabama Power' in str(tds[0]) or 'Redeemable Preferred Stock, $100 par or stated value' in str(tds[0]) or 'VIEs' in str(tds[0]) or 'L.P.' in str(tds[0])) and cash != '---' and equity != '---' and (liabilities != '---' or tot_liabilities != '---')
                ):
             break     
 
@@ -1021,7 +1035,8 @@ def cf_htm(cf_url, headers, per):
               r"this, 'defref_us-gaap_PaymentsOfOrdinaryDividends', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_PaymentsOfDividendsCommonStock', window" in str(tds[0]) or
               r"this, 'defref_frt_DividendsPaidToCommonAndPreferredShareholders', window" in str(tds[0]) or
-              r"this, 'defref_us-gaap_PaymentsOfCapitalDistribution', window" in str(tds[0])
+              r"this, 'defref_us-gaap_PaymentsOfCapitalDistribution', window" in str(tds[0]) or
+              r"this, 'defref_spg_PaymentsOfOrdinaryDividendsCommonStockAndPreferredStock', window" in str(tds[0])
               ):
             divpaid_calc = html_re(str(tds[colm]))
             if divpaid_calc != '---' and divpaid_calc != 0:
@@ -1040,7 +1055,7 @@ def cf_htm(cf_url, headers, per):
             if sbc_calc != '---':
                 sbc = round(sbc_calc * (dollar_multiplier / 1_000_000), 2)
 
-        elif '[Member]' in str(row) and cfo != '---':
+        elif ('[Member]' in str(row) or 'Successor' in str(row)) and cfo != '---':
             break    
 
     # Calculate Free Cash Flow
@@ -1130,7 +1145,7 @@ def div_htm(div_url, headers, per):
                     except:
                         div = html_re(str(tds[colm]))
                     if (div != '---' and r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" not in str(soup) and r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds[0]) or
-                        div != '---' and div!= 0 and ('DIVIDENDS (Per Share Distributions) (Detail)' in str(head) or 'DIVIDENDS (Detail' in str(head))
+                        div != '---' and div!= 0 and ('DIVIDENDS (Per Share Distributions) (Detail)' in str(head) or 'DIVIDENDS (Detail' in str(head) or 'Per Share and Per Unit Data (Details)' in str(head) or 'Per Share Data (Details)' in str(head))
                         ):
                         return div
 
@@ -1709,6 +1724,14 @@ def eps_catch_htm(catch_url, headers, per):
                 if shares_calc != '---':
                     shares = round(shares_calc * (share_multiplier / 1_000), 2)
 
+            elif r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds[0]) and div =='---':
+                result = html_re(str(tds[colm]))
+                if result != '---':
+                    div = check_neg(str(tds[colm]), result)
+
+            elif ', L.P.' in str(tds[0]):
+                break
+
 
     return eps, div, shares
 
@@ -1807,6 +1830,9 @@ def share_catch_htm(catch_url, headers, per):
                 if shares_repurchased_calc != '---':
                     shares_repurchased = round(shares_repurchased_calc * (share_multiplier / 1_000), 2)
                     shares_repurchased_set.add(shares_repurchased)
+
+            elif 'L.P.' in str(tds[0]):
+                break
 
         shares = round(sum(share_set), 2)
         if shares == 0:
@@ -2183,7 +2209,8 @@ def bs_xml(bs_url, headers):
               r'us-gaap_InterestsContinuedToBeHeldByTransferorFairValue<' in str(row.ElementName) or
               r'us-gaap_AccountsAndNotesReceivableNet<' in str(row.ElementName) or
               r'us-gaap_DeferredRentReceivablesNet<' in str(row.ElementName) or
-              r'us-gaap_DueFromRelatedParties<' in str(row.ElementName)
+              r'us-gaap_DueFromRelatedParties<' in str(row.ElementName) or
+              r'us-gaap_NotesReceivableRelatedParties<' in str(row.ElementName)
               ):
             recievables_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if recievables_calc != '---':
@@ -2201,7 +2228,8 @@ def bs_xml(bs_url, headers):
               r'us-gaap_SecuredDebt<' in str(row.ElementName) or
               r'us-gaap_ConvertibleNotesPayable<' in str(row.ElementName) or
               r'us-gaap_NotesPayable<' in str(row.ElementName) or
-              r'us-gaap_LongTermDebtComponentsNotesPayable<' in str(row.ElementName)
+              r'us-gaap_LongTermDebtComponentsNotesPayable<' in str(row.ElementName) or
+              r'us-gaap_DebtAndCapitalLeaseObligations<' in str(row.ElementName)
               ):
             debt_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if debt_calc != '---':
@@ -2230,7 +2258,8 @@ def bs_xml(bs_url, headers):
               r'us-gaap_InterestPayableCurrentAndNoncurrent<' in str(row.ElementName) and cur_liabilities == '---' or
               r'us-gaap_LiabilityForFuturePolicyBenefitsAndUnpaidClaimsAndClaimsAdjustmentExpense<' in str(row.ElementName) and cur_liabilities == '---' or
               r'us-gaap_OtherPolicyholderFunds' in str(row.ElementName) and cur_liabilities == '---' or
-              r'us-gaap_PayablesToCustomers<' in str(row.ElementName) and cur_liabilities == '---'
+              r'us-gaap_PayablesToCustomers<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'spg_AccountsPayableAccruedExpensesIntangiblesAndDeferredRevenues<' in str(row.ElementName) and cur_liabilities == '---'
               ):
             liabilities_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if liabilities_calc != '---':              
@@ -2474,6 +2503,13 @@ def eps_catch_xml(catch_url, headers):
             if share_calc != '---':
                 shares = round(share_calc * (share_multiplier / 1_000), 2) 
 
+        elif r'us-gaap_CommonStockDividendsPerShareCashPaid<' in str(row.ElementName):
+            cells = row.find_all('Cell')
+            div_calc = xml_re(str(cells[colm].RoundedNumericAmount))
+            if div_calc != '---':
+                div = div_calc
+        
+
     return eps, div, shares
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
@@ -2560,4 +2596,4 @@ def share_catch_xml(catch_url, headers, per):
         if shares == '---' and shares_issued != '---' and shares_repurchased != '---':
             shares = round((shares_issued - shares_repurchased) * (share_multiplier / 1_000), 2)
 
-    return shares
+    return shares if shares > 1 else '---'
