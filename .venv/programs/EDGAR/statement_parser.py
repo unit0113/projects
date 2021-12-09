@@ -7,6 +7,7 @@ from datetime import datetime
 import pandas as pd
 import math
 import numpy as np
+import copy
 
 
 # RE for .htm filings
@@ -103,25 +104,129 @@ def column_finder_annual_htm(soup, per):
     head2 = soup.table.find_all('tr')[1]
     first_cell = soup.table.find_all('tr')[2]
 
+    # For rewrite, combine head and head2 data, see if per and 12 month data in concat
+    header1 = list(head.find_all('th'))
+    header1_list = []
+    header2 = list(head2.find_all(['th']))
+    header2_list =['Row Header']
+
+    if 'Months Ended' not in str(header1):
+        header_combined = []
+        for date in header1:
+            result = re.search(r'(?:colspan=\"(\d\d?)\")', str(date), re.M)
+            if result != None:
+                result = int(result.group(1))
+                for i in range(result):
+                    header_combined.append((str(date)))
+            else:
+                header_combined.append((str(date)))
+
+    else:
+        # Loop through column labels
+        for column in header1:
+            result = re.search(r'(?:colspan=\"(\d\d?)\")', str(column), re.M)
+            if result != None:
+                result = int(result.group(1))
+                for i in range(result):
+                    header1_list.append((str(column)))
+                # If title row is wide, multiply the row header tag in header2_list
+                if column == header1[0]:
+                    header2_list = header2_list * result
+            else:
+                header1_list.append((str(column)))
+
+        # Loop through the dates and find the first occurance of period_end
+        for date in header2:
+            # If not date data
+            if re.search(r'(\d\d\d\d)', str(date), re.M) == None:
+                header2_list[-1] = header2_list[-1] + str(date)
+            else:
+                result = re.search(r'(?:colspan=\"(\d\d?)\")', str(date), re.M)
+                if result != None:
+                    result = int(result.group(1))
+                    for i in range(result):
+                        header2_list.append((str(date)))
+                else:
+                    header2_list.append((str(date)))
+
+        # Concatinate both lists together
+        header_combined = [i + j for i, j in zip(header1_list, header2_list)]
+        
+    # Find all columns with per in them
+    header_filtered = [colm for colm in header_combined if per in colm]
+    
+    # Further filtering for preferred shares columns
+    things_to_filter = ['At The Market (ATM) Program', 'Series A Preferred Stock', 'Series B Preferred Stock']
+    for thing in things_to_filter:
+        header_filtered = [colm for colm in header_filtered if thing not in colm]
+
+    # Isolate the one we want for longest months ended
+    header_dur_filtered = copy.deepcopy(header_filtered)
+    for duration in range(12, 1, -1):
+        m_ended = str(duration) + ' Months Ended'
+        header_dur_filtered = [colm for colm in header_filtered if m_ended in colm]
+        if len(header_dur_filtered) > 0:
+            header_filtered = header_dur_filtered
+            break
+
+    # Filter for better matched column
+    header_filtered_more = []
+    for poss_colm in header_filtered:
+        if 'Common Shares' in poss_colm:
+            header_filtered_more.append(poss_colm)
+    if len (header_filtered_more) > 0:
+        header_filtered = header_filtered_more
+
+    colm = header_combined.index(header_filtered[-1])
+    
+    return colm
+
+
+
+
+
+
+
+
+
     # Identify next FY in case there is a more recent date than the relevant period
     next_year = str(int(per[-4:]) + 1)
     weird_colm = False
 
-    # Identify range of three month data
-    three_mon_data = 0
-    if '3 Months Ended' in str(head) and '12 Months Ended' in str(head) and '9 Months Ended' not in str(head) and '<sup>[1]' not in str(head2):
-        for row in head:
+    # Identify start of range of tweleve month data
+    tweleve_mon_data = 0
+    if '12 Months Ended' in str(head) and '9 Months Ended' not in str(head) and '11 Months Ended' not in str(head) and '<sup>[1]' not in str(head2) and 'At The Market (ATM) Program' not in str(head2) and '<sup>[1]' not in str(head2):
+        for row in head.find_all('th'):
             if '12 Months Ended' not in str(row):
                 result = re.search(r'(?:colspan=\"(\d\d?)\")', str(row), re.M)
                 if result != None:
-                    three_mon_data += int(result.group(1))
+                    tweleve_mon_data += int(result.group(1))
+                else:
+                    tweleve_mon_data += 1
             else:
                 break
+
+    # Identify start of range of tweleve month data if there are multiple 12 month data sections (preferred, common) 
+    if '12 Months Ended' in str(head) and '11 Months Ended' not in str(head) and '<sup>[1]' not in str(head2) and 'At The Market (ATM) Program' in str(head2) and 'Preferred Stock' in str(head2) and 'Common Shares' in str(head2):
+        per_found = False
+        for row in head2.find_all('div'):
+            if per in str(row):
+                per_found = True
+                tweleve_mon_data += 1
+            elif per_found == True and 'Common Shares' in str(row):
+                break
+            else:
+                per_found = False
+                obj = re.search(r'(\d\d\d\d)', str(row))
+                if obj == None:
+                    continue
+                tweleve_mon_data += 1
+
 
     # Find index for period end
     if per in str(head2):
         rows = head2.find_all('th')
-        index = 0
+        index = col_last = 0
         for row1 in rows:
             tweleve_month_prior = False
             # If extra/next FY in table
@@ -142,7 +247,7 @@ def column_finder_annual_htm(soup, per):
                     if '12 Months Ended' in str(row2):
                         tweleve_month_prior = True
                     # Restart loop if data doesn't end on FY data, else, get new index and start loop over
-                    if col_index > max(index, three_mon_data):
+                    if col_index > max(index, tweleve_mon_data, 1):
                         if ('3 Months Ended' in str(row2) and ('12 Months Ended' in str(head) or '11 Months Ended' in str(head)) or
                             '4 Months Ended' in str(row2) or
                             '1 Months Ended' in str(row2) and '11 Months Ended' not in str(row2) or
@@ -1036,7 +1141,8 @@ def cf_htm(cf_url, headers, per):
               r"this, 'defref_us-gaap_PaymentsOfDividendsCommonStock', window" in str(tds[0]) or
               r"this, 'defref_frt_DividendsPaidToCommonAndPreferredShareholders', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_PaymentsOfCapitalDistribution', window" in str(tds[0]) or
-              r"this, 'defref_spg_PaymentsOfOrdinaryDividendsCommonStockAndPreferredStock', window" in str(tds[0])
+              r"this, 'defref_spg_PaymentsOfOrdinaryDividendsCommonStockAndPreferredStock', window" in str(tds[0]) or
+              r"this, 'defref_stag_PaymentOfCashDistributionToMembers', window" in str(tds[0])
               ):
             divpaid_calc = html_re(str(tds[colm]))
             if divpaid_calc != '---' and divpaid_calc != 0:
@@ -1138,14 +1244,15 @@ def div_htm(div_url, headers, per):
                         break
             if 'Distributions (Details)' not in str(head):
                 if (r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds[0]) and 'Capital Stock (Narrative) (Details) (USD $)' not in str(head) or
-                    r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds[0])
+                    r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" in str(tds[0]) or
+                    r"this, 'defref_stag_CommonStockDividendsPerShareTaxTreatmentForIncomeTaxPurposesDeclared', window" in str(tds[0])
                     ):
                     try:
                         div = html_re(str(tds[index]))
                     except:
                         div = html_re(str(tds[colm]))
                     if (div != '---' and r"this, 'defref_us-gaap_CommonStockDividendsPerShareCashPaid', window" not in str(soup) and r"this, 'defref_us-gaap_CommonStockDividendsPerShareDeclared', window" in str(tds[0]) or
-                        div != '---' and div!= 0 and ('DIVIDENDS (Per Share Distributions) (Detail)' in str(head) or 'DIVIDENDS (Detail' in str(head) or 'Per Share and Per Unit Data (Details)' in str(head) or 'Per Share Data (Details)' in str(head))
+                        div != '---' and div!= 0 and ('DIVIDENDS (Per Share Distributions) (Detail)' in str(head) or 'Summary of Significant Accounting Policies - Dividends (Details)' in str(head) or 'DIVIDENDS (Detail' in str(head) or 'Per Share and Per Unit Data (Details)' in str(head) or 'Per Share Data (Details)' in str(head))
                         ):
                         return div
 
