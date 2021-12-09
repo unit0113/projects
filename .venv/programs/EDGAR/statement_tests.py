@@ -71,7 +71,7 @@ rev_answers_htm = [[168088.0, 115856.0, 20716.0, 69916.0, 61271.0, 8.05, 7608000
 rev_url = r'https://www.sec.gov/Archives/edgar/data/909832/000119312512428890/R4.htm'
 
 # Rev Test
-print(sp.rev_htm(rev_url, headers, get_sum_per(rev_url)))
+#print(sp.rev_htm(rev_url, headers, get_sum_per(rev_url)))
 
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
@@ -114,7 +114,7 @@ bs_answers_htm = [[16289.0, 27645.0, 37201.0, 21071.0, 14510.0, 44709.0, 36210.0
                   [13701.0, 13701.0, 940722.0, 19718.0, 483343.0, 872512.0, 67425.], [183.69, 183.69, 9917.62, 390.75, 297.94, 688.68, 9411.91], [3.59, 6.23, 4778.14, 2364.67, 227.44, 2687.88, 1832.22],
                   [1975.0, 9817.0, 112884.0, 41798.0, 12546.0, 86650.0, 27505.0], [669.37, 1501.52, 31231.63, 24163.23, 1390.68, 28101.32, 2526.4]]
 
-bs_url = r'https://www.sec.gov/Archives/edgar/data/1063761/000155837020001135/R2.htm'
+bs_url = r'https://www.sec.gov/Archives/edgar/data/753308/000075330813000023/R5.htm'
 
 # BS Test
 #print(sp.bs_htm(bs_url, headers, get_sum_per(bs_url)))
@@ -215,7 +215,7 @@ div_answers_htm = [1.2, 1.0, 0.825,
                    1.86, 2.29, 8.3,
                    1.2]
 
-div_url = r'https://www.sec.gov/Archives/edgar/data/1479094/000104746914001398/R51.htm'
+div_url = r'https://www.sec.gov/Archives/edgar/data/6281/000000628119000144/R97.htm'
 
 def get_sum_per_div(url):
     obj = re.search(r'(/R\d?\d?\d\.htm)', str(url))

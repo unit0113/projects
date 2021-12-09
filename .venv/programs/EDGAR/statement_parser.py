@@ -139,7 +139,10 @@ def column_finder_annual_htm(soup, per):
         for date in header2:
             # If not date data
             if re.search(r'(\d\d\d\d)', str(date), re.M) == None:
-                header2_list[-1] = header2_list[-1] + str(date)
+                if '<sup>[' in str(date):
+                    header2_list.append((str(date)))
+                else:
+                    header2_list[-1] = header2_list[-1] + str(date)
             else:
                 result = re.search(r'(?:colspan=\"(\d\d?)\")', str(date), re.M)
                 if result != None:
@@ -156,9 +159,17 @@ def column_finder_annual_htm(soup, per):
     header_filtered = [colm for colm in header_combined if per in colm]
     
     # Further filtering for preferred shares columns
-    things_to_filter = ['At The Market (ATM) Program', 'Series A Preferred Stock', 'Series B Preferred Stock']
+    things_to_filter = ['At The Market (ATM) Program', 'Series A Preferred Stock', 'Series B Preferred Stock', '[Member]', ]
     for thing in things_to_filter:
         header_filtered = [colm for colm in header_filtered if thing not in colm]
+
+    # Filter for better matched column
+    header_filtered_more = []
+    for poss_colm in header_filtered:
+        if 'Common Shares' in poss_colm or 'Common Stock' in poss_colm:
+            header_filtered_more.append(poss_colm)
+    if len (header_filtered_more) > 0:
+        header_filtered = header_filtered_more
 
     # Isolate the one we want for longest months ended
     header_dur_filtered = copy.deepcopy(header_filtered)
@@ -169,130 +180,27 @@ def column_finder_annual_htm(soup, per):
             header_filtered = header_dur_filtered
             break
 
-    # Filter for better matched column
-    header_filtered_more = []
-    for poss_colm in header_filtered:
-        if 'Common Shares' in poss_colm:
-            header_filtered_more.append(poss_colm)
-    if len (header_filtered_more) > 0:
-        header_filtered = header_filtered_more
-
-    colm = header_combined.index(header_filtered[-1])
+    # If per not in any columns
+    if len(header_filtered) == 0:
+        colm = 1
+    else:
+        colm = header_combined.index(header_filtered[-1])
+    
+    # Check first data cell to catch extra colspans
+    if 'colspan' in str(first_cell):
+        colm_modifier = 0
+        for row in first_cell.find_all('td')[:colm]:
+            result = re.search(r'(?:colspan=\"(\d\d?)\")', str(row), re.M)
+            if result == None:
+                continue
+            else:
+                result = int(result.group(1))
+                colm_modifier += (result - 1)
+        
+        # Modify colm return
+        colm -= colm_modifier
     
     return colm
-
-
-
-
-
-
-
-
-
-    # Identify next FY in case there is a more recent date than the relevant period
-    next_year = str(int(per[-4:]) + 1)
-    weird_colm = False
-
-    # Identify start of range of tweleve month data
-    tweleve_mon_data = 0
-    if '12 Months Ended' in str(head) and '9 Months Ended' not in str(head) and '11 Months Ended' not in str(head) and '<sup>[1]' not in str(head2) and 'At The Market (ATM) Program' not in str(head2) and '<sup>[1]' not in str(head2):
-        for row in head.find_all('th'):
-            if '12 Months Ended' not in str(row):
-                result = re.search(r'(?:colspan=\"(\d\d?)\")', str(row), re.M)
-                if result != None:
-                    tweleve_mon_data += int(result.group(1))
-                else:
-                    tweleve_mon_data += 1
-            else:
-                break
-
-    # Identify start of range of tweleve month data if there are multiple 12 month data sections (preferred, common) 
-    if '12 Months Ended' in str(head) and '11 Months Ended' not in str(head) and '<sup>[1]' not in str(head2) and 'At The Market (ATM) Program' in str(head2) and 'Preferred Stock' in str(head2) and 'Common Shares' in str(head2):
-        per_found = False
-        for row in head2.find_all('div'):
-            if per in str(row):
-                per_found = True
-                tweleve_mon_data += 1
-            elif per_found == True and 'Common Shares' in str(row):
-                break
-            else:
-                per_found = False
-                obj = re.search(r'(\d\d\d\d)', str(row))
-                if obj == None:
-                    continue
-                tweleve_mon_data += 1
-
-
-    # Find index for period end
-    if per in str(head2):
-        rows = head2.find_all('th')
-        index = col_last = 0
-        for row1 in rows:
-            tweleve_month_prior = False
-            # If extra/next FY in table
-            if next_year in str(row1) or 'Minimum' in str(row1):
-                if ('Subsequent Event [Member]' not in str(soup) and
-                    'Shareholders\' Equity - Dividends Declared (Details)' not in str(head)
-                    ):
-                    weird_colm = True         
-            elif per in str(row1):
-                # Find correct column if multiple things before 12 months data
-                col_index = 0
-                colm = 0
-                rows2 = head.find_all('th')
-
-                # Go through colms and check if index lines up with 12 month data
-                for row2 in rows2:
-                    # Identify if 12 month data is listed prior and column is unlabled
-                    if '12 Months Ended' in str(row2):
-                        tweleve_month_prior = True
-                    # Restart loop if data doesn't end on FY data, else, get new index and start loop over
-                    if col_index > max(index, tweleve_mon_data, 1):
-                        if ('3 Months Ended' in str(row2) and ('12 Months Ended' in str(head) or '11 Months Ended' in str(head)) or
-                            '4 Months Ended' in str(row2) or
-                            '1 Months Ended' in str(row2) and '11 Months Ended' not in str(row2) or
-                            '0 Months Ended' in str(row2) or
-                            'Months Ended' not in str(row2) and '12 Months Ended' in str(head) and tweleve_month_prior == False or
-                            '6 Months Ended' in str(row2) and '12 Months Ended' not in str(row2)
-                            ):
-                            break 
-                        else:
-                            # Check if data cells have wide cells
-                            if 'colspan' in str(first_cell):
-                                tds = first_cell.find_all('td')
-                                col_index = 0
-                                for cell_index, td in enumerate(tds):
-                                    colm_part = re.search(r'(?:colspan=\"(\d\d?)\")', str(td), re.M)
-                                    if colm_part == None:
-                                        col_index += 1
-                                    else:
-                                        col_index += int(colm_part.group(1))
-                                    if col_index > colm:
-                                        return cell_index
-                            else:
-                                if weird_colm == True:
-                                    return (colm + 1 - col_last)
-                                else:
-                                    return colm          
-                    if 'colspan' in str(row2):
-                        colm_part = re.search(r'(?:colspan=\"(\d\d?)\")', str(row2), re.M)
-                        colm += int(colm_part.group(1))
-                        col_index += int(colm_part.group(1))
-                        col_last = int(colm_part.group(1))
-                
-            # Check for wide date columns
-            if 'colspan' in str(row1):
-                index_part = re.search(r'(?:colspan=\"(\d\d?)\")', str(row1), re.M)
-                index += int(index_part.group(1))
-            else:
-                index += 1
-
-        return (colm - col_last)
-
-    else:
-        # Find correct column accounting for empties prior to data
-        colm = re.search(r'(?:colspan=\"(\d\d?)\")', str(head), re.M)
-        return int(colm.group(1))
 
 
 multiplier_list_1 = ['shares in Millions, $ in Millions', 'In Millions, except Per Share data, unless otherwise specified', 'In Millions, except Per Share data', 'In Millions', 'In Millions, unless otherwise specified']
