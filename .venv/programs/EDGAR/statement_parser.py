@@ -861,7 +861,7 @@ def bs_htm(bs_url, headers, per):
             if liabilities_calc != '---':
                 liabilities = round(check_neg(str(tds[colm]), liabilities_calc) * (dollar_multiplier / 1_000_000), 2)
 
-        elif ('this, \'defref_us-gaap_LongTermDebtNoncurrent\', window' in str(tds[0]) or
+        elif ('this, \'defref_us-gaap_LongTermDebtNoncurrent\', window' in str(tds[0]) and not ('Total long-term debt' in str(tds[0]) and debt != 0) or
               'this, \'defref_us-gaap_LongTermDebt\', window' in str(tds[0]) or
               'this, \'defref_us-gaap_LongTermDebtAndCapitalLeaseObligations\', window' in str(tds[0]) or
               r"this, 'defref_us-gaap_LineOfCredit', window" in str(tds[0]) or
@@ -898,7 +898,12 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_ohi_UnsecuredDebtExcludingRevolvingCreditFacility', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_LoansPayableToBank', window" in str(tds[0]) or
               r"this, 'defref_cube_UnsecuredSeniorNotesNet', window" in str(tds[0]) or
-              r"this, 'defref_us-gaap_NotesAndLoansPayable', window" in str(tds[0])
+              r"this, 'defref_us-gaap_NotesAndLoansPayable', window" in str(tds[0]) or
+              r"this, 'defref_stag_UnsecuredCreditFacility', window" in str(tds[0]) or
+              r"this, 'defref_stag_UnsecuredTermLoans', window" in str(tds[0]) or
+              r"this, 'defref_stag_UnsecuredNotesPayable', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_SecuredLongTermDebt', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_OtherLongTermDebtNoncurrent', window" in str(tds[0])
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -2231,7 +2236,7 @@ def bs_xml(bs_url, headers):
             if recievables_calc != '---':
                 recievables += round(recievables_calc * (dollar_multiplier / 1_000_000), 2) 
 
-        elif (r'us-gaap_LongTermDebtNoncurrent<' in str(row.ElementName) or
+        elif (r'us-gaap_LongTermDebtNoncurrent<' in str(row.ElementName) and not ('Total long-term debt' in str(row.Label) and len(debt_set) != 0) or
               r'us-gaap_LongTermDebtAndCapitalLeaseObligations<' in str(row.ElementName) or
               r'us-gaap_LongTermDebt<' in str(row.ElementName) or
               r'us-gaap_LongTermLoansPayable<' in str(row.ElementName) or
@@ -2244,11 +2249,18 @@ def bs_xml(bs_url, headers):
               r'us-gaap_ConvertibleNotesPayable<' in str(row.ElementName) or
               r'us-gaap_NotesPayable<' in str(row.ElementName) or
               r'us-gaap_LongTermDebtComponentsNotesPayable<' in str(row.ElementName) or
-              r'us-gaap_DebtAndCapitalLeaseObligations<' in str(row.ElementName)
+              r'us-gaap_DebtAndCapitalLeaseObligations<' in str(row.ElementName) or
+              r'us-gaap_OtherLongTermDebtNoncurrent<' in str(row.ElementName) or
+              r'us-gaap_ConvertibleDebtNoncurrent<' in str(row.ElementName)
               ):
             debt_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if debt_calc != '---':
                 debt_set.add(round(debt_calc * (dollar_multiplier / 1_000_000), 2))
+
+        elif r'us-gaap_LongTermDebtNoncurrent<' in str(row.ElementName) and 'Total long-term debt' in str(row.Label):
+            debt_calc = xml_re(str(cells[colm].RoundedNumericAmount))
+            if debt_calc != '---':
+                debt += round(debt_calc * (dollar_multiplier / 1_000_000), 2)
 
         elif r'us-gaap_LiabilitiesCurrent<' in str(row.ElementName):
             cur_liabilities = round(xml_re(str(cells[colm].RoundedNumericAmount)) * (dollar_multiplier / 1_000_000), 2)
@@ -2302,7 +2314,7 @@ def bs_xml(bs_url, headers):
         cur_assets = round(cash + recievables, 2)
 
     # Calculate debt total
-    debt = round(sum(debt_set), 2)
+    debt = max(debt, round(sum(debt_set), 2))
 
     # Calculate current liabilities if total not found
     if cur_liabilities == '---' and cur_liabilities_sum != 0:
