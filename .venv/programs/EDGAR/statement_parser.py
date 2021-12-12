@@ -211,7 +211,7 @@ multiplier_list_3 = ['shares in Thousands, $ in Thousands', 'In Thousands, excep
 
 multiplier_list_4 = ['In Thousands, except Share data, unless otherwise specified', 'In Thousands, except Share data']
 
-multiplier_list_5 = ['$ in Millions', '$ in Millions, ¥ in Billions', 'In Millions, except Share data', 'In Millions, except Share data, unless otherwise specified', '€ in Millions, $ in Millions']
+multiplier_list_5 = ['$ in Millions', '$ in Millions, ¥ in Billions', 'In Millions, except Share data', 'In Millions, except Share data, unless otherwise specified', '€ in Millions, $ in Millions', '$ in Millions, ₨ in Billions']
 
 multiplier_list_6 = ['$ in Thousands', '$ / shares in Units, $ in Thousands']
 
@@ -424,6 +424,7 @@ def rev_htm(rev_url, headers, per):
 
         elif r'defref_us-gaap_GrossProfit' in str(tds[0]):
             gross = html_re(str(tds[colm]))
+            print(gross)
             if gross != '---':
                 gross = round(check_neg(str(tds[colm]), gross) * (dollar_multiplier / 1_000_000), 2)
 
@@ -641,7 +642,7 @@ def rev_htm(rev_url, headers, per):
         oi = round(rev - credit_loss_provision - op_exp, 2)
 
     # Calculate Gross if operating expenses are given
-    if cost == 0 and operating_exp != 0:
+    if cost == 0 and operating_exp != 0 and gross == '---':
         cost = operating_exp - op_exp
         gross = round(rev - cost, 2)
 
@@ -806,11 +807,15 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_us-gaap_SeparateAccountAssets', window" in str(tds[0]) and '>Assets held for policyholders<' in str(tds[0]) or
               r"this, 'defref_ivz_Accountsreceivableandotherassetsofconsolidatedinvestmentproducts', window" in str(tds[0]) or
               r"this, 'defref_ivz_CashAndCashEquivalentsOfConsolidatedInvestmentProducts', window" in str(tds[0]) or
-              r"this, 'defref_us-gaap_PrepaidExpenseCurrentAndNoncurrent', window" in str(tds[0])
+              r"this, 'defref_us-gaap_PrepaidExpenseCurrentAndNoncurrent', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_PremiumsReceivableAtCarryingValue', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ReinsuranceRecoverablesOnPaidAndUnpaidLosses', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_PrepaidReinsurancePremiums', window" in str(tds[0]) or
+              r"this, 'defref_trv_ContractholderReceivables', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_ReinsuranceRecoverables', window" in str(tds[0])
               ):
             if cur_assets == '---':
                 recievables_calc = html_re(str(tds[colm]))
-                print(recievables_calc)
                 if recievables_calc != '---':
                     recievables += round(check_neg(str(tds[colm]), recievables_calc) * (dollar_multiplier / 1_000_000), 2)
 
@@ -859,10 +864,15 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_spg_AccountsPayableAccruedExpensesIntangiblesAndDeferredRevenues', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_EmployeeRelatedLiabilitiesCurrentAndNoncurrent', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_SeparateAccountsLiability', window" in str(tds[0]) and '>Policyholder payables<' in str(tds[0]) or
-              r"this, 'defref_ivz_UnsettledFundPayables', window" in str(tds[0])
+              r"this, 'defref_ivz_UnsettledFundPayables', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_LiabilityForClaimsAndClaimsAdjustmentExpense', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_UnearnedPremiums', window" in str(tds[0]) or
+              r"this, 'defref_trv_ContractholderPayables', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_CededPremiumsPayable', window" in str(tds[0])
               ):
             if cur_liabilities == '---':
                 cur_liabilities_calc = html_re(str(tds[colm]))
+                print(cur_liabilities_calc)
                 if cur_liabilities_calc != '---':
                     cur_liabilities_sum += round(check_neg(str(tds[colm]), cur_liabilities_calc) * (dollar_multiplier / 1_000_000), 2)
 
@@ -2241,7 +2251,11 @@ def bs_xml(bs_url, headers):
               r'us-gaap_AccountsAndNotesReceivableNet<' in str(row.ElementName) or
               r'us-gaap_DeferredRentReceivablesNet<' in str(row.ElementName) or
               r'us-gaap_DueFromRelatedParties<' in str(row.ElementName) or
-              r'us-gaap_NotesReceivableRelatedParties<' in str(row.ElementName)
+              r'us-gaap_NotesReceivableRelatedParties<' in str(row.ElementName) or
+              r'us-gaap_PremiumsReceivableAtCarryingValue<' in str(row.ElementName) or
+              r'us-gaap_ReinsuranceRecoverables<' in str(row.ElementName) or
+              r'us-gaap_PrepaidReinsurancePremiums<' in str(row.ElementName) or
+              r'us-gaap_ContractHolderReceivables<' in str(row.ElementName)
               ):
             recievables_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if recievables_calc != '---':
@@ -2263,7 +2277,8 @@ def bs_xml(bs_url, headers):
               r'us-gaap_DebtAndCapitalLeaseObligations<' in str(row.ElementName) or
               r'us-gaap_OtherLongTermDebtNoncurrent<' in str(row.ElementName) or
               r'us-gaap_ConvertibleDebtNoncurrent<' in str(row.ElementName) or
-              r'us-gaap_LoansPayableCurrent' in str(row.ElementName)
+              r'us-gaap_LoansPayableCurrent<' in str(row.ElementName) or
+              r'tgt_NonrecourseDebtCollateralizedByCreditCardReceivablesLongTerm<' in str(row.ElementName)
               ):
             debt_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if debt_calc != '---':
@@ -2296,9 +2311,13 @@ def bs_xml(bs_url, headers):
               r'us-gaap_InterestAndDividendsPayableCurrentAndNoncurrent<' in str(row.ElementName) and cur_liabilities == '---' or
               r'us-gaap_InterestPayableCurrentAndNoncurrent<' in str(row.ElementName) and cur_liabilities == '---' or
               r'us-gaap_LiabilityForFuturePolicyBenefitsAndUnpaidClaimsAndClaimsAdjustmentExpense<' in str(row.ElementName) and cur_liabilities == '---' or
-              r'us-gaap_OtherPolicyholderFunds' in str(row.ElementName) and cur_liabilities == '---' or
+              r'us-gaap_OtherPolicyholderFunds<' in str(row.ElementName) and cur_liabilities == '---' or
               r'us-gaap_PayablesToCustomers<' in str(row.ElementName) and cur_liabilities == '---' or
-              r'spg_AccountsPayableAccruedExpensesIntangiblesAndDeferredRevenues<' in str(row.ElementName) and cur_liabilities == '---'
+              r'spg_AccountsPayableAccruedExpensesIntangiblesAndDeferredRevenues<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'us-gaap_LiabilityForClaimsAndClaimsAdjustmentExpense<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'us-gaap_UnearnedPremiums<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'trv_ContractholderPayables<' in str(row.ElementName) and cur_liabilities == '---' or
+              r'trv_PayablesForReinsurancePremiums<' in str(row.ElementName) and cur_liabilities == '---'
               ):
             liabilities_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if liabilities_calc != '---':              
