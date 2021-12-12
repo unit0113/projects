@@ -203,7 +203,7 @@ def column_finder_annual_htm(soup, per):
     return colm
 
 
-multiplier_list_1 = ['shares in Millions, $ in Millions', 'In Millions, except Per Share data, unless otherwise specified', 'In Millions, except Per Share data', 'In Millions', 'In Millions, unless otherwise specified']
+multiplier_list_1 = ['shares in Millions, $ in Millions', 'In Millions, except Per Share data, unless otherwise specified', 'In Millions, except Per Share data', 'In Millions', 'In Millions, unless otherwise specified', '$ / shares in Units, shares in Millions, $ in Millions']
 
 multiplier_list_2 = ['shares in Thousands, $ in Millions', 'In Millions, except Share data in Thousands, unless otherwise specified']
 
@@ -800,10 +800,17 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_us-gaap_MortgageLoansOnRealEstateCommercialAndConsumerNet', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_CashAndSecuritiesSegregatedUnderFederalAndOtherRegulations', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_FinancialInstrumentsOwnedAtFairValue', window" in str(tds[0]) and 'Consolidated Statements of Financial Condition' not in str(head) or
-              r"this, 'defref_us-gaap_NotesReceivableRelatedParties', window " in str(tds[0])
+              r"this, 'defref_us-gaap_NotesReceivableRelatedParties', window " in str(tds[0]) or
+              r"this, 'defref_ivz_UnsettledFundReceivables', window" in str(tds[0]) or
+              r"this, 'defref_ivz_InvestmentsOfConsolidatedInvestmentProducts', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_SeparateAccountAssets', window" in str(tds[0]) and '>Assets held for policyholders<' in str(tds[0]) or
+              r"this, 'defref_ivz_Accountsreceivableandotherassetsofconsolidatedinvestmentproducts', window" in str(tds[0]) or
+              r"this, 'defref_ivz_CashAndCashEquivalentsOfConsolidatedInvestmentProducts', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_PrepaidExpenseCurrentAndNoncurrent', window" in str(tds[0])
               ):
             if cur_assets == '---':
                 recievables_calc = html_re(str(tds[colm]))
+                print(recievables_calc)
                 if recievables_calc != '---':
                     recievables += round(check_neg(str(tds[colm]), recievables_calc) * (dollar_multiplier / 1_000_000), 2)
 
@@ -849,7 +856,10 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_us-gaap_OtherPolicyholderFunds', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_AccruedLiabilitiesCurrentAndNoncurrent', window" in str(tds[0]) or
               r"this, 'defref_srt_PayablesToCustomers', window" in str(tds[0]) or
-              r"this, 'defref_spg_AccountsPayableAccruedExpensesIntangiblesAndDeferredRevenues', window" in str(tds[0])
+              r"this, 'defref_spg_AccountsPayableAccruedExpensesIntangiblesAndDeferredRevenues', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_EmployeeRelatedLiabilitiesCurrentAndNoncurrent', window" in str(tds[0]) or
+              r"this, 'defref_us-gaap_SeparateAccountsLiability', window" in str(tds[0]) and '>Policyholder payables<' in str(tds[0]) or
+              r"this, 'defref_ivz_UnsettledFundPayables', window" in str(tds[0])
               ):
             if cur_liabilities == '---':
                 cur_liabilities_calc = html_re(str(tds[colm]))
@@ -903,7 +913,8 @@ def bs_htm(bs_url, headers, per):
               r"this, 'defref_stag_UnsecuredTermLoans', window" in str(tds[0]) or
               r"this, 'defref_stag_UnsecuredNotesPayable', window" in str(tds[0]) or
               r"this, 'defref_us-gaap_SecuredLongTermDebt', window" in str(tds[0]) or
-              r"this, 'defref_us-gaap_OtherLongTermDebtNoncurrent', window" in str(tds[0])
+              r"this, 'defref_us-gaap_OtherLongTermDebtNoncurrent', window" in str(tds[0]) or
+              r"this, 'defref_ivz_LongTermDebtOfConsolidatedInvestmentProducts', window" in str(tds[0])
               ):
             result = html_re(str(tds[colm]))
             if result != '---':
@@ -2251,7 +2262,8 @@ def bs_xml(bs_url, headers):
               r'us-gaap_LongTermDebtComponentsNotesPayable<' in str(row.ElementName) or
               r'us-gaap_DebtAndCapitalLeaseObligations<' in str(row.ElementName) or
               r'us-gaap_OtherLongTermDebtNoncurrent<' in str(row.ElementName) or
-              r'us-gaap_ConvertibleDebtNoncurrent<' in str(row.ElementName)
+              r'us-gaap_ConvertibleDebtNoncurrent<' in str(row.ElementName) or
+              r'us-gaap_LoansPayableCurrent' in str(row.ElementName)
               ):
             debt_calc = xml_re(str(cells[colm].RoundedNumericAmount))
             if debt_calc != '---':

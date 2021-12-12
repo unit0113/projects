@@ -564,7 +564,8 @@ def parse_filings(filings, type, headers, splits):
                 'CONSOLIDATED STATEMENTS OF STOCKHOLDERS\' (DEFICIT) EQUITY (PARENTHETICAL)', 'CONSOLIDATED STATEMENTS OF STOCKHOLDERS (DEFICIT) EQUITY (PARENTHETICAL)', 'QUARTERLY FINANCIAL DATA (TABLES)',
                 'EARNINGS PER SHARE AND UNIT AND SHAREHOLDERS\' EQUITY AND CAPITAL - EARNINGS PER SHARE AND UNIT (DETAILS)', 'EARNINGS PER SHARE AND UNIT AND SHAREHOLDERS\' EQUITY AND CAPITAL (DETAILS)', 'CAPITAL STOCK DIVIDENDS (DETAILS)',
                 'CONSOLIDATED STATEMENT OF SHAREOWNERS\' EQUITY (PARENTHETICAL)', 'SHAREHOLDERS\' EQUITY (SCHEDULE OF DIVIDENDS PAID AND DIVIDENDS DECLARED) (DETAILS)', 'CONSOLIDATED STATEMENTS OF EQUITY',
-                'EQUITY - DIVIDENDS (DETAILS)', 'CONSOLIDATED STATEMENTS OF EQUITY (USD $) (PARENTHETICAL)', 'QUARTERLY FINANCIAL INFORMATION (UNAUDITED) (DETAILS)', 'SUMMARY OF SIGNIFICANT ACCOUNTING POLICIES - DIVIDENDS (DETAILS)']
+                'EQUITY - DIVIDENDS (DETAILS)', 'CONSOLIDATED STATEMENTS OF EQUITY (USD $) (PARENTHETICAL)', 'QUARTERLY FINANCIAL INFORMATION (UNAUDITED) (DETAILS)', 'SUMMARY OF SIGNIFICANT ACCOUNTING POLICIES - DIVIDENDS (DETAILS)',
+                'COMMITMENTS AND CONTINGENCIES (DETAILS)', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY AND COMPREHENSIVE INCOME (PARENTHETICAL)']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)', 'EARNINGS PER SHARE (DETAIL)', 'EARNING PER SHARE (DETAIL)', 'EARNINGS PER SHARE (BASIC AND DILUTED WEIGHTED AVERAGE SHARES OUTSTANDING) (DETAILS)',
                       'EARNINGS PER SHARE (SCHEDULE OF COMPUTATION OF BASIC AND DILUTED EARNINGS PER SHARE) (DETAIL)', 'PER SHARE AND PER UNIT DATA (DETAILS)', 'PER SHARE DATA (DETAILS)']
     share_catch_list = ['CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEET (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEETS (PARANTHETICAL)', 'CONSOLIDATED BALANCE SHEET CONSOLIDATED BALANCE SHEET (PARENTHETICAL)',
@@ -727,7 +728,7 @@ def parse_filings(filings, type, headers, splits):
                             shares = share_result
                 
             # Shares if not reported on income statement
-            if report.shortname.text.upper() in share_catch_list and shares == '---' or report.shortname.text.upper() in share_catch_list and shares > 1:
+            if report.shortname.text.upper() in share_catch_list and (shares == '---' or shares < 1):
                 # Create URL and call parser function
                 try:
                     catch_url = base_url + report.htmlfilename.text
@@ -737,9 +738,7 @@ def parse_filings(filings, type, headers, splits):
                     shares = sp.share_catch_xml(catch_url, headers, period_end)
             
             # Break if all data found
-            if (rev != '---' and cash != '---' and fcf != '---' and shares != '---' and eps != '---' and div != '---' and divpaid > 0 or
-                rev != '---' and cash != '---' and fcf != '---' and shares != '---' and eps != '---' and divpaid == 0
-                ):
+            if rev != '---' and cash != '---' and fcf != '---' and shares != '---' and eps != '---' and (div != '---' and divpaid > 0 or divpaid == 0):
                 break
                 
         # Check for errors in FY pull (company's fault)
