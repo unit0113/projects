@@ -3,6 +3,7 @@ import random
 import re
 import sys
 
+
 DAMPING = 0.85
 SAMPLES = 10000
 
@@ -57,7 +58,29 @@ def transition_model(corpus, page, damping_factor):
     linked to by `page`. With probability `1 - damping_factor`, choose
     a link at random chosen from all pages in the corpus.
     """
-    raise NotImplementedError
+
+    # Initialize return dict
+    result = {}
+    for site in corpus:
+        result[site] = 0
+
+    # Add values for not damped
+    if len(corpus[page]) == 0:
+        i = 1 / len(corpus)
+        for site in corpus:
+            result[site] = round(result[site] + i, 10)
+    else:
+        # Add values for random page (damping)
+        damped = round((1 - damping_factor) / len(corpus), 10)
+        for site in result:
+            result[site] += damped
+
+        # Add values for not damped
+        i = round(damping_factor / len(corpus[page]), 10)
+        for site in corpus[page]:
+            result[site] = round(result[site] + i, 10)
+
+    return result
 
 
 def sample_pagerank(corpus, damping_factor, n):
@@ -69,7 +92,30 @@ def sample_pagerank(corpus, damping_factor, n):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+
+    # Initialize return dict
+    sampled = {site: 0 for site in corpus}
+    
+    # Determine what page to start on
+    page = random.choice(list(corpus.keys()))
+    sampled[page] += 1
+
+    # Cycle through samples
+    for i in range(n-1):
+        # Get prob distribution for selected page
+        dist = transition_model(corpus, page, damping_factor)
+        page = random.choices(list(dist.keys()), weights=dist.values())[0]
+
+        # Update sample counter
+        sampled[page] += 1
+
+    # Calc final rankings
+    page_rank = {}
+    for page in sampled:
+        page_rank[page] = sampled[page] / n
+
+    return page_rank
+
 
 
 def iterate_pagerank(corpus, damping_factor):
@@ -81,7 +127,39 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+    
+    # Initialize return dict, error min, and constant for formula
+    N = len(corpus)
+    page_rank = {site: 1 / N for site in corpus}
+    error = 0.001
+    constant = round((1 - damping_factor) / N, 10)
+
+    # Run through loop
+    while True:
+        old_page_rank = page_rank.copy()
+        for site in corpus:
+            sum = 0
+            for i in corpus:
+                # Check if no links
+                if len(corpus[i]) == 0:
+                    sum += page_rank[i] / N
+                # If there are links
+                elif site in corpus[i]:
+                    sum += page_rank[i] / len(corpus[i])
+
+            # use equation
+            page_rank[site] = constant + (damping_factor * sum)
+
+        # Check error values
+        error_check = True
+        for site in corpus:
+            if abs(page_rank[site] - old_page_rank[site]) > error:
+                error_check = False
+                break
+        
+        # Return page rank if all errors less than error value
+        if error_check:
+            return page_rank
 
 
 if __name__ == "__main__":
