@@ -74,7 +74,7 @@ def get_tickers(cikList):
         canvas.delete("agent_tag")
         # Open file
         try:
-            with open(r'C:\Users\unit0\Desktop\EDGAR\user_agent.txt') as f:
+            with open(r'user_agent.txt') as f:
                 data = f.read()
                 headers = json.loads(data)
                 canvas.create_text(335, 480, text='User Agent found', anchor="center", justify='center', fill="green2", tag="agent_tag", font=("Helvetica", 12, "bold"))
@@ -172,7 +172,7 @@ def get_tickers(cikList):
         """ 
 
         file = (tkinter.filedialog.askopenfilename())
-        copyfile(file, r'C:\Users\unit0\Desktop\EDGAR\user_agent.txt')
+        copyfile(file, r'user_agent.txt')
         import_user_agent()
 
 
@@ -192,7 +192,7 @@ def get_tickers(cikList):
                      "Host": "www.sec.gov"}
             
             # Save User Agent
-            with open(r'C:\Users\unit0\Desktop\EDGAR\user_agent.txt', 'w') as f:
+            with open(r'user_agent.txt', 'w') as f:
                 print(json.dumps(agent), file=f)
 
             import_user_agent()
@@ -309,7 +309,7 @@ def get_tickers(cikList):
     root.resizable(width=False, height=False)
 
     # Background
-    bg = ImageTk.PhotoImage(image=Image.open(".venv/programs/EDGAR/bg.png"))
+    bg = ImageTk.PhotoImage(image=Image.open("bg.png"))
     canvas.create_image(0,0, image=bg, anchor="nw")
 
     # Pull User Agent

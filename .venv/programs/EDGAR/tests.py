@@ -11,7 +11,7 @@ import timeit
 
 
 # Header data for data pull
-with open(r'C:\Users\unit0\Desktop\EDGAR\user_agent.txt') as f:
+with open(r'user_agent.txt') as f:
     data = f.read()
     headers = json.loads(data)
 
@@ -177,7 +177,7 @@ def share_catch_test():
 '''-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------'''
 
 # TESTS!!!!!
-#rev_test()
+rev_test()
 #bs_test()
 #cf_test()
 #div_test()

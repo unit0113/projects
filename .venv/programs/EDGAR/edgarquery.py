@@ -516,7 +516,7 @@ def parse_filings(filings, type, headers, splits):
                    'CONSOLIDATED STATEMENTS OF OPERATIONS AND COMPREHENSIVE LOSS', 'CONSOLIDATED STATEMENTS OF OPERATIONS AND OTHER COMPREHENSIVE LOSS', 'STATEMENTS OF OPERATIONS', 'STATEMENTS OF CONSOLIDATED EARNINGS',
                    'CONSOLIDATED RESULTS OF OPERATIONS', 'CONDENSED CONSOLIDATED STATEMENTS OF EARNINGS', 'STATEMENT OF CONSOLIDATED INCOME', 'CONSOLIDATED STATEMENTS OF INCOME AND COMPREHENSIVE INCOME', 'CONSOLIDATED STATEMENTS OF INCOME (LOSS)',
                    'CONSOLIDATED STATEMENTS OF COMPREHENSIVE INCOME', 'CONSOLIDATED STATEMENTS OF EARNINGS (LOSS)', 'CONSOLDIATED STATEMENTS OF OPERATIONS', 'CONSOLIDATED INCOME STATEMENT',
-                   'CONDENSED CONSOLIDATED STATEMENTS OF INCOME', 'STATEMENTS OF CONSOLIDATED OPERATIONS', 'STATEMENTS OF INCOME']
+                   'CONDENSED CONSOLIDATED STATEMENTS OF INCOME', 'STATEMENTS OF CONSOLIDATED OPERATIONS', 'STATEMENTS OF INCOME', 'STATEMENTS OF CONSOLIDATED INCOME (LOSS)']
     bs_list = ['BALANCE SHEETS', 'CONSOLIDATED BALANCE SHEETS', 'STATEMENT OF FINANCIAL POSITION CLASSIFIED', 'CONSOLIDATED BALANCE SHEET', 'CONDENSED CONSOLIDATED BALANCE SHEETS',
                'CONSOLIDATED AND COMBINED BALANCE SHEETS', 'CONSOLIDATED STATEMENTS OF FINANCIAL POSITION', 'BALANCE SHEET', 'CONSOLIDATED FINANCIAL POSITION', 'CONSOLIDATED STATEMENTS OF FINANCIAL CONDITION',
                'CONSOLIDATED STATEMENT OF FINANCIAL POSITION', 'CONDENSED CONSOLIDATED BALANCE SHEET', 'CONDENSED CONSOLIDATED STATEMENTS OF FINANCIAL CONDITION']
@@ -567,7 +567,10 @@ def parse_filings(filings, type, headers, splits):
                 'CONSOLIDATED STATEMENT OF SHAREOWNERS\' EQUITY (PARENTHETICAL)', 'SHAREHOLDERS\' EQUITY (SCHEDULE OF DIVIDENDS PAID AND DIVIDENDS DECLARED) (DETAILS)', 'CONSOLIDATED STATEMENTS OF EQUITY',
                 'EQUITY - DIVIDENDS (DETAILS)', 'CONSOLIDATED STATEMENTS OF EQUITY (USD $) (PARENTHETICAL)', 'QUARTERLY FINANCIAL INFORMATION (UNAUDITED) (DETAILS)', 'SUMMARY OF SIGNIFICANT ACCOUNTING POLICIES - DIVIDENDS (DETAILS)',
                 'COMMITMENTS AND CONTINGENCIES (DETAILS)', 'CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' EQUITY AND COMPREHENSIVE INCOME (PARENTHETICAL)', 'QUARTERLY RESULTS (UNAUDITED) (DETAILS)',
-                'CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' INVESTMENT (PARENTHETICAL)', 'SHAREHOLDERS\' EQUITY AND DIVIDEND AVAILABILITY (DETAILS) - DIVIDEND AVAILABILITY', 'SHAREHOLDERS\' EQUITY AND DIVIDEND AVAILABILITY (DETAILS)']
+                'CONSOLIDATED STATEMENTS OF SHAREHOLDERS\' INVESTMENT (PARENTHETICAL)', 'SHAREHOLDERS\' EQUITY AND DIVIDEND AVAILABILITY (DETAILS) - DIVIDEND AVAILABILITY', 'SHAREHOLDERS\' EQUITY AND DIVIDEND AVAILABILITY (DETAILS)',
+                'SHAREOWNERS\' EQUITY - ROLL-FORWARD OF COMMON STOCK, ADDITIONAL PAID-IN CAPITAL, AND RETAINED EARNINGS ACCOUNTS (DETAIL)', 'SHAREOWNERS\' EQUITY - ROLL-FORWARD OF COMMON STOCK, ADDITIONAL PAID-IN CAPITAL, AND RETAINED EARNINGS ACCOUNTS (PHANTOM) (DETAIL)',
+                'SHAREOWNERS\' EQUITY - ROLL-FORWARD OF COMMON STOCK, ADDITIONAL PAID-IN CAPITAL, AND RETAINED EARNINGS ACCOUNTS (PARENTHETICAL) (DETAIL)', 'ROLL-FORWARD OF COMMON STOCK, ADDITIONAL PAID-IN CAPITAL, AND RETAINED EARNINGS ACCOUNTS (PARENTHETICAL) (DETAIL)',
+                'EQUITY (DIVIDENDS AND DIVIDEND RESTRICTIONS) (DETAILS)', 'SUPPLEMENTARY FINANCIAL INFORMATION - SUMMARY OF QUARTERLY RESULTS (DETAILS)', 'SUPPLEMENTARY FINANCIAL INFORMATION, SUMMARY OF QUARTERLY RESULTS (DETAILS)']
     eps_catch_list = ['EARNINGS PER SHARE', 'EARNINGS (LOSS) PER SHARE', 'STOCKHOLDERS\' EQUITY', 'EARNINGS PER SHARE (DETAILS)', 'EARNINGS PER SHARE (DETAIL)', 'EARNING PER SHARE (DETAIL)', 'EARNINGS PER SHARE (BASIC AND DILUTED WEIGHTED AVERAGE SHARES OUTSTANDING) (DETAILS)',
                       'EARNINGS PER SHARE (SCHEDULE OF COMPUTATION OF BASIC AND DILUTED EARNINGS PER SHARE) (DETAIL)', 'PER SHARE AND PER UNIT DATA (DETAILS)', 'PER SHARE DATA (DETAILS)']
     share_catch_list = ['CONSOLIDATED BALANCE SHEETS (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEET (PARENTHETICAL)', 'CONSOLIDATED BALANCE SHEETS (PARANTHETICAL)', 'CONSOLIDATED BALANCE SHEET CONSOLIDATED BALANCE SHEET (PARENTHETICAL)',
@@ -714,21 +717,21 @@ def parse_filings(filings, type, headers, splits):
                     div = sp.div_xml(div_url, headers)
 
             # EPS/div catcher
-            elif report.shortname.text.upper() in eps_catch_list and (div == '---' and divpaid != 0 or eps == '---' or shares == '---'):
+            elif report.shortname.text.upper() in eps_catch_list and ((div == '---' and divpaid != 0) or eps == '---' or shares == '---'):
                 # Create URL and call parser function
-                    try:
-                        catch_url = base_url + report.htmlfilename.text
-                        eps_result, div_result, share_result = sp.eps_catch_htm(catch_url, headers, period_end)
-                    except:
-                        catch_url = base_url + report.xmlfilename.text
-                        eps_result, div_result, share_result = sp.eps_catch_xml(catch_url, headers)
-                    # Update EPS or div if result found/needed
-                    if eps == '---' and eps_result != '---':
-                        eps = eps_result
-                    if div == '---' and div_result != '---':
-                        div = div_result
-                    if shares == '---' and share_result != '---':
-                            shares = share_result
+                try:
+                    catch_url = base_url + report.htmlfilename.text
+                    eps_result, div_result, share_result = sp.eps_catch_htm(catch_url, headers, period_end)
+                except:
+                    catch_url = base_url + report.xmlfilename.text
+                    eps_result, div_result, share_result = sp.eps_catch_xml(catch_url, headers)
+                # Update EPS or div if result found/needed
+                if eps == '---' and eps_result != '---':
+                    eps = eps_result
+                if div == '---' and div_result != '---' and div_result != 0.0:
+                    div = div_result
+                if shares == '---' and share_result != '---':
+                    shares = share_result
                 
             # Shares if not reported on income statement
             if report.shortname.text.upper() in share_catch_list and (shares == '---' or shares < 1):
@@ -743,7 +746,7 @@ def parse_filings(filings, type, headers, splits):
             # Break if all data found
             if rev != '---' and cash != '---' and fcf != '---' and shares != '---' and eps != '---' and (div != '---' and divpaid > 0 or divpaid == 0):
                 break
-                
+            
         # Check for errors in FY pull (company's fault)
         if len(Fiscal_Period) > 0:
             if int(Fiscal_Period[-1]) - int(fy) > 1 and str(int(Period_End[-1][-4:]) - 1) in period_end:
