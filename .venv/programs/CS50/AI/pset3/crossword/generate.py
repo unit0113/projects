@@ -162,13 +162,20 @@ class CrosswordCreator():
                 for var2 in self.crossword.neighbors(var1):
                     arcs.append((var1, var2))
 
-        # add arcs in case of revision
-        for x, y in arcs:
-            if self.revise(x, y):
-                for neighbor in self.crossword.neighbors(x):
-                    arcs.append((x, neighbor))
+        # initialize queue
+        while arcs:
+            x, y = arcs.pop(0)
 
-        return len(self.domains[x]) > 0
+            # add neighbors if revised
+            if self.revise(x, y):
+                if len(self.domains[x]) == 0 or len(self.domains[y]):
+                    return False
+                neighbors = [neighbor for neighbor in self.crossword.neighbors(x) if neighbor is not y]
+                # add if new values found
+                if neighbors != []:
+                    arcs.append(neighbors)
+
+        return True
 
 
     def assignment_complete(self, assignment):
@@ -221,7 +228,28 @@ class CrosswordCreator():
         The first value in the list, for example, should be the one
         that rules out the fewest values among the neighbors of `var`.
         """
-        raise NotImplementedError
+
+        # iniatialize values
+        constraints = dict()
+
+        for word_var in self.domains[var]:
+            constraint_count = 0
+            # go through all unassigned neighbors
+            for neighbor in self.crossword.neighbors(var):
+                if neighbor in assignment:
+                    continue
+                # Check for overlap and see how much gets ruled out
+                i_overlap, j_overlap = self.crossword.overlaps[var, neighbor]
+                for word_neighbor in self.domains[neighbor]:
+                    if word_var[i_overlap] != word_neighbor[j_overlap]:
+                        constraint_count += 1
+            # add to dict
+            constraints[word_var] = constraint_count
+
+        # Sort results
+        domain_val_result = [val for val in sorted(constraints, key=constraints.get)]
+        return domain_val_result           
+
 
     def select_unassigned_variable(self, assignment):
         """
@@ -231,7 +259,40 @@ class CrosswordCreator():
         degree. If there is a tie, any of the tied variables are acceptable
         return values.
         """
-        raise NotImplementedError
+
+        # Initialize values
+        min_val = dict()
+
+        for var in self.crossword.variables:
+            # skip vars with answer
+            if var in assignment:
+                continue
+            
+            # add size of domains to the min_val dict
+            value = len(self.domains[var])
+            min_val[var] = value
+
+        # find lowest values
+        min_value = min(min_val.values())
+        min_val_result = [var for var, val in min_val.items() if val == min_value]
+
+        # return if only one option
+        if len(min_val_result) == 1:
+            return min_val_result[0]
+
+        # add size of degree to the dict
+        max_degree = dict()
+        for var in min_val_result:
+            degree = len(self.crossword.neighbors(var))
+            max_degree[var] = degree
+
+        # find highest degree
+        max_value = max(max_degree.values())
+        max_degree_result = [var for var, val in max_degree.items() if val == max_value]
+
+        # return answer
+        return max_degree_result[0]
+
 
     def backtrack(self, assignment):
         """
@@ -242,7 +303,22 @@ class CrosswordCreator():
 
         If no assignment is possible, return None.
         """
-        raise NotImplementedError
+        
+        # return assignment if complete
+        if self.assignment_complete(assignment):
+            return assignment
+
+        var = self.select_unassigned_variable(assignment)
+        for word in self.order_domain_values(var, assignment):
+            assignment[var] = word
+            if self.consistent(assignment):
+                result = self.backtrack(assignment)
+                if result is None:
+                    assignment[var] = None
+                else:
+                    return result
+
+        return None
 
 
 def main():
