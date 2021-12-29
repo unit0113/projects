@@ -93,6 +93,7 @@ class CrosswordCreator():
         self.ac3()
         return self.backtrack(dict())
 
+
     def enforce_node_consistency(self):
         """
         Update `self.domains` such that each variable is node-consistent.
@@ -168,12 +169,13 @@ class CrosswordCreator():
 
             # add neighbors if revised
             if self.revise(x, y):
-                if len(self.domains[x]) == 0 or len(self.domains[y]):
+                if len(self.domains[x]) == 0 or len(self.domains[y]) == 0:
                     return False
                 neighbors = [neighbor for neighbor in self.crossword.neighbors(x) if neighbor is not y]
                 # add if new values found
                 if neighbors != []:
-                    arcs.append(neighbors)
+                    for neighbor in neighbors:
+                        arcs.append((x, neighbor))
 
         return True
 
@@ -200,9 +202,9 @@ class CrosswordCreator():
         """
         for var1 in assignment:
             # check for word length
-            for word1 in assignment[var1]:
-                if var1.length != len(word1):
-                    return False
+            word1 = assignment[var1]
+            if var1.length != len(word1):
+                return False
 
             # check for only using words once
             for var2 in assignment:
