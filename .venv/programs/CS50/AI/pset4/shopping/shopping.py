@@ -59,7 +59,41 @@ def load_data(filename):
     labels should be the corresponding list of labels, where each label
     is 1 if Revenue is true, and 0 otherwise.
     """
-    raise NotImplementedError
+    with open(filename) as file:
+        reader = csv.reader(file)
+        next(reader)
+        month_name = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        evidence = []
+        labels = []
+
+        for row in reader:
+            new_evidence = []
+            # Grab initial numbers
+            new_evidence.append(int(row[0]))
+            new_evidence.append(float(row[1]))
+            new_evidence.append(int(row[2]))
+            new_evidence.append(float(row[3]))
+            new_evidence.append(int(row[4]))
+            new_evidence += [float(cell) for cell in row[5:10]]
+            # Grab month and convert to int
+            new_evidence.append(month_name.index(row[10]))
+            # Grab rest of numbers
+            new_evidence += [int(cell) for cell in row[11:15]]
+            # Grab Visitor type
+            new_evidence.append(1 if row[15] == 'Returning_Visitor' else 0)
+            # Grab weekend
+            new_evidence.append(1 if row[16] == 'TRUE' else 0)
+
+            # Grab label
+            new_label = 1 if row[-1] == 'TRUE' else 0
+
+            # Add to existing data
+            evidence.append(new_evidence)
+            labels.append(new_label)
+
+        data = (evidence, labels)
+
+    return data
 
 
 def train_model(evidence, labels):
@@ -67,7 +101,10 @@ def train_model(evidence, labels):
     Given a list of evidence lists and a list of labels, return a
     fitted k-nearest neighbor model (k=1) trained on the data.
     """
-    raise NotImplementedError
+    model = KNeighborsClassifier(n_neighbors=1)
+    model.fit(evidence, labels)
+
+    return model
 
 
 def evaluate(labels, predictions):
@@ -85,7 +122,24 @@ def evaluate(labels, predictions):
     representing the "true negative rate": the proportion of
     actual negative labels that were accurately identified.
     """
-    raise NotImplementedError
+    tot_true = tot_false = pred_true = pred_false = 0
+
+    for label, prediction in zip(labels, predictions):
+        # If true
+        if label == 1:
+            tot_true += 1
+            if prediction == 1:
+                pred_true += 1
+        # If false
+        else:
+            tot_false += 1
+            if prediction == 0:
+                pred_false += 1
+
+    sensitivity = pred_true / tot_true
+    specificity = pred_false / tot_false
+
+    return sensitivity, specificity
 
 
 if __name__ == "__main__":

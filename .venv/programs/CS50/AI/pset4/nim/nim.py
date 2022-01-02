@@ -101,7 +101,14 @@ class NimAI():
         Return the Q-value for the state `state` and the action `action`.
         If no Q-value exists yet in `self.q`, return 0.
         """
-        raise NotImplementedError
+        
+        # Create key for ease of use, check if in self.q, and return value
+        key = (tuple(state), action)
+        if key in self.q.keys():
+            return self.q[key]
+        else:
+            return 0
+
 
     def update_q_value(self, state, action, old_q, reward, future_rewards):
         """
@@ -118,7 +125,12 @@ class NimAI():
         `alpha` is the learning rate, and `new value estimate`
         is the sum of the current reward and estimated future rewards.
         """
-        raise NotImplementedError
+
+        # Create new q and update value
+        key = (tuple(state), action)
+        new_q = old_q + self.alpha * (reward + future_rewards - old_q)
+        self.q[key] = new_q
+
 
     def best_future_reward(self, state):
         """
@@ -130,7 +142,21 @@ class NimAI():
         Q-value in `self.q`. If there are no available actions in
         `state`, return 0.
         """
-        raise NotImplementedError
+        
+        # Get list of actions
+        actions = list(Nim.available_actions(state))
+        # Return 0 if no actions
+        if len(actions) == 0:
+            return 0
+
+        # Get list of q values for all actions
+        q_list = []
+        for action in actions:
+            q_list.append(self.get_q_value(state, action))
+
+        # Return best q
+        return max(q_list)
+
 
     def choose_action(self, state, epsilon=True):
         """
@@ -147,7 +173,23 @@ class NimAI():
         If multiple actions have the same Q-value, any of those
         options is an acceptable return value.
         """
-        raise NotImplementedError
+        
+        # Get list of best available actions
+        best_q = self.best_future_reward(state)
+        actions = list(Nim.available_actions(state))
+        best_actions = [action for action in actions if self.get_q_value(state, action) == best_q]
+        
+        # Pick best action if using greedy
+        if not epsilon:
+            return random.choice(best_actions)
+        
+        # Return in accordance with epislon greedy
+        else:
+            value = random.random()
+            if value <= self.epsilon:
+                return random.choice(actions)
+            else:
+                return random.choice(best_actions)
 
 
 def train(n):
