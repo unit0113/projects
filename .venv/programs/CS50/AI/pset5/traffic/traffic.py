@@ -58,7 +58,33 @@ def load_data(data_dir):
     be a list of integer labels, representing the categories for each of the
     corresponding `images`.
     """
-    raise NotImplementedError
+    
+    # Initialize return lists
+    images = []
+    labels = []
+
+    print('Loading Data...')
+    for folder_index in range(0, NUM_CATEGORIES):
+        
+        # Go to folder and get files
+        folder_path = os.path.join(data_dir, str(folder_index))
+        files = os.listdir(folder_path)
+        
+        # Get individual file and convert to np array
+        for file in files:
+            img = np.array(cv2.imread(os.path.join(folder_path, file)))
+            img = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT))
+
+            # Append to return lists
+            images.append(img)
+            labels.append(folder_index)
+
+        # Print status
+        print(f'Loaded set {folder_index}')
+
+    # Return
+    print('Loading complete')
+    return (images, labels)
 
 
 def get_model():
@@ -67,8 +93,48 @@ def get_model():
     `input_shape` of the first layer is `(IMG_WIDTH, IMG_HEIGHT, 3)`.
     The output layer should have `NUM_CATEGORIES` units, one for each category.
     """
-    raise NotImplementedError
+    
+    model = tf.keras.models.Sequential()
+    # First set of Conv/pooling
+    model.add(tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), activation='relu', input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)))
+    model.add(tf.keras.layers.MaxPool2D(pool_size=(2,2)))
+    model.add(tf.keras.layers.BatchNormalization(axis=-1))
 
+    # Dropout
+    model.add(tf.keras.layers.Dropout(rate=0.25))
+
+    # Second set of Conv/pooling
+    model.add(tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), activation='relu', input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)))
+    model.add(tf.keras.layers.MaxPool2D(pool_size=(2,2)))
+    model.add(tf.keras.layers.BatchNormalization(axis=-1))
+
+    # Dropout
+    model.add(tf.keras.layers.Dropout(rate=0.25))
+
+    # Third set of Conv/pooling
+    model.add(tf.keras.layers.Conv2D(filters=128, kernel_size=(3,3), activation='relu', input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)))
+    model.add(tf.keras.layers.MaxPool2D(pool_size=(2,2)))
+    model.add(tf.keras.layers.BatchNormalization(axis=-1))
+
+    # Dropout
+    model.add(tf.keras.layers.Dropout(rate=0.25))
+
+    # Hidden layer
+    model.add(tf.keras.layers.Flatten())
+    model.add(tf.keras.layers.Dense(256, activation='relu'))
+
+    # Dropout
+    model.add(tf.keras.layers.Dropout(rate=0.25))
+
+    # Output layer
+    model.add(tf.keras.layers.Dense(NUM_CATEGORIES, activation='softmax'))
+
+    # Additional model settings
+    model.compile(optimizer='adam',
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+
+    return model
 
 if __name__ == "__main__":
     main()
