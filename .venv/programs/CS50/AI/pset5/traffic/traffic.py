@@ -95,6 +95,7 @@ def get_model():
     """
     
     model = tf.keras.models.Sequential()
+    
     # First set of Conv/pooling
     model.add(tf.keras.layers.Conv2D(filters=32, kernel_size=(3,3), activation='relu', input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)))
     model.add(tf.keras.layers.MaxPool2D(pool_size=(2,2)))
@@ -104,7 +105,7 @@ def get_model():
     model.add(tf.keras.layers.Dropout(rate=0.25))
 
     # Second set of Conv/pooling
-    model.add(tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), activation='relu', input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)))
+    model.add(tf.keras.layers.Conv2D(filters=64, kernel_size=(3,3), activation='relu'))
     model.add(tf.keras.layers.MaxPool2D(pool_size=(2,2)))
     model.add(tf.keras.layers.BatchNormalization(axis=-1))
 
@@ -112,7 +113,7 @@ def get_model():
     model.add(tf.keras.layers.Dropout(rate=0.25))
 
     # Third set of Conv/pooling
-    model.add(tf.keras.layers.Conv2D(filters=128, kernel_size=(3,3), activation='relu', input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)))
+    model.add(tf.keras.layers.Conv2D(filters=128, kernel_size=(3,3), activation='relu'))
     model.add(tf.keras.layers.MaxPool2D(pool_size=(2,2)))
     model.add(tf.keras.layers.BatchNormalization(axis=-1))
 
