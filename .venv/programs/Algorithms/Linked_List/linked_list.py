@@ -4,6 +4,23 @@ class Node():
         self.next = None
         self.prev = None
 
+class Linked_List_Iterator():
+    def __init__(self, head):
+        self.current = head
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.current:
+            item = self.current.value
+            self.current = self.current.next
+            return item
+        else:
+            raise StopIteration
+
+
+
 
 class Linked_List():
     def __init__(self, *args):
@@ -79,4 +96,44 @@ class Linked_List():
             self.tail = self.tail.prev
 
         self.length -= 1
-        return tmp.value        
+        return tmp.value
+
+
+    def __search__(self, item):
+        cur_node = self.head
+        while cur_node:
+            if item == cur_node.value:
+                return cur_node
+            cur_node = cur_node.next
+
+        return False
+
+
+    def find(self, item):
+        return self.__search__(item) != False
+
+    
+    def remove(self, item):
+        node_to_remove = self.__search__(item)
+        if node_to_remove:
+            if self.head == node_to_remove:
+                self.remove_first()
+            elif self.tail == node_to_remove:
+                self.remove_last()
+            else:
+                prev = node_to_remove.prev
+                next = node_to_remove.next
+                prev.next = next
+                next.prev = prev
+
+    
+    def peek(self):
+        return self.head.value
+
+    
+    def peek_tail(self):
+        return self.tail.value
+
+
+    def __iter__(self):
+        return Linked_List_Iterator(self.head)

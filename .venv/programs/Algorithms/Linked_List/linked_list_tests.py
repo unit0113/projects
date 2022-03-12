@@ -92,21 +92,59 @@ class TestLinkedList(unittest.TestCase):
         self.assertEqual(None, a.head.prev)
         self.assertEqual(4, a.length)
 
-    def test_remove_rear(self):
+    def test_remove_last(self):
         a = ll.Linked_List()
         with self.assertRaises(ValueError):
-            a.remove_rear()
+            a.remove_last()
         a.add_rear(5)
-        self.assertEqual(5, a.remove_rear())
+        self.assertEqual(5, a.remove_last())
         self.assertEqual(None, a.head)
         self.assertEqual(None, a.tail)
         with self.assertRaises(ValueError):
-            a.remove_first()
+            a.remove_last()
         a.add_front(1, 2, 3, 4, 5)
-        self.assertEqual(5, a.remove_first())
-        self.assertEqual(4, a.head.value)
+        self.assertEqual(1, a.remove_last())
+        self.assertEqual(5, a.head.value)
         self.assertEqual(None, a.head.prev)
         self.assertEqual(4, a.length)
+
+    def test_find(self):
+        a = ll.Linked_List(1, 2, 3, 4, 5)
+        self.assertEqual(True, a.find(5))
+        self.assertEqual(True, a.find(1))
+        self.assertEqual(False, a.find(6))
+        a = ll.Linked_List()
+        self.assertEqual(False, a.find(6))
+
+    def test_remove(self):
+        a = ll.Linked_List(1, 2, 3, 4, 5)
+        a.remove(1)
+        self.assertEqual(2, a.tail.value)
+        a.remove(5)
+        self.assertEqual(4, a.head.value)
+        a.remove(3)
+        self.assertEqual(2, a.head.next.value)
+        self.assertEqual(4, a.tail.prev.value)
+
+    def test_peek(self):
+        a = ll.Linked_List(1, 2, 3, 4, 5)
+        self.assertEqual(5, a.peek())
+
+    def test_peek_tail(self):
+        a = ll.Linked_List(1, 2, 3, 4, 5)
+        self.assertEqual(1, a.peek_tail())
+
+    def test_iterator(self):
+        a = ll.Linked_List(1, 2, 3, 4, 5)
+        arr = []
+        for item in a:
+            arr.append(item)
+        self.assertEqual([5, 4, 3, 2, 1], arr)
+        a = ll.Linked_List()
+        arr = []
+        for item in a:
+            arr.append(item)
+        self.assertEqual([], arr)            
 
 
 if __name__ == '__main__':
