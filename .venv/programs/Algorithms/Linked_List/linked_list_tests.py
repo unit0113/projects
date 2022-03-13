@@ -144,7 +144,17 @@ class TestLinkedList(unittest.TestCase):
         arr = []
         for item in a:
             arr.append(item)
-        self.assertEqual([], arr)            
+        self.assertEqual([], arr)     
+
+    def test_contains(self):
+        a = ll.Linked_List(1, 2, 3, 4, 5)
+        self.assertEqual(True, 5 in a)
+        self.assertEqual(True, 6 not in a)
+        self.assertEqual(False, 6 in a)
+        self.assertEqual(True, 6 not in a)
+        a = ll.Linked_List()
+        self.assertEqual(False, 5 in a)
+        self.assertEqual(True, 5 not in a)
 
 
 if __name__ == '__main__':

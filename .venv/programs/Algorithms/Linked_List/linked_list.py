@@ -137,3 +137,10 @@ class Linked_List():
 
     def __iter__(self):
         return Linked_List_Iterator(self.head)
+
+    
+    def __contains__(self, item):
+        if self.__search__(item):
+            return True
+        else:
+            return False
