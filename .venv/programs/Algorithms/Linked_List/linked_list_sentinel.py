@@ -4,6 +4,7 @@ class Node():
         self.next = None
         self.prev = None
 
+
 class Linked_List_Iterator():
     def __init__(self, head):
         self.current = head
@@ -23,8 +24,7 @@ class Linked_List_Iterator():
 class Linked_List():
     def __init__(self, *args):
         self.length = 0
-        self.head = None
-        self.tail = None
+        self.sentinel = Node(None)
         for arg in args:
             self.add_front(arg)
 
@@ -35,15 +35,15 @@ class Linked_List():
 
         for item in items:
             new_node = Node(item)
-            new_node.next = self.head
+            new_node.next = self.sentinel.next
+            new_node.prev = self.sentinel
             
-            if self.head:
-                self.head.prev = new_node
+            if self.length > 0:
+                self.sentinel.next.prev = new_node
+            else:
+                self.sentinel.prev = new_node
 
-            if not self.tail:
-                self.tail = new_node
-
-            self.head = new_node
+            self.sentinel.next = new_node
             self.length += 1
 
 
@@ -53,15 +53,15 @@ class Linked_List():
 
         for item in items:
             new_node = Node(item)
-            
-            if self.tail:
-                self.tail.next = new_node
-                new_node.prev = self.tail
+            new_node.next = self.sentinel
+            new_node.prev = self.sentinel.prev
 
-            if not self.head:
-                self.head = new_node
+            if self.length > 0:
+                self.sentinel.prev.next = new_node
+            else:
+                self.sentinel.next = new_node
 
-            self.tail = new_node
+            self.sentinel.prev = new_node
             self.length += 1
 
 
@@ -69,13 +69,13 @@ class Linked_List():
         if self.length == 0:
             raise ValueError('Linked List is empty')
 
-        tmp = self.head
+        tmp = self.sentinel.next
         if self.length == 1:
-            self.head = None
-            self.tail = None
+            self.sentinel.next = None
+            self.sentinel.prev = None
         else:
-            self.head.next.prev = None
-            self.head = self.head.next
+            self.sentinel.next.next.prev = self.sentinel
+            self.sentinel.next = self.sentinel.next.next
 
         self.length -= 1
         return tmp.value
@@ -85,20 +85,20 @@ class Linked_List():
         if self.length == 0:
             raise ValueError('Linked List is empty')
 
-        tmp = self.tail
+        tmp = self.sentinel.prev
         if self.length == 1:
-            self.head = None
-            self.tail = None
+            self.sentinel.next = None
+            self.sentinel.prev = None
         else:
-            self.tail.prev.next = None
-            self.tail = self.tail.prev
+            self.sentinel.prev.prev.next = self.sentinel
+            self.sentinel.prev = self.sentinel.prev.prev
 
         self.length -= 1
         return tmp.value
 
 
     def __search__(self, item):
-        cur_node = self.head
+        cur_node = self.sentinel.next
         while cur_node:
             if item == cur_node.value:
                 return cur_node
@@ -114,9 +114,9 @@ class Linked_List():
     def remove(self, item):
         node_to_remove = self.__search__(item)
         if node_to_remove:
-            if self.head == node_to_remove:
+            if self.sentinel.next == node_to_remove:
                 self.remove_first()
-            elif self.tail == node_to_remove:
+            elif self.sentinel.prev == node_to_remove:
                 self.remove_last()
             else:
                 prev = node_to_remove.prev
@@ -126,15 +126,15 @@ class Linked_List():
 
     
     def peek(self):
-        return self.head.value
+        return self.sentinel.next.value
 
     
     def peek_tail(self):
-        return self.tail.value
+        return self.sentinel.prev.value
 
 
     def __iter__(self):
-        return Linked_List_Iterator(self.head)
+        return Linked_List_Iterator(self.sentinel.next)
 
     
     def __contains__(self, item):

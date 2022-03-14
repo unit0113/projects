@@ -3,6 +3,7 @@ import linear_search as ls
 import binary_search as bs
 import jump_search as js
 import interpolation_search as ints
+import exponential_search as es
 
 
 class TestLinkedList(unittest.TestCase):
@@ -34,6 +35,13 @@ class TestLinkedList(unittest.TestCase):
         self.assertEqual(False, ints.interpolation_search(arr, 20))
         arr = []
         self.assertEqual(False, ints.interpolation_search(arr, 5))
+
+    def test_exponential_search(self):
+        arr = [1,2,3,4,5,6,7,8,9,10]
+        self.assertEqual(True, es.exponential_search(arr, 5))
+        self.assertEqual(False, es.exponential_search(arr, 20))
+        arr = []
+        self.assertEqual(False, es.exponential_search(arr, 5))
 
 if __name__ == '__main__':
     unittest.main()
