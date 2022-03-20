@@ -22,7 +22,7 @@ class TestLinkedList(unittest.TestCase):
         c.parent = b
         c.right = d
         d.parent = c
-        a.__left_rotation__(b)
+        a._left_rotation(b)
         self.assertEqual(a.root, c)
         self.assertEqual(c.left, b)
         self.assertEqual(c.right, d)
@@ -37,7 +37,7 @@ class TestLinkedList(unittest.TestCase):
         e.left = g
         g.parent = e
         f.parent = e
-        a.__left_rotation__(d)
+        a._left_rotation(d)
         self.assertEqual(a.root, c)
         self.assertEqual(d.parent, e)
         self.assertEqual(e.left, d)
@@ -57,7 +57,7 @@ class TestLinkedList(unittest.TestCase):
         c.parent = b
         c.left = d
         d.parent = c
-        a.__right_rotation__(b)
+        a._right_rotation(b)
         self.assertEqual(a.root, c)
         self.assertEqual(c.right, b)
         self.assertEqual(c.left, d)
@@ -72,7 +72,7 @@ class TestLinkedList(unittest.TestCase):
         e.right = g
         g.parent = e
         f.parent = e
-        a.__right_rotation__(d)
+        a._right_rotation(d)
         self.assertEqual(a.root, c)
         self.assertEqual(d.parent, e)
         self.assertEqual(e.right, d)
@@ -81,6 +81,48 @@ class TestLinkedList(unittest.TestCase):
         self.assertEqual(f.parent, e)
         self.assertEqual(g.parent, d)
         self.assertEqual(d.left, g)
+
+
+    def test_insert(self):
+        a = avl.AVL_Tree()
+        a[5] = 5
+        self.assertEqual(a.root.value, 5)
+        a[7] = 7
+        a[9] = 9
+        self.assertEqual(a.root.value, 7)
+        self.assertEqual(a.root.height, 2)
+        self.assertEqual(a.root.left.height, 1)
+        a[8] = 8
+        self.assertEqual(a.root.height, 3)
+        self.assertEqual(a.root.right.height, 2)
+        self.assertEqual(a.root.right.left.height, 1)
+        self.assertEqual(a.root.right.left.value, 8)
+        a[10] = 10
+        a[11] = 11
+        self.assertEqual(a.root.value, 9)
+        self.assertEqual(a.root.left.value, 7)
+        self.assertEqual(a.root.left.right.value, 8)
+        a[9] = 20
+        self.assertEqual(a.root.value, 20)
+
+    def test_get_item(self):
+        a = avl.AVL_Tree()
+        a[5] = 5
+        self.assertEqual(a[5], 5)
+        a[5] = 10
+        self.assertEqual(a[5], 10)
+
+    def test_successor(self):
+        a = avl.AVL_Tree()
+        a[5] = 5
+        a[7] = 7
+        a[9] = 9
+        a[8] = 8
+        a[10] = 10
+        a[11] = 11
+        a[9] = 20
+        self.assertEqual(a.successor(10).key, 11)
+        self.assertEqual(a.successor(7).key, 8)
 
     
     '''def test_add_front_single(self):
