@@ -124,18 +124,49 @@ class TestLinkedList(unittest.TestCase):
         self.assertEqual(a.successor(10).key, 11)
         self.assertEqual(a.successor(7).key, 8)
 
+    def test_delete(self):
+        a = avl.AVL_Tree()
+        a[5] = 5
+        a[7] = 7
+        a[9] = 9
+        a[8] = 8
+        a[10] = 10
+        a[11] = 11
+        a.delete(11)
+        with self.assertRaises(KeyError):
+            b = a[11]
+        a[11] = 11
+        a.delete(10)
+        with self.assertRaises(KeyError):
+            b = a[10]
+        a[1] = 1
+        a[2] = 2
+        a[3] = 3
+        a[4] = 4
+        a[12] = 12
+        a.delete(2)
+        with self.assertRaises(KeyError):
+            b = a[2]
+        self.assertEqual(a.root.left.value, 3)
+        self.assertEqual(a.root.left.left.value, 1)
+        self.assertEqual(a.root.left.right.value, 4)
     
-    '''def test_add_front_single(self):
-        a = ll.Linked_List(5)
-        a.add_front(10)
-        self.assertEqual(10, a.head.value)
-        self.assertEqual(5, a.tail.value)
-        self.assertEqual(2, a.length)
-        self.assertEqual(5, a.head.next.value)
-        self.assertEqual(None, a.head.prev)
-        self.assertEqual(10, a.tail.prev.value)
-        with self.assertRaises(ValueError):
-            a.add_front()'''
+    def test_traverse(self):
+        a = avl.AVL_Tree()
+        a[5] = 5
+        a[7] = 7
+        a[9] = 9
+        a[8] = 8
+        a[10] = 10
+        a[11] = 11
+        results = []
+        for key in a:
+            results.append(key)
+        self.assertEqual(results, [5, 7, 8, 9, 10, 11])
+        results2 = []
+        for key, value in a.items():
+            results2.append((key, value))
+        self.assertEqual(results2, [(5, 5), (7, 7), (8, 8), (9, 9), (10, 10), (11, 11)])
 
 
 if __name__ == '__main__':

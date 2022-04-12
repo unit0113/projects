@@ -8,22 +8,6 @@ class Node():
         self.height = 1
 
 
-class AVL_Iterator():
-    def __init__(self, root):
-        self.current = root
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if self.current:
-            item = self.current.value
-            self.current = self.current.next
-            return item
-        else:
-            raise StopIteration
-
-
 class AVL_Tree():
     def __init__(self, *items):
         self.root = None
@@ -142,8 +126,6 @@ class AVL_Tree():
             replacing_node.parent = deleting_node.parent
 
 
-
-
     def __getitem__(self, key):
         node = self._search(key)
         if node:
@@ -162,41 +144,64 @@ class AVL_Tree():
 
 
     def delete(self, key):
-        return self._delete_helper(key, self.root)
+        if self.root and (deleting_node := self._search(key)):
+            # Case: no child
+            if (deleting_node.left is None) and (deleting_node.right is None):
+                self._delete_no_child(deleting_node=deleting_node)
+            # Case: Two children
+            elif deleting_node.left and deleting_node.right:
+                replacing_node = self._successor_helper(deleting_node)
+                # Replace the deleting node with the replacing node, but keep the replacing node in place.
+                deleting_node.key = replacing_node.key
+                deleting_node.value = replacing_node.value
+                if replacing_node.right:  # The replacing node cannot have left child.
+                    self._delete_one_child(deleting_node=replacing_node)
+                else:
+                    self._delete_no_child(deleting_node=replacing_node)
+            # Case: one child
+            else:
+                self._delete_one_child(deleting_node=deleting_node)
 
 
-    def _delete_helper(self, key, root):
-        if not root:
-            return root
+    def _delete_no_child(self, deleting_node):
+        parent = deleting_node.parent
+        self._transplant(deleting_node)
+        if parent:
+            self._delete_fixup(parent)
 
-        elif key < root.key:
-            root.left = self._delete_helper(key, root.left)
 
-        elif key > root.key:
-            root.right = self._delete_helper(key, root.right)
+    def _delete_one_child(self, deleting_node):
+        parent = deleting_node.parent
+        replacing_node = (deleting_node.right if deleting_node.right else deleting_node.left)
+        self._transplant(deleting_node, replacing_node)
+        if parent:
+            self._delete_fixup(parent)
 
-        else:
-            if not root.left:
-                tmp = root.right
-                root = None
-                return tmp
+    
+    def _delete_fixup(self, fixing_node):
+        while fixing_node:
+            fixing_node.height = 1 + max(self._get_height(fixing_node.left), self._get_height(fixing_node.right))
 
-            elif not root.right:
-                tmp = root.left
-                root = None
-                return tmp
+            if self._get_balance_factor(fixing_node) > 1:
+                # Case Left-Left
+                if self._get_balance_factor(fixing_node.left) >= 0:
+                    self._right_rotation(fixing_node)
+                # Case Left-Right
+                elif self._get_balance_factor(fixing_node.left) < 0:
+                    # The fixing node's left child cannot be empty
+                    self._left_rotation(fixing_node.left)
+                    self._right_rotation(fixing_node)
+            elif self._get_balance_factor(fixing_node) < -1:
+                # Case Right-Right
+                if self._get_balance_factor(fixing_node.right) <= 0:
+                    self._left_rotation(fixing_node)
+                # Case Right-Left
+                elif self._get_balance_factor(fixing_node.right) > 0:
+                    # The fixing node's right child cannot be empty
+                    self._right_rotation(fixing_node.right)
+                    self._left_rotation(fixing_node)
 
-            tmp = self.successor(root.right)
-            root.key = tmp.key
-            root.right = self._delete_helper(tmp.key, root.right)
-
-        if not root:
-            return root
-
-        root.height = 1 + max(self._get_height(root.left), self._get_height(root.right))
-        
-        return self._rebalance(root)
-
+            fixing_node = fixing_node.parent
 
 
     def _search(self, key):
@@ -251,7 +256,7 @@ class AVL_Tree():
 
 
     def __iter__(self):
-        return AVL_Iterator(self.root)
+        return self._inorder_traverse(self.root)
 
     
     def __contains__(self, item):
@@ -282,3 +287,26 @@ class AVL_Tree():
             tmp_node = tmp_node.parent
         
         return rank
+
+    
+    def _inorder_traverse(self, node):
+        if node:
+            yield from self._inorder_traverse(node.left)
+            yield node.key
+            yield from self._inorder_traverse(node.right)
+    
+    
+    def items(self):
+        return self._inorder_traverse_items(self.root)
+
+
+    def _inorder_traverse_items(self, node):
+        if node:
+            yield from self._inorder_traverse_items(node.left)
+            yield (node.key, node.value)
+            yield from self._inorder_traverse_items(node.right)
+
+    
+    def __str__(self):
+        contents = [item for item in self._inorder_traverse(self.root)]
+        return str(contents)
