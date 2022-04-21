@@ -1,300 +1,315 @@
 import numpy as np
-import nnfs
-from nnfs.datasets import spiral_data
-import matplotlib.pyplot as plt
-
-nnfs.init()
-
-X, y = spiral_data(samples=100, classes=3)
-#plt.scatter(X[:, 0], X[:, 1], c=y, cmap='brg')
-#plt.show()
-
-
-
-
-inputs = np.array([[1, 2, 3, 2.5],
-          [2., 5., -1., 2],
-          [-1.5, 2.7, 3.3, -0.8]])
-weights = np.array([[0.2, 0.8, -0.5, 1],
-           [0.5, -0.91, 0.26, -0.5],
-           [-0.26, -0.27, 0.17, 0.87]])
-biases = np.array([2, 3, 0.5])
-weights2 = np.array([[0.1, -0.14, 0.5],
-            [-0.5, 0.12, -0.33],
-            [-0.44, 0.73, -0.13]])
-biases2 = np.array([-1, 2, -0.5])
-
-
-layer1_out = np.dot(inputs, weights.T) + biases
-layer2_out = np.dot(layer1_out, weights2.T) + biases2
-#print(layer2_out)
-
-
-
-
-class Layer:
-    def __init__(self, activation):
-        self.act_fxns = ['sigmoid', 'binary', 'linear', 'tanh', 'ReLU', 'leaky_ReLU', 'soft_max', 'softplus', 'softminus']
-        self._activation = activation
-
-    @property
-    def activation(self):
-        return self._activation
-
-
-    @activation.setter
-    def activation(self, new_activation):
-        if new_activation not in self.act_fxns:
-            raise ValueError('Invalid Activation Function')
-        self._activation = new_activation
-
-
-    def activate(self, x):
-        match self.activation:
-            case 'sigmoid':                                                     # Mostly replaced by ReLU for hidden layers, still good for classification output, specifically for non-exclusive classivication
-                return np.exp(x - np.max(x)) / (1 + np.exp(x - np.max(x)))      # stable version of sigmoid, regular = 1 / (1+np.exp(-x))
-            
-            case 'binary':                                                      # Used for output layer on regression
-                return np.heaviside(x, 1)
-
-            case 'linear':
-                return x
-
-            case 'tanh':
-                return 2 * self.sigmoid(2*x) - 1
-
-            case 'ReLU':                                                        # Most common hidden layer function
-                return np.maximum(0, x)
-
-            case 'soft_max':                                                    # For output layer on exclusive classification
-                exp_values = np.exp(x - np.max(x, axis=1, keepdims=True))
-                return exp_values / np.sum(exp_values, axis=1, keepdims=True)        # For batches
-
-            case 'leaky_ReLU':
-                return np.maximum(0.01 * x, x)
-
-            case 'softplus':
-                return np.log(1 + np.exp(x))
-
-            case 'softminus':
-                return x - np.log(1 + np.exp(x))
-
-            case 'swish':
-                return x / (1 + np.log(-x))
-
-            case 'ELiSH':
-                if x > 0:
-                    return x / (1 + np.log(-x))
-                else:
-                    return (np.log(x) -1) / (1 + np.log(-x))
-
-            case 'HardTanH':
-                if x < -1:
-                    return -1
-                elif x > 1:
-                    return 1
-                else:
-                    return x
-
-            case 'TanhRE':
-                if x >= 0:
-                    return x
-                else:
-                    return (np.log(x) - np.log(-x)) / (np.log(x) - np.log(-x))
-
-            case 'ELU':
-                if x > 0:
-                    return x
-                else:
-                    return np.log(x) - 1
-
-    
-    def sigmoid_derivative(self, x):
-        return self.sigmoid(x) * (1 - self.sigmoid(x))
-
-
-    def tanh_derivative(self, x):
-        return 1 - self.sigmoid(x) ** 2
-
-
-    def ReLU_derivative(self, x):
-        return 0 if x < 0 else 1
-
-
-    def leaky_ReLU_derivative(self, x):
-        return 0.01 if x < 0 else 1
-
-
-    def soft_plus_derivative(self, x):
-        return 1 / (1 + np.exp(-x))
-
-
-    def soft_minus_derivative(self, x):
-        return 1 - 1 / (1 + np.exp(-x))
-
-
-class Layer_Dense(Layer):
-    """ Individual dense layer in ANN
-
-    Args:
-        n_inputs: Number of inputs (int)
-        n_neurons: Number of neurons in layer (int)
-        activation: Activation function of the layer. Default is 'sigmoid'. Options: 'sigmoid', 'binary', 'linear', 'tanh', 'ReLU', 'leaky_ReLU', 'soft_max'
-    """ 
-
-    def __init__(self, n_inputs, n_neurons, activation='ReLU'):
-        super().__init__(activation)
-        self.weights = np.random.uniform(-0.5,0.5, (n_inputs, n_neurons))
-        self.biases = np.zeros((1, n_neurons))
-
-    
-    def forward(self, inputs):
-        self.output = self.activate(np.dot(inputs, self.weights) + self.biases)
-        return self.output
-
-# Common loss class
-class Loss:
-# Calculates the data and regularization losses
-# given model output and ground truth values
-    def calculate(self, output, y):
-        # Calculate sample losses
-        sample_losses = self.forward(output, y)
-        # Calculate mean loss
-        data_loss = np.mean(sample_losses)
-        
-        return data_loss
-
-
-# Cross-entropy loss
-class Loss_CategoricalCrossentropy(Loss):
-    # Forward pass
-    def forward(self, y_pred, y_true):
-        # Number of samples in a batch
-        samples = len(y_pred)
-        # Clip data to prevent division by 0
-        # Clip both sides to not drag mean towards any value
-        y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
-        # For categorical labels
-        if len(y_true.shape) == 1:
-            correct_confidences = y_pred_clipped[range(samples), y_true]
-        
-        # For one-hot encoded labels
-        elif len(y_true.shape) == 2:
-            correct_confidences = np.sum(y_pred_clipped * y_true, axis=1
-            )
-        # Losses
-        return -np.log(correct_confidences)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+import pickle
+import copy
+from Layers import *
+from Optimizers import *
+from Loss import *
+from Accuracy import *
 
 
 class Model:
-    def __init__(self, input_size, net_specs, output_size, learning_rate=0.01):
-        self.layer_list = [input_size] + net_specs + [output_size]
-        self.learning_rate = learning_rate
+    def __init__(self):
+        # Create a list of network objects
+        self.layers = []
+        # Softmax classifier's output object
+        self.softmax_classifier_output = None
+
+
+    # Add objects to the model
+    def add(self, layer):
+        self.layers.append(layer)
+
+
+    # Set loss, optimizer and accuracy
+    def set(self, *, loss=None, optimizer=None, accuracy=None):
+        if loss is not None:
+            self.loss = loss
+        if optimizer is not None:
+            self.optimizer = optimizer
+        if accuracy is not None:
+            self.accuracy = accuracy
+
+
+    # Finalize the model
+    def finalize(self):
+        # Create and set the input layer
+        self.input_layer = Layer_Input()
+
+        # Count all the objects
+        layer_count = len(self.layers)
+
+        # Initialize a list containing trainable layers:
+        self.trainable_layers = []
+
+        # Iterate the objects
+        for i in range(layer_count):
+
+            # If it's the first layer, the previous layer object is the input layer
+            if i == 0:
+                self.layers[i].prev = self.input_layer
+                self.layers[i].next = self.layers[i+1]
+
+            # All layers except for the first and the last
+            elif i < layer_count - 1:
+                self.layers[i].prev = self.layers[i-1]
+                self.layers[i].next = self.layers[i+1]
+
+            # The last layer - the next object is the loss
+            else:
+                self.layers[i].prev = self.layers[i-1]
+                self.layers[i].next = self.loss
+                self.output_layer_activation = self.layers[i]
+
+            # If layer contains an attribute called "weights", it's a trainable layer
+            if hasattr(self.layers[i], 'weights'):
+                self.trainable_layers.append(self.layers[i])
+
+        # Update loss object with trainable layers
+        if self.loss is not None:
+            self.loss.remember_trainable_layers(self.trainable_layers)
+
+
+        # If output activation is Softmax and loss function is Categorical Cross-Entropy
+        # create an object of combined activation and loss function containing faster gradient calculation
+        if isinstance(self.layers[-1], Activation_Softmax) and isinstance(self.loss, Loss_CategoricalCrossentropy):
+            # Create an object of combined activation and loss functions
+            self.softmax_classifier_output = \
+                Activation_Softmax_Loss_CategoricalCrossentropy()
+
+
+    # Train the model
+    def train(self, X, y, *, epochs=1, batch_size=None, print_every=1, validation_data=None):
+        # Initialize accuracy object
+        self.accuracy.init(y)
+
+        # Default value if batch size is not being set
+        train_steps = 1
+
+        # If there is validation data passed, set default number of steps for validation as well
+        if validation_data is not None:
+            validation_steps = 1
+
+            # For better readability
+            X_val, y_val = validation_data
+
+        # Calculate number of steps
+        if batch_size is not None:
+            train_steps = len(X) // batch_size
+            # Get the not full batch at end of training loop
+            if train_steps * batch_size < len(X):
+                train_steps += 1
+
+            if validation_data is not None:
+                validation_steps = len(X_val) // batch_size
+
+                # Get the not full batch at end of training loop
+                if validation_steps * batch_size < len(X_val):
+                    validation_steps += 1
+
+        # Main training loop
+        for epoch in range(1, epochs+1):
+            print(f'epoch: {epoch}')
+
+            # Reset accumulated values in loss and accuracy objects
+            self.loss.new_pass()
+            self.accuracy.new_pass()
+
+            # Iterate over steps
+            for step in range(train_steps):
+
+                # If batch size is not set, train using one step and full dataset
+                if batch_size is None:
+                    batch_X = X
+                    batch_y = y
+
+                # Otherwise slice a batch
+                else:
+                    batch_X = X[step*batch_size:(step+1)*batch_size]
+                    batch_y = y[step*batch_size:(step+1)*batch_size]
+
+                # Perform the forward pass
+                output = self.forward(batch_X, training=True)
+
+                # Calculate loss
+                data_loss, regularization_loss = self.loss.calculate(output, batch_y, include_regularization=True)
+                loss = data_loss + regularization_loss
+
+                # Get predictions and calculate an accuracy
+                predictions = self.output_layer_activation.predictions(output)
+                accuracy = self.accuracy.calculate(predictions, batch_y)
+
+                # Perform backward pass
+                self.backward(output, batch_y)
+
+
+                # Optimize (update parameters)
+                self.optimizer.pre_update_params()
+                for layer in self.trainable_layers:
+                    self.optimizer.update_params(layer)
+                self.optimizer.post_update_params()
+
+                # Print a summary
+                if not step % print_every or step == train_steps - 1:
+                    print(f'step: {step}, ' +
+                          f'acc: {accuracy:.3f}, ' +
+                          f'loss: {loss:.3f} (' +
+                          f'data_loss: {data_loss:.3f}, ' +
+                          f'reg_loss: {regularization_loss:.3f}), ' +
+                          f'lr: {self.optimizer.current_learning_rate}')
+
+            # Get and print epoch loss and accuracy
+            epoch_data_loss, epoch_regularization_loss = self.loss.calculate_accumulated(include_regularization=True)
+            epoch_loss = epoch_data_loss + epoch_regularization_loss
+            epoch_accuracy = self.accuracy.calculate_accumulated()
+
+            print(f'epoch {epoch}: ' +
+                  f'acc: {epoch_accuracy:.3f}, ' +
+                  f'loss: {epoch_loss:.3f} (' +
+                  f'data_loss: {epoch_data_loss:.3f}, ' +
+                  f'reg_loss: {epoch_regularization_loss:.3f}), ' +
+                  f'lr: {self.optimizer.current_learning_rate}')
+
+            # If there is the validation data
+            if validation_data is not None:
+                self.evaluate(*validation_data, batch_size=batch_size)
+
+
+    def forward(self, X, training):
+        # Call forward method on the input layer
+        self.input_layer.forward(X, training)
+
+        # Call forward method of every object in a chain
+        for layer in self.layers:
+            layer.forward(layer.prev.output, training)
+
+        return layer.output
+
+
+    def backward(self, output, y):
+        # If softmax classifier
+        if self.softmax_classifier_output is not None:
+            # First call backward method on the combined activation/loss, this will set dinputs property
+            self.softmax_classifier_output.backward(output, y)
+
+            # Since we'll not call backward method of the last layer, which is Softmax activation
+            # as we used combined activation/loss object, let's set dinputs in this object
+            self.layers[-1].dinputs = \
+                self.softmax_classifier_output.dinputs
+
+            # Call backward method going through all the objects but last in reversed order
+            for layer in reversed(self.layers[:-1]):
+                layer.backward(layer.next.dinputs)
+
+            return
+
+        # First call backward method on the loss, this will set dinputs property 
+        self.loss.backward(output, y)
+
+        # Call backward method going through all the objects in reversed order
+        for layer in reversed(self.layers):
+            layer.backward(layer.next.dinputs)
+
+
+    # Evaluates the model using passed-in dataset
+    def evaluate(self, X_val, y_val, *, batch_size=None):
+        # Default value if batch size is not set
+        validation_steps = 1
+
+        # Calculate number of steps
+        if batch_size is not None:
+            validation_steps = len(X_val) // batch_size
+
+        # Get the not full batch at end of training loop
+            if validation_steps * batch_size < len(X_val):
+                validation_steps += 1
+
+        # Reset accumulated values in loss and accuracy objects
+        self.loss.new_pass()
+        self.accuracy.new_pass()
+
+        # Iterate over steps
+        for step in range(validation_steps):
+            # If batch size is not set, train using one step and full dataset
+            if batch_size is None:
+                batch_X = X_val
+                batch_y = y_val
+
+            # Otherwise slice a batch
+            else:
+                batch_X = X_val[step*batch_size:(step+1)*batch_size]
+                batch_y = y_val[step*batch_size:(step+1)*batch_size]
+
+            # Perform the forward pass
+            output = self.forward(batch_X, training=False)
+
+            # Calculate the loss
+            self.loss.calculate(output, batch_y)
+
+            # Get predictions and calculate an accuracy
+            predictions = self.output_layer_activation.predictions(output)
+            self.accuracy.calculate(predictions, batch_y)
+
+        # Get and print validation loss and accuracy
+        validation_loss = self.loss.calculate_accumulated()
+        validation_accuracy = self.accuracy.calculate_accumulated()
+
+        # Print a summary
+        print(f'validation, ' +
+              f'acc: {validation_accuracy:.3f}, ' +
+              f'loss: {validation_loss:.3f}')
+
+
+    def get_parameters(self):
+        parameters = []
+        # Iterable trainable layers and get their parameters
+        for layer in self.trainable_layers:
+            parameters.append(layer.get_parameters())
         
-        self.network = []
-        for index, layer in enumerate(self.layer_list[:-1]):
-            new_layer = Layer_Dense(layer, self.layer_list[index+1], 'ReLU')
-            self.network.append(new_layer)
-
-
-    @property
-    def learning_rate(self):
-        return self.learning_rate
-
-
-    @learning_rate.setter
-    def learning_rate(self, new_learning_rate):
-        if new_learning_rate is not type(float):
-            raise ValueError('Invalid Activation Function')
-        self._learning_rate = new_learning_rate
-
-
-
-    def set_activation(self, layer, new_activation):
-        self.network[layer].activation = new_activation
+        return parameters
 
     
-    def f_propogation(self, input):
-        running_input = input
-        for layer in self.network:
-            running_input = layer.forward(running_input) 
-
-        return running_input
+    def set_parameters(self, parameters):
+        for parameter_set, layer in zip(parameters, self.trainable_layers):
+            layer.set_parameters(*parameter_set)
 
 
-    def loss(self, output, label):  # Categorical Cross-Entropy, good for classification with one-hot
-        num_samples = len(output)
-        output_clipped = np.clip(output, 1e-7, 1-1e-7)
+    def save_parameters(self, path):
+        # Open a file in the binary-write mode and save parameters to it
+        with open(path, 'wb') as f:
+            pickle.dump(self.get_parameters(), f)
 
-        if len(label.shape) == 1:     # If categorical labels
-            correct_confidences = output_clipped[range(num_samples), label]
+
+    def load_parameters(self, path):
+        # Open file in the binary-read mode, load weights and update trainable layers
+        with open(path, 'rb') as f:
+            self.set_parameters(pickle.load(f))
+
         
-        else:   # for one-hot
-            correct_confidences = np.sum(output_clipped * label, axis=1)
-        
-        return -np.log(correct_confidences)
+    def save(self, path):
+        model = copy.deepcopy(self)
 
-        # Normal equation? good for num_features < 10000? doesn't need to iterate
-        #(X * X.T)^-1 * X.T * y
+        # Reset accumulated values in loss and accuracy objects
+        model.loss.new_pass()
+        model.accuracy.new_pass()
+
+        # Remove data from input layer and gradients from the loss object
+        model.input_layer.__dict__.pop('output', None)
+        model.loss.__dict__.pop('dinputs', None)
+
+        # For each layer remove inputs, output and dinputs properties
+        for layer in model.layers:
+            for property in ['inputs', 'output', 'dinputs', 'dweights', 'dbiases']:
+                layer.__dict__.pop(property, None)
+
+        # Open a file in the binary-write mode and save the model
+        with open(path, 'wb') as f:
+            pickle.dump(model, f)
 
     
-    def b_propogation(self, loss):
-        gradient = loss
-        for layer in reversed(self.network):
-            gradient = layer.backward(gradient)
-
-
-    def train(self, X_train, y_train, epochs=100):
-        for epoch in epochs:
-            num_correct = 0
-            precision_counter = np.zeros(10)
-            for X, y in zip(X_train, y_train):
-                output = self.f_propogation(X)
-                num_correct += int(np.argmax(output) == np.argmax(y))
-                precision_counter[np.argmax(output)] += 1
-                loss = self.loss(output, y)
-                self.b_propogation(loss)
-            
-            print(f"Epoch {int(epoch + 1)}:\nAccuracy: {round((num_correct / X_train.shape[0]) * 100, 2)}%\nPrecision: {np.divide(precision_counter, y_train.sum(axis=0))}")
-
-
-    def test():
-        pass
-
-
-    def dropout():
-        pass
-
-
-    def hypertune(): # tune learning rate, network size/shape, activation functions
-        pass
-
-
-
-
-X, y = spiral_data(samples=100, classes=3)
-d = Layer_Dense(2, 3)
-d.activation = 'ReLU'
-d.forward(X)
-d2 = Layer_Dense(3,3)
-d2.activation = 'soft_max'
-d2.forward(d.output)
-loss_fxn = Loss_CategoricalCrossentropy()
-loss = loss_fxn.calculate(d2.output, y)
-print(loss)
+    @staticmethod
+    def load(path):
+        # Open file in the binary-read mode, load a model
+        with open(path, 'rb') as f:
+            model = pickle.load(f)
+        
+        return model
