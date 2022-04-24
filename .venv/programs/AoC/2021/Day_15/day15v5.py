@@ -49,7 +49,7 @@ def find_next(array):
     min_cost = array[0][0]
     min_index = 0
     for index, item in enumerate(array[1:]):
-        if item[0] < min_cost:
+        if item[0] <= min_cost:
             min_cost = item[0]
             min_index = index
     

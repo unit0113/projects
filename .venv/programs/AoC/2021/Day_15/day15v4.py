@@ -12,6 +12,10 @@ class Node:
         self.h = HEIGHT - 1 - x + WIDTH - 1 - y
         self.f = self.g + self.h
 
+    
+    def recalc_f(self):
+        self.f = self.g + self.h
+
 
     def __lt__(self, other):
         return self.f < other.f
@@ -60,10 +64,11 @@ def a_star(risks):
                 continue
             if neighbor in open:
                 old_node = [node for node in open if node == neighbor][0]
-                if old_node.g > neighbor.g:
-                    open.remove(old_node)
-
-            open.append(neighbor)
+                old_node.g = min(old_node.g, neighbor.g)
+                old_node.recalc.f()
+            
+            else:
+                open.append(neighbor)
 
 
         if cycles % 5000 == 0:
