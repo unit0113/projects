@@ -1,5 +1,4 @@
 import pygame
-import math
 from queue import PriorityQueue
 
 # Initialize the display window
@@ -265,10 +264,6 @@ def main(window, width):
             
 
     pygame.quit()
-
-
-
-
 
 
 main(WINDOW, WIDTH)

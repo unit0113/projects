@@ -23,47 +23,19 @@ TURQUOISE = (64, 224, 208)
 DARK_GRAY = (80, 78, 81)
 
 FONT = pygame.font.SysFont('verdana', 14, bold=True)
-
-
-def random_start_location(distance, parent):
-    if parent:
-        x_parent = parent.x
-        y_parent = parent.y
-    else:
-        x_parent = y_parent = 0
-
-    angle = 2 * math.pi * random.random()
-    x = x_parent + distance * math.cos(angle)
-    y = y_parent + distance * math.sin(angle)
-
-    if parent:
-        velocity = math.sqrt(Planet.G * parent.mass / distance)
-        vy = abs(velocity * math.cos(angle))
-        if math.pi / 2 <= angle < 1.5 * math.pi:
-            vy = vy * -1
-
-        vy += parent.y_vel
-
-        vx = abs(velocity * math.sin(angle))
-        if 0 <= angle < math.pi:
-            vx = vx * -1
-
-        vx += parent.x_vel
-        
-    else:
-        vx = vy = 0
-
-    return x, y, vx, vy
+TIMESTEP_OPTIONS = [3600, 3600 * 6, 3600 * 12, 3600 * 24, 3600 * 24 * 2, 3600 * 24 * 7]
+TIMESTEP_NAMES = ['One Hour', 'Six Hours', 'Tweleve Hours', 'One Day', 'Two Days', 'One Week']
+TIMESTEP_INDEX = 3
+TIMESTEP = TIMESTEP_OPTIONS[TIMESTEP_INDEX]
+TIMESTEP_DISPLAY = TIMESTEP_NAMES[TIMESTEP_INDEX]
 
 
 class Planet:
     AU = 149.6e9
     G = 6.67428e-11
     SCALE = 125 / AU 
-    TIMESTEP = 3600 * 24 # 1 day per tick
 
-    def __init__(self, name, distance_to_parent, radius, color, mass, *, parent = None, draw_orbit=True):
-        self.x, self.y, self.x_vel, self.y_vel = random_start_location(distance_to_parent * Planet.AU, parent)
+    def __init__(self, name, distance_to_parent, radius, color, mass, *, parent=None, draw_orbit=True):
         self.name = name
         self.distance_to_sun = distance_to_parent
         self.radius = radius
@@ -72,6 +44,35 @@ class Planet:
         self.parent = parent
         self.draw_orbit = draw_orbit
         self.orbit = []
+        self.x, self.y, self.x_vel, self.y_vel = self.random_start_location(distance_to_parent * Planet.AU)
+
+    
+    def random_start_location(self, distance):
+        if self.parent:
+            x_parent = self.parent.x
+            y_parent = self.parent.y
+
+            angle = 2 * math.pi * random.random()
+            x = x_parent + distance * math.cos(angle)
+            y = y_parent + distance * math.sin(angle)
+
+            velocity = math.sqrt(Planet.G * self.parent.mass / distance)
+            vy = abs(velocity * math.cos(angle))
+            if math.pi / 2 <= angle < 1.5 * math.pi:
+                vy = vy * -1
+
+            vy += self.parent.y_vel
+
+            vx = abs(velocity * math.sin(angle))
+            if 0 <= angle < math.pi:
+                vx = vx * -1
+
+            vx += self.parent.x_vel
+            
+        else:
+            x = y = vx = vy = 0
+
+        return x, y, vx, vy
 
 
     def draw(self, window, show_text=False):
@@ -98,15 +99,21 @@ class Planet:
 
 
     def attraction(self):
-        distance_x = self.parent.x - self.x
-        distance_y = self.parent.y - self.y
-        distance = math.sqrt(distance_x**2 + distance_y**2)
-        self.distance_to_parent = distance / Planet.AU
+        current = self.parent
+        force_x = force_y = 0
+        while current:
+            distance_x = current.x - self.x
+            distance_y = current.y - self.y
+            distance = math.sqrt(distance_x**2 + distance_y**2)
+            if current is self.parent:
+                self.distance_to_parent = distance / Planet.AU
 
-        force = self.G * self.mass * self.parent.mass / distance ** 2
-        theta = math.atan2(distance_y, distance_x)
-        force_x = force * math.cos(theta)
-        force_y = force * math.sin(theta)
+            force = self.G * self.mass * current.mass / distance ** 2
+            theta = math.atan2(distance_y, distance_x)
+            force_x += force * math.cos(theta)
+            force_y += force * math.sin(theta)
+
+            current = current.parent
 
         return force_x, force_y
 
@@ -115,19 +122,15 @@ class Planet:
         if self.parent:
             fx, fy = self.attraction()
 
-            self.x_vel += (fx / self.mass) * self.TIMESTEP
-            self.y_vel += (fy / self.mass) * self.TIMESTEP
+            self.x_vel += (fx / self.mass) * TIMESTEP
+            self.y_vel += (fy / self.mass) * TIMESTEP
 
-            self.x += self.x_vel * self.TIMESTEP
-            self.y += self.y_vel * self.TIMESTEP
+            self.x += self.x_vel * TIMESTEP
+            self.y += self.y_vel * TIMESTEP
             self.orbit.append((self.x, self.y))
 
 
-def display_date():
-    pass
-
-
-def create_asteroid_belt(planets, num_asteroids, sun):
+def create_asteroid_belt(planets: list, num_asteroids: int, sun: Planet) -> list:
     random_lst = [1] * 950 + [2] * 49 + [3] * 1
 
     for _ in range(num_asteroids):
@@ -171,11 +174,11 @@ class Toggle_Button(pygame.sprite.Sprite):
 def initialize_sim():
     # Initialize objects
     sun = Planet('Sun', 0, 20, YELLOW, 1.98892e30, draw_orbit=False)
-    mecury = Planet('Mecury', 0.387, 3, DARK_GRAY, 3.3e23, parent=sun)
+    mecury = Planet('Mecury', 0.387, 4, DARK_GRAY, 3.3e23, parent=sun)
     venus = Planet('Venus', 0.723, 7, ORANGE, 4.8685e24, parent=sun)
     earth = Planet('Earth', 1, 8, LTBLUE, 5.9742e24, parent=sun)
     luna = Planet('Luna', .002569, 2, GREY, 7.34767309e22, parent=earth, draw_orbit=False)
-    mars = Planet('Mars', 1.524, 6, LTRED, 6.39e23, parent=sun)
+    mars = Planet('Mars', 1.524, 5, LTRED, 6.39e23, parent=sun)
     jupiter = Planet('Jupiter', 5.2, 15, TURQUOISE, 1.89813e27, parent=sun)
 
     planets = [sun, mecury, venus, earth, luna, mars, jupiter]
@@ -185,8 +188,21 @@ def initialize_sim():
 
     return planets
 
+
+
+def display_date():
+    pass
+
+
+def increase_timestep():
+    pass
+
+
+def decrease_timestep():
+    pass
+
+
 def main():
-    run = True
     clock = pygame.time.Clock() # Allows simulation to run at set speed rather than speed of computer
 
     planets = initialize_sim()
@@ -195,14 +211,14 @@ def main():
     toggle1_btn = Toggle_Button((50,30), 1325, 25)
     show_text = True
 
-    while run:
+    while True:
         clock.tick(60) # Update at 60 FPS
         WINDOW.fill(BLACK)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                run = False
-                break
+                pygame.quit()
+                return
 
             if pygame.mouse.get_pressed()[0]:
                 pos = pygame.mouse.get_pos()
@@ -218,7 +234,6 @@ def main():
         toggle1_btn.draw(WINDOW)
         pygame.display.update()
 
-    pygame.quit()
 
 if __name__ == "__main__":
     main()
@@ -228,4 +243,5 @@ if __name__ == "__main__":
 Make button not look terrible
 add moons
 Display simulated date
+adjustable timestep
 """
