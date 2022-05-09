@@ -2,12 +2,14 @@ import pygame
 pygame.init()
 import random
 
-# Initialize the display window
+# Initialize the main window
 screen_height = pygame.display.get_desktop_sizes()[0][1]
 WIDTH = HEIGHT = round(screen_height * 0.75)
 WINDOW = pygame.display.set_mode((WIDTH + 150, HEIGHT))
 pygame.display.set_caption("Soduku")
-FONT = pygame.font.SysFont('verdana', 25, bold=False)
+FONT = pygame.font.SysFont('verdana', 30, bold=False)
+LOCKED_FONT = pygame.font.SysFont('verdana', 30, bold=True)
+
 
 # Colors
 RED = (255, 0, 0)
@@ -33,15 +35,19 @@ class Cell:
         self.color = WHITE
         self.payload = ' '
         self.dimensions = WIDTH // 9
+        self.lock = False
+        self.rect = pygame.Rect(self.x, self.y, self.dimensions, self.dimensions)
+        self.font = FONT
 
     def draw(self, window):
         pygame.draw.rect(window, self.color, (self.x, self.y, self.dimensions, self.dimensions))
-        cell_text = FONT.render(self.payload, 1, BLACK)
+        cell_text = self.font.render(self.payload, 1, BLACK)
         window.blit(cell_text, (self.x + self.dimensions//2 - cell_text.get_width()//2, self.y + self.dimensions//2 - cell_text.get_height()//2))
 
 
 class Grid:
     def __init__(self):
+        self.valid_numbers = {str(num) for num in range(1,10)}
         self.grid = []
         for i in range(9):
             self.grid.append([])
@@ -53,7 +59,7 @@ class Grid:
         self.decimate()
 
 
-    def valid_location(self,row, col, number):
+    def valid_location(self, row, col, number):
         if self.num_used_in_row(row, number):
             return False
 
@@ -74,7 +80,7 @@ class Grid:
         return False
 
 
-    def num_used_in_column(self, col,number):
+    def num_used_in_column(self, col, number):
         for i in range(9):
             if self.grid[i][col].payload == str(number):
                 return True
@@ -128,7 +134,7 @@ class Grid:
         non_empty_squares = []
         for row in range(len(self.grid)):
             for col in range(len(self.grid)):
-                if self.grid[row][col].payload != 0:
+                if self.grid[row][col].payload != ' ':
                     non_empty_squares.append((row, col))
 
         random.shuffle(non_empty_squares)
@@ -137,7 +143,7 @@ class Grid:
 
 
     def decimate(self):
-		#get all non-empty squares from the grid
+		# Get all non-empty squares from the grid
         non_empty_squares = self.get_non_empty_squares()
         non_empty_squares_count = len(non_empty_squares)
 
@@ -146,7 +152,59 @@ class Grid:
             non_empty_squares_count -= 1
             self.grid[row][col].payload = ' '
 
+        # Lock contents of remaining cells
+        non_empty_squares = self.get_non_empty_squares()
+        for row, col in non_empty_squares:
+            cell = self.grid[row][col]
+            cell.lock = True
+            cell.font = LOCKED_FONT
+
         return
+
+
+    def check_win(self):
+        if (self.check_rows_win() and
+            self.check_cols_win() and
+            self.check_subgrids_win()):
+            return True
+
+        return False
+
+
+    def check_rows_win(self):
+        for row in range(9):
+            row_set = {cell.payload for cell in self.grid[row]}
+            if row_set != self.valid_numbers:
+                return False
+
+        return True
+
+
+    def check_cols_win(self):
+        for col in range(9):
+            col_set = set()
+            for row in range(9):
+                col_set.add(self.grid[row][col].payload)
+            if col_set != self.valid_numbers:
+                return False
+
+        return True
+
+
+    def check_subgrids_win(self):
+        # Go to subgrid
+        for sub_row in range(3):
+            for sub_col in range(3):
+
+                # Check subgrid
+                grid_set = set()
+                for row in range(sub_row * 3, (sub_row * 3 + 3)): 
+                    for col in range(sub_col * 3, (sub_col * 3 + 3)): 
+                        grid_set.add(self.grid[row][col].payload)
+                if grid_set != self.valid_numbers:
+                    return False
+
+        return True
 
 
     def draw_grid_lines(self, window):
@@ -175,6 +233,17 @@ class Grid:
         self.draw_grid_lines(window)
 
 
+    def check_button_press(self, pos, active):
+        for row in range(9):
+            for col in range(9):
+                cell = self.grid[row][col]
+                if cell.rect.collidepoint(pos) and not cell.lock:
+                    cell.payload = active
+                    if self.check_win():
+                        return True
+                    return False
+
+
 class Buttons:
     def __init__(self):
         self.buttons = []
@@ -187,7 +256,11 @@ class Buttons:
             new_cell.y = y
             y += 90
             new_cell.dimensions = 60
+            new_cell.rect = pygame.Rect(new_cell.x, new_cell.y, new_cell.dimensions, new_cell.dimensions)
             self.buttons.append(new_cell)
+
+        self.active = self.buttons[0]
+        self.active.color = GREEN
 
 
     def draw(self, window):
@@ -212,7 +285,13 @@ class Buttons:
             pygame.draw.line(window, GREY, (x2, y), (x2, y + 60), width=3)
             y += 90
 
-
+        
+    def check_button_press(self, pos):
+        for button in self.buttons:
+            if button.rect.collidepoint(pos):
+                self.active.color = WHITE
+                self.active = button
+                self.active.color = GREEN
 
 
 def draw(window, grid, buttons):
@@ -224,10 +303,20 @@ def draw(window, grid, buttons):
     pygame.display.update()
 
 
-def main():
-    clock = pygame.time.Clock()
+def initilize_game():
     grid = Grid()
     buttons = Buttons()
+    return grid, buttons
+
+
+def endgame(window):
+    window.fill(WHITE)
+    clock = pygame.time.Clock()
+    greeting_text = FONT.render('Congratulations!!!!', 1, PURPLE)
+    window.blit(greeting_text, (WIDTH // 2 + 75- greeting_text.get_width() // 2, HEIGHT // 2 - greeting_text.get_height() // 2))
+    instructions_text = FONT.render('Press C to play again, or press Q to quit.', 1, PURPLE)
+    window.blit(instructions_text, (WIDTH // 2 + 75 - instructions_text.get_width() // 2, HEIGHT // 2 + 25 - instructions_text.get_height() // 2))
+    pygame.display.update()
 
     while True:
         clock.tick(FPS)
@@ -237,7 +326,34 @@ def main():
                 pygame.quit()
                 quit()
 
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_c:
+                main()
+
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+                pygame.quit()
+                quit()
+
+
+def main():
+    clock = pygame.time.Clock()
+    grid, buttons = initilize_game()
+
+    while True:
+        clock.tick(FPS)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+            if pygame.mouse.get_pressed()[0]:
+                pos = pygame.mouse.get_pos()
+                buttons.check_button_press(pos)
+                if grid.check_button_press(pos, buttons.active.payload):
+                    endgame(WINDOW)
+
         draw(WINDOW, grid, buttons)
+        
 
 if __name__ == "__main__":
     main()

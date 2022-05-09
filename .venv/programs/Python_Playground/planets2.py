@@ -37,7 +37,7 @@ class Planet:
 
     def __init__(self, name, distance_to_parent, radius, color, mass, *, parent=None, draw_orbit=True):
         self.name = name
-        self.distance_to_sun = distance_to_parent
+        self.distance_to_parent = distance_to_parent
         self.radius = radius
         self.color = color
         self.mass = mass
@@ -49,25 +49,23 @@ class Planet:
     
     def random_start_location(self, distance):
         if self.parent:
-            x_parent = self.parent.x
-            y_parent = self.parent.y
-
             angle = 2 * math.pi * random.random()
-            x = x_parent + distance * math.cos(angle)
-            y = y_parent + distance * math.sin(angle)
+            x = self.parent.x + distance * math.cos(angle)
+            y = self.parent.y + distance * math.sin(angle)
 
             velocity = math.sqrt(Planet.G * self.parent.mass / distance)
-            vy = abs(velocity * math.cos(angle))
-            if math.pi / 2 <= angle < 1.5 * math.pi:
-                vy = vy * -1
+            vy = velocity * math.cos(angle)
 
-            vy += self.parent.y_vel
+            vx = -velocity * math.sin(angle)
 
-            vx = abs(velocity * math.sin(angle))
-            if 0 <= angle < math.pi:
-                vx = vx * -1
+            if self.parent.parent:
+                distance = math.sqrt(x**2 + y**2)
+                theta = math.atan2(y, x)
 
-            vx += self.parent.x_vel
+                new_velocity = math.sqrt(Planet.G * self.parent.parent.mass / distance)
+                vy += new_velocity * math.cos(theta)
+
+                vx -= new_velocity * math.sin(theta)
             
         else:
             x = y = vx = vy = 0
@@ -92,8 +90,10 @@ class Planet:
         pygame.draw.circle(window, self.color, (x, y), self.radius)
 		
         if show_text and self.draw_orbit:
+            # Draw name of object below object
             name_text = FONT.render(self.name, 1, WHITE)
             window.blit(name_text, (x - name_text.get_width()/2, y - name_text.get_height()/2 + self.radius + 10))
+            # Draw distance from sun below name of object
             distance_text = FONT.render(f"{self.distance_to_parent:.4f}AU", 1, WHITE)
             window.blit(distance_text, (x - distance_text.get_width()/2, y - distance_text.get_height()/2 + self.radius + 30))
 
@@ -218,12 +218,14 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                return
+                quit()
 
+            # Toggle text button
             if pygame.mouse.get_pressed()[0]:
                 pos = pygame.mouse.get_pos()
                 show_text = toggle1_btn.update(pos)
 
+            # Restart simulation
             if event.type == pygame.KEYDOWN and event.key == pygame.K_c:
                 planets = initialize_sim()
 
@@ -241,7 +243,7 @@ if __name__ == "__main__":
 
 """TODO
 Make button not look terrible
-add moons
+get moons to work
 Display simulated date
 adjustable timestep
 """
