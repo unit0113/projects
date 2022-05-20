@@ -1,8 +1,9 @@
 import pygame
 pygame.init()
-import random
 import math
 import copy
+from multiprocessing import Pool
+import os
 
 # Initialize the main window
 screen_height = pygame.display.get_desktop_sizes()[0][1]
@@ -32,7 +33,7 @@ AI_COLOR = YELLOW
 ROW_COUNT = 6
 COLUMN_COUNT = 7
 WIN_LENGTH = 4
-MINIMAX_DEPTH = 5
+MINIMAX_DEPTH = 3
 
 
 class Tile:
@@ -56,12 +57,13 @@ class Grid:
         self.active_player = HUMAN
         self.last_play = (None, None)
         self.grid = []
+        self.check_grid = []
         for i in range(ROW_COUNT):
             self.grid.append([])
+            self.check_grid.append([0] * COLUMN_COUNT)
             for j in range(COLUMN_COUNT):
                 tile = Tile(i, j)
                 self.grid[i].append(tile)
-
             
     def __next_player(self):
         if self.active_player == AI:
@@ -74,7 +76,7 @@ class Grid:
         return [col for col, row in enumerate(self.open_spaces) if self.open_spaces[col] != -1]
 
 
-    def play(self, active_col, skip_endgame = 'False'):
+    def play(self, active_col, skip_endgame = False):
         row = self.open_spaces[active_col]
 
         # Check if row is full
@@ -82,28 +84,27 @@ class Grid:
             return False
 
         self.grid[row][active_col].color = RED if self.active_player == HUMAN else YELLOW
+        self.check_grid[row][active_col] = 1 if self.active_player == HUMAN else -1
         self.open_spaces[active_col] -= 1
+        self.last_play = (row, active_col)
 
         if not skip_endgame:
-            if (self.game_over(row, active_col) == 1 or
-                self.game_over(row, active_col) == -1
-                ):
+            if self.game_over():
                 endgame(self.active_player)
-            elif self.game_over(row, active_col) == 0:
+            elif self.game_over() == 0:
                 endgame(None)
 
-        self.__next_player()
-        self.last_play = (row, active_col)
+        self.__next_player()        
 
         return True
 
 
     def game_over(self):
-        if self.check_win(self.last_play[0], self.last_play[1]):
+        if self.check_win():
             if self.active_player == HUMAN:
-                return math.inf
+                return 100_000
             else:
-                return -math.inf
+                return -100_000
 
         elif sum(self.open_spaces) == -COLUMN_COUNT:
             return 0
@@ -248,60 +249,55 @@ def result(grid, col):
     return new_grid
 
 
-def evaluate_window(window, piece):
-	score = 0
-	opp_piece = PLAYER_PIECE
-	if piece == PLAYER_PIECE:
-		opp_piece = AI_PIECE
+def evaluate_slice(slice, piece):
+    score = 0
+    opp_piece = -piece
 
-	if window.count(piece) == 4:
-		score += 100
-	elif window.count(piece) == 3 and window.count(EMPTY) == 1:
-		score += 5
-	elif window.count(piece) == 2 and window.count(EMPTY) == 2:
-		score += 2
+    if slice.count(piece) == 3 and slice.count(0) == 1:
+        score += 5
+    elif slice.count(piece) == 2 and slice.count(0) == 2:
+        score += 2
 
-	if window.count(opp_piece) == 3 and window.count(EMPTY) == 1:
-		score -= 4
+    if slice.count(opp_piece) == 3 and slice.count(0) == 1:
+        score -= 4
 
-	return score
+    return score
 
 
 def score_position(grid):
-    
-	score = 0
+    piece = 1 if grid.active_player == HUMAN else -1
+    score = 0
 
-	## Score center column
-	center_array = [int(i) for i in list(grid[:, COLUMN_COUNT//2])]
-	center_count = center_array.count(piece)
-	score += center_count * 3
+    ## Score center column
+    center_array = [row[COLUMN_COUNT//2] for row in grid.check_grid]
+    center_count = center_array.count(piece)
+    score += center_count * 3
 
-	## Score Horizontal
-	for row in range(ROW_COUNT):
-		row_array = [int(i) for i in list(grid[row,:])]
-		for col in range(COLUMN_COUNT-3):
-			window = row_array[col:col+WIN_LENGTH]
-			score += evaluate_window(window, piece)
+    ## Score Horizontal
+    for row in grid.check_grid:
+        for col in range(COLUMN_COUNT-3):
+            window = row[col:col+WIN_LENGTH]
+            score += evaluate_slice(window, piece)
 
-	## Score Vertical
-	for col in range(COLUMN_COUNT):
-		col_array = [int(i) for i in list(grid[:,col])]
-		for row in range(ROW_COUNT-3):
-			window = col_array[row:row+WIN_LENGTH]
-			score += evaluate_window(window, piece)
+    ## Score Vertical
+    columns_wise_grid = list(map(list, zip(*grid.check_grid)))
+    for col in columns_wise_grid:
+        for row in range(ROW_COUNT-3):
+            window = col[row:row+WIN_LENGTH]
+            score += evaluate_slice(window, piece)
 
-	## Score posiive sloped diagonal
-	for row in range(ROW_COUNT-3):
-		for col in range(COLUMN_COUNT-3):
-			window = [grid[row+i][col+i] for i in range(WIN_LENGTH)]
-			score += evaluate_window(window, piece)
+    ## Score posiive sloped diagonal
+    for row in range(ROW_COUNT-3):
+        for col in range(COLUMN_COUNT-3):
+            window = [grid.check_grid[row+i][col+i] for i in range(WIN_LENGTH)]
+            score += evaluate_slice(window, piece)
 
-	for row in range(ROW_COUNT-3):
-		for col in range(COLUMN_COUNT-3):
-			window = [grid[row+3-i][col+i] for i in range(WIN_LENGTH)]
-			score += evaluate_window(window, piece)
+    for row in range(ROW_COUNT-3):
+        for col in range(COLUMN_COUNT-3):
+            window = [grid.check_grid[row+3-i][col+i] for i in range(WIN_LENGTH)]
+            score += evaluate_slice(window, piece)
 
-	return score
+    return score
 
 
 def minimax(grid, alpha, beta, depth):
@@ -314,7 +310,7 @@ def minimax(grid, alpha, beta, depth):
     # find the max tree
     def find_max(grid, alpha, beta, depth):
         game_over_result = grid.game_over()
-        if game_over_result == 0:
+        if game_over_result == 0 or depth == 0:
             return score_position(grid)
         elif game_over_result != None:
             return game_over_result
@@ -332,13 +328,13 @@ def minimax(grid, alpha, beta, depth):
     # find the min tree
     def find_min(grid, alpha, beta, depth):
         game_over_result = grid.game_over()
-        if game_over_result == 0:
+        if game_over_result == 0 or depth == 0:
             return score_position(grid)
         elif game_over_result != None:
             return game_over_result
         min_eval = math.inf
         for move in grid.get_valid_moves():
-            value = find_max(result(grid, move), alpha, beta, depth)
+            value = find_max(result(grid, move), alpha, beta, depth-1)
             min_eval = min(min_eval, value)
             beta = min(beta, value)
             if beta <= alpha:
@@ -348,7 +344,7 @@ def minimax(grid, alpha, beta, depth):
 
     # Run minimax
     for move in grid.get_valid_moves():
-        results.append([find_min(result(grid, move), alpha, beta), move])
+        results.append([find_min(result(grid, move), alpha, beta, depth), move])
     return sorted(results, key=lambda x: x[0], reverse=True)[0][1]
 
 
@@ -391,6 +387,7 @@ def main():
                     active.move_right()
                 elif event.key == pygame.K_SPACE:
                     if grid.play(active.active_col):
+                        draw(WINDOW, grid, active)
                         AI_play(grid)
 
         draw(WINDOW, grid, active)
