@@ -2,8 +2,7 @@ import pygame
 pygame.init()
 import math
 import copy
-from multiprocessing import Pool
-import os
+
 
 # Initialize the main window
 screen_height = pygame.display.get_desktop_sizes()[0][1]
@@ -11,6 +10,8 @@ WIDTH = round(screen_height * 0.9)
 HEIGHT = round(screen_height * 0.9) * 6 // 7
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT+100))
 pygame.display.set_caption("Connect 4")
+FONT = pygame.font.SysFont('verdana', 30, bold=False)
+
 
 # Colors
 RED = (255, 0, 0)
@@ -33,7 +34,6 @@ AI_COLOR = YELLOW
 ROW_COUNT = 6
 COLUMN_COUNT = 7
 WIN_LENGTH = 4
-MINIMAX_DEPTH = 3
 
 
 class Tile:
@@ -76,7 +76,7 @@ class Grid:
         return [col for col, row in enumerate(self.open_spaces) if self.open_spaces[col] != -1]
 
 
-    def play(self, active_col, skip_endgame = False):
+    def play(self, active_col):
         row = self.open_spaces[active_col]
 
         # Check if row is full
@@ -88,12 +88,6 @@ class Grid:
         self.open_spaces[active_col] -= 1
         self.last_play = (row, active_col)
 
-        if not skip_endgame:
-            if self.game_over():
-                endgame(self.active_player)
-            elif self.game_over() == 0:
-                endgame(None)
-
         self.__next_player()        
 
         return True
@@ -102,9 +96,9 @@ class Grid:
     def game_over(self):
         if self.check_win():
             if self.active_player == HUMAN:
-                return 100_000
+                return 100_000_000
             else:
-                return -100_000
+                return -100_000_000
 
         elif sum(self.open_spaces) == -COLUMN_COUNT:
             return 0
@@ -244,7 +238,7 @@ def result(grid, col):
     # Initialize deep copy of board and row and column indecies
     new_grid = copy.deepcopy(grid)
 
-    new_grid.play(col, skip_endgame='True')
+    new_grid.play(col)
 
     return new_grid
 
@@ -348,8 +342,8 @@ def minimax(grid, alpha, beta, depth):
     return sorted(results, key=lambda x: x[0], reverse=True)[0][1]
 
 
-def AI_play(grid):
-    move = minimax(grid, -math.inf, math.inf, MINIMAX_DEPTH)
+def AI_play(grid, minimax_depth):
+    move = minimax(grid, -math.inf, math.inf, minimax_depth)
     grid.play(move)
 
 
@@ -360,17 +354,77 @@ def draw(window, grid, active):
     pygame.display.update()
 
 
-def endgame(player):
-    if player:
-        print(f'The {player} wins!')
-    else:
-        print('Draw!')
+def endgame(player, window):
+    player = AI if player == HUMAN else HUMAN
+    pygame.time.wait(1500)
+    window.fill(WHITE)
+    clock = pygame.time.Clock()
+    greeting_text = FONT.render(f'The {player} wins!', 1, PURPLE)
+    window.blit(greeting_text, (WIDTH // 2 - greeting_text.get_width() // 2, HEIGHT // 2 - greeting_text.get_height() // 2))
+    instructions_text = FONT.render('Press C to play again, or press Q to quit.', 1, PURPLE)
+    window.blit(instructions_text, (WIDTH // 2 - instructions_text.get_width() // 2, HEIGHT // 2 + 25 - instructions_text.get_height() // 2))
+    pygame.display.update()
+
+    while True:
+        clock.tick(FPS)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_c:
+                main()
+
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+                pygame.quit()
+                quit()
+
+
+def difficulty_select(window):
+    window.fill(WHITE)
+    clock = pygame.time.Clock()
+    greeting_text = FONT.render('Welcome to Connect 4!', 1, PURPLE)
+    window.blit(greeting_text, (WIDTH // 2 - greeting_text.get_width() // 2, HEIGHT // 2 - greeting_text.get_height() // 2))
+    instructions_text = FONT.render('Select 1 for easy, 2 for medium, 3 for hard, and 4 for impossible.', 1, PURPLE)
+    window.blit(instructions_text, (WIDTH // 2 - instructions_text.get_width() // 2, HEIGHT // 2 + 25 - instructions_text.get_height() // 2))
+    pygame.display.update()
+
+    while True:
+        clock.tick(FPS)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_1:
+                return 1
+
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_2:
+                return 2
+
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_3:
+                return 3
+
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_4:
+                return 4
+
+
+def end_turn_clean_up(window, grid, active):
+    draw(window, grid, active)
+
+    if grid.game_over():
+        endgame(grid.active_player, window)
+    elif grid.game_over() == 0:
+        endgame(None, window)
 
 
 def main():
     clock = pygame.time.Clock()
     grid = Grid()
     active = Active()
+    minimax_depth = 1 + difficulty_select(WINDOW)
 
     while True:
         clock.tick(FPS)
@@ -387,8 +441,10 @@ def main():
                     active.move_right()
                 elif event.key == pygame.K_SPACE:
                     if grid.play(active.active_col):
-                        draw(WINDOW, grid, active)
-                        AI_play(grid)
+                        end_turn_clean_up(WINDOW, grid, active)
+
+                        AI_play(grid, minimax_depth)
+                        end_turn_clean_up(WINDOW, grid, active)
 
         draw(WINDOW, grid, active)
         
