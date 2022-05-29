@@ -5,7 +5,6 @@ import time
 
 
 # Initialize the main window
-screen_height = pygame.display.get_desktop_sizes()[0][1]
 CELL_DIMENSION = 100
 COLUMNS, ROWS = 5, 6
 WIDTH = COLUMNS * CELL_DIMENSION
@@ -237,6 +236,29 @@ class Key:
         window.blit(cell_text, (self.x + self.dimensions//2 - cell_text.get_width()//2, self.y + self.dimensions//2 - cell_text.get_height()//2))
 
 
+class BigKey:
+    def __init__(self, row, col, offset, window):
+        self.row = row
+        self.col = col
+        self.dimensions = int(CELL_DIMENSION * 3 / 4)
+        self.x = col * self.dimensions + HORZ_MARGIN // 2 - self.dimensions // 2 + offset
+        self.y = row * self.dimensions + VERT_MARGIN_TOP + HEIGHT + VERT_MARGIN_BOTTOM // 4
+        self.color = L_GRAY
+        self.payload = ' '
+        self.rect = pygame.Rect(self.x, self.y, self.dimensions, self.dimensions * 2)
+        self.font = FONT
+        self.window = window
+
+    def draw(self, window):
+        pygame.draw.rect(window, self.color, (self.x, self.y, self.dimensions * 2, self.dimensions))
+        cell_text = self.font.render(self.payload, 1, WHITE)
+        window.blit(cell_text, (self.x + self.dimensions - cell_text.get_width()//2, self.y + self.dimensions//2 - cell_text.get_height()//2))
+        pygame.draw.line(self.window, WHITE, (self.x, self.y), (self.x, self.y + self.dimensions), width=5)
+        pygame.draw.line(self.window, WHITE, (self.x + self.dimensions * 2, self.y), (self.x + self.dimensions * 2, self.y + self.dimensions), width=5)
+        pygame.draw.line(self.window, WHITE, (self.x, self.y), (self.x  + self.dimensions * 2, self.y), width=5)
+        pygame.draw.line(self.window, WHITE, (self.x, self.y + self.dimensions), (self.x  + self.dimensions * 2, self.y + self.dimensions), width=5)
+
+
 class Keyboard:
     def __init__(self, window):
         row1 = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P']
@@ -253,6 +275,11 @@ class Keyboard:
                 key.payload = letter
                 self.keys[row_index].append(key)
             offset += 35
+
+        # Create backspace
+        key = BigKey(row_index, col_index+1, offset-15, self.window)
+        key.payload = 'Delete'
+        self.keys[row_index].append(key)
         
         self.draw_keys()
 
@@ -280,7 +307,8 @@ class Keyboard:
                 pygame.draw.line(self.window, WHITE, (key.x, key.y), (key.x, key.y + gap), width=5)
 
             # Draw far right vert line
-            pygame.draw.line(self.window, WHITE, (key.x + gap, key.y), (key.x + gap, key.y + gap), width=5)
+            if key.payload != 'Delete': 
+                pygame.draw.line(self.window, WHITE, (key.x + gap, key.y), (key.x + gap, key.y + gap), width=5)
 
 
     def _find_key_index(self, letter):
@@ -307,6 +335,16 @@ class Keyboard:
         self.keys[row_index][col_index].color = D_GRAY
 
 
+    def check_button_press(self, pos, grid):
+        for row in self.keys:
+            for key in row:
+                if key.rect.collidepoint(pos):
+                    if key.payload == 'Delete':
+                        grid.delete(self)
+                    else:
+                        grid.update(ord(key.payload.lower()), self)
+
+
 def letter_pressed(event_key):
     return event_key >= 97 and event_key <= 122
 
@@ -327,6 +365,9 @@ def main():
                     grid.update(event.key, keyboard)
                 elif event.key == pygame.K_BACKSPACE:
                     grid.delete(keyboard)
+            elif pygame.mouse.get_pressed()[0]:
+                pos = pygame.mouse.get_pos()
+                keyboard.check_button_press(pos, grid)
         
 
 if __name__ == "__main__":
