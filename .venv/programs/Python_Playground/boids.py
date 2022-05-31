@@ -48,9 +48,9 @@ class Boid:
         normalized_velocity = self.velocity.normalize() * BOID_SIZE
         x, y = int(self.location.x), int(self.location.y)
         points = ((x + int(normalized_velocity.x), y + int(normalized_velocity.y)),
-                  (x + normalized_velocity.y // 2, y - normalized_velocity.x // 2),
+                  (int(x + normalized_velocity.y / 2 - normalized_velocity.x / 4), int(y - normalized_velocity.x / 2 - normalized_velocity.x / 4)),
                   (x, y),
-                  (x -  normalized_velocity.y // 2, y + normalized_velocity.y // 2))
+                  (int(x -  normalized_velocity.y / 2 - normalized_velocity.x / 4), int(y + normalized_velocity.y / 2 - normalized_velocity.x / 2)))
         pygame.draw.polygon(window, self.color, (points), 0)
 
 
