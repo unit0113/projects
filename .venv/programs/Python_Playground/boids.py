@@ -6,7 +6,7 @@ import multiprocessing
 from itertools import repeat
 
 
-# Initialize the main window
+# Constants
 NUM_BOIDS = 50
 PERCEPTION_RADIUS = 100
 MAX_FORCE = 0.5
