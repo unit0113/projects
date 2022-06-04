@@ -6,12 +6,22 @@ class TestRLE(unittest.TestCase):
     def test_to_hex_string(self):
         input = [3, 15, 6, 4]
         self.assertEqual(to_hex_string(input), '3f64')
+        input = [1, 9, 1, 2, 1, 0, 1, 15, 1, 0, 1, 15, 1, 0, 1, 15, 1, 0, 1, 15, 1, 0, 1, 15, 1, 0, 1, 15, 1, 0, 1, 15, 1, 0, 1, 15, 1, 0, 1, 15]
+        self.assertEqual(to_hex_string(input), '1912101f101f101f101f101f101f101f101f101f')
 
 
     def test_count_runs(self):
         input = [15] * 3 + [4] * 6
         self.assertEqual(count_runs(input), 2)
         input = [15] * 3 + [4] * 6 + [15] * 3
+        self.assertEqual(count_runs(input), 3)
+        input = [5, 8, 1, 0, 3, 7]
+        self.assertEqual(count_runs(input), 6)
+        input = []
+        self.assertEqual(count_runs(input), 0)
+        input = [1]
+        self.assertEqual(count_runs(input), 1)
+        input = [6] * 35
         self.assertEqual(count_runs(input), 3)
 
 
@@ -22,6 +32,10 @@ class TestRLE(unittest.TestCase):
         self.assertEqual(encode_rle(input), [3, 15, 6, 4, 3, 15])
         input = [15] * 3 + [4] * 6 + [15] * 3 + [9]
         self.assertEqual(encode_rle(input), [3, 15, 6, 4, 3, 15, 1, 9])
+        input = [4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        self.assertEqual(encode_rle(input), [2, 4, 15, 1, 15, 1, 5, 1])
+        input = [4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 8, 7]
+        self.assertEqual(encode_rle(input), [2, 4, 15, 1, 15, 1, 5, 1, 1, 8, 1, 7])
 
     
     def test_get_decoded_length(self):

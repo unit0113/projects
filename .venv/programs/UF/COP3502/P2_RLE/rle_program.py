@@ -14,7 +14,7 @@ def to_hex_string(data):
     """
 
     # Remove '0x' for storage
-    hex_list = [hex(item).lstrip('0x') for item in data]
+    hex_list = [hex(item).replace('0x', '') for item in data]
     return ''.join(hex_list)
 
 
@@ -34,11 +34,21 @@ def count_runs(flat_data):
 
     last_seen = flat_data[0]
     count = 1
+    current_run = 1
     for item in flat_data[1:]:
         # Find start of new run
         if item != last_seen:
             last_seen = item
             count += 1
+            current_run = 1
+        
+        else:
+            current_run += 1
+
+        # Account for runs longer than 15
+        if current_run == 15:
+            current_run = 0
+            count += 1        
 
     return count
 
@@ -66,6 +76,10 @@ def encode_rle(flat_data):
             result += [count, last_seen]
             last_seen = item
             count = 1
+        
+        if count == 15:
+            result += [count, last_seen]
+            count = 0
 
     # Catch last item
     result += [count, last_seen]
@@ -132,10 +146,10 @@ def to_rle_string(rle_data):
     for run_length, run_value in zip(rle_data[::2], rle_data[1::2]):
         # First number is decimal representation of hex number, max of 15
         while run_length > 15:
-            result.append('15' + hex(run_value).lstrip('0x'))
+            result.append('15' + hex(run_value).replace('0x', ''))
             run_length -= 15
 
-        result.append(str(run_length) + hex(run_value).lstrip('0x'))
+        result.append(str(run_length) + hex(run_value).replace('0x', ''))
 
     return ':'.join(result)
 
