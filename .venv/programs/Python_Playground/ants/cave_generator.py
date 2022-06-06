@@ -35,7 +35,6 @@ class Cave:
         for _ in range(SMOOTHNESS):
             self.smooth_cave()
 
-
     def set_cave_walls(self):
         # Left/right walls
         self.cave[:OUTER_WALL_THICKNESS, :, :] = self.wall_color
@@ -45,20 +44,19 @@ class Cave:
         self.cave[:, :OUTER_WALL_THICKNESS, :] = self.wall_color
         self.cave[:, -OUTER_WALL_THICKNESS:, :] = self.wall_color
 
-
     def smooth_cave(self):
         for row in range(OUTER_WALL_THICKNESS, self.cave.shape[0] - OUTER_WALL_THICKNESS):
             for col in range(OUTER_WALL_THICKNESS, self.cave.shape[1] - OUTER_WALL_THICKNESS):
                 pass
+                #wall_count = np.sum(self.cave[row-1:row+2, col-1:col+2]) - self.cave[row, col]
 
-    
+
     def get_surrounding_wall_count(self, row, col):
         check_array = self.cave[row-1:row+1, col-1:col+1, :]
         check_array[1][1] = 0
         wall_count = np.count_nonzero(check_array == self.wall_color)
 
         return wall_count
-
 
     def draw(self):
         surface = pygame.pixelcopy.make_surface(self.cave)

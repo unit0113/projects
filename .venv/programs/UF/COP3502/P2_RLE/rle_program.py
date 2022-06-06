@@ -41,14 +41,14 @@ def count_runs(flat_data):
             last_seen = item
             count += 1
             current_run = 1
-        
+
         else:
             current_run += 1
 
         # Account for runs longer than 15
         if current_run == 15:
             current_run = 0
-            count += 1        
+            count += 1
 
     return count
 
@@ -76,7 +76,7 @@ def encode_rle(flat_data):
             result += [count, last_seen]
             last_seen = item
             count = 1
-        
+
         if count == 15:
             result += [count, last_seen]
             count = 0
@@ -114,7 +114,7 @@ def decode_rle(rle_data):
     # Step by two
     result = []
     for index in range(0, len(rle_data), 2):
-        result += [rle_data[index+1]] * rle_data[index]
+        result += [rle_data[index + 1]] * rle_data[index]
 
     return result
 
@@ -163,7 +163,7 @@ def string_to_rle(rle_string):
     Returns:
         list: RLE data
     """
-    
+
     rle_string_list = rle_string.split(':')
 
     result = []
@@ -182,7 +182,6 @@ class RLE:
         print()
         print('Displaying Spectrum Image:')
         ConsoleGfx.display_image(ConsoleGfx.test_rainbow)
-
 
     def menu(self):
         # Print Menu
@@ -216,12 +215,12 @@ class RLE:
         # Exit
         if option == 0:
             quit()
-        
+
         # Call appropriate functions
         if option == 1:
             self.load_file()
 
-        elif option ==2:
+        elif option == 2:
             self.load_test_image()
 
         elif option == 3:
@@ -245,7 +244,6 @@ class RLE:
         elif option == 9:
             self.display_hex_flat_data()
 
-
     def load_file(self):
         """Load data from file
         """
@@ -255,7 +253,6 @@ class RLE:
         print()
         self.menu()
 
-
     def load_test_image(self):
         """Load test image data
         """
@@ -263,7 +260,6 @@ class RLE:
         print('Test image data loaded.')
         print()
         self.menu()
-
 
     def read_rle_string(self):
         """Decode RLE string and store as flat data
@@ -274,7 +270,6 @@ class RLE:
         print()
         self.menu()
 
-
     def read_rle_hex_string(self):
         """Decode hex RLE string and store as flat data
         """
@@ -284,7 +279,6 @@ class RLE:
         print()
         self.menu()
 
-
     def read_data_hex_string(self):
         """Convert hex flat data and store
         """
@@ -293,7 +287,6 @@ class RLE:
         print()
         self.menu()
 
-
     def display_image(self):
         """Displays stored image data
         """
@@ -301,7 +294,6 @@ class RLE:
         ConsoleGfx.display_image(self.data)
         print()
         self.menu()
-
 
     def display_rle_string(self):
         """Display currently stored flat data as RLE string
@@ -312,7 +304,6 @@ class RLE:
         print()
         self.menu()
 
-
     def display_hex_rle_data(self):
         """Display currently stored flat data as hex RLE string
         """
@@ -321,7 +312,6 @@ class RLE:
         print(f'RLE hex values: {hex_output}')
         print()
         self.menu()
-
 
     def display_hex_flat_data(self):
         """Display currently stored flat data as hex string

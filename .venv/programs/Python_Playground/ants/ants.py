@@ -55,7 +55,7 @@ def main():
                     pygame.quit()
                     quit()
 
-                if event.key == pygame.K_r:
+                elif event.key == pygame.K_r:
                     main()
 
 
