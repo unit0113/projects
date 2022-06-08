@@ -32,7 +32,7 @@ fig = px.treemap(df, path=[px.Constant("Stock Portfolio"), 'Account', 'Sector', 
                  color='Daily Change (%) Numerical',
                  color_continuous_scale=["red", "black", "green"],
                  color_continuous_midpoint=0,
-                 hover_data={'Market Value Numerical': False, 'Daily Change (%) Numerical': False, 'Sector': True, 'Market Value': True, 'Gain (%)': True, 'Div Yield': True, 'Yearly Div': True},
+                 hover_data={'Sector': True, 'Market Value': True, 'Gain (%)': True, 'Div Yield': True, 'Yearly Div': True},
                  hover_name='Ticker',
                  branchvalues='total',
                  custom_data=['Sector', 'Market Value', 'Gain (%)', 'Div Yield', 'Yearly Div', 'Ticker', 'Daily Change (%)']
@@ -41,6 +41,7 @@ fig = px.treemap(df, path=[px.Constant("Stock Portfolio"), 'Account', 'Sector', 
 # Edit text and hover text templates
 fig.data[0].hovertemplate = "<br>".join([
         "%{customdata[5]}",
+        "%{customdata[6]}",
         "Sector: %{customdata[0]}",
         "Market Value: %{customdata[1]}",
         "Gain: %{customdata[2]}",
