@@ -1,10 +1,8 @@
 import pygame
-from cave_generator import Cave
 from screeninfo import get_monitors
 
 
 # Constants
-WANDER_STRENGTH = 1
 monitor = get_monitors()[0]
 WIDTH = monitor.width
 HEIGHT = monitor.height
@@ -19,14 +17,25 @@ GRAY = (128, 128, 128)
 L_GRAY = (200, 200, 200)
 D_GRAY = (70, 70, 70)
 
-class Ant:
+class Lander:
     def __init__(self):
         pass
 
+    def draw(self):
+        pass
 
 
-def draw(cave):
-    cave.draw()
+class Terrain:
+    def __init__(self):
+        pass
+
+    def draw(self):
+        pass
+
+
+def draw(terrain, lander):
+    terrain.draw()
+    lander.draw()
     pygame.display.update()
 
 
@@ -34,15 +43,16 @@ def initialize_pygame():
     pygame.init()
     window = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Ants")
-    cave = Cave(WIDTH, HEIGHT, window)
+    terrain = Terrain(WIDTH, HEIGHT, window)
+    lander = Lander(WIDTH, HEIGHT, window)
 
-    return window, cave
+    return window, terrain, lander
 
 
 def main():
-    window, cave = initialize_pygame()
+    window, terrain, lander = initialize_pygame()
     clock = pygame.time.Clock()
-    draw(cave)
+    draw(terrain, lander)
 
     while True:
         clock.tick(FPS)

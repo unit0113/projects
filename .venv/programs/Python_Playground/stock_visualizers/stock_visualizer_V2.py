@@ -60,6 +60,6 @@ fig.update_layout(margin = dict(t=0, l=0, r=0, b=0),
         plot_bgcolor='#3a3b3c',
         paper_bgcolor='#3a3b3c',
         title_text = f'Portfolio Status {today}',
-        uniformtext_minsize=18, uniformtext_mode='hide'
+        uniformtext_minsize=18, uniformtext_mode='hide' # check for other modes
     )
 fig.show()
