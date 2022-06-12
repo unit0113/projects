@@ -15,10 +15,11 @@ WOOD = (164, 116, 73)
 GRASS = (0, 154, 23)
 
 # Cave generation constants
-FILL_PERCENT = 0.5
-WALL_THRESHOLD = 4
+FILL_PERCENT = 0.6
+WALL_THRESHOLD = 8
 OUTER_WALL_THICKNESS = 10
-SMOOTHNESS = 5
+SMOOTHNESS = 7
+MASK_SIZE = 2
 
 class Cave:
     def __init__(self, width, height, window):
@@ -32,14 +33,15 @@ class Cave:
         self.cave = np.random.rand(self.width, self.height)
         self.cave = np.where(self.cave < FILL_PERCENT, Terrain.GROUND, Terrain.WALL)
 
-        # Smooth cave via cellular automata
+        # Build outer walls
         self.set_cave_walls()
+
+        # Smooth cave via cellular automata
         for _ in range(SMOOTHNESS):
             self.smooth_cave()
 
         # Convert cave from black/white to color
-        self.cave = np.repeat(self.cave[:, :, np.newaxis], 3, axis=2)
-        self.cave = np.where(self.cave == Terrain.WALL, self.wall_color, self.ground_color)
+        self.finalize()
 
     def set_cave_walls(self):
         # Left/right walls
@@ -54,30 +56,23 @@ class Cave:
         cave_copy = np.copy(self.cave)
         for row in range(OUTER_WALL_THICKNESS, self.cave.shape[0] - OUTER_WALL_THICKNESS):
             for col in range(OUTER_WALL_THICKNESS, self.cave.shape[1] - OUTER_WALL_THICKNESS):
-                wall_count = self.get_surrounding_wall_count(row, col)
+                wall_count = self.get_surrounding_wall_count(row, col, cave_copy)
                 if wall_count > WALL_THRESHOLD:
-                    cave_copy[row][col] = Terrain.WALL
-                elif wall_count < WALL_THRESHOLD:
-                    cave_copy[row][col] = Terrain.WALL
-        
-        self.cave = np.copy(cave_copy)
+                    self.cave[row][col] = Terrain.WALL
+                elif wall_count < WALL_THRESHOLD - MASK_SIZE // 2:
+                    self.cave[row][col] = Terrain.GROUND
 
-    def get_surrounding_wall_count(self, row, col):
-        # np.sum(self.cave[row-1:row+2, col-1:col+2]) - self.cave[row, col]
-        check_array = self.cave[row-1:row+2, col-1:col+2]
-        check_array[1][1] = 0
+    def get_surrounding_wall_count(self, row, col, cave):
+        check_array = cave[row-MASK_SIZE:row+MASK_SIZE+1, col-MASK_SIZE:col+MASK_SIZE+1]
+        check_array[1][1] = Terrain.GROUND
         wall_count = np.count_nonzero(check_array == Terrain.WALL)
 
         return wall_count
 
+    def finalize(self):
+        self.cave = np.repeat(self.cave[:, :, np.newaxis], 3, axis=2)
+        self.cave = np.where(self.cave == Terrain.WALL, self.wall_color, self.ground_color)
+        self.surface = pygame.pixelcopy.make_surface(self.cave)
+
     def draw(self):
-        surface = pygame.pixelcopy.make_surface(self.cave)
-        self.window.blit(surface, (0,0))
-        
-
-
-# Tests
-cave = Cave(3440, 1440, None)
-#print(cave.cave)
-#print(cave.surrounding_cell_mask)
-#print(cave.get_surrounding_wall_count(50, 50))
+        self.window.blit(self.surface, (0,0))

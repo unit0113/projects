@@ -6,8 +6,9 @@ from screeninfo import get_monitors
 # Constants
 WANDER_STRENGTH = 1
 monitor = get_monitors()[0]
-WIDTH = monitor.width
-HEIGHT = monitor.height
+#WIDTH = monitor.width
+#HEIGHT = monitor.height
+WIDTH = HEIGHT = 1000
 FPS = 60
 
 # Colors
