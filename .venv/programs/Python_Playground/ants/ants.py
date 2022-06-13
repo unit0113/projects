@@ -5,10 +5,9 @@ from screeninfo import get_monitors
 
 # Constants
 WANDER_STRENGTH = 1
-monitor = get_monitors()[0]
-#WIDTH = monitor.width
-#HEIGHT = monitor.height
-WIDTH = HEIGHT = 1000
+monitor = get_monitors()[2]
+WIDTH = monitor.width
+HEIGHT = monitor.height
 FPS = 60
 
 # Colors
@@ -44,6 +43,7 @@ def main():
     window, cave = initialize_pygame()
     clock = pygame.time.Clock()
     draw(cave)
+    pygame.event.clear()
 
     while True:
         clock.tick(FPS)
