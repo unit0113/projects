@@ -217,20 +217,20 @@ def main():
                 pygame.quit()
                 quit()
 
-        keys = pygame.key.get_pressed()
+            keys = pygame.key.get_pressed()
 
-        if keys[pygame.K_q]:
-            pygame.quit()
-            quit()
+            if keys[pygame.K_q]:
+                pygame.quit()
+                quit()
 
-        elif keys[pygame.K_r]:
-            main()
+            elif keys[pygame.K_r]:
+                main()
 
-        elif keys[pygame.K_UP]:
-            pong.player_up()
+            elif keys[pygame.K_UP]:
+                pong.player_up()
 
-        elif keys[pygame.K_DOWN]:
-            pong.player_down()
+            elif keys[pygame.K_DOWN]:
+                pong.player_down()
 
         pong.update()
         pong.draw()
