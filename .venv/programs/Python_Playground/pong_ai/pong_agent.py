@@ -17,23 +17,18 @@ class Agent:
         self.epsilon = 0.75
         self.gamma = 0.5
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
-        self.model = Linear_QNet(7, 256, 256, 3)
+        self.model = Linear_QNet(4, 256, 256, 3)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, game):
         state = [
             # Ball info
-            game.ball.rect.x / game.width,
-            game.ball.rect.y / game.height,
-            game.ball.x_velocity / 50,
-            game.ball.y_velocity / 50,
-
-            # Own Position
-            game.right_paddle.rect.y / game.height,
+            game.ball.x_velocity,
+            game.ball.y_velocity,
 
             # Self to ball comparision
-            (game.right_paddle.rect.x - game.ball.rect.x - game.ball.size) / game.width,
-            (game.right_paddle.rect.y + game.right_paddle.length // 2 - game.ball.rect.y + game.ball.size // 2) / game.height
+            game.right_paddle.rect.x - game.ball.rect.x - game.ball.size,
+            game.right_paddle.rect.y + game.right_paddle.length // 2 - game.ball.rect.y + game.ball.size // 2
         ]
 
         return np.array(state, dtype=float)
@@ -85,14 +80,15 @@ def train():
         agent.remember(state_old, final_move, reward, state_new, done)
 
         if done:
-            # train long memory, plot result
+            # train long memory
             game.initialize_round()
             agent.num_rounds += 1
             agent.train_long_memory()
             agent.model.save()
-            agent.epsilon -= 0.001
+            if reward > -100:
+                agent.epsilon -= 0.001
 
-            print(f'Round {agent.num_rounds}\tComputer Score: {game.score_left}\tAI Score: {game.score_right}')
+            print(f'Round {agent.num_rounds}\tComputer Score: {game.score_left}\tAI Score: {game.score_right}\tReward: {reward}')
 
 
 if __name__ == '__main__':

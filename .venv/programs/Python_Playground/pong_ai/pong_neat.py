@@ -10,12 +10,8 @@ FPS = 60
 
 # Colors
 GREEN = (0, 255, 0)
-YELLOW = (220, 220, 40)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-GRAY = (128, 128, 128)
-L_GRAY = (200, 200, 200)
-D_GRAY = (70, 70, 70)
 
 
 class GameInformation:
@@ -166,34 +162,6 @@ class PongGame:
         
         return True
 
-    def computer_move(self):
-        if self.ball.rect.y > self.left_paddle.rect.y + self.left_paddle.length // 2 + PADDLE_SPEED * 2 and self.left_paddle.rect.y < HEIGHT - self.left_paddle.length:
-            self.left_paddle.rect.y += PADDLE_SPEED
-        elif self.ball.rect.y < self.left_paddle.rect.y + self.left_paddle.length // 2 - PADDLE_SPEED * 2 and self.left_paddle.rect.y > 0:
-            self.left_paddle.rect.y -= PADDLE_SPEED
-
-    def move_paddle(self, left=True, up=True):
-        """
-        Move the left or right paddle.
-        :returns: boolean indicating if paddle movement is valid. 
-                  Movement is invalid if it causes paddle to go 
-                  off the screen
-        """
-        if left:
-            if up and self.left_paddle.y - Paddle.VEL < 0:
-                return False
-            if not up and self.left_paddle.y + Paddle.HEIGHT > self.window_height:
-                return False
-            self.left_paddle.move(up)
-        else:
-            if up and self.right_paddle.y - Paddle.VEL < 0:
-                return False
-            if not up and self.right_paddle.y + Paddle.HEIGHT > self.window_height:
-                return False
-            self.right_paddle.move(up)
-
-        return True
-
     def update(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -214,45 +182,3 @@ class PongGame:
             self.score_left += 1
         
         return GameInformation(self.left_hits, self.right_hits, self.score_left, self.score_right)
-
-    def play_step(self, action):
-        # 1. collect user input
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-        
-        # 2. move
-        if action[0]:
-            self.ai_up()
-        elif action[2]:
-            self.ai_down()
-
-        self.computer_move()
-        
-        # 3. check if game over
-        game_over = self.ball.update()
-        if not game_over:
-            self.ball.check_bounce(self.left_paddle)
-
-            if self.ball.check_bounce(self.right_paddle):
-                self.reward += abs(self.ball.y_velocity)
-        
-        else:
-            if game_over == 'right':
-                self.score_right += 1
-                game_over = True
-                self.reward += 1000
-            elif game_over == 'left':
-                self.score_left += 1
-                game_over = True
-                self.reward -= 100
-
-            return self.reward, game_over
-        
-        # 4. update ui and clock
-        self.draw()
-        self.clock.tick(FPS)
-
-        # 5. return game over and score
-        return self.reward, game_over
