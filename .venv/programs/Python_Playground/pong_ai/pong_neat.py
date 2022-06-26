@@ -42,7 +42,7 @@ class Ball:
     def __init__(self, window):
         self.window = window
         self.x_velocity = random.randint(10, 15) * random.choice([1, -1])
-        self.y_velocity = random.randint(-5, 5)
+        self.y_velocity = random.randint(2, 5) * random.choice([1, -1])
         self.size = 10
         self.color = WHITE
         self.rect = pygame.Rect(WIDTH // 2, HEIGHT // 2, self.size, self.size)
@@ -168,7 +168,6 @@ class PongGame:
                 pygame.quit()
                 quit()
 
-        self.computer_move()
         score = self.ball.update()
         if not score:
             if self.ball.check_bounce(self.left_paddle):

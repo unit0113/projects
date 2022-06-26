@@ -1,9 +1,13 @@
+from curses.ascii import isdigit
 from pong_neat import PongGame
 import neat
 import os
 import pickle
 import time
 import pygame
+import re
+
+NUM_GENERATIONS = 50
 
 
 class PongGameManager:
@@ -25,9 +29,9 @@ class PongGameManager:
                     run = False
                     break
 
-            output = net.activate((self.right_paddle.y,
-                                   abs(self.right_paddle.x - self.ball.x),
-                                   self.ball.y))
+            output = net.activate((self.game.right_paddle.rect.y,
+                                   abs(self.game.right_paddle.rect.x - self.game.ball.rect.x),
+                                   self.game.ball.rect.y))
             decision = output.index(max(output))
 
             if decision == 1:  # Move up
@@ -37,9 +41,9 @@ class PongGameManager:
 
             keys = pygame.key.get_pressed()
             if keys[pygame.K_UP]:
-                self.game.player_up(left=True)
+                self.game.player_up()
             elif keys[pygame.K_DOWN]:
-                self.game.player_down(left=True)
+                self.game.player_down()
 
             self.game.draw()
 
@@ -111,29 +115,76 @@ def eval_genomes(genomes, config):
                 quit()
 
 
-def run_neat(config):
-    #p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-85')
+def run_neat(config, menu_selection):
+    # Change directory to save checkpoints in correct folder
+    os.chdir(r'Python_Playground\pong_ai\neat_checkpoints')
+
+    if menu_selection == 1:
+        p = neat.Population(config)
+        last_checkpoint_number = 0
+    elif menu_selection == 2:
+        checkpoints = os.listdir()
+        if len(checkpoints) == 0:
+            print('WARNING: No checkpoints found. Initializing new population.')
+            p = neat.Population(config)
+            last_checkpoint_number = 0
+        else:
+            checkpoints.sort(key=lambda x: os.stat(os.path.join(os.getcwd(), x)).st_ctime)
+            last_checkpoint = checkpoints[-1]
+            print(f'Loading {last_checkpoint}...')
+            last_checkpoint_number = int(re.findall(r'\d+', last_checkpoint)[0])
+            p = neat.Checkpointer.restore_checkpoint(last_checkpoint)
+            print('Load successful. Resuming training.')
     p = neat.Population(config)
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     p.add_reporter(stats)
     p.add_reporter(neat.Checkpointer(1))
 
-    winner = p.run(eval_genomes, 50)
+    winner = p.run(eval_genomes, NUM_GENERATIONS - last_checkpoint_number)
+    os.chdir('..')
     with open("best.pickle", "wb") as f:
         pickle.dump(winner, f)
 
+    print("Training complete.")
+
 
 def test_best_network(config):
-    with open("best.pickle", "rb") as f:
-        winner = pickle.load(f)
+    try:
+        with open(r'Python_Playground\pong_ai\best.pickle', "rb") as f:
+            winner = pickle.load(f)
+    except FileNotFoundError:
+        print('No best network exists. Please train a network')
+        print('----------------------------------------------')
+        main()
     winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
 
     pong = PongGameManager()
     pong.test_ai(winner_net)
 
 
-if __name__ == '__main__':
+def menu():
+    print('Welcome to Pong with NEAT AI!')
+    print('-----------------------------')
+    print('Options:')
+    print('1. Train AI from scratch')
+    print('2. Continue previous training')
+    print('3. Play best AI')
+    print('4. Quit')
+    print()
+
+    response = input('Select an option: ')
+    while not response.isdigit() or int(response) < 1 or int(response) > 4:
+        response = input('Invalid selection. Select an option (1-4): ')
+
+    if response == '4':
+        print('Goodbye!')
+        quit()
+
+    return int(response)
+
+
+def main():
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, 'neat_config.txt')
 
@@ -141,5 +192,12 @@ if __name__ == '__main__':
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          config_path)
 
-    run_neat(config)
-    test_best_network(config)
+    response = menu()
+    if response == 1 or response == 2:
+        run_neat(config, response)
+    
+    else:
+        test_best_network(config)
+
+if __name__ == '__main__':
+    main()
