@@ -14,10 +14,11 @@ CAR_SIZE_Y = 30
 MIN_SPEED = 8
 CAR_ACCEL = 2
 CAR_TURN_SPEED = 100
+INITIAL_SPEED = 8
 FPS = 60
-NUM_INPUTS = 9
+NUM_INPUTS = 5
 RADAR_RANGE = 300
-RADAR_ANGLES = [-135, -90, -45, -15, 0, 15, 45, 90, 135]
+RADAR_ANGLES = [-90, -30, 0, 30, 90]
 
 BORDER_COLOR = (255, 255, 255, 255) # Color To Crash on Hit
 
@@ -33,7 +34,7 @@ class Car:
 
         self.position = [1750, 1300] # Starting Position
         self.angle = 0
-        self.speed = 20
+        self.speed = INITIAL_SPEED
 
         self.center = [self.position[0] + CAR_SIZE_X / 2, self.position[1] + CAR_SIZE_Y / 2] # Calculate Center
 
@@ -138,7 +139,7 @@ class Car:
         return self.alive
 
     def get_reward(self):
-        return self.distance / (CAR_SIZE_X / 2)
+        return self.distance - self.time
 
     def rotate_center(self, image, angle):
         # Rotate The Rectangle
@@ -198,13 +199,13 @@ def run_simulation(genomes, config):
                 car.angle += CAR_TURN_SPEED // car.speed # Left
             elif choice == 1:
                 car.angle -= CAR_TURN_SPEED // car.speed # Right
-            elif choice == 2:
-                if car.speed - CAR_ACCEL >= MIN_SPEED:
-                    car.speed -= CAR_ACCEL # Slow Down
-            elif choice == 3:
-                car.speed += CAR_ACCEL # Speed Up
+                '''elif choice == 2:
+                    if car.speed - CAR_ACCEL >= MIN_SPEED:
+                        car.speed -= CAR_ACCEL # Slow Down
+                elif choice == 3:
+                    car.speed += CAR_ACCEL # Speed Up'''
             else:
-                pass # Drive straight
+                pass
         
         # Check If Car Is Still Alive
         # Increase Fitness If Yes And Break Loop If Not
