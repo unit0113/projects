@@ -13,7 +13,8 @@ LASER_SIZE = (6, 30)
 LASER_REGEN = 100
 LASER_COST = 60
 
-AI_BASE_FIRE_RATE = 5
+AI_BASE_FIRE_CHANCE = 5
+AI_BASE_FIRE_RATE = 25
 AI_BASE_SPAWN_RATE = 10
 AI_BASE_SPEED = 120
 AI_BASE_DMG = 20
@@ -31,7 +32,7 @@ LEVEL_DURATION = 20
 STORE_HEALTH_COST_BASE = 10000
 STORE_SPEED_COST_BASE = 10000
 STORE_DAMAGE_COST_BASE = 10000
-STORE_FIRE_RATE_COST_BASE = 10000
+STORE_LASER_REGEN_COST_BASE = 10000
 STORE_INFLATION = 1.1
 STORE_LIVES_COST = 25000
 STORE_LASER_UPGRADE_COST = 50000
@@ -51,15 +52,16 @@ shields
 power-ups
 shop
 different ship types
-different enemy types
+different enemy types, use a factory
 mouse controls
+fix alignment on scorecard
 
 """
 
 
 class Laser:
     def __init__(self, x, y):
-        self.rect = pygame.Rect(x, y, LASER_SIZE[0], LASER_SIZE[1])
+        self.rect = pygame.Rect(x, y, *LASER_SIZE)
         self.mask = pygame.mask.Mask(LASER_SIZE, True)
 
     def draw(self, window):
@@ -157,20 +159,14 @@ class PlayerSpaceShip:
 
     def laser1(self):
         laser = Laser(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2, self.rect.y)
-        #laser = pygame.Rect(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2, self.rect.y, LASER_SIZE[0], LASER_SIZE[1])
         return [laser]
 
     def laser2(self):
-        #laser1 = pygame.Rect(self.rect.x, self.rect.y + 15, LASER_SIZE[0], LASER_SIZE[1])
-        #laser2 = pygame.Rect(self.rect.x + SHIP_SIZE[0] - LASER_SIZE[0], self.rect.y + 15, LASER_SIZE[0], LASER_SIZE[1])
         laser1 = Laser(self.rect.x, self.rect.y + 15)
         laser2 = Laser(self.rect.x + SHIP_SIZE[0] - LASER_SIZE[0], self.rect.y + 15)
         return [laser1, laser2]
 
     def laser3(self):
-        #laser1 = pygame.Rect(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2, self.rect.y, LASER_SIZE[0], LASER_SIZE[1])
-        #laser2 = pygame.Rect(self.rect.x, self.rect.y + 15, LASER_SIZE[0], LASER_SIZE[1])
-        #laser3 = pygame.Rect(self.rect.x + SHIP_SIZE[0] - LASER_SIZE[0], self.rect.y + 15, LASER_SIZE[0], LASER_SIZE[1])
         laser1 = Laser(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2, self.rect.y)
         laser2 = Laser(self.rect.x, self.rect.y + 15)
         laser3 = Laser(self.rect.x + SHIP_SIZE[0] - LASER_SIZE[0], self.rect.y + 15)
@@ -187,32 +183,26 @@ class EvilSpaceShip:
         pygame.sprite.Sprite.__init__(self)
         self.window = window
         self.level = level
-        self.image = pygame.transform.scale(pygame.image.load(os.path.join(r'Python_Playground\space_invaders\Assets', 'spaceship_red.png')), SHIP_SIZE)
+        self.image = pygame.transform.scale(pygame.image.load(os.path.join(r'Python_Playground\space_invaders\Assets', 'spaceship_red.png')), SHIP_SIZE).convert_alpha()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = pygame.Rect(random.randint(20, WIDTH - 20 - SHIP_SIZE[0]), -10 - SHIP_SIZE[1], self.image.get_width(), self.image.get_height())
-        self.lasers = []
         self.max_health = int(AI_BASE_HEALTH * random.uniform(0.8, 1.2) * (1 + (self.level - 1) / 10))
         self.health = self.max_health
         self.speed = int(AI_BASE_SPEED * random.uniform(0.8, 1.2) * (1 + (self.level - 1) / 10))
+        self.laser_timer = AI_BASE_FIRE_RATE * FPS / 60
+
+    @property
+    def is_dead(self):
+        return self.health <= 0
 
     def draw(self):
-        self.rect.y += self.speed // FPS
-
-        for laser in self.lasers:
-            pygame.draw.rect(self.window, LASER_GREEN, laser)
-
+        self.laser_timer += 1
         self.window.blit(self.image, (self.rect.x, self.rect.y))
 
-    def is_dead(self):
-        if self.health <= 0:
-            return True
-
-        return False
-
     def fire(self):
-        if self.rect.y > 0 and random.uniform(0, 10) < AI_BASE_FIRE_RATE * (1 + (self.level - 1) / 10) / FPS:
-            laser = pygame.Rect(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2 // 2, self.rect.y, LASER_SIZE[0], LASER_SIZE[1])
-            return laser
+        if self.rect.y > 0 and self.laser_timer > AI_BASE_FIRE_RATE and random.uniform(0, 10) < AI_BASE_FIRE_CHANCE * (1 + (self.level - 1) / 10) / FPS:
+            self.laser_timer = 0
+            return Laser(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2 // 2, self.rect.y)
 
     def take_hit(self, damage):
         self.health -= damage
@@ -255,16 +245,16 @@ class BadGuyManager:
 
     def update_lasers(self):
         for laser in self.evil_lasers[:]:
-            laser.y += AI_LASER_SPEED // FPS
-            if laser.y > HEIGHT:
+            laser.rect.y += AI_LASER_SPEED // FPS
+            if laser.rect.y > HEIGHT:
                 self.evil_lasers.remove(laser)
 
     def draw(self):
         for laser in self.evil_lasers:
-            pygame.draw.rect(self.window, LASER_GREEN, laser)
+            laser.draw(self.window)
 
         for baddie in self.bad_guys:
-            self.window.blit(baddie.image, (baddie.rect.x, baddie.rect.y))
+            baddie.draw()
 
 
 class SpaceGame:
@@ -280,13 +270,13 @@ class SpaceGame:
         self.score = 0
         self.credits = 0
         self.max_level_duration = LEVEL_DURATION * FPS
-        self.initializ_round()
+        self.initialize_round()
 
     @property
     def is_round_end(self):
         return self.level_duration > self.max_level_duration and not self.bad_guy_manager.bad_guys
 
-    def initializ_round(self):
+    def initialize_round(self):
         self.player.health = self.player.max_health
         self.level += 1
         self.level_duration = 0
@@ -302,7 +292,7 @@ class SpaceGame:
     def end_round(self):
         self.round_scoreboard()
         self.open_store()
-        self.initializ_round()
+        self.initialize_round()
 
     def round_scoreboard(self):
         self.window.blit(self.background, (0, 0))
@@ -340,8 +330,8 @@ class SpaceGame:
         total_pts_text = self.scorecard_font.render(f'{"Total score:":.<30}{self.score:.>10}', 1, WHITE)
         self.window.blit(total_pts_text, (WIDTH // 2 - total_pts_text.get_width() // 2, HEIGHT // 3 + 30 * spacer - total_pts_text.get_height() // 2))
 
-        spacer += 2
-        instructions_text = self.scorecard_font.render('Press C to continue.', 1, WHITE)
+        spacer += 3
+        instructions_text = self.labels_font.render('Press C to continue.', 1, WHITE)
         self.window.blit(instructions_text, (WIDTH // 2 - instructions_text.get_width() // 2, HEIGHT // 3 + 30 * spacer - instructions_text.get_height() // 2))
 
         pygame.display.update()
@@ -402,10 +392,10 @@ class SpaceGame:
         # Check laser hits on bad guys
         for laser in self.player.lasers[:]:
             for baddie in self.bad_guy_manager.bad_guys[:]:
-                if laser.mask.overlap(baddie.mask, (laser.rect.x - baddie.rect.x, laser.rect.y - baddie.rect.y)):
+                if laser.mask.overlap(baddie.mask, (baddie.rect.x - laser.rect.x, baddie.rect.y - laser.rect.y)):
                     baddie.take_hit(self.player.damage)
                     if laser in self.player.lasers: self.player.lasers.remove(laser)
-                    if baddie.is_dead():
+                    if baddie.is_dead:
                         self.score += baddie.max_health * 10
                         self.bad_guy_manager.bad_guys.remove(baddie)
                         self.num_baddies_killed_round += 1
@@ -422,7 +412,7 @@ class SpaceGame:
 
             # Check laser hits on player
             for laser in self.bad_guy_manager.evil_lasers[:]:
-                if laser.colliderect(self.player.rect):
+                if laser.mask.overlap(self.player.mask, (self.player.rect.x - laser.rect.x, self.player    .rect.y - laser.rect.y)):
                     self.player.take_hit(self.bad_guy_manager.damage)
                     if laser in self.bad_guy_manager.evil_lasers:
                         self.bad_guy_manager.evil_lasers.remove(laser)
