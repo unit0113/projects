@@ -1,26 +1,43 @@
 import pygame
 import os
 import random
-import time
 
 
 WIDTH, HEIGHT = 1200, 1000
 FPS = 60
+
 MOVEMENT_SPEED = 480
 LASER_SPEED = 960
 AI_LASER_SPEED = 720
 LASER_SIZE = (6, 30)
 LASER_REGEN = 100
 LASER_COST = 60
+
 AI_BASE_FIRE_RATE = 5
 AI_BASE_SPAWN_RATE = 10
 AI_BASE_SPEED = 120
-AI_BASE_DMG = 15
+AI_BASE_DMG = 20
 AI_BASE_HEALTH = 100
+
 PLAYER_LIVES = 5
 PLAYER_STARTING_HEALTH = 100
 PLAYER_STARTING_DMG = 100
+PLAYER_STARTING_FIRE_RATE = 25
+PLAYER_INVINSIBLE_AFTER_DEATH_PERIOD = 120
+
 SHIP_SIZE = (50, 50)
+LEVEL_DURATION = 20
+
+STORE_HEALTH_COST_BASE = 10000
+STORE_SPEED_COST_BASE = 10000
+STORE_DAMAGE_COST_BASE = 10000
+STORE_FIRE_RATE_COST_BASE = 10000
+STORE_INFLATION = 1.1
+STORE_LIVES_COST = 25000
+STORE_LASER_UPGRADE_COST = 50000
+
+BONUS_NO_DAMAGE_TAKEN = 0.1
+BONUS_ALL_ENEMIES_KILLED = 0.1
 
 WHITE = (255, 255, 255)
 RED = (199, 14, 32)
@@ -29,29 +46,65 @@ GREEN = (34,139,34)
 LASER_GREEN = (160, 252, 36)
 
 
+"""TODO:
+shields
+power-ups
+shop
+different ship types
+different enemy types
+mouse controls
+
+"""
+
+
+class Laser:
+    def __init__(self, x, y):
+        self.rect = pygame.Rect(x, y, LASER_SIZE[0], LASER_SIZE[1])
+        self.mask = pygame.mask.Mask(LASER_SIZE, True)
+
+    def draw(self, window):
+        pygame.draw.rect(window, RED, self.rect)
+
+
 class PlayerSpaceShip:
     def __init__(self, window):
+        pygame.sprite.Sprite.__init__(self)
         self.window = window
-        self.image = pygame.transform.rotate(pygame.image.load(os.path.join(r'Python_Playground\space_invaders\Assets', 'spaceship_yellow.png')), 180)
+        self.image = pygame.transform.rotate(pygame.image.load(os.path.join(r'Python_Playground\space_invaders\Assets', 'spaceship_yellow.png')), 180).convert_alpha()
         self.image = pygame.transform.scale(self.image, SHIP_SIZE)
+        self.mask = pygame.mask.from_surface(self.image)
         x = WIDTH // 2 - self.image.get_width() // 2
         y = HEIGHT - self.image.get_height() * 2
         self.rect = pygame.Rect(x, y, self.image.get_width(), self.image.get_height())
+        self.laser_types = [self.laser1, self.laser2, self.laser3]
+        self.laser_type_dmg_multipliers = [1, 0.65, 0.5]
+        self.laser_type_current_index = 0
         self.lasers = []
         self.max_laser_charge = 100
         self.laser_charge = self.max_laser_charge
         self.max_health = PLAYER_STARTING_HEALTH
         self.health = self.max_health
         self.max_damage = PLAYER_STARTING_DMG
+        self.reload = PLAYER_STARTING_FIRE_RATE
+        self.laser_timer = self.reload * FPS / 60
+        self.invinsible_timer = 0
 
     @property
     def damage(self):
-        return self.max_damage * random.uniform(0.5, 1.5)
+        return self.max_damage * random.uniform(0.5, 1.5) * self.laser_type_dmg_multipliers[self.laser_type_current_index]
+
+    @property
+    def is_invinsible(self):
+        return self.invinsible_timer
+
+    @property
+    def is_dead(self):
+        return self.health <= 0
 
     def draw(self):
-        self.update_lasers()
+        self.update()
         for laser in self.lasers:
-            pygame.draw.rect(self.window, RED, laser)
+            laser.draw(self.window)
 
         self.window.blit(self.image, (self.rect.x, self.rect.y))
 
@@ -74,36 +127,68 @@ class PlayerSpaceShip:
                                                           SHIP_SIZE[0] * (self.health / self.max_health),
                                                           5))
 
+    def update(self):
+        self.update_lasers()
+        self.laser_timer += 1
+        self.invinsible_timer = max(self.invinsible_timer - 1, 0)
+        if self.invinsible_timer:
+            self.draw_invincibility()
+
     def update_lasers(self):
         self.laser_charge = min(self.laser_charge + LASER_REGEN / FPS, self.max_laser_charge)
 
         for laser in self.lasers[:]:
-            if laser.y < -LASER_SIZE[1]:
+            if laser.rect.y < -LASER_SIZE[1]:
                 self.lasers.remove(laser)
             else:
-                laser.y -= LASER_SPEED // FPS
+                laser.rect.y -= LASER_SPEED // FPS
 
-    def is_dead(self):
-        if self.health <= 0:
-            return True
-        
-        return False
+    def draw_invincibility(self):
+        if (self.invinsible_timer // (FPS / 2)) % 2:
+            self.image.set_alpha(128)
+        else:
+            self.image.set_alpha(255)
 
     def fire(self):
-        if self.laser_charge >= 100:
-            laser = pygame.Rect(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2 // 2, self.rect.y, LASER_SIZE[0], LASER_SIZE[1])
-            self.lasers.append(laser)
+        if self.laser_charge >= 100 and self.laser_timer > self.reload:
+            self.lasers += self.laser_types[self.laser_type_current_index]()
             self.laser_charge -= LASER_COST
+            self.laser_timer = 0
+
+    def laser1(self):
+        laser = Laser(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2, self.rect.y)
+        #laser = pygame.Rect(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2, self.rect.y, LASER_SIZE[0], LASER_SIZE[1])
+        return [laser]
+
+    def laser2(self):
+        #laser1 = pygame.Rect(self.rect.x, self.rect.y + 15, LASER_SIZE[0], LASER_SIZE[1])
+        #laser2 = pygame.Rect(self.rect.x + SHIP_SIZE[0] - LASER_SIZE[0], self.rect.y + 15, LASER_SIZE[0], LASER_SIZE[1])
+        laser1 = Laser(self.rect.x, self.rect.y + 15)
+        laser2 = Laser(self.rect.x + SHIP_SIZE[0] - LASER_SIZE[0], self.rect.y + 15)
+        return [laser1, laser2]
+
+    def laser3(self):
+        #laser1 = pygame.Rect(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2, self.rect.y, LASER_SIZE[0], LASER_SIZE[1])
+        #laser2 = pygame.Rect(self.rect.x, self.rect.y + 15, LASER_SIZE[0], LASER_SIZE[1])
+        #laser3 = pygame.Rect(self.rect.x + SHIP_SIZE[0] - LASER_SIZE[0], self.rect.y + 15, LASER_SIZE[0], LASER_SIZE[1])
+        laser1 = Laser(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2, self.rect.y)
+        laser2 = Laser(self.rect.x, self.rect.y + 15)
+        laser3 = Laser(self.rect.x + SHIP_SIZE[0] - LASER_SIZE[0], self.rect.y + 15)
+        
+        return [laser1, laser2, laser3]
 
     def take_hit(self, damage):
-        self.health -= damage
+        if not self.is_invinsible:
+            self.health -= damage
 
 
 class EvilSpaceShip:
     def __init__(self, window, level):
+        pygame.sprite.Sprite.__init__(self)
         self.window = window
         self.level = level
         self.image = pygame.transform.scale(pygame.image.load(os.path.join(r'Python_Playground\space_invaders\Assets', 'spaceship_red.png')), SHIP_SIZE)
+        self.mask = pygame.mask.from_surface(self.image)
         self.rect = pygame.Rect(random.randint(20, WIDTH - 20 - SHIP_SIZE[0]), -10 - SHIP_SIZE[1], self.image.get_width(), self.image.get_height())
         self.lasers = []
         self.max_health = int(AI_BASE_HEALTH * random.uniform(0.8, 1.2) * (1 + (self.level - 1) / 10))
@@ -139,6 +224,8 @@ class BadGuyManager:
         self.level = level
         self.bad_guys = []
         self.evil_lasers = []
+        self.no_baddies_escaped = True
+        self.new_baddies_generation = True
 
     @property
     def damage(self):
@@ -151,7 +238,7 @@ class BadGuyManager:
         self.draw()
 
     def add_baddies(self):
-        if random.uniform(0, 10) < AI_BASE_SPAWN_RATE * (1 + (self.level - 1) / 10) / FPS:
+        if self.new_baddies_generation and random.uniform(0, 10) < AI_BASE_SPAWN_RATE * (1 + (self.level - 1) / 10) / FPS:
             self.bad_guys.append(EvilSpaceShip(self.window, self.level))
 
     def update_baddies(self):
@@ -159,6 +246,7 @@ class BadGuyManager:
             baddie.rect.y += baddie.speed // FPS
             if baddie.rect.y > HEIGHT:
                 self.bad_guys.remove(baddie)
+                self.no_baddies_escaped = False
                 continue
 
             check_fire = baddie.fire()
@@ -185,11 +273,90 @@ class SpaceGame:
         self.background = pygame.transform.scale(pygame.image.load(os.path.join(r'Python_Playground\space_invaders\Assets', 'space.png')), (WIDTH, HEIGHT))
         self.player = PlayerSpaceShip(self.window)
         self.player_lives = PLAYER_LIVES
-        self.level = 1
+        self.level = 0
         self.bad_guy_manager = BadGuyManager(self.window, self.level)
         self.labels_font = pygame.font.SysFont('verdana', 30, bold=True)
-        self.bad_guys = []
+        self.scorecard_font = pygame.font.SysFont('verdana', 25, bold=True)
         self.score = 0
+        self.credits = 0
+        self.max_level_duration = LEVEL_DURATION * FPS
+        self.initializ_round()
+
+    @property
+    def is_round_end(self):
+        return self.level_duration > self.max_level_duration and not self.bad_guy_manager.bad_guys
+
+    def initializ_round(self):
+        self.player.health = self.player.max_health
+        self.level += 1
+        self.level_duration = 0
+        self.no_damage_taken = True
+        self.bad_guy_manager.no_baddies_escaped = True
+        self.bad_guy_manager.new_baddies_generation = True
+        self.num_baddies_killed_round = 0
+        self.score_start_of_round = self.score
+        self.bad_guy_manager.bad_guys.clear()
+        self.bad_guy_manager.evil_lasers.clear()
+        self.draw()
+
+    def end_round(self):
+        self.round_scoreboard()
+        self.open_store()
+        self.initializ_round()
+
+    def round_scoreboard(self):
+        self.window.blit(self.background, (0, 0))
+        self.player.draw()
+
+        spacer = 0
+        enemies_text = self.scorecard_font.render(f'{"Enemy ships destroyed":.<30}{self.num_baddies_killed_round:.>10}', 1, WHITE)
+        self.window.blit(enemies_text, (WIDTH // 2 - enemies_text.get_width() // 2, HEIGHT // 3 - enemies_text.get_height() // 2))
+
+        spacer += 1
+        round_points = self.score - self.score_start_of_round
+        points_text = self.scorecard_font.render(f'{"Points earned:":.<30}{round_points:.>10}', 1, WHITE)
+        self.window.blit(points_text, (WIDTH // 2 - points_text.get_width() // 2, HEIGHT // 3 + 30 * spacer - points_text.get_height() // 2))
+
+        spacer += 1
+        level_bonus_pts = int(round_points * (self.level / 10))
+        level_bonus_text = self.scorecard_font.render(f'{"Level bonus:":.<30}{level_bonus_pts:.>10}', 1, WHITE)
+        self.window.blit(level_bonus_text, (WIDTH // 2 - level_bonus_text.get_width() // 2, HEIGHT // 3 + 30 * spacer - level_bonus_text.get_height() // 2))
+
+        no_damamge_pts = all_baddies_killed_pts = 0
+        if self.no_damage_taken:
+            spacer += 1
+            no_damamge_pts = int(round_points * BONUS_NO_DAMAGE_TAKEN)
+            no_damage_text = self.scorecard_font.render(f'{"No damage taken bonus:":.<30}{no_damamge_pts:.>10}', 1, WHITE)
+            self.window.blit(no_damage_text, (WIDTH // 2 - no_damage_text.get_width() // 2, HEIGHT // 3 + 30 * spacer - no_damage_text.get_height() // 2))
+
+        if self.bad_guy_manager.no_baddies_escaped:
+            spacer += 1
+            all_baddies_killed_pts = int(round_points * BONUS_ALL_ENEMIES_KILLED)
+            all_killed_text = self.scorecard_font.render(f'{"Total destruction bonus:":.<30}{all_baddies_killed_pts:.>10}', 1, WHITE)
+            self.window.blit(all_killed_text, (WIDTH // 2 - all_killed_text.get_width() // 2, HEIGHT // 3 + 30 * spacer - all_killed_text.get_height() // 2))
+
+        spacer += 2
+        self.score = self.score_start_of_round + round_points + level_bonus_pts + no_damamge_pts + all_baddies_killed_pts
+        total_pts_text = self.scorecard_font.render(f'{"Total score:":.<30}{self.score:.>10}', 1, WHITE)
+        self.window.blit(total_pts_text, (WIDTH // 2 - total_pts_text.get_width() // 2, HEIGHT // 3 + 30 * spacer - total_pts_text.get_height() // 2))
+
+        spacer += 2
+        instructions_text = self.scorecard_font.render('Press C to continue.', 1, WHITE)
+        self.window.blit(instructions_text, (WIDTH // 2 - instructions_text.get_width() // 2, HEIGHT // 3 + 30 * spacer - instructions_text.get_height() // 2))
+
+        pygame.display.update()
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_c:
+                    return
+
+    def open_store(self):
+        pass
 
     def player_up(self):
         if self.player.rect.y > 0 + MOVEMENT_SPEED // FPS:
@@ -211,10 +378,15 @@ class SpaceGame:
         self.player.fire()
 
     def draw(self):
+        self.level_duration += 1
+        if self.level_duration > self.max_level_duration:
+            self.bad_guy_manager.new_baddies_generation = False
         self.window.blit(self.background, (0, 0))
         self.bad_guy_manager.update()
         self.player.draw()
         self.check_hits()
+        if self.is_round_end:
+            self.end_round()
         self.check_player_death()
 
         lives_label = self.labels_font.render(f'Lives: {self.player_lives}', 1, WHITE)
@@ -230,34 +402,70 @@ class SpaceGame:
         # Check laser hits on bad guys
         for laser in self.player.lasers[:]:
             for baddie in self.bad_guy_manager.bad_guys[:]:
-                if laser.colliderect(baddie):
+                if laser.mask.overlap(baddie.mask, (laser.rect.x - baddie.rect.x, laser.rect.y - baddie.rect.y)):
                     baddie.take_hit(self.player.damage)
                     if laser in self.player.lasers: self.player.lasers.remove(laser)
                     if baddie.is_dead():
                         self.score += baddie.max_health * 10
                         self.bad_guy_manager.bad_guys.remove(baddie)
+                        self.num_baddies_killed_round += 1
 
-        # Check ship-to-ship collision
-        for baddie in self.bad_guy_manager.bad_guys[:]:
-            if self.player.rect.colliderect(baddie):
-                self.player.take_hit(baddie.max_health)
-                self.score += baddie.max_health * 10
-                self.bad_guy_manager.bad_guys.remove(baddie)
+        # Check for player damage
+        if not self.player.is_invinsible:
+            # Check ship-to-ship collision
+            for baddie in self.bad_guy_manager.bad_guys[:]:
+                if self.player.mask.overlap(baddie.mask, (self.player.rect.x - baddie.rect.x, self.player.rect.y - baddie.rect.y)):
+                    self.player.take_hit(baddie.max_health)
+                    self.score += baddie.max_health * 10
+                    self.bad_guy_manager.bad_guys.remove(baddie)
+                    self.no_damage_taken = False
 
-        # Check laser hits on player
-        for laser in self.bad_guy_manager.evil_lasers[:]:
-            if laser.colliderect(self.player.rect):
-                self.player.take_hit(self.bad_guy_manager.damage)
-                if laser in self.bad_guy_manager.evil_lasers:
-                    self.bad_guy_manager.evil_lasers.remove(laser)
+            # Check laser hits on player
+            for laser in self.bad_guy_manager.evil_lasers[:]:
+                if laser.colliderect(self.player.rect):
+                    self.player.take_hit(self.bad_guy_manager.damage)
+                    if laser in self.bad_guy_manager.evil_lasers:
+                        self.bad_guy_manager.evil_lasers.remove(laser)
+                        self.no_damage_taken = False
 
     def check_player_death(self):
-        if self.player.is_dead():
+        if self.player.is_dead:
             if self.player_lives > 0:
                 self.player_lives -= 1
                 self.player.health = self.player.max_health
+                self.player.invinsible_timer = PLAYER_INVINSIBLE_AFTER_DEATH_PERIOD * FPS/ 60
             else:
-                game_over(self.score, self.level)
+                self.game_over()
+    
+    def game_over(self):
+        self.window.blit(self.background, (0, 0))
+        self.game_over_font = pygame.font.SysFont('verdana', 50, bold=True)
+
+        death_text = self.game_over_font.render(f'You Died...', 1, WHITE)
+        self.window.blit(death_text, (WIDTH // 2 - death_text.get_width() // 2, HEIGHT // 4 - death_text.get_height() // 2))
+
+        level_text = self.game_over_font.render(f'You reached level {self.level}', 1, WHITE)
+        self.window.blit(level_text, (WIDTH // 2 - level_text.get_width() // 2, HEIGHT // 4 + 50 - level_text.get_height() // 2))
+
+        score_text = self.game_over_font.render(f'Your final score is {self.score}', 1, WHITE)
+        self.window.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, HEIGHT // 4 + 100 - score_text.get_height() // 2))
+
+        instructions_text = self.game_over_font.render('Press C to play again, or press Q to quit.', 1, WHITE)
+        self.window.blit(instructions_text, (WIDTH // 2 - instructions_text.get_width() // 2, HEIGHT // 4 + 150 - instructions_text.get_height() // 2))
+        pygame.display.update()
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_c:
+                    main()
+
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+                    pygame.quit()
+                    quit()
                         
 
 def initialize_pygame():
@@ -267,10 +475,6 @@ def initialize_pygame():
     pygame.font.init()
 
     return window
-
-
-def game_over(score, level):
-    pass
 
 
 def main():
