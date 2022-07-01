@@ -6,12 +6,12 @@ import random
 WIDTH, HEIGHT = 1200, 1000
 FPS = 60
 
-MOVEMENT_SPEED = 480
 LASER_SPEED = 960
 AI_LASER_SPEED = 720
 LASER_SIZE = (6, 30)
-LASER_REGEN = 100
-LASER_COST = 60
+LASER_STARTING_REGEN = 100
+LASER_BASE_COST = 60
+LASER_BASE_CHARGE_LEVEL = 100
 
 AI_BASE_FIRE_CHANCE = 5
 AI_BASE_FIRE_RATE = 25
@@ -21,21 +21,26 @@ AI_BASE_DMG = 20
 AI_BASE_HEALTH = 100
 
 PLAYER_LIVES = 5
+PLAYER_STARTING_MOVEMENT_SPEED = 480
 PLAYER_STARTING_HEALTH = 100
 PLAYER_STARTING_DMG = 100
-PLAYER_STARTING_FIRE_RATE = 25
+PLAYER_MIN_FIRE_RATE = 25
 PLAYER_INVINSIBLE_AFTER_DEATH_PERIOD = 120
 
 SHIP_SIZE = (50, 50)
 LEVEL_DURATION = 20
 
-STORE_HEALTH_COST_BASE = 10000
-STORE_SPEED_COST_BASE = 10000
-STORE_DAMAGE_COST_BASE = 10000
-STORE_LASER_REGEN_COST_BASE = 10000
+STORE_HEALTH_BASE_COST = 10000
+STORE_SPEED_BASE_COST = 10000
+STORE_DAMAGE_BASE_COST = 10000
+STORE_LASER_REGEN_BASE_COST = 10000
+STORE_LASER_MAX_CHARGE_BASE_COST = 10000
+STORE_LASER_COST_BASE_COST = 10000
 STORE_INFLATION = 1.1
 STORE_LIVES_COST = 25000
 STORE_LASER_UPGRADE_COST = 50000
+UPGRADE_PERCENT = 0.1
+STORE_WINDOW_PADDING = 50
 
 BONUS_NO_DAMAGE_TAKEN = 0.1
 BONUS_ALL_ENEMIES_KILLED = 0.1
@@ -45,6 +50,7 @@ RED = (199, 14, 32)
 YELLOW = (200, 200, 15)
 GREEN = (34,139,34)
 LASER_GREEN = (160, 252, 36)
+STEEL = (67, 70, 75)
 
 
 """TODO:
@@ -82,14 +88,42 @@ class PlayerSpaceShip:
         self.laser_type_dmg_multipliers = [1, 0.65, 0.5]
         self.laser_type_current_index = 0
         self.lasers = []
-        self.max_laser_charge = 100
-        self.laser_charge = self.max_laser_charge
-        self.max_health = PLAYER_STARTING_HEALTH
+
+        self.health_upgrades = 0
+        self.damage_upgrades = 0
+        self.laser_regen_upgrades = 0
+        self.speed_upgrades = 0
+        self.laser_max_charge_upgrades = 0
+        self.laser_cost_upgrades = 0
+
+        self.laser_charge = self.laser_max_charge
         self.health = self.max_health
-        self.max_damage = PLAYER_STARTING_DMG
-        self.reload = PLAYER_STARTING_FIRE_RATE
-        self.laser_timer = self.reload * FPS / 60
+        self.laser_timer = PLAYER_MIN_FIRE_RATE * FPS / 60
         self.invinsible_timer = 0
+
+    @property
+    def max_health(self):
+        return PLAYER_STARTING_HEALTH * self.improvment_multiplyer(self.health_upgrades)
+
+    @property
+    def max_damage(self):
+        return PLAYER_STARTING_DMG * self.improvment_multiplyer(self.damage_upgrades)    
+
+    @property
+    def laser_regen(self):
+        return LASER_STARTING_REGEN * self.improvment_multiplyer(self.laser_regen_upgrades)  
+
+    @property
+    def speed(self):
+        return PLAYER_STARTING_MOVEMENT_SPEED * self.improvment_multiplyer(self.speed_upgrades)
+
+    @property
+    def laser_max_charge(self):
+        return LASER_BASE_CHARGE_LEVEL * self.improvment_multiplyer(self.laser_max_charge_upgrades)
+
+    @property
+    def laser_cost(self):
+        return LASER_BASE_COST * self.improvment_multiplyer(self.laser_cost_upgrades)
 
     @property
     def damage(self):
@@ -102,6 +136,13 @@ class PlayerSpaceShip:
     @property
     def is_dead(self):
         return self.health <= 0
+
+    @property
+    def can_fire(self):
+        return self.laser_charge >= self.laser_cost and self.laser_timer > PLAYER_MIN_FIRE_RATE
+
+    def improvment_multiplyer(self, num_upgrades):
+        return 1 + num_upgrades * UPGRADE_PERCENT
 
     def draw(self):
         self.update()
@@ -137,7 +178,7 @@ class PlayerSpaceShip:
             self.draw_invincibility()
 
     def update_lasers(self):
-        self.laser_charge = min(self.laser_charge + LASER_REGEN / FPS, self.max_laser_charge)
+        self.laser_charge = min(self.laser_charge + self.laser_regen / FPS, self.laser_max_charge)
 
         for laser in self.lasers[:]:
             if laser.rect.y < -LASER_SIZE[1]:
@@ -152,9 +193,9 @@ class PlayerSpaceShip:
             self.image.set_alpha(255)
 
     def fire(self):
-        if self.laser_charge >= 100 and self.laser_timer > self.reload:
+        if self.can_fire:
             self.lasers += self.laser_types[self.laser_type_current_index]()
-            self.laser_charge -= LASER_COST
+            self.laser_charge -= self.laser_cost
             self.laser_timer = 0
 
     def laser1(self):
@@ -177,6 +218,22 @@ class PlayerSpaceShip:
         if not self.is_invinsible:
             self.health -= damage
 
+    def player_up(self):
+        if self.rect.y > 0 + self.speed // FPS:
+            self.rect.y -= self.speed //FPS
+
+    def player_down(self):
+        if self.rect.y + self.image.get_height() < HEIGHT - self.speed // FPS:
+            self.rect.y += self.speed // FPS
+
+    def player_left(self):
+        if self.rect.x > 0 + self.speed // FPS:
+            self.rect.x -= self.speed // FPS
+
+    def player_right(self):
+        if self.rect.x + self.image.get_width() < WIDTH - self.speed // FPS:
+            self.rect.x += self.speed // FPS
+
 
 class EvilSpaceShip:
     def __init__(self, window, level):
@@ -195,12 +252,16 @@ class EvilSpaceShip:
     def is_dead(self):
         return self.health <= 0
 
+    @property
+    def can_fire(self):
+        return self.rect.y > 0 and self.laser_timer > AI_BASE_FIRE_RATE
+
     def draw(self):
         self.laser_timer += 1
         self.window.blit(self.image, (self.rect.x, self.rect.y))
 
     def fire(self):
-        if self.rect.y > 0 and self.laser_timer > AI_BASE_FIRE_RATE and random.uniform(0, 10) < AI_BASE_FIRE_CHANCE * (1 + (self.level - 1) / 10) / FPS:
+        if self.can_fire and random.uniform(0, 10) < AI_BASE_FIRE_CHANCE * (1 + (self.level - 1) / 10) / FPS:
             self.laser_timer = 0
             return Laser(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2 // 2, self.rect.y)
 
@@ -267,6 +328,7 @@ class SpaceGame:
         self.bad_guy_manager = BadGuyManager(self.window, self.level)
         self.labels_font = pygame.font.SysFont('verdana', 30, bold=True)
         self.scorecard_font = pygame.font.SysFont('verdana', 25, bold=True)
+        self.store_title_font = pygame.font.SysFont('verdana', 40, bold=True)
         self.score = 0
         self.credits = 0
         self.max_level_duration = LEVEL_DURATION * FPS
@@ -288,6 +350,7 @@ class SpaceGame:
         self.bad_guy_manager.bad_guys.clear()
         self.bad_guy_manager.evil_lasers.clear()
         self.draw()
+        self.open_store() # Remove when done with store
 
     def end_round(self):
         self.round_scoreboard()
@@ -346,23 +409,42 @@ class SpaceGame:
                     return
 
     def open_store(self):
-        pass
+        self.window.blit(self.background, (0, 0))
+        store_rect = pygame.Rect(STORE_WINDOW_PADDING, STORE_WINDOW_PADDING, WIDTH - 2 * STORE_WINDOW_PADDING, HEIGHT - 2 * STORE_WINDOW_PADDING)
+        pygame.draw.rect(self.window, STEEL, store_rect, border_radius=10)
+
+        store_title_text = self.store_title_font.render(f'{"Upgrade Store"}', 1, WHITE)
+        self.window.blit(store_title_text, (WIDTH // 2 - store_title_text.get_width() // 2, STORE_WINDOW_PADDING + store_title_text.get_height() // 2))
+
+
+
+
+
+
+
+
+        pygame.display.update()
+        pygame.time.delay(5000)
+
+
+
+
+
+
+
+        
 
     def player_up(self):
-        if self.player.rect.y > 0 + MOVEMENT_SPEED // FPS:
-            self.player.rect.y -= MOVEMENT_SPEED //FPS
+        self.player.player_up()
 
     def player_down(self):
-        if self.player.rect.y + self.player.image.get_height() < HEIGHT - MOVEMENT_SPEED // FPS:
-            self.player.rect.y += MOVEMENT_SPEED // FPS
+        self.player.player_down()
 
     def player_left(self):
-        if self.player.rect.x > 0 + MOVEMENT_SPEED // FPS:
-            self.player.rect.x -= MOVEMENT_SPEED // FPS
+        self.player.player_left()
 
     def player_right(self):
-        if self.player.rect.x + self.player.image.get_width() < WIDTH - MOVEMENT_SPEED // FPS:
-            self.player.rect.x += MOVEMENT_SPEED // FPS
+        self.player.player_right()
 
     def player_fire(self):
         self.player.fire()
