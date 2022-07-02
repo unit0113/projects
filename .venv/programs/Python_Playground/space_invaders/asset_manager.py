@@ -1,0 +1,115 @@
+import random
+from space_invaders import HEIGHT, FPS
+from player_ship import PlayerSpaceShip
+from enemy_ships import EvilSpaceShip
+
+
+PLAYER_LASER_SPEED = 960
+AI_LASER_SPEED = 720
+AI_BASE_SPAWN_RATE = 10
+
+LASER_RED = (237, 47, 50)
+LASER_GREEN = (160, 252, 36)
+
+
+class AssetManager:
+    def __init__(self, window):
+        self.window = window
+        self.level = 0
+        self.player = PlayerSpaceShip()
+
+    def new_round(self):
+        self.player.health = self.player.max_health
+        self.level +=1
+        self.bad_guys = []
+        self.evil_lasers = []
+        self.good_lasers = []
+        self.num_baddies_killed_round = 0
+        self.no_damage_taken = True
+        self.no_baddies_escaped = True
+        self.new_baddies_generation = True
+
+    def player_fire(self):
+        lasers = self.player.fire()
+        if lasers:
+            self.good_lasers += lasers
+
+    def update(self):
+        self.update_baddies()
+        self.player.update()
+        self.add_baddies()
+        self.update_lasers()
+
+    def update_baddies(self):
+        for baddie in self.bad_guys[:]:
+            baddie.update()
+            if baddie.rect.y > HEIGHT:
+                self.bad_guys.remove(baddie)
+                self.no_baddies_escaped = False
+                continue
+
+            check_fire = baddie.fire()
+            if check_fire:
+                self.evil_lasers += check_fire
+    
+    def add_baddies(self):
+        if self.new_baddies_generation and random.uniform(0, 10) < AI_BASE_SPAWN_RATE * (1 + (self.level - 1) / 10) / FPS:
+            self.bad_guys.append(EvilSpaceShip(self.level))
+
+    def update_lasers(self):
+        # Bad guy lasers
+        for laser in self.evil_lasers[:]:
+            laser.update(AI_LASER_SPEED // FPS)
+            if laser.is_off_screen:
+                self.evil_lasers.remove(laser)
+
+        # Player lasers
+        for laser in self.good_lasers[:]:
+            laser.update(-PLAYER_LASER_SPEED // FPS)
+            if laser.is_off_screen:
+                self.good_lasers.remove(laser)
+
+    def draw(self):
+        for laser in self.evil_lasers:
+            laser.draw(self.window, LASER_GREEN)
+
+        for laser in self.good_lasers:
+            laser.draw(self.window, LASER_RED)
+
+        for baddie in self.bad_guys:
+            baddie.draw(self.window)
+
+        self.player.draw(self.window)
+
+    def check_hits(self):
+        score_change = 0
+        # Check laser hits on bad guys
+        for laser in self.good_lasers[:]:
+            for baddie in self.bad_guys[:]:
+                if laser.mask.overlap(baddie.mask, (baddie.rect.x - laser.rect.x, baddie.rect.y - laser.rect.y)):
+                    baddie.take_hit(laser.damage)
+                    if laser in self.good_lasers: self.good_lasers.remove(laser)
+                    if baddie.is_dead:
+                        score_change += baddie.point_value
+                        self.bad_guys.remove(baddie)
+                        self.num_baddies_killed_round += 1
+
+        # Check for player damage
+        if not self.player.is_invinsible:
+            # Check ship-to-ship collision
+            for baddie in self.bad_guys[:]:
+                if self.player.mask.overlap(baddie.mask, (self.player.rect.x - baddie.rect.x, self.player.rect.y - baddie.rect.y)):
+                    self.player.take_hit(baddie.max_health)
+                    score_change += baddie.point_value
+                    self.bad_guys.remove(baddie)
+                    self.no_damage_taken = False
+
+            # Check laser hits on player
+            for laser in self.evil_lasers[:]:
+                if laser.mask.overlap(self.player.mask, (self.player.rect.x - laser.rect.x, self.player.rect.y - laser.rect.y)):
+                    self.player.take_hit(laser.damage)
+                    if laser in self.evil_lasers:
+                        self.evil_lasers.remove(laser)
+                        self.no_damage_taken = False
+
+        return score_change
