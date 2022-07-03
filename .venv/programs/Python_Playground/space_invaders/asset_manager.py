@@ -20,6 +20,7 @@ class AssetManager:
 
     def new_round(self):
         self.player.health = self.player.max_health
+        self.player.shield_strength = self.player.max_shield_strength
         self.level +=1
         self.bad_guys = []
         self.evil_lasers = []
@@ -83,6 +84,14 @@ class AssetManager:
 
     def check_hits(self):
         score_change = 0
+
+        # Check laser hits on bad guy's shields
+        for laser in self.good_lasers[:]:
+            for baddie in [baddie for baddie in self.bad_guys if baddie.shield_strength > 0]:
+                if laser.rect.colliderect(baddie.shield_rect):
+                    baddie.shield_take_hit(laser.damage)
+                    if laser in self.good_lasers: self.good_lasers.remove(laser)
+
         # Check laser hits on bad guys
         for laser in self.good_lasers[:]:
             for baddie in self.bad_guys[:]:
@@ -103,6 +112,14 @@ class AssetManager:
                     score_change += baddie.point_value
                     self.bad_guys.remove(baddie)
                     self.no_damage_taken = False
+
+            # Check for laser hits on shields
+            if self.player.shield_strength:
+                for laser in self.evil_lasers[:]:
+                    if laser.rect.colliderect(self.player.shield_rect):
+                        self.player.shield_take_hit(laser.damage)
+                        if laser in self.evil_lasers:
+                            self.evil_lasers.remove(laser)
 
             # Check laser hits on player
             for laser in self.evil_lasers[:]:

@@ -12,6 +12,8 @@ PLAYER_STARTING_MOVEMENT_SPEED = 480
 PLAYER_LASER_BASE_CHARGE_LEVEL = 100
 PLAYER_LASER_BASE_COST = 60
 PLAYER_INVINSIBLE_AFTER_DEATH_PERIOD = 120
+PLAYER_SHIELD_STRENGTH_PER_LEVEL = 25
+PLAYER_SHIELD_REGEN_BASE = 10
 
 
 class PlayerSpaceShip(Ship):
@@ -30,11 +32,22 @@ class PlayerSpaceShip(Ship):
         self.speed_upgrades = 0
         self.laser_max_charge_upgrades = 0
         self.laser_cost_upgrades = 0
+        self.shield_strength_upgrades = 0
+        self.shield_regen_upgrades = 0
+        self.shield_cooldown_upgrades = 0
 
         self.laser_charge = self.laser_max_charge
         self.health = self.max_health
         self.laser_timer = PLAYER_MIN_FIRE_RATE * FPS / 60
         self.invinsible_timer = 0
+
+    @property
+    def shield_regen(self):
+        return PLAYER_SHIELD_REGEN_BASE * self.improvment_multiplyer(self.shield_regen_upgrades) / FPS
+
+    @property
+    def max_shield_strength(self):
+        return PLAYER_SHIELD_STRENGTH_PER_LEVEL * self.shield_level * self.improvment_multiplyer(self.shield_strength_upgrades)
 
     @property
     def max_health(self):
@@ -69,7 +82,7 @@ class PlayerSpaceShip(Ship):
         return self.laser_charge >= self.laser_cost and self.laser_timer >= PLAYER_MIN_FIRE_RATE
 
     def improvment_multiplyer(self, num_upgrades):
-        return 1 + num_upgrades * UPGRADE_PERCENT
+        return 1 * UPGRADE_PERCENT ** (num_upgrades)
 
     def draw(self, window):
         super().draw(window)
@@ -94,6 +107,9 @@ class PlayerSpaceShip(Ship):
                                                           5))
 
     def update(self):
+        if self.shield_level:
+            self.update_shield()
+
         self.laser_timer += 1
         self.laser_charge = min(self.laser_charge + self.laser_regen / FPS, self.laser_max_charge)
         self.invinsible_timer = max(self.invinsible_timer - 1, 0)

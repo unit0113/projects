@@ -1,6 +1,5 @@
 import pygame
 import os
-import random
 import asset_manager
 
 
@@ -140,7 +139,7 @@ class SpaceGame:
 
 
         pygame.display.update()
-        pygame.time.delay(5000)
+        pygame.time.delay(2000)
 
 
 
