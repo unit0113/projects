@@ -49,7 +49,7 @@ class EvilSpaceShip(Ship):
     
     @property
     def max_shield_strength(self):
-        return AI_SHIELD_STRENGTH_PER_LEVEL * self.shield_level * self.level_multiplier
+        return AI_SHIELD_STRENGTH_PER_LEVEL * self.shield_level
 
     @property
     def shield_regen(self):

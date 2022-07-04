@@ -32,7 +32,6 @@ class PlayerSpaceShip(Ship):
         self.speed_upgrades = 0
         self.laser_max_charge_upgrades = 0
         self.laser_cost_upgrades = 0
-        self.shield_strength_upgrades = 0
         self.shield_regen_upgrades = 0
         self.shield_cooldown_upgrades = 0
 
@@ -47,7 +46,7 @@ class PlayerSpaceShip(Ship):
 
     @property
     def max_shield_strength(self):
-        return PLAYER_SHIELD_STRENGTH_PER_LEVEL * self.shield_level * self.improvment_multiplyer(self.shield_strength_upgrades)
+        return PLAYER_SHIELD_STRENGTH_PER_LEVEL * self.shield_level
 
     @property
     def max_health(self):
