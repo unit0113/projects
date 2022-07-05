@@ -5,11 +5,11 @@ from ship import Ship
 from space_invaders import WIDTH, HEIGHT, FPS
 
 
-AI_BASE_FIRE_RATE = 25
+AI_BASE_FIRE_RATE = 2
 AI_BASE_FIRE_CHANCE = 5
-AI_BASE_SPEED = 120
+AI_BASE_SPEED = 100
 AI_BASE_DMG = 20
-AI_BASE_HEALTH = 100
+AI_BASE_HEALTH = 75
 AI_SHIELD_STRENGTH_PER_LEVEL = 25
 AI_SHIELD_REGEN_BASE = 10
 AI_BASE_LEVEL_UPGRADE = 1.1
@@ -31,7 +31,7 @@ class EvilSpaceShip(Ship):
         self.speed = int(AI_BASE_SPEED * random.uniform(0.8, 1.2) * self.level_multiplier)
         self.shield_level = random.choice([0] * (10 - self.level) + [1] * (self.level // 2) + [2] * (self.level // 4) + [3] * (self.level // 6) + [4] * (self.level // 8) + [5] * (self.level // 10))
         self.point_value = self.health * POINT_HEALTH_MULTIPLIER + self.speed * POINT_SPEED_MULTIPLIER + self.laser_type_current_index * POINT_LASER_MULTIPLIER + self.shield_level * POINT_SHIELD_MULTIPLIER
-        self.laser_timer = AI_BASE_FIRE_RATE * FPS / 60
+        self.laser_timer = AI_BASE_FIRE_RATE * FPS
         self.base_damage = AI_BASE_DMG * self.level_multiplier
         self.shield_strength = self.max_shield_strength
     
@@ -41,7 +41,7 @@ class EvilSpaceShip(Ship):
 
     @property
     def can_fire(self):
-        return self.rect.y > 0 and self.rect.y < HEIGHT - 2* self.ship_size[1] and self.laser_timer > AI_BASE_FIRE_RATE
+        return self.rect.y > 0 and self.rect.y < HEIGHT - 2* self.ship_size[1] and self.laser_timer > AI_BASE_FIRE_RATE * FPS
 
     @property
     def will_fire(self):
@@ -54,6 +54,10 @@ class EvilSpaceShip(Ship):
     @property
     def shield_regen(self):
         return AI_SHIELD_REGEN_BASE * self.level_multiplier / FPS
+
+    @property
+    def shield_cooldown_modifier(self):
+        return self.level_multiplier
 
     def update(self):
         if self.shield_level:

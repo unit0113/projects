@@ -49,6 +49,10 @@ class PlayerSpaceShip(Ship):
         return PLAYER_SHIELD_STRENGTH_PER_LEVEL * self.shield_level
 
     @property
+    def shield_cooldown_modifier(self):
+        return self.improvment_multiplyer(self.shield_cooldown_upgrades)
+
+    @property
     def max_health(self):
         return PLAYER_STARTING_HEALTH * self.improvment_multiplyer(self.health_upgrades)
 

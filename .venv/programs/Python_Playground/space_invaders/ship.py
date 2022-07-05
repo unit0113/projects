@@ -50,7 +50,11 @@ class Ship(ABC):
 
     @property
     def can_regen(self):
-        return self.shield_cooldown_timer > SHIELD_POST_HIT_COOLDOWN * FPS
+        return self.shield_cooldown_timer > (SHIELD_POST_HIT_COOLDOWN / self.shield_cooldown_modifier) * FPS
+
+    @abstractproperty
+    def shield_cooldown_modifier(self):
+        pass
 
     @abstractproperty
     def shield_regen(self):

@@ -1,12 +1,7 @@
-import pygame
-import os
-import asset_manager
-
-
 WIDTH, HEIGHT = 1200, 1000
 FPS = 60
 PLAYER_LIVES = 5
-LEVEL_DURATION = 20
+LEVEL_DURATION = 10
 
 STORE_HEALTH_BASE_COST = 10000
 STORE_SPEED_BASE_COST = 10000
@@ -28,6 +23,12 @@ RED = (199, 14, 32)
 YELLOW = (200, 200, 15)
 GREEN = (34,139,34)
 STEEL = (67, 70, 75)
+
+
+import pygame
+import os
+import asset_manager
+import store
 
 
 """TODO:
@@ -54,6 +55,7 @@ class SpaceGame:
         self.credits = 0
         self.max_level_duration = LEVEL_DURATION * FPS
         self.asset_manager = asset_manager.AssetManager(self.window)
+        self.store = store.Store(self.window, self.background, self.asset_manager.player)
 
         self.initialize_round()
 
@@ -69,7 +71,7 @@ class SpaceGame:
 
     def end_round(self):
         self.round_scoreboard()
-        self.open_store()
+        self.credits -= self.store.open_store(self.credits)
         self.initialize_round()
 
     def round_scoreboard(self):
@@ -114,6 +116,8 @@ class SpaceGame:
 
         pygame.display.update()
 
+        self.credits += self.score - self.score_start_of_round
+
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -121,33 +125,7 @@ class SpaceGame:
                     quit()
 
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_c:
-                    return
-
-    def open_store(self):
-        self.window.blit(self.background, (0, 0))
-        store_rect = pygame.Rect(STORE_WINDOW_PADDING, STORE_WINDOW_PADDING, WIDTH - 2 * STORE_WINDOW_PADDING, HEIGHT - 2 * STORE_WINDOW_PADDING)
-        pygame.draw.rect(self.window, STEEL, store_rect, border_radius=10)
-
-        store_title_text = self.store_title_font.render(f'{"Upgrade Store"}', 1, WHITE)
-        self.window.blit(store_title_text, (WIDTH // 2 - store_title_text.get_width() // 2, STORE_WINDOW_PADDING + store_title_text.get_height() // 2))
-
-
-
-
-
-
-
-
-        pygame.display.update()
-        pygame.time.delay(2000)
-
-
-
-
-
-
-
-        
+                    return     
 
     def player_up(self):
         self.asset_manager.player.player_up()
