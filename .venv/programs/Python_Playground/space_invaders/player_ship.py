@@ -1,19 +1,9 @@
 import pygame
 from ship import Ship
 import os
-from space_invaders import WIDTH, HEIGHT, FPS, UPGRADE_PERCENT, YELLOW, GREEN, RED
-
-
-PLAYER_MIN_FIRE_RATE = 25
-PLAYER_STARTING_HEALTH = 100
-PLAYER_STARTING_DMG = 100
-PLAYER_LASER_STARTING_REGEN = 100
-PLAYER_STARTING_MOVEMENT_SPEED = 480
-PLAYER_LASER_BASE_CHARGE_LEVEL = 100
-PLAYER_LASER_BASE_COST = 60
-PLAYER_INVINSIBLE_AFTER_DEATH_PERIOD = 120
-PLAYER_SHIELD_STRENGTH_PER_LEVEL = 25
-PLAYER_SHIELD_REGEN_BASE = 10
+from settings import (WIDTH, HEIGHT, FPS, UPGRADE_PERCENT, YELLOW, GREEN, RED, PLAYER_MIN_FIRE_RATE, PLAYER_STARTING_HEALTH,PLAYER_STARTING_DMG,
+                      PLAYER_LASER_STARTING_REGEN, PLAYER_STARTING_MOVEMENT_SPEED, PLAYER_LASER_BASE_CHARGE_LEVEL, PLAYER_LASER_BASE_COST,
+                      PLAYER_INVINSIBLE_AFTER_DEATH_PERIOD, PLAYER_SHIELD_REGEN_BASE, PLAYER_SHIELD_STRENGTH_PER_LEVEL, MAX_SHIELD_LEVEL)
 
 
 class PlayerSpaceShip(Ship):
@@ -74,7 +64,7 @@ class PlayerSpaceShip(Ship):
 
     @property
     def laser_cost(self):
-        return PLAYER_LASER_BASE_COST * self.improvment_multiplyer(self.laser_cost_upgrades)
+        return PLAYER_LASER_BASE_COST / self.improvment_multiplyer(self.laser_cost_upgrades)
 
     @property
     def is_invinsible(self):
@@ -84,8 +74,16 @@ class PlayerSpaceShip(Ship):
     def can_fire(self):
         return self.laser_charge >= self.laser_cost and self.laser_timer >= PLAYER_MIN_FIRE_RATE
 
+    @property
+    def at_max_shield_level(self):
+        return self.shield_level >= MAX_SHIELD_LEVEL
+
+    @property
+    def at_max_laser_level(self):
+        return self.laser_level >= len(self.laser_types) - 1
+
     def improvment_multiplyer(self, num_upgrades):
-        return 1 * UPGRADE_PERCENT ** (num_upgrades)
+        return 1 + UPGRADE_PERCENT * num_upgrades
 
     def draw(self, window):
         super().draw(window)
@@ -129,7 +127,7 @@ class PlayerSpaceShip(Ship):
         if self.can_fire:
             self.laser_charge -= self.laser_cost
             self.laser_timer = 0
-            return self.laser_types[self.laser_type_current_index]()
+            return self.laser_types[self.laser_level]()
 
     def take_hit(self, damage):
         if not self.is_invinsible:

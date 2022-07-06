@@ -1,15 +1,7 @@
 import random
-from space_invaders import HEIGHT, FPS
 from player_ship import PlayerSpaceShip
 from enemy_ships import EvilSpaceShip
-
-
-PLAYER_LASER_SPEED = 960
-AI_LASER_SPEED = 720
-AI_BASE_SPAWN_RATE = 10
-
-LASER_RED = (237, 47, 50)
-LASER_GREEN = (160, 252, 36)
+from settings import HEIGHT, FPS, PLAYER_LASER_SPEED, AI_LASER_SPEED, AI_BASE_SPAWN_RATE, LASER_RED, LASER_GREEN
 
 
 class AssetManager:

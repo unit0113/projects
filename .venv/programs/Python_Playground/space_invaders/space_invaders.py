@@ -1,34 +1,8 @@
-WIDTH, HEIGHT = 1200, 1000
-FPS = 60
-PLAYER_LIVES = 5
-LEVEL_DURATION = 10
-
-STORE_HEALTH_BASE_COST = 10000
-STORE_SPEED_BASE_COST = 10000
-STORE_DAMAGE_BASE_COST = 10000
-STORE_LASER_REGEN_BASE_COST = 10000
-STORE_LASER_MAX_CHARGE_BASE_COST = 10000
-STORE_LASER_COST_BASE_COST = 10000
-STORE_INFLATION = 1.1
-STORE_LIVES_COST = 25000
-STORE_LASER_UPGRADE_COST = 50000
-UPGRADE_PERCENT = 0.1
-STORE_WINDOW_PADDING = 50
-
-BONUS_NO_DAMAGE_TAKEN = 0.1
-BONUS_ALL_ENEMIES_KILLED = 0.1
-
-WHITE = (255, 255, 255)
-RED = (199, 14, 32)
-YELLOW = (200, 200, 15)
-GREEN = (34,139,34)
-STEEL = (67, 70, 75)
-
-
 import pygame
 import os
 import asset_manager
 import store
+from settings import WIDTH, HEIGHT, FPS, PLAYER_LIVES, LEVEL_DURATION, BONUS_NO_DAMAGE_TAKEN, BONUS_ALL_ENEMIES_KILLED, WHITE
 
 
 """TODO:
@@ -71,7 +45,7 @@ class SpaceGame:
 
     def end_round(self):
         self.round_scoreboard()
-        self.credits -= self.store.open_store(self.credits)
+        self.credits, self.player_lives = self.store.open_store(self.credits, self.player_lives)
         self.initialize_round()
 
     def round_scoreboard(self):

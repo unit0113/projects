@@ -1,18 +1,8 @@
 import pygame
 import random
 from abc import ABC, abstractmethod, abstractproperty
-from lasers import Laser, LASER_SIZE
-from space_invaders import FPS
-
-
-SHIP_SIZE = (50, 50)
-SHIELD_SIZE = 0.8
-SHIELD_STRENGTH_PER_LEVEL = 25
-MAX_SHIELD_LEVEL = 5
-SHIELD_POST_HIT_COOLDOWN = 5
-
-SHIELD_BLUE_INNER = (63, 94, 249, 50)
-SHIELD_BLUE_OUTER = (63, 94, 249, 200)
+from lasers import Laser
+from settings import LASER_SIZE, FPS, SHIP_SIZE, SHIELD_SIZE, SHIELD_POST_HIT_COOLDOWN, SHIELD_BLUE_INNER, SHIELD_BLUE_OUTER
 
 
 class Ship(ABC):
@@ -22,7 +12,7 @@ class Ship(ABC):
         # Init lasers
         self.laser_types = [self.laser1, self.laser2, self.laser3]
         self.laser_type_dmg_multipliers = [1, 0.65, 0.5]
-        self.laser_type_current_index = 0
+        self.laser_level = 0
 
         # Init shields
         self.shield_radius = SHIELD_SIZE * SHIP_SIZE[0]
@@ -34,7 +24,7 @@ class Ship(ABC):
 
     @property
     def damage(self):
-        return self.base_damage * random.uniform(0.5, 1.5) * self.laser_type_dmg_multipliers[self.laser_type_current_index]
+        return self.base_damage * random.uniform(0.5, 1.5) * self.laser_type_dmg_multipliers[self.laser_level]
 
     @property
     def is_dead(self):

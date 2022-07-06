@@ -1,8 +1,5 @@
 import pygame
-from space_invaders import HEIGHT
-
-
-LASER_SIZE = (6, 30)
+from settings import HEIGHT, LASER_SIZE
 
 
 class Laser:

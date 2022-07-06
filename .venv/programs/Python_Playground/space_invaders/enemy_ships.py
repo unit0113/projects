@@ -2,21 +2,9 @@ import pygame
 import random
 import os
 from ship import Ship
-from space_invaders import WIDTH, HEIGHT, FPS
-
-
-AI_BASE_FIRE_RATE = 2
-AI_BASE_FIRE_CHANCE = 5
-AI_BASE_SPEED = 100
-AI_BASE_DMG = 20
-AI_BASE_HEALTH = 75
-AI_SHIELD_STRENGTH_PER_LEVEL = 25
-AI_SHIELD_REGEN_BASE = 10
-AI_BASE_LEVEL_UPGRADE = 1.1
-POINT_HEALTH_MULTIPLIER = 10
-POINT_SPEED_MULTIPLIER = 1
-POINT_LASER_MULTIPLIER = 500
-POINT_SHIELD_MULTIPLIER = 250
+from settings import (WIDTH, HEIGHT, FPS, AI_BASE_FIRE_RATE, AI_BASE_FIRE_CHANCE, AI_BASE_SPEED, AI_BASE_DMG, AI_BASE_HEALTH,
+                      AI_SHIELD_STRENGTH_PER_LEVEL, AI_SHIELD_REGEN_BASE, AI_BASE_LEVEL_UPGRADE, POINT_HEALTH_MULTIPLIER,
+                      POINT_SPEED_MULTIPLIER, POINT_LASER_MULTIPLIER, POINT_SHIELD_MULTIPLIER)
 
 
 class EvilSpaceShip(Ship):
@@ -29,15 +17,15 @@ class EvilSpaceShip(Ship):
         self.max_health = int(AI_BASE_HEALTH * random.uniform(0.8, 1.2) * self.level_multiplier)
         self.health = self.max_health
         self.speed = int(AI_BASE_SPEED * random.uniform(0.8, 1.2) * self.level_multiplier)
-        self.shield_level = random.choice([0] * (10 - self.level) + [1] * (self.level // 2) + [2] * (self.level // 4) + [3] * (self.level // 6) + [4] * (self.level // 8) + [5] * (self.level // 10))
-        self.point_value = self.health * POINT_HEALTH_MULTIPLIER + self.speed * POINT_SPEED_MULTIPLIER + self.laser_type_current_index * POINT_LASER_MULTIPLIER + self.shield_level * POINT_SHIELD_MULTIPLIER
+        self.shield_level = random.choice([0] * (20 - self.level) + [1] * (self.level // 2) + [2] * (self.level // 4) + [3] * (self.level // 6) + [4] * (self.level // 8) + [5] * (self.level // 10))
+        self.point_value = self.health * POINT_HEALTH_MULTIPLIER + self.speed * POINT_SPEED_MULTIPLIER + self.laser_level * POINT_LASER_MULTIPLIER + self.shield_level * POINT_SHIELD_MULTIPLIER
         self.laser_timer = AI_BASE_FIRE_RATE * FPS
         self.base_damage = AI_BASE_DMG * self.level_multiplier
         self.shield_strength = self.max_shield_strength
     
     @property
     def level_multiplier(self):
-        return 1 * AI_BASE_LEVEL_UPGRADE ** (self.level - 1)
+        return (1 + AI_BASE_LEVEL_UPGRADE) ** (self.level - 1)
 
     @property
     def can_fire(self):
@@ -69,7 +57,7 @@ class EvilSpaceShip(Ship):
     def fire(self):
         if self.can_fire and self.will_fire:
             self.laser_timer = 0
-            return self.laser_types[self.laser_type_current_index]()
+            return self.laser_types[self.laser_level]()
 
     def take_hit(self, damage):
         self.health -= damage
