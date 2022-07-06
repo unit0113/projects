@@ -6,14 +6,12 @@ from settings import WIDTH, HEIGHT, FPS, PLAYER_LIVES, LEVEL_DURATION, BONUS_NO_
 
 
 """TODO:
-shields
 power-ups
-shop
 different ship types
 different enemy types, use a factory
 mouse controls
 fix alignment on scorecard
-
+missiles
 """
 
 

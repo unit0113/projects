@@ -1,8 +1,8 @@
 import pygame
 import random
 from abc import ABC, abstractmethod, abstractproperty
-from lasers import Laser
-from settings import LASER_SIZE, FPS, SHIP_SIZE, SHIELD_SIZE, SHIELD_POST_HIT_COOLDOWN, SHIELD_BLUE_INNER, SHIELD_BLUE_OUTER
+from lasers import Laser, MiniGunLaser
+from settings import LASER_SIZE, MINIGUN_LASER_SIZE, FPS, SHIP_SIZE, SHIELD_SIZE, SHIELD_POST_HIT_COOLDOWN, SHIELD_BLUE_INNER, SHIELD_BLUE_OUTER
 
 
 class Ship(ABC):
@@ -10,8 +10,10 @@ class Ship(ABC):
         self.ship_size = SHIP_SIZE
 
         # Init lasers
-        self.laser_types = [self.laser1, self.laser2, self.laser3]
-        self.laser_type_dmg_multipliers = [1, 0.65, 0.5]
+        self.laser_types = [self.laser1, self.laser2, self.laser3, self.laser4, self.laser5, self.laser6]
+        self.laser_type_dmg_multipliers = [1, 0.65, 0.5, 0.4, 0.3, 0.3]
+        self.laser_type_cost_multipliers = [1, 1, 1, 0.25, 0.25, 0.25]
+        self.laser_type_fire_rate_multipliers = [1, 1, 1, 0.25, 0.25, 0.25]
         self.laser_level = 0
 
         # Init shields
@@ -95,6 +97,24 @@ class Ship(ABC):
         laser1 = Laser(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2, self.rect.y, self.damage)
         laser2 = Laser(self.rect.x, self.rect.y + 15, self.damage)
         laser3 = Laser(self.rect.x + SHIP_SIZE[0] - LASER_SIZE[0], self.rect.y + 15, self.damage)
+        return [laser1, laser2, laser3]
+
+    def laser4(self):
+        # Single centerline minigun
+        laser = MiniGunLaser(self.rect.x + self.image.get_width() // 2 - MINIGUN_LASER_SIZE[0] // 2, self.rect.y, self.damage)
+        return [laser]
+
+    def laser5(self):
+        # Dual wingtip lasers
+        laser1 = MiniGunLaser(self.rect.x, self.rect.y + 15, self.damage)
+        laser2 = MiniGunLaser(self.rect.x + SHIP_SIZE[0] - MINIGUN_LASER_SIZE[0], self.rect.y + 15, self.damage)
+        return [laser1, laser2]
+
+    def laser6(self):
+        # Centerline plus dual wingtip lasers
+        laser1 = MiniGunLaser(self.rect.x + self.image.get_width() // 2 - MINIGUN_LASER_SIZE[0] // 2, self.rect.y, self.damage)
+        laser2 = MiniGunLaser(self.rect.x, self.rect.y + 15, self.damage)
+        laser3 = MiniGunLaser(self.rect.x + SHIP_SIZE[0] - MINIGUN_LASER_SIZE[0], self.rect.y + 15, self.damage)
         return [laser1, laser2, laser3]
 
     def draw(self, window):

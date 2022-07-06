@@ -47,7 +47,17 @@ class AssetManager:
     
     def add_baddies(self):
         if self.new_baddies_generation and random.uniform(0, 10) < AI_BASE_SPAWN_RATE * (1 + (self.level - 1) / 10) / FPS:
-            self.bad_guys.append(EvilSpaceShip(self.level))
+            new_baddie = EvilSpaceShip(self.level)
+            overlap = True
+            while overlap:
+                overlap = False
+                for baddie in self.bad_guys[:]:
+                    if new_baddie.rect.colliderect(baddie.rect):
+                        new_baddie = EvilSpaceShip(self.level)
+                        overlap = True
+                        break
+
+            self.bad_guys.append(new_baddie)
 
     def update_lasers(self):
         # Bad guy lasers

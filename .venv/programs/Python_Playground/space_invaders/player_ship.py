@@ -64,7 +64,7 @@ class PlayerSpaceShip(Ship):
 
     @property
     def laser_cost(self):
-        return PLAYER_LASER_BASE_COST / self.improvment_multiplyer(self.laser_cost_upgrades)
+        return self.laser_type_cost_multipliers[self.laser_level] * PLAYER_LASER_BASE_COST / self.improvment_multiplyer(self.laser_cost_upgrades)
 
     @property
     def is_invinsible(self):
@@ -72,7 +72,7 @@ class PlayerSpaceShip(Ship):
 
     @property
     def can_fire(self):
-        return self.laser_charge >= self.laser_cost and self.laser_timer >= PLAYER_MIN_FIRE_RATE
+        return self.laser_charge >= self.laser_cost and self.laser_timer >= PLAYER_MIN_FIRE_RATE * (PLAYER_LASER_STARTING_REGEN / self.laser_regen) * self.laser_type_fire_rate_multipliers[self.laser_level]
 
     @property
     def at_max_shield_level(self):
