@@ -92,18 +92,20 @@ class AssetManager:
             for baddie in [baddie for baddie in self.bad_guys if baddie.shield_strength > 0]:
                 if laser.rect.colliderect(baddie.shield_rect):
                     baddie.shield_take_hit(laser.damage)
-                    if laser in self.good_lasers: self.good_lasers.remove(laser)
+                    self.good_lasers.remove(laser)
+                    break
 
         # Check laser hits on bad guys
         for laser in self.good_lasers[:]:
             for baddie in self.bad_guys[:]:
                 if laser.mask.overlap(baddie.mask, (baddie.rect.x - laser.rect.x, baddie.rect.y - laser.rect.y)):
                     baddie.take_hit(laser.damage)
-                    if laser in self.good_lasers: self.good_lasers.remove(laser)
+                    self.good_lasers.remove(laser)
                     if baddie.is_dead:
                         score_change += baddie.point_value
                         self.bad_guys.remove(baddie)
                         self.num_baddies_killed_round += 1
+                    break
 
         # Check for player damage
         if not self.player.is_invinsible:

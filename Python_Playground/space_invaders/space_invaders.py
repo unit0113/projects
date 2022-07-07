@@ -154,7 +154,7 @@ class SpaceGame:
         death_text = self.game_over_font.render(f'You Died...', 1, WHITE)
         self.window.blit(death_text, (WIDTH // 2 - death_text.get_width() // 2, HEIGHT // 4 - death_text.get_height() // 2))
 
-        level_text = self.game_over_font.render(f'You reached level {self.level}', 1, WHITE)
+        level_text = self.game_over_font.render(f'You reached level {self.asset_manager.level}', 1, WHITE)
         self.window.blit(level_text, (WIDTH // 2 - level_text.get_width() // 2, HEIGHT // 4 + 50 - level_text.get_height() // 2))
 
         score_text = self.game_over_font.render(f'Your final score is {self.score}', 1, WHITE)
