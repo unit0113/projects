@@ -15,6 +15,7 @@ class Ship(ABC):
         self.laser_type_cost_multipliers = [1, 1, 1, 0.25, 0.25, 0.25]
         self.laser_type_fire_rate_multipliers = [1, 1, 1, 0.25, 0.25, 0.25]
         self.laser_level = 0
+        self.laser_image = None
 
         # Init shields
         self.shield_radius = SHIELD_SIZE * SHIP_SIZE[0]
@@ -83,38 +84,38 @@ class Ship(ABC):
 
     def laser1(self):
         # Single centerline laser
-        laser = Laser(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2, self.rect.y, self.damage)
+        laser = Laser(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2, self.rect.y, self.damage, self.laser_image)
         return [laser]
 
     def laser2(self):
         # Dual wingtip lasers
-        laser1 = Laser(self.rect.x, self.rect.y + 15, self.damage)
-        laser2 = Laser(self.rect.x + SHIP_SIZE[0] - LASER_SIZE[0], self.rect.y + 15, self.damage)
+        laser1 = Laser(self.rect.x, self.rect.y + 15, self.damage, self.laser_image)
+        laser2 = Laser(self.rect.x + SHIP_SIZE[0] - LASER_SIZE[0], self.rect.y + 15, self.damage, self.laser_image)
         return [laser1, laser2]
 
     def laser3(self):
         # Centerline plus dual wingtip lasers
-        laser1 = Laser(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2, self.rect.y, self.damage)
-        laser2 = Laser(self.rect.x, self.rect.y + 15, self.damage)
-        laser3 = Laser(self.rect.x + SHIP_SIZE[0] - LASER_SIZE[0], self.rect.y + 15, self.damage)
+        laser1 = Laser(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2, self.rect.y, self.damage, self.laser_image)
+        laser2 = Laser(self.rect.x, self.rect.y + 15, self.damage, self.laser_image)
+        laser3 = Laser(self.rect.x + SHIP_SIZE[0] - LASER_SIZE[0], self.rect.y + 15, self.damage, self.laser_image)
         return [laser1, laser2, laser3]
 
     def laser4(self):
         # Single centerline minigun
-        laser = MiniGunLaser(self.rect.x + self.image.get_width() // 2 - MINIGUN_LASER_SIZE[0] // 2, self.rect.y, self.damage)
+        laser = MiniGunLaser(self.rect.x + self.image.get_width() // 2 - MINIGUN_LASER_SIZE[0] // 2, self.rect.y, self.damage, self.laser_image)
         return [laser]
 
     def laser5(self):
         # Dual wingtip lasers
-        laser1 = MiniGunLaser(self.rect.x, self.rect.y + 15, self.damage)
-        laser2 = MiniGunLaser(self.rect.x + SHIP_SIZE[0] - MINIGUN_LASER_SIZE[0], self.rect.y + 15, self.damage)
+        laser1 = MiniGunLaser(self.rect.x, self.rect.y + 15, self.damage, self.laser_image)
+        laser2 = MiniGunLaser(self.rect.x + SHIP_SIZE[0] - MINIGUN_LASER_SIZE[0], self.rect.y + 15, self.damage, self.laser_image)
         return [laser1, laser2]
 
     def laser6(self):
         # Centerline plus dual wingtip lasers
-        laser1 = MiniGunLaser(self.rect.x + self.image.get_width() // 2 - MINIGUN_LASER_SIZE[0] // 2, self.rect.y, self.damage)
-        laser2 = MiniGunLaser(self.rect.x, self.rect.y + 15, self.damage)
-        laser3 = MiniGunLaser(self.rect.x + SHIP_SIZE[0] - MINIGUN_LASER_SIZE[0], self.rect.y + 15, self.damage)
+        laser1 = MiniGunLaser(self.rect.x + self.image.get_width() // 2 - MINIGUN_LASER_SIZE[0] // 2, self.rect.y, self.damage, self.laser_image)
+        laser2 = MiniGunLaser(self.rect.x, self.rect.y + 15, self.damage, self.laser_image)
+        laser3 = MiniGunLaser(self.rect.x + SHIP_SIZE[0] - MINIGUN_LASER_SIZE[0], self.rect.y + 15, self.damage, self.laser_image)
         return [laser1, laser2, laser3]
 
     def draw(self, window):

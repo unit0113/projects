@@ -3,10 +3,12 @@ from settings import HEIGHT, LASER_SIZE, MINIGUN_LASER_SIZE
 
 
 class Laser:
-    def __init__(self, x, y, damage):
+    def __init__(self, x, y, damage, laser_image):
         self.damage = damage
-        self.rect = pygame.Rect(x, y, *LASER_SIZE)
-        self.mask = pygame.mask.Mask(LASER_SIZE, True)
+        self.image = laser_image
+        self.image = pygame.transform.scale(self.image, LASER_SIZE)
+        self.rect = pygame.Rect(x, y, self.image.get_width(), self.image.get_height())
+        self.mask = pygame.mask.from_surface(self.image)
 
     @property
     def is_off_screen(self):
@@ -15,12 +17,13 @@ class Laser:
     def update(self, movement):
         self.rect.y += movement
 
-    def draw(self, window, color):
-        pygame.draw.rect(window, color, self.rect)
+    def draw(self, window):
+        window.blit(self.image, (self.rect.x, self.rect.y))
 
 
 class MiniGunLaser(Laser):
-    def __init__(self, x, y, damage):
-        self.damage = damage
-        self.rect = pygame.Rect(x, y, *MINIGUN_LASER_SIZE)
-        self.mask = pygame.mask.Mask(MINIGUN_LASER_SIZE, True)
+    def __init__(self, x, y, damage, laser_image):
+        super().__init__(x, y, damage, laser_image)
+        self.image = pygame.transform.scale(self.image, MINIGUN_LASER_SIZE)
+        self.rect = pygame.Rect(x, y, self.image.get_width(), self.image.get_height())
+        self.mask = pygame.mask.from_surface(self.image)

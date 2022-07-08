@@ -1,7 +1,7 @@
 import random
 from player_ship import PlayerSpaceShip
 from enemy_ships import EvilSpaceShip
-from settings import HEIGHT, FPS, PLAYER_LASER_SPEED, AI_LASER_SPEED, AI_BASE_SPAWN_RATE, LASER_RED, LASER_GREEN
+from settings import HEIGHT, FPS, PLAYER_LASER_SPEED, AI_LASER_SPEED, AI_BASE_SPAWN_RATE
 
 
 class AssetManager:
@@ -17,6 +17,7 @@ class AssetManager:
         self.bad_guys = []
         self.evil_lasers = []
         self.good_lasers = []
+        self.good_missiles = []
         self.num_baddies_killed_round = 0
         self.no_damage_taken = True
         self.no_baddies_escaped = True
@@ -74,10 +75,10 @@ class AssetManager:
 
     def draw(self):
         for laser in self.evil_lasers:
-            laser.draw(self.window, LASER_GREEN)
+            laser.draw(self.window)
 
         for laser in self.good_lasers:
-            laser.draw(self.window, LASER_RED)
+            laser.draw(self.window)
 
         for baddie in self.bad_guys:
             baddie.draw(self.window)

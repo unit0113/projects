@@ -12,6 +12,7 @@ STORE_SHIELD_COOLDOWN_BASE_COST = 10_000
 
 STORE_INFLATION = 0.25
 STORE_LIVES_COST = 25_000
+STORE_LIVES_PER_LEVEL_ADDITIONAL_COST = 5_000
 STORE_LASER_LEVEL_UPGRADE_COST = 50_000
 STORE_SHIELD_LEVEL_UPGRADE_COST = 25_000
 STORE_WINDOW_PADDING = 50
@@ -67,7 +68,7 @@ class Store:
         self.lives_rect = self.increase_image.get_rect(topleft=(STORE_WINDOW_PADDING * 2, STORE_WINDOW_PADDING + self.increase_image.get_height() // 2 + SPACER * spacer))
         self.rects.append(self.lives_rect)
 
-    def open_store(self, credits, lives):
+    def open_store(self, credits, lives, level):
         self.credits = credits
         self.lives = lives
         clock = pygame.time.Clock()
@@ -117,7 +118,7 @@ class Store:
                                 case self.laser_level_rect:
                                     self._increase_laser_level()
                                 case self.lives_rect:
-                                    self._increase_lives()
+                                    self._increase_lives(level)
 
     def _draw_store(self):
         self.window.blit(self.background, (0, 0))
@@ -351,11 +352,12 @@ class Store:
         else:
             self._generate_warning(req_credits)
 
-    def _increase_lives(self):
-        if self.credits > STORE_LIVES_COST:
+    def _increase_lives(self, level):
+        req_credits = STORE_LIVES_COST + STORE_LIVES_PER_LEVEL_ADDITIONAL_COST * (level - 1)
+        if self.credits > req_credits:
             self.lives += 1
-            self.credits -= STORE_LIVES_COST
+            self.credits -= req_credits
 
         else:
-            self._generate_warning(STORE_LIVES_COST)
+            self._generate_warning(req_credits)
         

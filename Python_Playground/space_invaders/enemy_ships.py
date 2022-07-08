@@ -14,6 +14,8 @@ class EvilSpaceShip(Ship):
         self.image = pygame.transform.scale(pygame.image.load(os.path.join(r'Python_Playground\space_invaders\Assets', 'spaceship_red.png')), self.ship_size).convert_alpha()
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = pygame.Rect(random.randint(20, WIDTH - 20 - self.ship_size[0]), -10 - self.ship_size[1], self.image.get_width(), self.image.get_height())
+        self.laser_image = pygame.image.load(os.path.join(r'Python_Playground\space_invaders\Assets', 'green_laser.png')).convert_alpha()
+
         self.max_health = int(AI_BASE_HEALTH * random.uniform(0.8, 1.2) * self.level_multiplier)
         self.health = self.max_health
         self.speed = int(AI_BASE_SPEED * random.uniform(0.8, 1.2) * self.level_multiplier)

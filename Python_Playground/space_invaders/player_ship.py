@@ -15,6 +15,7 @@ class PlayerSpaceShip(Ship):
         x = WIDTH // 2 - self.image.get_width() // 2
         y = HEIGHT - self.image.get_height() * 2
         self.rect = pygame.Rect(x, y, self.image.get_width(), self.image.get_height())
+        self.laser_image = pygame.image.load(os.path.join(r'Python_Playground\space_invaders\Assets', 'red_laser.png')).convert_alpha()
 
         self.health_upgrades = 0
         self.damage_upgrades = 0

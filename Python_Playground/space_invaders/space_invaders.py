@@ -43,7 +43,7 @@ class SpaceGame:
 
     def end_round(self):
         self.round_scoreboard()
-        self.credits, self.player_lives = self.store.open_store(self.credits, self.player_lives)
+        self.credits, self.player_lives = self.store.open_store(self.credits, self.player_lives, self.asset_manager.level)
         self.initialize_round()
 
     def round_scoreboard(self):
