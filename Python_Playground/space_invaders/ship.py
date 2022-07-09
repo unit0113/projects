@@ -2,7 +2,8 @@ import pygame
 import random
 from abc import ABC, abstractmethod, abstractproperty
 from lasers import Laser, MiniGunLaser
-from settings import LASER_SIZE, MINIGUN_LASER_SIZE, FPS, SHIP_SIZE, SHIELD_SIZE, SHIELD_POST_HIT_COOLDOWN, SHIELD_BLUE_INNER, SHIELD_BLUE_OUTER
+from missiles import Missile
+from settings import LASER_SIZE, MINIGUN_LASER_SIZE, MISSILE_SIZE, MISSILE_COOLDOWN, FPS, SHIP_SIZE, SHIELD_SIZE, SHIELD_POST_HIT_COOLDOWN, SHIELD_BLUE_INNER, SHIELD_BLUE_OUTER
 
 
 class Ship(ABC):
@@ -24,6 +25,9 @@ class Ship(ABC):
         self.shield_cooldown_timer = 0
         self.shield_mask = pygame.mask.from_surface(self.create_shield_mask())
 
+        # Init missiles
+        self.missile_cooldown = 0
+        self.missile_image = None
 
     @property
     def damage(self):
@@ -52,6 +56,10 @@ class Ship(ABC):
     @abstractproperty
     def shield_regen(self):
         pass
+
+    @property
+    def can_fire_missile(self):
+        return self.missile_cooldown > MISSILE_COOLDOWN * FPS
 
     def create_shield_mask(self):
         self.shield_surf = pygame.Surface((2 * self.shield_radius, 2 * self.shield_radius), pygame.SRCALPHA)
@@ -117,6 +125,11 @@ class Ship(ABC):
         laser2 = MiniGunLaser(self.rect.x, self.rect.y + 15, self.damage, self.laser_image)
         laser3 = MiniGunLaser(self.rect.x + SHIP_SIZE[0] - MINIGUN_LASER_SIZE[0], self.rect.y + 15, self.damage, self.laser_image)
         return [laser1, laser2, laser3]
+
+    def fire_missile(self):
+        if self.can_fire_missile:
+            self.missile_cooldown = 0
+            return [Missile(self.rect.x + self.image.get_width() // 2 - MISSILE_SIZE[0] // 2, self.rect.y + self.image.get_height() // 4, self.missile_damage, self.missile_image)]
 
     def draw(self, window):
         window.blit(self.image, (self.rect.x, self.rect.y))

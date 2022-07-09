@@ -28,11 +28,16 @@ class AssetManager:
         if lasers:
             self.good_lasers += lasers
 
+        missiles = self.player.fire_missile()
+        if missiles:
+            self.good_missiles += missiles
+
     def update(self):
         self.update_baddies()
         self.player.update()
         self.add_baddies()
         self.update_lasers()
+        self.update_missiles()
 
     def update_baddies(self):
         for baddie in self.bad_guys[:]:
@@ -72,6 +77,11 @@ class AssetManager:
             laser.update(-PLAYER_LASER_SPEED // FPS)
             if laser.is_off_screen:
                 self.good_lasers.remove(laser)
+    
+    def update_missiles(self):
+        # Good guy missiles
+        for missile in self.good_missiles:
+            missile.update()
 
     def draw(self):
         for laser in self.evil_lasers:
@@ -79,6 +89,9 @@ class AssetManager:
 
         for laser in self.good_lasers:
             laser.draw(self.window)
+
+        for missile in self.good_missiles:
+            missile.draw(self.window)
 
         for baddie in self.bad_guys:
             baddie.draw(self.window)

@@ -1,17 +1,20 @@
 import pygame
 import math
-from settings import HEIGHT, MISSILE_SIZE, MISSILE_SPEED, MISSILE_BORESIGHT_VISION, MISSILE_VISION
+from settings import HEIGHT, FPS, MISSILE_SIZE, MISSILE_SPEED, MISSILE_BORESIGHT_VISION, MISSILE_VISION
 
 class Missile:
     def __init__(self, x, y, damage, missile_image):
         self.damage = damage
         self.target = None
+        self.lock = False
         self.image = missile_image
         self.image = pygame.transform.scale(self.image, MISSILE_SIZE)
         self.rect = pygame.Rect(x, y, self.image.get_width(), self.image.get_height())
         self.mask = pygame.mask.from_surface(self.image)
-        self.timer = 0
+        self.timer = -1
         self.velocity = pygame.Vector2(0, 0)
+        self.launch_profile = [4] * (FPS // 15) + [3] * (FPS // 15) + [2] * (FPS // 15) + [1] * (FPS // 15) + [0] * (FPS // 15) + [-1] * (FPS // 15) + [-2] * (FPS // 20) + [-3] * (FPS // 20) + [-4] * (FPS // 20) + [-5] * (FPS // 20) + [-6] * (FPS // 15) + [-7] *( FPS // 15) + [-8] * (FPS // 10)
+        self.trail = []
 
     @property
     def is_off_screen(self):
@@ -45,7 +48,12 @@ class Missile:
         return self.distance_to_object(object) < MISSILE_VISION and self.angle_between(object) < MISSILE_BORESIGHT_VISION
 
     def update(self):
-        pass
+        self.timer += 1
+        if self.timer < len(self.launch_profile):
+            self.rect.y += self.launch_profile[self.timer]
+            return
+        
+        # else
 
     def draw(self, window):
         window.blit(self.image, (self.rect.x, self.rect.y))
