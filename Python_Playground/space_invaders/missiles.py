@@ -78,6 +78,7 @@ class Missile:
                 self.missile_last_pos = None
 
     def pro_nav(self):
+        # Source: https://www.moddb.com/members/blahdy/blogs/gamedev-introduction-to-proportional-navigation-part-i
         # Get missile to target vectors
         RTM_old = self.target_last_pos - self.missile_last_pos
         target_pos = pygame.Vector2(*self.target.rect.center) 
@@ -113,15 +114,6 @@ class Missile:
         delta_angle = latax * 100_000_000     
         clamped_delta_angle = max(-MISSILE_TURN_RATE, min(MISSILE_TURN_RATE, PRO_NAV_CONST * delta_angle))
         self.velocity.rotate_ip(clamped_delta_angle)
-
-    def angle_between_pro_nav(self, other):
-        x1, y1 = self.velocity.x + self.rect.center[0], self.velocity.y + self.rect.center[1]
-        x2, y2 = self.rect.center
-        x3, y3 = other.velocity.x + other.rect.center[0], other.velocity.y + other.rect.center[1]
-        v1 = (x1-x2, y1-y2)
-        v2 = (x3-x2, y3-y2)
-
-        return (math.atan2(v2[1], v2[0]) - math.atan2(v1[1], v1[0])) * 360 / (2 * (math.pi))
 
     def draw(self, window):
         window.blit(pygame.transform.rotate(self.image, self.velocity.angle_to((0,-1))), (self.rect.x, self.rect.y))
