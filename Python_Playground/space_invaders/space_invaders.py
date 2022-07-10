@@ -39,7 +39,7 @@ class SpaceGame:
         self.asset_manager.new_round()
         self.level_duration = 0
         self.score_start_of_round = self.score
-        self.asset_manager.draw()
+        self.asset_manager.draw()          
 
     def end_round(self):
         self.round_scoreboard()

@@ -82,6 +82,10 @@ class AssetManager:
         # Good guy missiles
         for missile in self.good_missiles:
             missile.update()
+            if missile.is_off_screen:
+                self.good_missiles.remove(missile)
+            elif missile.can_check_locks:
+                missile.check_possible_locks(self.bad_guys)
 
     def draw(self):
         for laser in self.evil_lasers:
@@ -115,6 +119,25 @@ class AssetManager:
                 if laser.mask.overlap(baddie.mask, (baddie.rect.x - laser.rect.x, baddie.rect.y - laser.rect.y)):
                     baddie.take_hit(laser.damage)
                     self.good_lasers.remove(laser)
+                    if baddie.is_dead:
+                        score_change += baddie.point_value
+                        self.bad_guys.remove(baddie)
+                        self.num_baddies_killed_round += 1
+                    break
+
+        # Check missile hits on bad guy's shields. No damage to shields. Missile defeated
+        for missile in self.good_missiles[:]:
+            for baddie in [baddie for baddie in self.bad_guys if baddie.shield_strength > 0]:
+                if missile.rect.colliderect(baddie.shield_rect):
+                    self.good_missiles.remove(missile)
+                    break
+        
+        # Check missile hits on bad guy
+        for missile in self.good_missiles[:]:
+            for baddie in self.bad_guys[:]:
+                if missile.mask.overlap(baddie.mask, (baddie.rect.x - missile.rect.x, baddie.rect.y - missile.rect.y)):
+                    baddie.take_hit(missile.damage)
+                    self.good_missiles.remove(missile)
                     if baddie.is_dead:
                         score_change += baddie.point_value
                         self.bad_guys.remove(baddie)
