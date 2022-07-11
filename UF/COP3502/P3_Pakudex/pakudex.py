@@ -10,7 +10,8 @@ class pakudex:
     def is_full(self):
         return len(self.pakuris) >= self.max_capacity
 
-    def find_paku(self, species):
+    def _find_paku(self, species):
+        # Check if specific Paku already exists in pakyu list
         for paku in self.pakuris:
             if species == paku.get_species():
                 return paku
@@ -18,17 +19,20 @@ class pakudex:
         return None
 
     def get_size(self):
+        # Number of pakus in dex
         return len(self.pakuris)
 
     def get_capacity(self):
         return self.max_capacity
 
     def get_species_array(self):
+        # Species names for all pakus in paku list
         if self.pakuris:
             return [paku.get_species() for paku in self.pakuris]
 
     def get_stats(self, species):
-        paku = self.find_paku(species)
+        # Get stats for specific paku
+        paku = self._find_paku(species)
         if paku:
             return [paku.get_attack(), paku.get_defense(), paku.get_speed()]
 
@@ -39,15 +43,17 @@ class pakudex:
         self.pakuris.sort(key=lambda x: x.get_species())
 
     def add_pakuri(self, species):
+        # Add new paku to paku list
         # If dex is full
-        if self.is_full or self.find_paku(species):
+        if self.is_full or self._find_paku(species):
             return False
         
         self.pakuris.append(pakuri(species))
         return True
 
     def evolve_species(self, species):
-        paku = self.find_paku(species)
+        # Enhance stats of specific paku species
+        paku = self._find_paku(species)
         if paku:
             paku.evolve()
             return True

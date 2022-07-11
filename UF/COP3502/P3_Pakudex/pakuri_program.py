@@ -2,6 +2,7 @@ from pakudex import pakudex
 
 
 def print_menu():
+    print()
     print('Pakudex Main Menu')
     print('-----------------')
     print('1. List Pakuri')
@@ -14,9 +15,8 @@ def print_menu():
 
 
 def menu():
-    print()
     print_menu()
-    selection = -1
+    # Loop until valid input, print menu after each failure
     while True:
         try:
             selection = int(input('What would you like to do? '))
@@ -24,25 +24,28 @@ def menu():
                 raise ValueError
             else:
                 break
-        except:
+        # Catch non int and ints outside of valid range
+        except ValueError:
             print('Unrecognized menu selection!')
-            print()
             print_menu()
             continue
 
     return selection
 
 
-def list_pakus(pakus):
+def print_pakus(pakus):
     if pakus:
         print('Pakuri In Pakudex:')
         for index, paku_name in enumerate(pakus):
             print(f'{index+1}. {paku_name}')
+
+    # If no pakus
     else:
         print('No Pakuri in Pakudex yet!')
 
 
 def show_paku(paku, paku_stats):
+    # Print stats for paku
     print(f'Species: {paku}')
     print(f'Attack: {paku_stats[0]}')
     print(f'Defense: {paku_stats[1]}')
@@ -71,9 +74,11 @@ def main():
         selection = menu()
 
         if selection == 1:
-            list_pakus(dex.get_species_array())
+            # Print list of all current Pakuris
+            print_pakus(dex.get_species_array())
 
         elif selection == 2:
+            # Print stats for specific paku
             paku = input('Enter the name of the species to display: ')
             stats = dex.get_stats(paku)
             
@@ -85,11 +90,13 @@ def main():
                 print('Error: No such Pakuri!')
 
         elif selection == 3:
+            # Add new paku
             if dex.is_full:
                 print('Error: Pakudex is full!')
                 continue
 
-            species = input('Enter the name of the species to add: ')            
+            species = input('Enter the name of the species to add: ')   
+            # Check unique         
             if dex.add_pakuri(species):
                 print(f'Pakuri species {species} successfully added!')
 
@@ -97,6 +104,7 @@ def main():
                 print('Error: Pakudex already contains this species!')
 
         elif selection == 4:
+            # Evolve selected Paku
             species = input('Enter the name of the species to evolve: ')
             if dex.evolve_species(species):
                 print(f'{species} has evolved!')
@@ -113,7 +121,6 @@ def main():
             break
 
 
-
-
 if __name__ == "__main__":
     main()
+    
