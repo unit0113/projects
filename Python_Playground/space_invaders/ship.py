@@ -1,7 +1,7 @@
 import pygame
 import random
 from abc import ABC, abstractmethod, abstractproperty
-from lasers import Laser, MiniGunLaser
+from lasers import Laser, MiniGunLaser, SideLaser
 from missiles import Missile
 from settings import LASER_SIZE, MINIGUN_LASER_SIZE, MISSILE_SIZE, MISSILE_COOLDOWN, FPS, SHIP_SIZE, SHIELD_SIZE, SHIELD_POST_HIT_COOLDOWN, SHIELD_BLUE_INNER, SHIELD_BLUE_OUTER
 
@@ -17,6 +17,8 @@ class Ship(ABC):
         self.laser_type_fire_rate_multipliers = [1, 1, 1, 0.25, 0.25, 0.25]
         self.laser_level = 0
         self.laser_image = None
+        self.side_laser_types = [None, self.side_laser1, self.side_laser2, self.side_laser3, self.side_laser4, self.side_laser5]
+        self.side_laser_level = 0
 
         # Init shields
         self.shield_radius = SHIELD_SIZE * SHIP_SIZE[0]
@@ -92,7 +94,7 @@ class Ship(ABC):
 
     def laser1(self):
         # Single centerline laser
-        laser = Laser(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2, self.rect.y, self.damage, self.laser_image)
+        laser = Laser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image)
         return [laser]
 
     def laser2(self):
@@ -103,14 +105,14 @@ class Ship(ABC):
 
     def laser3(self):
         # Centerline plus dual wingtip lasers
-        laser1 = Laser(self.rect.x + self.image.get_width() // 2 - LASER_SIZE[0] // 2, self.rect.y, self.damage, self.laser_image)
+        laser1 = Laser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image)
         laser2 = Laser(self.rect.x, self.rect.y + 15, self.damage, self.laser_image)
         laser3 = Laser(self.rect.x + SHIP_SIZE[0] - LASER_SIZE[0], self.rect.y + 15, self.damage, self.laser_image)
         return [laser1, laser2, laser3]
 
     def laser4(self):
         # Single centerline minigun
-        laser = MiniGunLaser(self.rect.x + self.image.get_width() // 2 - MINIGUN_LASER_SIZE[0] // 2, self.rect.y, self.damage, self.laser_image)
+        laser = MiniGunLaser(self.rect.center[0] - MINIGUN_LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image)
         return [laser]
 
     def laser5(self):
@@ -121,10 +123,55 @@ class Ship(ABC):
 
     def laser6(self):
         # Centerline plus dual wingtip lasers
-        laser1 = MiniGunLaser(self.rect.x + self.image.get_width() // 2 - MINIGUN_LASER_SIZE[0] // 2, self.rect.y, self.damage, self.laser_image)
+        laser1 = MiniGunLaser(self.rect.center[0] - MINIGUN_LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image)
         laser2 = MiniGunLaser(self.rect.x, self.rect.y + 15, self.damage, self.laser_image)
         laser3 = MiniGunLaser(self.rect.x + SHIP_SIZE[0] - MINIGUN_LASER_SIZE[0], self.rect.y + 15, self.damage, self.laser_image)
         return [laser1, laser2, laser3]
+
+    def side_laser1(self):
+        laser1 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, -45)
+        laser2 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, 45)
+        return [laser1, laser2]
+
+    def side_laser2(self):
+        laser1 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, -90)
+        laser2 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, -45)
+        laser3 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, 45)
+        laser4 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, 90)
+        return [laser1, laser2, laser3, laser4]
+
+    def side_laser3(self):
+        laser1 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, -90)
+        laser2 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, -60)
+        laser3 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, -30)
+        laser4 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, 30)
+        laser5 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, 60)
+        laser6 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, 90)
+        return [laser1, laser2, laser3, laser4, laser5, laser6]
+
+    def side_laser4(self):
+        laser1 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, -90)
+        laser2 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, -80)
+        laser3 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, -45)
+        laser4 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, -15)
+        laser5 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, 15)
+        laser6 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, 45)
+        laser7 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, 80)
+        laser8 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, 90)
+        return [laser1, laser2, laser3, laser4, laser5, laser6, laser7, laser8]
+
+    def side_laser5(self):
+        laser1 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, -90)
+        laser2 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, -80)
+        laser3 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, -45)
+        laser4 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, -15)
+        laser5 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, -10)
+        laser6 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, 10)
+        laser7 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, 15)
+        laser8 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, 45)
+        laser9 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, 80)
+        laser10 = SideLaser(self.rect.center[0] - LASER_SIZE[0] // 2, self.rect.center[1], self.damage, self.laser_image, 90)
+        return [laser1, laser2, laser3, laser4, laser5, laser6, laser7, laser8, laser9, laser10]
 
     def fire_missile(self):
         if self.can_fire_missile:

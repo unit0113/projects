@@ -24,7 +24,6 @@ class SpaceGame:
         self.scorecard_font = pygame.font.SysFont('verdana', 25, bold=True)
         self.store_title_font = pygame.font.SysFont('verdana', 40, bold=True)
         self.score = 0
-        self.credits = 0
         self.max_level_duration = LEVEL_DURATION * FPS
         self.asset_manager = asset_manager.AssetManager(self.window)
         self.store = store.Store(self.window, self.background, self.asset_manager.player)
@@ -43,7 +42,7 @@ class SpaceGame:
 
     def end_round(self):
         self.round_scoreboard()
-        self.credits, self.player_lives = self.store.open_store(self.credits, self.player_lives, self.asset_manager.level)
+        self.player_lives = self.store.open_store(self.score - self.score_start_of_round, self.player_lives, self.asset_manager.level)
         self.initialize_round()
 
     def round_scoreboard(self):
@@ -79,7 +78,7 @@ class SpaceGame:
 
         spacer += 2
         self.score = self.score_start_of_round + round_points + level_bonus_pts + no_damamge_pts + all_baddies_killed_pts
-        total_pts_text = self.scorecard_font.render(f'{"Total score:":.<30}{self.score:.>10}', 1, WHITE)
+        total_pts_text = self.scorecard_font.render(f'{"Total score:":.<30}{int(self.score):.>10}', 1, WHITE)
         self.window.blit(total_pts_text, (WIDTH // 2 - total_pts_text.get_width() // 2, HEIGHT // 3 + 30 * spacer - total_pts_text.get_height() // 2))
 
         spacer += 3
@@ -87,8 +86,6 @@ class SpaceGame:
         self.window.blit(instructions_text, (WIDTH // 2 - instructions_text.get_width() // 2, HEIGHT // 3 + 30 * spacer - instructions_text.get_height() // 2))
 
         pygame.display.update()
-
-        self.credits += self.score - self.score_start_of_round
 
         while True:
             for event in pygame.event.get():
@@ -136,7 +133,7 @@ class SpaceGame:
         self.window.blit(lives_label, (15, 15))
         level_label = self.labels_font.render(f'Level: {self.asset_manager.level}', 1, WHITE)
         self.window.blit(level_label, (WIDTH - level_label.get_width() - 15, 15))
-        score_label = self.labels_font.render(f'Score: {self.score}', 1, WHITE)
+        score_label = self.labels_font.render(f'Score: {self.score:.0f}', 1, WHITE)
         self.window.blit(score_label, (WIDTH // 2 - score_label.get_width() // 2, 15))
 
     def check_player_death(self):

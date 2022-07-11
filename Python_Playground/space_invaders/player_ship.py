@@ -1,7 +1,6 @@
 import pygame
 from ship import Ship
 import os
-from missiles import Missile
 from settings import (WIDTH, HEIGHT, FPS, UPGRADE_PERCENT, YELLOW, GREEN, RED, PLAYER_MIN_FIRE_RATE, PLAYER_STARTING_HEALTH,PLAYER_STARTING_DMG,
                       PLAYER_LASER_STARTING_REGEN, PLAYER_STARTING_MOVEMENT_SPEED, PLAYER_LASER_BASE_CHARGE_LEVEL, PLAYER_LASER_BASE_COST,
                       PLAYER_INVINSIBLE_AFTER_DEATH_PERIOD, PLAYER_SHIELD_REGEN_BASE, PLAYER_SHIELD_STRENGTH_PER_LEVEL, MAX_SHIELD_LEVEL,
@@ -19,7 +18,7 @@ class PlayerSpaceShip(Ship):
         self.rect = pygame.Rect(x, y, self.image.get_width(), self.image.get_height())
         self.laser_image = pygame.image.load(os.path.join(r'Python_Playground\space_invaders\Assets', 'red_laser.png')).convert_alpha()
         self.missile_image = pygame.image.load(os.path.join(r'Python_Playground\space_invaders\Assets', 'yellow_missile.png')).convert_alpha()
-
+        
         self.health_upgrades = 0
         self.damage_upgrades = 0
         self.laser_regen_upgrades = 0
@@ -28,7 +27,7 @@ class PlayerSpaceShip(Ship):
         self.laser_cost_upgrades = 0
         self.shield_regen_upgrades = 0
         self.shield_cooldown_upgrades = 0
-        self.missile_damage_upgrades = 0
+        self.missile_damage_upgrades = 0      
 
         self.laser_charge = self.laser_max_charge
         self.health = self.max_health
@@ -137,7 +136,11 @@ class PlayerSpaceShip(Ship):
         if self.can_fire:
             self.laser_charge -= self.laser_cost
             self.laser_timer = 0
-            return self.laser_types[self.laser_level]()
+            lasers =  self.laser_types[self.laser_level]()
+            if self.side_laser_level:
+                lasers += self.side_laser_types[self.side_laser_level]()
+
+            return lasers
 
     def take_hit(self, damage):
         if not self.is_invinsible:

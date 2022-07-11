@@ -9,6 +9,7 @@ STORE_LASER_MAX_CHARGE_BASE_COST = 10_000
 STORE_LASER_COST_BASE_COST = 10_000
 STORE_SHIELD_REGEN_BASE_COST = 10_000
 STORE_SHIELD_COOLDOWN_BASE_COST = 10_000
+STORE_SMISSILE_DAMAGE_BASE_COST = 10_000
 
 STORE_INFLATION = 0.25
 STORE_LIVES_COST = 25_000
@@ -24,6 +25,7 @@ class Store:
         self.window = window
         self.background = background
         self.player_ship = player_ship
+        self.credits = 0
         self.store_title_font = pygame.font.SysFont('verdana', 40, bold=True)
         self.store_font = pygame.font.SysFont('verdana', 25, bold=True)
         self.increase_image = pygame.image.load('Python_Playground\space_invaders\Assets\increase.png').convert_alpha()
@@ -68,8 +70,8 @@ class Store:
         self.lives_rect = self.increase_image.get_rect(topleft=(STORE_WINDOW_PADDING * 2, STORE_WINDOW_PADDING + self.increase_image.get_height() // 2 + SPACER * spacer))
         self.rects.append(self.lives_rect)
 
-    def open_store(self, credits, lives, level):
-        self.credits = credits
+    def open_store(self, new_credits, lives, level):
+        self.credits += new_credits
         self.lives = lives
         clock = pygame.time.Clock()
         self.display_warning = False
@@ -84,7 +86,7 @@ class Store:
                     quit()
 
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_c:
-                    return self.credits, self.lives
+                    return self.lives
 
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_q:
                     pygame.quit()
