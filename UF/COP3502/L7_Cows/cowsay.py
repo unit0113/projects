@@ -19,8 +19,8 @@ def main(args):
     cows = list_cows()
     
     # List cows
-    if args[1] == '-1':
-        print(f'Cows available: {cows[0].name} {cows[1].name}')
+    if args[1] == '-1' or args[1] == '-l':
+        print(f"Cows available: {' '.join([cow.name for cow in cows])}")
 
     # Pick specific cow
     elif args[1] == '-n':
@@ -33,7 +33,7 @@ def main(args):
 
         # if invalid name
         else:
-            print(f'Could not find {args[2]} cow')
+            print(f'Could not find {args[2]} cow!')
         
 
     # Print default cow with message
