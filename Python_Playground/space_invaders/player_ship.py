@@ -32,6 +32,7 @@ class PlayerSpaceShip(Ship):
         self.laser_charge = self.laser_max_charge
         self.health = self.max_health
         self.laser_timer = PLAYER_MIN_FIRE_RATE * FPS / 60
+        self.side_laser_timer = PLAYER_MIN_FIRE_RATE * FPS / 60
         self.invinsible_timer = 0
 
     @property
@@ -79,6 +80,10 @@ class PlayerSpaceShip(Ship):
         return self.laser_charge >= self.laser_cost and self.laser_timer >= PLAYER_MIN_FIRE_RATE * (PLAYER_LASER_STARTING_REGEN / self.laser_regen) * self.laser_type_fire_rate_multipliers[self.laser_level]
 
     @property
+    def can_fire_side_laser(self):
+        return self.side_laser_timer >= PLAYER_MIN_FIRE_RATE * (PLAYER_LASER_STARTING_REGEN / self.laser_regen)
+
+    @property
     def at_max_shield_level(self):
         return self.shield_level >= MAX_SHIELD_LEVEL
 
@@ -120,6 +125,7 @@ class PlayerSpaceShip(Ship):
             self.update_shield()
 
         self.laser_timer += 1
+        self.side_laser_timer += 1
         self.laser_charge = min(self.laser_charge + self.laser_regen / FPS, self.laser_max_charge)
         self.missile_cooldown += 1
         self.invinsible_timer = max(self.invinsible_timer - 1, 0)
@@ -137,8 +143,9 @@ class PlayerSpaceShip(Ship):
             self.laser_charge -= self.laser_cost
             self.laser_timer = 0
             lasers =  self.laser_types[self.laser_level]()
-            if self.side_laser_level:
+            if self.side_laser_level and self.can_fire_side_laser:
                 lasers += self.side_laser_types[self.side_laser_level]()
+                self.side_laser_timer = 0
 
             return lasers
 
