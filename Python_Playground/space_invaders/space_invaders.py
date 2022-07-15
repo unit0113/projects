@@ -154,7 +154,7 @@ class SpaceGame:
         level_text = self.game_over_font.render(f'You reached level {self.asset_manager.level}', 1, WHITE)
         self.window.blit(level_text, (WIDTH // 2 - level_text.get_width() // 2, HEIGHT // 4 + 50 - level_text.get_height() // 2))
 
-        score_text = self.game_over_font.render(f'Your final score is {self.score}', 1, WHITE)
+        score_text = self.game_over_font.render(f'Your final score is {self.score:.0f}', 1, WHITE)
         self.window.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, HEIGHT // 4 + 100 - score_text.get_height() // 2))
 
         instructions_text = self.game_over_font.render('Press C to play again, or press Q to quit.', 1, WHITE)

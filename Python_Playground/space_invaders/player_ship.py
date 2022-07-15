@@ -4,7 +4,7 @@ import os
 from settings import (WIDTH, HEIGHT, FPS, UPGRADE_PERCENT, YELLOW, GREEN, RED, PLAYER_MIN_FIRE_RATE, PLAYER_STARTING_HEALTH,PLAYER_STARTING_DMG,
                       PLAYER_LASER_STARTING_REGEN, PLAYER_STARTING_MOVEMENT_SPEED, PLAYER_LASER_BASE_CHARGE_LEVEL, PLAYER_LASER_BASE_COST,
                       PLAYER_INVINSIBLE_AFTER_DEATH_PERIOD, PLAYER_SHIELD_REGEN_BASE, PLAYER_SHIELD_STRENGTH_PER_LEVEL, MAX_SHIELD_LEVEL,
-                      PLAYER_MISSILE_DAMAMGE)
+                      PLAYER_MISSILE_DAMAMGE, MISSILE_COOLDOWN)
 
 
 class PlayerSpaceShip(Ship):
@@ -35,8 +35,6 @@ class PlayerSpaceShip(Ship):
         self.laser_timer = PLAYER_MIN_FIRE_RATE * FPS / 60
         self.side_laser_timer = PLAYER_MIN_FIRE_RATE * FPS / 60
         self.invinsible_timer = 0
-
-        self.missile_level = 3
 
     @property
     def shield_regen(self):
@@ -95,12 +93,24 @@ class PlayerSpaceShip(Ship):
         return self.laser_level >= len(self.laser_types) - 1
 
     @property
+    def at_max_side_laser_level(self):
+        return self.side_laser_level >= len(self.side_laser_types) - 1
+
+    @property
+    def at_max_missile_level(self):
+        return self.missile_level >= len(self.missile_types) - 1
+
+    @property
     def missile_damage(self):
         return PLAYER_MISSILE_DAMAMGE * self.improvment_multiplyer(self.damage_upgrades)  
     
     @property
     def can_fire_missile(self):
-        return super().can_fire_missile /self.improvment_multiplyer(self.missile_cooldown_upgrades) 
+        return self.missile_timer > self.missile_cooldown * FPS
+
+    @property
+    def missile_cooldown(self):
+        return MISSILE_COOLDOWN / self.improvment_multiplyer(self.missile_cooldown_upgrades) 
 
     def improvment_multiplyer(self, num_upgrades):
         return 1 + UPGRADE_PERCENT * num_upgrades
@@ -134,7 +144,7 @@ class PlayerSpaceShip(Ship):
         self.laser_timer += 1
         self.side_laser_timer += 1
         self.laser_charge = min(self.laser_charge + self.laser_regen / FPS, self.laser_max_charge)
-        self.missile_cooldown += 1
+        self.missile_timer += 1
         self.invinsible_timer = max(self.invinsible_timer - 1, 0)
         if self.invinsible_timer:
             self.draw_invincibility()

@@ -30,7 +30,7 @@ class Ship(ABC):
         self.shield_mask = pygame.mask.from_surface(self.create_shield_mask())
 
         # Init missiles
-        self.missile_cooldown = 0
+        self.missile_timer = 0
         self.missile_image = None
 
     @property
@@ -60,10 +60,6 @@ class Ship(ABC):
     @abstractproperty
     def shield_regen(self):
         pass
-
-    @property
-    def can_fire_missile(self):
-        return self.missile_cooldown > MISSILE_COOLDOWN * FPS
 
     def create_shield_mask(self):
         self.shield_surf = pygame.Surface((2 * self.shield_radius, 2 * self.shield_radius), pygame.SRCALPHA)
@@ -176,8 +172,8 @@ class Ship(ABC):
         return [laser1, laser2, laser3, laser4, laser5, laser6, laser7, laser8, laser9, laser10]
 
     def fire_missile(self):
-        if self.can_fire_missile:
-            self.missile_cooldown = 0
+        if self.missile_level and self.can_fire_missile:
+            self.missile_timer = 0
             return self.missile_types[self.missile_level]()
 
     def missile1(self):

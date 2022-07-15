@@ -9,7 +9,8 @@ STORE_LASER_MAX_CHARGE_BASE_COST = 10_000
 STORE_LASER_COST_BASE_COST = 10_000
 STORE_SHIELD_REGEN_BASE_COST = 10_000
 STORE_SHIELD_COOLDOWN_BASE_COST = 10_000
-STORE_SMISSILE_DAMAGE_BASE_COST = 10_000
+STORE_MISSILE_DAMAGE_BASE_COST = 10_000
+STORE_MISSILE_COOLDOWN_BASE_COST = 10_000
 
 STORE_INFLATION = 0.25
 STORE_LIVES_COST = 25_000
@@ -69,6 +70,18 @@ class Store:
         spacer += 1
         self.lives_rect = self.increase_image.get_rect(topleft=(STORE_WINDOW_PADDING * 2, STORE_WINDOW_PADDING + self.increase_image.get_height() // 2 + SPACER * spacer))
         self.rects.append(self.lives_rect)
+        self.side_laser_level_rect = self.increase_image.get_rect(topleft=(WIDTH - STORE_WINDOW_PADDING * 2, STORE_WINDOW_PADDING + self.increase_image.get_height() // 2 + SPACER * spacer))
+        self.rects.append(self.side_laser_level_rect)
+
+        spacer += 1
+        self.missile_damage_rect = self.increase_image.get_rect(topleft=(STORE_WINDOW_PADDING * 2, STORE_WINDOW_PADDING + self.increase_image.get_height() // 2 + SPACER * spacer))
+        self.rects.append(self.missile_damage_rect)
+        self.missile_level_rect = self.increase_image.get_rect(topleft=(WIDTH - STORE_WINDOW_PADDING * 2, STORE_WINDOW_PADDING + self.increase_image.get_height() // 2 + SPACER * spacer))
+        self.rects.append(self.missile_level_rect)
+
+        spacer += 1
+        self.missile_cooldown_rect = self.increase_image.get_rect(topleft=(STORE_WINDOW_PADDING * 2, STORE_WINDOW_PADDING + self.increase_image.get_height() // 2 + SPACER * spacer))
+        self.rects.append(self.missile_cooldown_rect)
 
     def open_store(self, new_credits, lives, level):
         self.credits += new_credits
@@ -121,6 +134,16 @@ class Store:
                                     self._increase_laser_level()
                                 case self.lives_rect:
                                     self._increase_lives(level)
+                                case self.side_laser_level_rect:
+                                    self._increase_side_laser_level()
+                                case self.missile_damage_rect:
+                                    if self.player_ship.missile_level:
+                                        self._increase_missile_damage()
+                                case self.missile_level_rect:
+                                    self._increase_missile_level()
+                                case self.missile_cooldown_rect:
+                                    if self.player_ship.missile_level:
+                                        self._increase_missile_cooldown()
 
     def _draw_store(self):
         self.window.blit(self.background, (0, 0))
@@ -215,7 +238,7 @@ class Store:
         # Right
         store_laser_level_text = self.store_font.render(f"Laser Level", 1, WHITE)
         self.window.blit(store_laser_level_text, (col2_start, STORE_WINDOW_PADDING + store_laser_level_text.get_height() // 2 + SPACER * spacer))
-        store_laser_level_text_2 = self.store_font.render(f"{self.player_ship.laser_level + 1:.0f}", 1, WHITE)
+        store_laser_level_text_2 = self.store_font.render(f"{self.player_ship.laser_level:.0f}", 1, WHITE)
         self.window.blit(store_laser_level_text_2, (col2_num_start - store_laser_level_text_2.get_width(), STORE_WINDOW_PADDING + store_laser_level_text_2.get_height() // 2 + SPACER * spacer))
         self.window.blit(self.increase_image, (WIDTH - STORE_WINDOW_PADDING * 2, STORE_WINDOW_PADDING + self.increase_image.get_height() // 2 + SPACER * spacer))
 
@@ -226,6 +249,38 @@ class Store:
         store_lives_text_2 = self.store_font.render(f"{self.lives:.0f}", 1, WHITE)
         self.window.blit(store_lives_text_2, (col1_num_start - store_lives_text_2.get_width(), STORE_WINDOW_PADDING + store_lives_text_2.get_height() // 2 + SPACER * spacer))
         self.window.blit(self.increase_image, (STORE_WINDOW_PADDING * 2, STORE_WINDOW_PADDING + self.increase_image.get_height() // 2 + SPACER * spacer))
+
+        # Right
+        store_side_laser_level_text = self.store_font.render(f"Side Laser Level", 1, WHITE)
+        self.window.blit(store_side_laser_level_text, (col2_start, STORE_WINDOW_PADDING + store_side_laser_level_text.get_height() // 2 + SPACER * spacer))
+        store_side_laser_level_text_2 = self.store_font.render(f"{self.player_ship.side_laser_level:.0f}", 1, WHITE)
+        self.window.blit(store_side_laser_level_text_2, (col2_num_start - store_side_laser_level_text_2.get_width(), STORE_WINDOW_PADDING + store_side_laser_level_text_2.get_height() // 2 + SPACER * spacer))
+        self.window.blit(self.increase_image, (WIDTH - STORE_WINDOW_PADDING * 2, STORE_WINDOW_PADDING + self.increase_image.get_height() // 2 + SPACER * spacer))
+
+        spacer += 1
+        # Left
+        if self.player_ship.missile_level:
+            store_missile_damage_text = self.store_font.render(f"Missile Damage", 1, WHITE)
+            self.window.blit(store_missile_damage_text, (col1_start, STORE_WINDOW_PADDING + store_missile_damage_text.get_height() // 2 + SPACER * spacer))
+            store_missile_damage_text_2 = self.store_font.render(f"{self.player_ship.missile_damage:.0f}", 1, WHITE)
+            self.window.blit(store_missile_damage_text_2, (col1_num_start - store_missile_damage_text_2.get_width(), STORE_WINDOW_PADDING + store_missile_damage_text_2.get_height() // 2 + SPACER * spacer))
+            self.window.blit(self.increase_image, (STORE_WINDOW_PADDING * 2, STORE_WINDOW_PADDING + self.increase_image.get_height() // 2 + SPACER * spacer))
+
+        # Right
+        store_side_missile_level_text = self.store_font.render(f"Missile Level", 1, WHITE)
+        self.window.blit(store_side_missile_level_text, (col2_start, STORE_WINDOW_PADDING + store_side_missile_level_text.get_height() // 2 + SPACER * spacer))
+        store_side_missile_level_text_2 = self.store_font.render(f"{self.player_ship.missile_level:.0f}", 1, WHITE)
+        self.window.blit(store_side_missile_level_text_2, (col2_num_start - store_side_missile_level_text_2.get_width(), STORE_WINDOW_PADDING + store_side_missile_level_text_2.get_height() // 2 + SPACER * spacer))
+        self.window.blit(self.increase_image, (WIDTH - STORE_WINDOW_PADDING * 2, STORE_WINDOW_PADDING + self.increase_image.get_height() // 2 + SPACER * spacer))
+
+        spacer += 1
+        # Left
+        if self.player_ship.missile_level:
+            store_missile_cooldown_text = self.store_font.render(f"Missile Cooldown", 1, WHITE)
+            self.window.blit(store_missile_cooldown_text, (col1_start, STORE_WINDOW_PADDING + store_missile_cooldown_text.get_height() // 2 + SPACER * spacer))
+            store_missile_cooldown_text_2 = self.store_font.render(f"{self.player_ship.missile_cooldown:.0f}", 1, WHITE)
+            self.window.blit(store_missile_cooldown_text_2, (col1_num_start - store_missile_cooldown_text_2.get_width(), STORE_WINDOW_PADDING + store_missile_cooldown_text_2.get_height() // 2 + SPACER * spacer))
+            self.window.blit(self.increase_image, (STORE_WINDOW_PADDING * 2, STORE_WINDOW_PADDING + self.increase_image.get_height() // 2 + SPACER * spacer))
 
         spacer += 3
         instructions_text = self.store_title_font.render('Press C to continue.', 1, WHITE)
@@ -358,6 +413,56 @@ class Store:
         req_credits = STORE_LIVES_COST + STORE_LIVES_PER_LEVEL_ADDITIONAL_COST * (level - 1)
         if self.credits > req_credits:
             self.lives += 1
+            self.credits -= req_credits
+
+        else:
+            self._generate_warning(req_credits)
+
+    def _increase_side_laser_level(self):
+        if self.player_ship.at_max_side_laser_level:
+            self.warning_text = self.store_font.render(f'Side laser level at maximum.', 1, RED)
+            self.display_warning = True
+            return
+
+        req_credits = int(STORE_LASER_LEVEL_UPGRADE_COST * (1 + self.player_ship.side_laser_level))
+        if self.credits > req_credits:
+            self.display_warning = False
+            self.player_ship.side_laser_level += 1
+            self.credits -= req_credits
+
+        else:
+            self._generate_warning(req_credits)
+
+    def _increase_missile_level(self):
+        if self.player_ship.at_max_missile_level:
+            self.warning_text = self.store_font.render(f'Missile level at maximum.', 1, RED)
+            self.display_warning = True
+            return
+
+        req_credits = int(STORE_LASER_LEVEL_UPGRADE_COST * (1 + self.player_ship.missile_level))
+        if self.credits > req_credits:
+            self.display_warning = False
+            self.player_ship.missile_level += 1
+            self.credits -= req_credits
+
+        else:
+            self._generate_warning(req_credits)
+
+    def _increase_missile_damage(self):
+        req_credits = int(STORE_MISSILE_DAMAGE_BASE_COST * self._get_credit_multiplier(self.player_ship.missile_damage_upgrades))
+        if self.credits > req_credits:
+            self.display_warning = False
+            self.player_ship.missile_damage_upgrades += 1
+            self.credits -= req_credits
+
+        else:
+            self._generate_warning(req_credits)
+
+    def _increase_missile_cooldown(self):
+        req_credits = int(STORE_MISSILE_COOLDOWN_BASE_COST * self._get_credit_multiplier(self.player_ship.missile_cooldown_upgrades))
+        if self.credits > req_credits:
+            self.display_warning = False
+            self.player_ship.missile_cooldown_upgrades += 1
             self.credits -= req_credits
 
         else:
