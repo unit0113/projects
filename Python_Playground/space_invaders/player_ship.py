@@ -27,13 +27,16 @@ class PlayerSpaceShip(Ship):
         self.laser_cost_upgrades = 0
         self.shield_regen_upgrades = 0
         self.shield_cooldown_upgrades = 0
-        self.missile_damage_upgrades = 0      
+        self.missile_damage_upgrades = 0
+        self.missile_cooldown_upgrades = 0         
 
         self.laser_charge = self.laser_max_charge
         self.health = self.max_health
         self.laser_timer = PLAYER_MIN_FIRE_RATE * FPS / 60
         self.side_laser_timer = PLAYER_MIN_FIRE_RATE * FPS / 60
         self.invinsible_timer = 0
+
+        self.missile_level = 3
 
     @property
     def shield_regen(self):
@@ -94,6 +97,10 @@ class PlayerSpaceShip(Ship):
     @property
     def missile_damage(self):
         return PLAYER_MISSILE_DAMAMGE * self.improvment_multiplyer(self.damage_upgrades)  
+    
+    @property
+    def can_fire_missile(self):
+        return super().can_fire_missile /self.improvment_multiplyer(self.missile_cooldown_upgrades) 
 
     def improvment_multiplyer(self, num_upgrades):
         return 1 + UPGRADE_PERCENT * num_upgrades

@@ -19,6 +19,8 @@ class Ship(ABC):
         self.laser_image = None
         self.side_laser_types = [None, self.side_laser1, self.side_laser2, self.side_laser3, self.side_laser4, self.side_laser5]
         self.side_laser_level = 0
+        self.missile_types = [None, self.missile1, self.missile2, self.missile3]
+        self.missile_level = 0
 
         # Init shields
         self.shield_radius = SHIELD_SIZE * SHIP_SIZE[0]
@@ -176,7 +178,24 @@ class Ship(ABC):
     def fire_missile(self):
         if self.can_fire_missile:
             self.missile_cooldown = 0
-            return [Missile(self.rect.x + self.image.get_width() // 2 - MISSILE_SIZE[0] // 2, self.rect.y + self.image.get_height() // 4, self.missile_damage, self.missile_image)]
+            return self.missile_types[self.missile_level]()
+
+    def missile1(self):
+        # Single missile
+        missile = Missile(self.rect.x + self.image.get_width() // 2 - MISSILE_SIZE[0] // 2, self.rect.y + self.image.get_height() // 4, self.missile_damage, self.missile_image)
+        return [missile]
+
+    def missile2(self):
+        # Dual missiles
+        missile1 = Missile(self.rect.x + self.image.get_width() // 2 - MISSILE_SIZE[0] // 2 + 15, self.rect.y + self.image.get_height() // 4, self.missile_damage, self.missile_image)
+        missile1.velocity.x += 2
+        missile2 = Missile(self.rect.x + self.image.get_width() // 2 - MISSILE_SIZE[0] // 2 - 15, self.rect.y + self.image.get_height() // 4, self.missile_damage, self.missile_image)
+        missile2.velocity.x -= 2
+        return [missile1, missile2]
+
+    def missile3(self):
+        # triple missiles
+        return self.missile1() + self.missile2()
 
     def draw(self, window):
         window.blit(self.image, (self.rect.x, self.rect.y))

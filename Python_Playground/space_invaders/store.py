@@ -134,7 +134,7 @@ class Store:
         col1_num_start, col2_num_start = WIDTH // 2 - STORE_WINDOW_PADDING, WIDTH - STORE_WINDOW_PADDING * 3
 
         spacer = 3
-        store_credits_text = self.store_title_font.render(f'Avaliable Credits: {self.credits}', 1, WHITE)
+        store_credits_text = self.store_title_font.render(f'Avaliable Credits: {self.credits:.0f}', 1, WHITE)
         self.window.blit(store_credits_text, (WIDTH // 2 - store_credits_text.get_width() // 2, STORE_WINDOW_PADDING + store_credits_text.get_height() // 2 + SPACER * spacer))        
 
         # Row 1

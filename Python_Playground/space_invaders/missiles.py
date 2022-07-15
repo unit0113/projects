@@ -65,6 +65,7 @@ class Missile:
     def update(self):
         self.timer += 1
         if self.timer < len(self.launch_profile):
+            self.rect.x += self.velocity.x
             self.rect.y += self.launch_profile[self.timer]
             return
         
@@ -85,14 +86,13 @@ class Missile:
         missile_pos = pygame.Vector2(self.rect.x, self.rect.center[1])
         RTM_new = target_pos - missile_pos
 
-        pygame.math.Vector2.normalize_ip(RTM_old)
-        pygame.math.Vector2.normalize_ip(RTM_new)
-
-        if not pygame.math.Vector2.length(RTM_old):
+        if not pygame.math.Vector2.length(RTM_old) or not pygame.math.Vector2.length(RTM_new):
             LOS_delta = pygame.Vector2(0, 0)
             LOS_rate = 0
 
         else:
+            pygame.math.Vector2.normalize_ip(RTM_old)
+            pygame.math.Vector2.normalize_ip(RTM_new)
             LOS_delta = RTM_new - RTM_old
             LOS_rate = pygame.math.Vector2.length(LOS_delta)
 
