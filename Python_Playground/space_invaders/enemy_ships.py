@@ -20,8 +20,8 @@ class EvilSpaceShip(Ship):
         self.health = self.max_health
         self.velocity = pygame.Vector2(0, int(AI_BASE_SPEED * random.uniform(0.8, 1.2) * self.level_multiplier))
         #self.speed = int(AI_BASE_SPEED * random.uniform(0.8, 1.2) * self.level_multiplier)
-        self.shield_level = random.choice([0] * (20 - self.level) + [1] * (self.level // 2) + [2] * (self.level // 4) + [3] * (self.level // 6) + [4] * (self.level // 8) + [5] * (self.level // 10))
-        self.laser_level = random.choice([0] * (20 - self.level) + [1] * (self.level // 5) + [2] * (self.level // 10))
+        self.shield_level = random.choice([0] * (30 - self.level) + [1] * (self.level // 2) + [2] * (self.level // 4) + [3] * (self.level // 6) + [4] * (self.level // 8) + [5] * (self.level // 10))
+        self.laser_level = random.choice([0] * (30 - self.level) + [1] * (self.level // 5) + [2] * (self.level // 10))
         self.point_value = self.health * POINT_HEALTH_MULTIPLIER + self.velocity.magnitude() * POINT_SPEED_MULTIPLIER + self.laser_level * POINT_LASER_MULTIPLIER + self.shield_level * POINT_SHIELD_MULTIPLIER
         self.laser_timer = AI_BASE_FIRE_RATE * FPS
         self.base_damage = AI_BASE_DMG * self.level_multiplier
