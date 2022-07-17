@@ -48,6 +48,7 @@
         "xutility": "cpp",
         "sstream": "cpp",
         "string": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "numeric": "cpp"
     }
 }
