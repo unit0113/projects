@@ -49,6 +49,8 @@
         "sstream": "cpp",
         "string": "cpp",
         "vector": "cpp",
-        "numeric": "cpp"
+        "numeric": "cpp",
+        "any": "cpp",
+        "algorithm": "cpp"
     }
 }
