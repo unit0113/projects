@@ -51,6 +51,9 @@
         "vector": "cpp",
         "numeric": "cpp",
         "any": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "iomanip": "cpp",
+        "xlocmon": "cpp",
+        "xloctime": "cpp"
     }
 }
