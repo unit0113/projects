@@ -5,7 +5,7 @@
 
 uint64_t fibonacci_rec(int n);
 uint64_t fibonacci_iter(int n);
-uint64_t fibonacci_dynamic(int n);
+int64_t fibonacci_dynamic(std::array<int64_t, 100> &memo, int n);
 
 
 int main() {
@@ -17,7 +17,7 @@ int main() {
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    std::cout << "Number, recursive: " << fibonacci_rec(num-1) << std::endl;
+    std::cout << "Number, recursive: " << fibonacci_rec(num) << std::endl;
 
     auto end = std::chrono::high_resolution_clock::now();
     std::cout << "Elapsed time: " << std::chrono::duration<double>(end - start).count() << std::endl;
@@ -33,20 +33,23 @@ int main() {
     
     start = std::chrono::high_resolution_clock::now();
 
-    std::cout << "Number, dynamic: " << fibonacci_dynamic(num-1) << std::endl;
+    std::array<int64_t, 100> memo;
+    memo.fill(-1);
+    memo[1] = 0;
+    memo[2] = 1;
+
+    std::cout << "Number, dynamic: " << fibonacci_dynamic(memo, num) << std::endl;
 
     end = std::chrono::high_resolution_clock::now();
     std::cout << "Elapsed time: " << std::chrono::duration<double>(end - start).count() << std::endl;
-
-
 
     return 0;
 }
 
 
 uint64_t fibonacci_rec(int n) {
-    if ((n == 0) || (n == 1)) {
-        return (uint64_t)n;
+    if ((n == 1) || (n == 2)) {
+        return (uint64_t)n - 1;
     } else {
         return fibonacci_rec(n-2) + fibonacci_rec(n-1);
     }
@@ -67,16 +70,10 @@ uint64_t fibonacci_iter(int n) {
 }
 
 
-uint64_t fibonacci_dynamic(int n) {
-    static std::array<uint64_t, 100> memo = {};
-    memo.fill(-1);
-    memo[0] = 0;
-    memo[1] = 1;
-
+int64_t fibonacci_dynamic(std::array<int64_t, 100> &memo, int n) {
     if (memo[n] == -1) {
-        memo[n] = fibonacci_dynamic(n-1) + fibonacci_dynamic(n-2);
+        memo[n] = fibonacci_dynamic(memo, n-1) + fibonacci_dynamic(memo, n-2);
     }
 
     return memo[n];
-
 }
