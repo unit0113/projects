@@ -16,8 +16,6 @@ int main() {
         print_if_perfect(i);
     }
 
-
-
     auto end = std::chrono::high_resolution_clock::now();
     std::cout << "Elapsed time: " << std::chrono::duration<double>(end - start).count() << std::endl;
 
