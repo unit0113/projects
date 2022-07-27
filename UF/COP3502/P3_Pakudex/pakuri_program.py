@@ -1,4 +1,4 @@
-from pakudex import pakudex
+from pakudex import Pakudex
 
 
 def print_menu():
@@ -66,7 +66,7 @@ def main():
         except ValueError:
             print('Please enter a valid size.')
 
-    dex = pakudex(max_capacity)
+    dex = Pakudex(max_capacity)
     print(f'The Pakudex can hold {max_capacity} species of Pakuri.')
 
     # Run main loop

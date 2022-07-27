@@ -1,7 +1,7 @@
-from pakuri import pakuri
+from pakuri import Pakuri
 
 
-class pakudex:
+class Pakudex:
     def __init__(self, capacity=20):
         self.max_capacity = capacity
         self.pakuris = []
@@ -48,7 +48,7 @@ class pakudex:
         if self.is_full or self._find_paku(species):
             return False
         
-        self.pakuris.append(pakuri(species))
+        self.pakuris.append(Pakuri(species))
         return True
 
     def evolve_species(self, species):

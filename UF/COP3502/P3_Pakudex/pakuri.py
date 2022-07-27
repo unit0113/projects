@@ -1,4 +1,4 @@
-class pakuri:
+class Pakuri:
     def __init__(self, name):
         self._name = name
         self._attack = len(name) * 7 + 9
