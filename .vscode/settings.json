@@ -67,6 +67,8 @@
         "xlocbuf": "cpp",
         "xlocmes": "cpp",
         "xtree": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "deque": "cpp",
+        "queue": "cpp"
     }
 }
