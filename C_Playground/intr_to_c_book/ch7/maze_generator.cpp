@@ -79,14 +79,13 @@ void Visit(int x, int y) {
             case EAST: dx = 1; break;
             case WEST: dx = -1; break;
         }
-        // Find the (x,y) coordinates of the grid cell 2 spots
-        // away in the given direction.
+        // Find the (x,y) coordinates of the grid cell 2 spots away in the given direction.
         int x2 = x + (dx<<1);
         int y2 = y + (dy<<1);
 
-        if (IsInBounds(x2,y2) && grid[ XYToIndex(x2,y2) ] == '#') {
+        if (IsInBounds(x2,y2) && grid[XYToIndex(x2,y2)] == '#') {
             // (x2,y2) has not been visited yet... knock down the wall between my current position and that position
-            grid[ XYToIndex(x2-dx,y2-dy) ] = '.';
+            grid[XYToIndex(x2-dx,y2-dy)] = '.';
             // Recursively Visit (x2,y2)
             Visit(x2,y2);
         }
