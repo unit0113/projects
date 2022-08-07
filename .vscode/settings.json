@@ -69,6 +69,7 @@
         "xtree": "cpp",
         "random": "cpp",
         "deque": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "fstream": "cpp"
     }
 }
