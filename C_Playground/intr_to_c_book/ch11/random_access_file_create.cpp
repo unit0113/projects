@@ -26,8 +26,11 @@ int main () {
         client.balance = stod(str_balance);
 
         // Move to location and input data
-        account_file.seekp(client.account_number * sizeof(Client_Data));
-        account_file << client.account_number << client.name_last << client.name_first << client.balance;
+        account_file.seekp(client.account_number * sizeof(Client_Data), std::ios::beg);
+        account_file.write((char *) &client.account_number, sizeof(client.account_number));
+        account_file.write((char *) &client.name_last[0], sizeof(client.name_last));
+        account_file.write((char *) &client.name_first[0], sizeof(client.name_first));
+        account_file.write((char *) &client.balance, sizeof(client.balance));
 
         // Ask for new data
         std::cout << "Enter Account Number: ";
