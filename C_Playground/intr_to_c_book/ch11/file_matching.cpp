@@ -56,10 +56,6 @@ int main() {
     }
 
     new_mast_file.close();
-
-
-
-
-
+    
     return 0;
 }
