@@ -70,6 +70,7 @@
         "random": "cpp",
         "deque": "cpp",
         "queue": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "cstdarg": "cpp"
     }
 }
