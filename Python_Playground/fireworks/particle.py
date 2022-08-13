@@ -3,7 +3,9 @@ import random
 from settings import GRAVITY, FPS
 
 
+MASS_DECAY_SHORT = 0.15
 MASS_DECAY = 0.1
+MASS_DECAY_LONG = 0.05
 
 
 class Particle:
@@ -20,9 +22,9 @@ class Particle:
 
     def update(self):
         self.x += self.vel.x
-        self.x += self.vel.y
-        self.vel.y += GRAVITY / FPS
-        self.mass -= MASS_DECAY
+        self.y += self.vel.y
+        self.vel.y += (GRAVITY / FPS) * random.uniform(1, 1.1)
+        self.mass -= MASS_DECAY_LONG
 
     def draw(self, surface):
         pygame.draw.circle(surface, self.color, (self.x, self.y), int(self.mass))

@@ -3,8 +3,6 @@ from show_manager import Show_Manager
 from settings import HEIGHT, WIDTH, FPS
 
 
-
-
 def initialize_pygame():
     pygame.init()
     window = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -37,6 +35,7 @@ def main():
             main()
 
         show_manager.update()
+        show_manager.draw()
 
 
 if __name__ == "__main__":
