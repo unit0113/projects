@@ -28,3 +28,4 @@ class Particle:
 
     def draw(self, surface):
         pygame.draw.circle(surface, self.color, (self.x, self.y), int(self.mass))
+        

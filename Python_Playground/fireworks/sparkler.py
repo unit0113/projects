@@ -20,3 +20,4 @@ class Sparkler:
                 self.sparks.remove(spark)
 
         pygame.display.update()
+        

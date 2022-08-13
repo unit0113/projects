@@ -14,11 +14,11 @@ SHELL_SIZE = 2
 BURST_PARTICLE_INITIAL_VEL_DECR = 0.5
 
 SHELL_PROPERTIES = {
-    'small': (100, 1, TRAIL_DENSITY_LIGHT),
+    'small': (100, 2, TRAIL_DENSITY_LIGHT),
     'medium': (250, 2, TRAIL_DENSITY_LIGHT), 
-    'large': (500, 2, TRAIL_DENSITY_MED),
+    'large': (500, 3, TRAIL_DENSITY_MED),
     'extra_large': (750, 3, TRAIL_DENSITY_MED),
-    'super': (1000, 3, TRAIL_DENSITY_HEAVY),
+    'super': (1000, 4, TRAIL_DENSITY_HEAVY),
     'enormous': (2000, 4, TRAIL_DENSITY_HEAVY)
 }
 
@@ -56,7 +56,7 @@ class Projectile:
         self.y += self.vel.y
         self.vel.y += GRAVITY / FPS
         if self.trail_color and self.fuse % self.trail_density == 0:
-            return Particle(self.x, self.y, self.vel.x * TRAIL_INITIAL_VEL_DECR + random.randint(-1, 1), self.vel.y * TRAIL_INITIAL_VEL_DECR + random.randint(-2, 2), random.uniform(0, self.particle_mass), self.trail_color)
+            return Particle(self.x, self.y, self.vel.x * TRAIL_INITIAL_VEL_DECR + random.randint(-1, 1), self.vel.y * TRAIL_INITIAL_VEL_DECR + random.randint(-2, 2), random.uniform(0.25, self.particle_mass), self.trail_color)
 
     def burst(self):
         particles = []
