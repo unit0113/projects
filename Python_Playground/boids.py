@@ -3,7 +3,6 @@ import random
 from p5 import Vector
 import numpy as np
 import multiprocessing
-from itertools import repeat
 
 
 # Constants
