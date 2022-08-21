@@ -71,6 +71,10 @@
         "deque": "cpp",
         "queue": "cpp",
         "fstream": "cpp",
-        "cstdarg": "cpp"
+        "cstdarg": "cpp",
+        "functional": "cpp",
+        "list": "cpp",
+        "unordered_map": "cpp",
+        "xhash": "cpp"
     }
 }
