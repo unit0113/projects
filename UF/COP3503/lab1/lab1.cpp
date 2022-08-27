@@ -8,22 +8,22 @@ using namespace std;
 int main() {
    
     // Get Data title
-    cout << "Enter a title for the data: ";
+    cout << "Enter a title for the data:\n";
     string dataTitle;
     getline(cin, dataTitle);
-    cout << "You entered: " << dataTitle << endl << endl;
+    cout << "You entered: " << dataTitle << endl;
 
     // Get Col 1 title
-    cout << "Enter the column 1 header: ";
+    cout << "Enter the column 1 header:\n";
     string colTitle1;
     getline(cin, colTitle1);
-    cout << "You entered: " << colTitle1 << endl << endl;
+    cout << "You entered: " << colTitle1 << endl;
 
     // Get Col 2 title
-    cout << "Enter the column 2 header: ";
+    cout << "Enter the column 2 header:\n";
     string colTitle2;
     getline(cin, colTitle2);
-    cout << "You entered: " << colTitle2 << endl << endl;
+    cout << "You entered: " << colTitle2 << endl;
 
     // Temp data
     string dataPoint;
@@ -38,7 +38,7 @@ int main() {
 
     while (true) {
         // Get input
-        cout << "Enter a data point (-1 to stop input): ";
+        cout << "Enter a data point (-1 to stop input):\n";
         getline(cin, dataPoint);
 
         // Break if -1
@@ -48,11 +48,11 @@ int main() {
         }
 
         // Check for correct num commas
-        if (commaCount = count(dataPoint.begin(), dataPoint.end(), ',') == 0) {
-            cout << "Error: No comma in string.\n" << endl;
+        if ((commaCount = count(dataPoint.begin(), dataPoint.end(), ',')) == 0) {
+            cout << "Error: No comma in string." << endl;
             continue;
         } else if (commaCount > 1) {
-            cout << "Error: Too many commas in input.\n" << endl;
+            cout << "Error: Too many commas in input." << endl;
             continue;
         }
 
@@ -65,7 +65,7 @@ int main() {
             temptInt = stoi(dataPoint.substr(commaIndex + 1, dataPoint.size() - commaIndex));
         }
         catch (invalid_argument) {
-            cout << "Error: Comma not followed by an integer.\n" << endl;
+            cout << "Error: Comma not followed by an integer." << endl;
             continue;
         }
 
@@ -75,7 +75,7 @@ int main() {
         
         // Output captured data
         cout << "Data string: " << tempStr << endl;
-        cout << "Data integer: " << temptInt << endl << endl;
+        cout << "Data integer: " << temptInt << endl;
 
     }
 
