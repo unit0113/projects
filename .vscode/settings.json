@@ -76,6 +76,7 @@
         "list": "cpp",
         "unordered_map": "cpp",
         "xhash": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "stack": "cpp"
     }
 }
