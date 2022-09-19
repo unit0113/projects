@@ -77,6 +77,7 @@
         "unordered_map": "cpp",
         "xhash": "cpp",
         "thread": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "regex": "cpp"
     }
 }
