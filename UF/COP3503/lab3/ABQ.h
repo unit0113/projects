@@ -21,6 +21,7 @@ class ABQ {
     private:
         unsigned int m_size;
         unsigned int m_capacity;
+        unsigned int head {};
         T* m_data;
         unsigned int total_resizes {};
         static float c_scale_factor;
@@ -73,6 +74,8 @@ void ABQ<T>::copy(const ABQ& other) {
     delete[] m_data;
     m_size = other.m_size;
     m_capacity = other.m_capacity;
+    head = other.head;
+    total_resizes = other.total_resizes;
     m_data = new T[m_capacity];
     // Deep copy of array data
     for (unsigned int i{}; i < m_capacity; ++i) {
@@ -92,8 +95,7 @@ void ABQ<T>::enqueue(T item) {
         increase_capacity();
     }
 
-    m_data[m_size] = item;
-    ++m_size;
+    m_data[m_size++] = item;
 }
 
 template<typename T>
@@ -101,12 +103,15 @@ void ABQ<T>::increase_capacity() {
     T* new_data = new T[static_cast<int>(m_capacity * c_scale_factor)];
     // Deep copy of array data
     for (unsigned int i{}; i < m_capacity; ++i) {
-        new_data[i] = m_data[i];
+        new_data[i] = m_data[head + i];
     }
+
+    // Cleanup
     m_capacity *= c_scale_factor;
     delete[] m_data;
     m_data = new_data;
     ++total_resizes;
+    head = 0;
 }
 
 template<typename T>
@@ -114,7 +119,7 @@ T ABQ<T>::peek() const {
     if (m_size == 0) {
         throw std::runtime_error("Stack is empty");
     }
-    return m_data[0];
+    return m_data[head];
 }
 
 template<typename T>
@@ -122,14 +127,8 @@ T ABQ<T>::dequeue() {
     if (m_size == 0) {
         throw std::runtime_error("Stack is empty");
     }
-    T value = m_data[0];
-
-    // Shift remaining items left
-    if (m_size > 0) {
-        for (unsigned int i {}; i < m_size; ++i) {
-            m_data[i] = m_data[i + 1];
-        }
-    }
+    T value = m_data[head];
+    ++head;
 
     // Check if capacity is too small, and resize if yes
     if ((static_cast<float>(m_capacity) -1) / --m_size >= c_scale_factor) {
@@ -150,12 +149,13 @@ void ABQ<T>::decrease_capacity() {
     T* new_data = new T[m_capacity];
     // Deep copy of array data
     for (unsigned int i{}; i < m_capacity; ++i) {
-        new_data[i] = m_data[i];
+        new_data[i] = m_data[head + i];
     }
     
     delete[] m_data;
     m_data = new_data;
     ++total_resizes;
+    head = 0;
 }
 
 template<typename T>
