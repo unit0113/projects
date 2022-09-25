@@ -78,6 +78,9 @@
         "xhash": "cpp",
         "thread": "cpp",
         "stack": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "mutex": "cpp",
+        "set": "cpp",
+        "stop_token": "cpp"
     }
 }
