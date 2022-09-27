@@ -8,6 +8,7 @@ using namespace std;
 template<typename T>
 class LinkedList {
     public:
+        // Nested Node class
         class Node {
             friend class LinkedList;
             public:
@@ -18,11 +19,12 @@ class LinkedList {
                 T data;
         };
 
-        LinkedList() = default;
-        LinkedList(const LinkedList& otherList);
-        LinkedList& operator=(const LinkedList& otherList);
-        ~LinkedList();
-        void clear();
+        LinkedList() = default;                                 // Default constructor
+        LinkedList(const LinkedList& otherList);                // Copy constructor
+        LinkedList& operator=(const LinkedList& otherList);     // Copy assignement
+        ~LinkedList();                                          // Destructor
+        
+        void Clear();
         void AddHead(T data);
         void AddTail(T data);
         void AddNodesHead(T* data, int size);
@@ -38,10 +40,10 @@ class LinkedList {
         void InsertAfter(Node* node, T data);
         void InsertBefore(Node* node, T data);
         void InsertAt(T data, int index);
-        void RemoveHead();
-        void RemoveTail();
-        void RemoveAt(int index);
-        void Remove(int val);
+        bool RemoveHead();
+        bool RemoveTail();
+        bool RemoveAt(int index);
+        int Remove(T val);
         void PrintForwardRecursive(Node* node) const;
         void PrintReverseRecursive(Node* node) const;
 
@@ -53,9 +55,12 @@ class LinkedList {
         Node* tail = nullptr;
         size_t count {};
         void copy(const LinkedList& otherList);
+        void deleteNode(Node* node);
 };
 
+//********************* Function Definitions ****************************
 
+// Helper function for copy construction and copy assignment
 template<typename T>
 void LinkedList<T>::copy(const LinkedList& otherList) {
     Node* currNode = otherList.tail;
@@ -65,8 +70,9 @@ void LinkedList<T>::copy(const LinkedList& otherList) {
     }
 }
 
+// Helper function for destructor and copy assignment
 template<typename T>
-void LinkedList<T>::clear() {
+void LinkedList<T>::Clear() {
     count = 0;
     tail = nullptr;
     Node* current = head;
@@ -86,14 +92,14 @@ LinkedList<T>::LinkedList(const LinkedList& otherList) {
 
 template<typename T>
 LinkedList<T>& LinkedList<T>::operator=(const LinkedList<T>& otherList) {
-    clear();
+    Clear();
     copy(otherList);
     return *this;
 }
 
 template<typename T>
 LinkedList<T>::~LinkedList() {
-    clear();
+    Clear();
 }
 
 
@@ -166,10 +172,12 @@ typename LinkedList<T>::Node* LinkedList<T>::GetNode(int index) const {
     if (index >= static_cast<int>(count)) {
         throw out_of_range("Index out of range");
     }
+
     Node* currNode = head;
     for (int i{}; i < index; ++i) {
         currNode = currNode->next;
     }
+
     return currNode;
 }
 
@@ -203,6 +211,8 @@ void LinkedList<T>::InsertAfter(Node* node, T data) {
     newNode->next = node->next;
     newNode->prev = node;
     node->next = newNode;
+
+    // Check if new tail
     if (newNode->next) {
         newNode->next->prev = newNode;
     } else {
@@ -217,6 +227,8 @@ void LinkedList<T>::InsertBefore(Node* node, T data) {
     newNode->prev = node->prev;
     newNode->next = node;
     node->prev = newNode;
+
+    // Check if new head
     if (newNode->prev) {
         newNode->prev->next = newNode;
     } else {
@@ -227,6 +239,7 @@ void LinkedList<T>::InsertBefore(Node* node, T data) {
 
 template<typename T>
 void LinkedList<T>::InsertAt(T data, int index) {
+    // If inserting at last index (new tail)
     if (index == static_cast<int>(count)) {
         AddTail(data);
     } else {
@@ -235,39 +248,68 @@ void LinkedList<T>::InsertAt(T data, int index) {
 }
 
 template<typename T>
-void LinkedList<T>::RemoveHead() {
+bool LinkedList<T>::RemoveHead() {
     if (!head) {
-        return;
+        return false;
     }
 
-    Node* temp = head->next;
-    temp->prev = nullptr;
-    delete head;
-    head = temp;
-    --count;
+    deleteNode(head);
+    return true;
 }
 
 template<typename T>
-void LinkedList<T>::RemoveTail() {
+bool LinkedList<T>::RemoveTail() {
     if (!tail) {
-        return;
+        return false;
     }
 
-    Node* temp = tail->prev;
-    temp->next = nullptr;
-    delete tail;
-    tail = temp;
+    deleteNode(tail);
+    return true;
+}
+
+template<typename T>
+bool LinkedList<T>::RemoveAt(int index) {
+    if (index >= static_cast<int>(count)) {
+        return false;
+    }
+
+    deleteNode(GetNode(index));
+    return true;
+}
+
+template<typename T>
+int LinkedList<T>::Remove(T val) {
+    Node* currNode = head;
+    Node* nextNode;
+    int delCount {};
+    while (currNode) {
+        nextNode = currNode->next;
+        if (currNode->data == val) {
+            deleteNode(currNode);
+            ++delCount;
+        }
+        currNode = nextNode;
+    }
+    return delCount;
+}
+
+// Helper function to delete nodes
+template<typename T>
+void LinkedList<T>::deleteNode(Node* node) {
+    if (node->prev) {
+        node->prev->next = node->next;
+    } else {
+        head = node->next;
+    }
+
+    if (node->next) {
+        node->next->prev = node->prev;
+    } else {
+        tail = node->prev;
+    }    
+
     --count;
-}
-
-template<typename T>
-void LinkedList<T>::RemoveAt(int index) {
-
-}
-
-template<typename T>
-void LinkedList<T>::Remove(int val) {
-
+    delete node;
 }
 
 template<typename T>
@@ -282,11 +324,12 @@ template<typename T>
 void LinkedList<T>::PrintReverseRecursive(Node* node) const {
     if (node) {
         cout << node->data << endl;
-        PrintForwardRecursive(node->prev);
+        PrintReverseRecursive(node->prev);
     }
 }
 
 
+//Operators
 template<typename T>
 T LinkedList<T>::operator[](int index) const {
     return GetNode(index)->data;
