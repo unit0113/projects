@@ -22,6 +22,7 @@ class LinkedList {
         LinkedList(const LinkedList& otherList);
         LinkedList& operator=(const LinkedList& otherList);
         ~LinkedList();
+        void clear();
         void AddHead(T data);
         void AddTail(T data);
         void AddNodesHead(T* data, int size);
@@ -34,15 +35,24 @@ class LinkedList {
         Node* GetNode(int index) const;
         Node* Find(T val) const;
         void FindAll(vector<Node*>& pVec, T val) const;
+        void InsertAfter(Node* node, T data);
+        void InsertBefore(Node* node, T data);
+        void InsertAt(T data, int index);
+        void RemoveHead();
+        void RemoveTail();
+        void RemoveAt(int index);
+        void Remove(int val);
+        void PrintForwardRecursive(Node* node) const;
+        void PrintReverseRecursive(Node* node) const;
 
         T operator[](int index) const;
+        bool operator==(const LinkedList& otherList);
 
     private:
         Node* head = nullptr;
         Node* tail = nullptr;
         size_t count {};
         void copy(const LinkedList& otherList);
-        void reset();
 };
 
 
@@ -56,7 +66,7 @@ void LinkedList<T>::copy(const LinkedList& otherList) {
 }
 
 template<typename T>
-void LinkedList<T>::reset() {
+void LinkedList<T>::clear() {
     count = 0;
     tail = nullptr;
     Node* current = head;
@@ -76,14 +86,14 @@ LinkedList<T>::LinkedList(const LinkedList& otherList) {
 
 template<typename T>
 LinkedList<T>& LinkedList<T>::operator=(const LinkedList<T>& otherList) {
-    reset();
+    clear();
     copy(otherList);
     return *this;
 }
 
 template<typename T>
 LinkedList<T>::~LinkedList() {
-    reset();
+    clear();
 }
 
 
@@ -136,7 +146,7 @@ void LinkedList<T>::AddNodesTail(T* data, int size) {
 template<typename T>
 void LinkedList<T>::PrintForward() const {
     Node* currNode = head;
-    while (currNode != nullptr) {
+    while (currNode) {
         cout << currNode->data << endl;
         currNode = currNode->next;
     }
@@ -145,7 +155,7 @@ void LinkedList<T>::PrintForward() const {
 template<typename T>
 void LinkedList<T>::PrintReverse() const {
     Node* currNode = tail;
-    while (currNode != nullptr) {
+    while (currNode) {
         cout << currNode->data << endl;
         currNode = currNode->prev;
     }
@@ -166,18 +176,20 @@ typename LinkedList<T>::Node* LinkedList<T>::GetNode(int index) const {
 template<typename T>
 typename LinkedList<T>::Node* LinkedList<T>::Find(T val) const {
     Node* currNode = head;
-    for (size_t i{}; i < count; ++i) {
-        if (val == currNode->data) {
+    while (currNode)  {
+        if (currNode->data == val) {
             return currNode;
         }
+        currNode = currNode->next;
     }
-    return nullptr;
+
+    return currNode;
 }
 
 template<typename T>
 void LinkedList<T>::FindAll(vector<Node*>& pVec, T val) const {
     Node* currNode = head;
-    while (currNode != nullptr) {
+    while (currNode) {
         if (currNode->data == val) {
             pVec.push_back(currNode);
         }
@@ -186,6 +198,114 @@ void LinkedList<T>::FindAll(vector<Node*>& pVec, T val) const {
 }
 
 template<typename T>
+void LinkedList<T>::InsertAfter(Node* node, T data) {
+    Node* newNode = new Node(data);
+    newNode->next = node->next;
+    newNode->prev = node;
+    node->next = newNode;
+    if (newNode->next) {
+        newNode->next->prev = newNode;
+    } else {
+        tail = newNode;
+    }
+    ++count;
+}
+
+template<typename T>
+void LinkedList<T>::InsertBefore(Node* node, T data) {
+    Node* newNode = new Node(data);
+    newNode->prev = node->prev;
+    newNode->next = node;
+    node->prev = newNode;
+    if (newNode->prev) {
+        newNode->prev->next = newNode;
+    } else {
+        head = newNode;
+    }
+    ++count;
+}
+
+template<typename T>
+void LinkedList<T>::InsertAt(T data, int index) {
+    if (index == static_cast<int>(count)) {
+        AddTail(data);
+    } else {
+        InsertBefore(GetNode(index), data);
+    }
+}
+
+template<typename T>
+void LinkedList<T>::RemoveHead() {
+    if (!head) {
+        return;
+    }
+
+    Node* temp = head->next;
+    temp->prev = nullptr;
+    delete head;
+    head = temp;
+    --count;
+}
+
+template<typename T>
+void LinkedList<T>::RemoveTail() {
+    if (!tail) {
+        return;
+    }
+
+    Node* temp = tail->prev;
+    temp->next = nullptr;
+    delete tail;
+    tail = temp;
+    --count;
+}
+
+template<typename T>
+void LinkedList<T>::RemoveAt(int index) {
+
+}
+
+template<typename T>
+void LinkedList<T>::Remove(int val) {
+
+}
+
+template<typename T>
+void LinkedList<T>::PrintForwardRecursive(Node* node) const {
+    if (node) {
+        cout << node->data << endl;
+        PrintForwardRecursive(node->next);
+    }
+}
+
+template<typename T>
+void LinkedList<T>::PrintReverseRecursive(Node* node) const {
+    if (node) {
+        cout << node->data << endl;
+        PrintForwardRecursive(node->prev);
+    }
+}
+
+
+template<typename T>
 T LinkedList<T>::operator[](int index) const {
     return GetNode(index)->data;
+}
+
+template<typename T>
+bool LinkedList<T>::operator==(const LinkedList& otherList) {
+    if (count != otherList.count) {
+        return false;
+    }
+
+    Node* currNodeThis = head;
+    Node* currNodeOther = otherList.head;
+    while (currNodeThis) {
+        if (currNodeThis->data != currNodeOther->data) {
+            return false;
+        }
+        currNodeThis = currNodeThis->next;
+        currNodeOther = currNodeOther->next;
+    }
+    return true;
 }
