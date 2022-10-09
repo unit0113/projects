@@ -32,7 +32,7 @@ void mostPieces(vector<LegoSet> sets);
 void printSetInfo(LegoSet set);
 void printSetInfoShort(LegoSet set);
 void nameMatch(vector<LegoSet> sets, string phrase);
-void phraseMatch(vector<LegoSet> sets, string phrase);
+void themeMatch(vector<LegoSet> sets, string phrase);
 void printMatches(vector<LegoSet> sets, string phrase);
 void printPartCountInfo(vector<LegoSet> sets);
 void printPriceInfo(vector<LegoSet> sets);
@@ -71,9 +71,9 @@ int main() {
     }
 
     /*======= Print out how many sets were loaded =======*/
-    cout << "Total number of sets: " << legoSets.size() << endl;;
+    cout << "Total number of sets: " << legoSets.size() << "\n\n";
 
-    cout << "1. Most Expensive set" << endl;
+    /*cout << "1. Most Expensive set" << endl;
     cout << "2. Largest piece count" << endl;
     cout << "3. Search for set name containing..." << endl;
     cout << "4. Search themes..." << endl;
@@ -82,6 +82,7 @@ int main() {
     cout << "7. Minifigure information" << endl;
     cout << "8. If you bought one of everything..." << endl;
     cout << "0. Exit" << endl;
+    */
    
 	int choice;
 	cin >> choice;
@@ -98,7 +99,7 @@ int main() {
         case 3:
             {
                 string phrase;
-                cout << "Input a search string: ";
+                //cout << "Input a search string: ";
                 getline(cin, phrase);
                 nameMatch(legoSets, phrase);
                 break;
@@ -107,9 +108,9 @@ int main() {
         case 4:
             {
                 string phrase;
-                cout << "Input a search string: ";
+                //cout << "Input a search string: ";
                 getline(cin, phrase);
-                phraseMatch(legoSets, phrase);
+                themeMatch(legoSets, phrase);
                 break;
             }
         case 5:
@@ -167,7 +168,7 @@ vector<LegoSet> loadfile(std::initializer_list<string> args) {
             getline(inStream, token, ',');
             price = stod(token);
 
-            // Add to return vector
+            // Add set to return vector
             setData.push_back(LegoSet(number, theme, name, minifigs, pieces, price));
         }
         inFile.close();
@@ -179,7 +180,7 @@ vector<LegoSet> loadfile(std::initializer_list<string> args) {
 void mostExpensive(vector<LegoSet> sets) {
     int maxIndex{};
     for (size_t i = 1; i < sets.size(); ++i) {
-        if (sets[i].m_price > sets[maxIndex].m_price) {
+        if (sets[i].m_price >= sets[maxIndex].m_price) {
             maxIndex = i;
         }
     }
@@ -192,7 +193,7 @@ void mostExpensive(vector<LegoSet> sets) {
 void mostPieces(vector<LegoSet> sets) {
     int maxIndex{};
     for (size_t i = 1; i < sets.size(); ++i) {
-        if (sets[i].m_pieces > sets[maxIndex].m_pieces) {
+        if (sets[i].m_pieces >= sets[maxIndex].m_pieces) {
             maxIndex = i;
         }
     }
@@ -209,6 +210,7 @@ void printSetInfo(LegoSet set) {
     cout << "Price: $" << set.m_price << endl;
     cout << "Minifigures: " << set.m_minifigs << endl;
     cout << "Piece count: " << set.m_pieces << endl;
+    cout << endl;
 }
 
 
@@ -229,10 +231,10 @@ void nameMatch(vector<LegoSet> sets, string phrase) {
 }
 
 
-void phraseMatch(vector<LegoSet> sets, string phrase) {
+void themeMatch(vector<LegoSet> sets, string phrase) {
     vector<LegoSet> matches;
     for (const auto& set: sets) {
-        if (set.m_name.find(phrase) != string::npos) {
+        if (set.m_theme.find(phrase) != string::npos) {
             matches.push_back(set);
         }
     }
@@ -264,30 +266,30 @@ void printPartCountInfo(vector<LegoSet> sets) {
 
 
 void printPriceInfo(vector<LegoSet> sets) {
-    int sum{};
+    double sum = sets[0].m_price;
     int maxIndex{};
     int minIndex{};
     for (size_t i = 1; i < sets.size(); ++i) {
         sum += sets[i].m_price;
-        maxIndex = (sets[maxIndex].m_price > sets[i].m_price) ? maxIndex : i;
-        minIndex = (sets[minIndex].m_price < sets[i].m_price) ? minIndex : i;
+        maxIndex = (sets[maxIndex].m_price >= sets[i].m_price) ? maxIndex : i;
+        minIndex = (sets[minIndex].m_price <= sets[i].m_price) ? minIndex : i;
     }
 
-    cout << "Average price information for " << sets.size() << " sets: $" << sum / sets.size() << "\n\n";
-    cout << "Set with the minimum price:\n";
+    cout << "Average price for " << sets.size() << " sets: $" << sum / sets.size() << "\n\n";
+    cout << "Least expensive set:\n";
     printSetInfo(sets[minIndex]);
     cout << endl;
-    cout << "Set with the maximum price:\n";
+    cout << "Most expensive set:\n";
     printSetInfo(sets[maxIndex]);
 }
 
 
 void printMinifigInfo(vector<LegoSet> sets) {
-    int sum{};
+    int sum = sets[0].m_minifigs;
     int maxIndex{};
     for (size_t i = 1; i < sets.size(); ++i) {
-        sum += sets[i].m_price;
-        maxIndex = (sets[maxIndex].m_minifigs > sets[i].m_minifigs) ? maxIndex : i;
+        sum += sets[i].m_minifigs;
+        maxIndex = (sets[maxIndex].m_minifigs >= sets[i].m_minifigs) ? maxIndex : i;
     }
 
     cout << "Average number of minifigures: " << sum / sets.size() << "\n";
@@ -297,7 +299,7 @@ void printMinifigInfo(vector<LegoSet> sets) {
 
 
 void printOneOfEverything(vector<LegoSet> sets) {
-    int costSum{};
+    double costSum{};
     int pieceSum{};
     int minifigSum{};
     for (const auto& set: sets) {
@@ -306,7 +308,7 @@ void printOneOfEverything(vector<LegoSet> sets) {
         minifigSum += set.m_minifigs;
     }
     cout << "If you bought one of everything...\n";
-    cout << "It would cost $" << costSum << endl;
+    cout << "It would cost: $" << costSum << endl;
     cout << "You would have " << pieceSum << " pieces in your collection\n";
     cout << "You would have an army of " << minifigSum << " minifigures!" << endl;
 }
