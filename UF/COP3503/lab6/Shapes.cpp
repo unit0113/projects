@@ -5,6 +5,7 @@
 #include <string>
 using namespace std;
 
+
 /*---------------2D-----------------*/
 void Shape2D::ShowArea() const {
     cout << "The area of the " << GetName2D() << " is : " << Area() << endl;
@@ -36,7 +37,6 @@ void Square::Scale(float scaleFactor) {
 }
 
 void Square::Display() const {
-    cout << fixed << setprecision(2);
     Shape2D::ShowArea();
     cout << "Length of a side: " << m_side << endl;
 }
@@ -56,7 +56,6 @@ void Triangle::Scale(float scaleFactor) {
 }
 
 void Triangle::Display() const {
-    cout << fixed << setprecision(2);
     Shape2D::ShowArea();
     cout << "Base: " << m_base << endl;
     cout << "Height: " << m_height << endl;
@@ -76,9 +75,12 @@ void Circle::Scale(float scaleFactor) {
 }
 
 void Circle::Display() const {
-    cout << fixed << setprecision(2);
     Shape2D::ShowArea();
     cout << "Radius: " << m_radius << endl;
+}
+
+float Circle::getRadius() const {
+    return m_radius;
 }
 
 /*---------------3D-----------------*/
@@ -101,7 +103,7 @@ bool Shape3D::operator==(const Shape3D &rhs) const {
 
 /*---------------Pyramid-----------------*/
 float TriangularPyramid::Volume() const {
-    return m_tri.Area() * m_height / 3.0f;
+    return Triangle::Area() * m_height / 3.0f;
 }
 
 string TriangularPyramid::GetName3D() const {
@@ -110,20 +112,19 @@ string TriangularPyramid::GetName3D() const {
 
 void TriangularPyramid::Scale(float scaleFactor) {
     m_height *= scaleFactor;
-    m_tri.Scale(scaleFactor);
+    Triangle::Scale(scaleFactor);
 }
 
 void TriangularPyramid::Display() const {
-    cout << fixed << setprecision(2);
     Shape3D::ShowVolume();
     cout << "The height is: " << m_height << endl;
-    m_tri.Display();
+    Triangle::Display();
 }
 
 
 /*---------------Cylinder-----------------*/
 float Cylinder::Volume() const {
-    return m_cir.Area() * m_height;
+    return Circle::Area() * m_height;
 }
 
 string Cylinder::GetName3D() const {
@@ -132,20 +133,19 @@ string Cylinder::GetName3D() const {
 
 void Cylinder::Scale(float scaleFactor) {
     m_height *= scaleFactor;
-    m_cir.Scale(scaleFactor);
+    Circle::Scale(scaleFactor);
 }
 
 void Cylinder::Display() const {
-    cout << fixed << setprecision(2);
     Shape3D::ShowVolume();
     cout << "The height is: " << m_height << endl;
-    m_cir.Display();
+    Circle::Display();
 }
 
 
 /*---------------Sphere-----------------*/
 float Sphere::Volume() const {
-    return m_cir.Area() * m_radius * 4.0f / 3.0f;
+    return Circle::Area() * Circle::getRadius() * 4.0f / 3.0f;
 }
 
 string Sphere::GetName3D() const {
@@ -153,12 +153,10 @@ string Sphere::GetName3D() const {
 }
 
 void Sphere::Scale(float scaleFactor) {
-    m_radius *= scaleFactor;
-    m_cir.Scale(scaleFactor);
+    Circle::Scale(scaleFactor);
 }
 
 void Sphere::Display() const {
-    cout << fixed << setprecision(2);
     Shape3D::ShowVolume();
-    m_cir.Display();
+    Circle::Display();
 }

@@ -27,10 +27,11 @@ int main()
 	cout << std::fixed << setprecision(2);
 	
 	// Input to seed a random number generator
+	cout << "Input random seed: ";
 	int randomInput;
 	cin >> randomInput;
 	ranGen.seed(randomInput);
-	
+	cout << "Enter test number: ";
 	int testNum;
 	cin >> testNum;
 
@@ -51,6 +52,7 @@ int main()
 // Testing constructors, default constructors and Display() for 2D shapes
 void TestOne()
 {
+	cout << "One\n";
 	// 2D shapes and their constructors
 	vector<Shape *> shapes;
 	shapes.push_back(new Square);
