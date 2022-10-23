@@ -1,24 +1,25 @@
 #include "Shapes.h"
 #include <iostream>
 #include <iomanip>
-#include <compare>
 #include <math.h>
 #include <string>
 using namespace std;
 
-
+/*---------------2D-----------------*/
 void Shape2D::ShowArea() const {
     cout << "The area of the " << GetName2D() << " is : " << Area() << endl;
 }
 
-strong_ordering Shape2D::operator<=>(const Shape2D &rhs) const {
-    if (Area() < rhs.Area()) {
-        return strong_ordering::less;
-    } else if (Area() > rhs.Area()) {
-        return strong_ordering::greater;
-    } else {
-        return strong_ordering::equal;
-    }
+bool Shape2D::operator>(const Shape2D &rhs) const {
+    return Area() > rhs.Area();
+}
+
+bool Shape2D::operator<(const Shape2D &rhs) const {
+    return Area() < rhs.Area();
+}
+
+bool Shape2D::operator==(const Shape2D &rhs) const {
+    return Area() == rhs.Area();
 }
 
 /*---------------Square-----------------*/
@@ -78,4 +79,86 @@ void Circle::Display() const {
     cout << fixed << setprecision(2);
     Shape2D::ShowArea();
     cout << "Radius: " << m_radius << endl;
+}
+
+/*---------------3D-----------------*/
+void Shape3D::ShowVolume() const {
+    cout << "The volume of the " << GetName3D() << " is : " << Volume();
+}
+
+bool Shape3D::operator>(const Shape3D &rhs) const {
+    return Volume() > rhs.Volume();
+}
+
+bool Shape3D::operator<(const Shape3D &rhs) const {
+    return Volume() < rhs.Volume();
+}
+
+bool Shape3D::operator==(const Shape3D &rhs) const {
+    return Volume() == rhs.Volume();
+}
+
+
+/*---------------Pyramid-----------------*/
+float TriangularPyramid::Volume() const {
+    return m_tri.Area() * m_height / 3.0f;
+}
+
+string TriangularPyramid::GetName3D() const {
+    return "TriangularPyramid";
+}
+
+void TriangularPyramid::Scale(float scaleFactor) {
+    m_height *= scaleFactor;
+    m_tri.Scale(scaleFactor);
+}
+
+void TriangularPyramid::Display() const {
+    cout << fixed << setprecision(2);
+    Shape3D::ShowVolume();
+    cout << "The height is: " << m_height << endl;
+    m_tri.Display();
+}
+
+
+/*---------------Cylinder-----------------*/
+float Cylinder::Volume() const {
+    return m_cir.Area() * m_height;
+}
+
+string Cylinder::GetName3D() const {
+    return "Cylinder";
+}
+
+void Cylinder::Scale(float scaleFactor) {
+    m_height *= scaleFactor;
+    m_cir.Scale(scaleFactor);
+}
+
+void Cylinder::Display() const {
+    cout << fixed << setprecision(2);
+    Shape3D::ShowVolume();
+    cout << "The height is: " << m_height << endl;
+    m_cir.Display();
+}
+
+
+/*---------------Sphere-----------------*/
+float Sphere::Volume() const {
+    return m_cir.Area() * m_radius * 4.0f / 3.0f;
+}
+
+string Sphere::GetName3D() const {
+    return "Sphere";
+}
+
+void Sphere::Scale(float scaleFactor) {
+    m_radius *= scaleFactor;
+    m_cir.Scale(scaleFactor);
+}
+
+void Sphere::Display() const {
+    cout << fixed << setprecision(2);
+    Shape3D::ShowVolume();
+    m_cir.Display();
 }
