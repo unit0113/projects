@@ -1,0 +1,1 @@
+Your output files should be written to this folder. Read files from input, process them, and write them here. Compare your output files against those in the examples folder.

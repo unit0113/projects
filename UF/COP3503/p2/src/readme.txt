@@ -1,0 +1,1 @@
+This folder should contain your source and header files. They will be built using a makefile from the directory ABOVE this one.
