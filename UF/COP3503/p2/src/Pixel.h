@@ -8,4 +8,8 @@ class Pixel {
 
     public:
     Pixel(std::ifstream& file);
+    bool operator==(const Pixel& rhs);
+    Pixel& operator*=(const Pixel& rhs);
+    Pixel& operator-=(const Pixel& rhs);
+    unsigned char clamp(int val);
 };

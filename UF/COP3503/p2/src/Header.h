@@ -16,4 +16,5 @@ struct Header {
     char imageDescriptor;
 
     Header(std::ifstream& file);
+    bool operator==(const Header& rhs);
 };
