@@ -10,15 +10,26 @@ void testPixelSubtract();
 void testPixelScreen();
 void testPixelOverlayDark();
 void testPixelOverlayLight();
+void testHeaderLoad();
 void testHeaderEqual();
+void testHeaderNotEqual();
+void testImageEqual();
+void testImageNotEqual();
 
 int main() {
+    cout << "Pixel Tests:\n";
     testPixelMult();
     testPixelSubtract();
     testPixelScreen();
     testPixelOverlayDark();
     testPixelOverlayLight();
+    cout << "Header Tests:\n";
+    testHeaderLoad();
     testHeaderEqual();
+    testHeaderNotEqual();
+    cout << "Image Tests:\n";
+    testImageEqual();
+    testImageNotEqual();
 }
 
 
@@ -103,14 +114,52 @@ void testPixelOverlayLight() {
     }
 }
 
-void testHeaderEqual() {
+void testHeaderLoad() {
     const int varLength = 20;
 
-    ifstream file("input/cat.tga", ios::binary);
+    ifstream file("input/car.tga", ios::binary);
     Header h1(file);
     file.close();
 
-    file.open("input/cat.tga");
+    cout << setfill('.') << setw(testCaseName) << left << "Test Header Load";
+    if ((int)h1.idLength == 0
+        && (int)h1.colorMapType == 0
+        && (int)h1.dataTypeCode == 2
+        && h1.colorMapOrigin == 0
+        && h1.colorMapLength == 0
+        && (int)h1.colorMapDepth == 0
+        && h1.xOrigin == 0
+        && h1.yOrigin == 0
+        && h1.width == 512
+        && h1.height == 512
+        && (int)h1.bitsPerPixel == 24
+        && (int)h1.imageDescriptor == 0) {
+            cout << "Passed\n";
+    } else {
+        cout << "Failed\n";
+        cout << "\t" << setw(varLength) << "IDLength:" << (int)h1.idLength << endl;
+        cout << "\t" << setw(varLength) << "Color Map Type:" << (int)h1.colorMapType << endl;
+        cout << "\t" << setw(varLength) << "Data Type Code:" << (int)h1.dataTypeCode << endl;
+        cout << "\t" << setw(varLength) << "Color Map Origin:" << h1.colorMapOrigin << endl;
+        cout << "\t" << setw(varLength) << "Color Map Length:" << h1.colorMapLength << endl;
+        cout << "\t" << setw(varLength) << "Color Map Depth:" << (int)h1.colorMapDepth << endl;
+        cout << "\t" << setw(varLength) << "X Origin:" << h1.xOrigin << endl;
+        cout << "\t" << setw(varLength) << "Y Origin:" << h1.yOrigin << endl;
+        cout << "\t" << setw(varLength) << "Width:" << h1.width << endl;
+        cout << "\t" << setw(varLength) << "Height:" << h1.height << endl;
+        cout << "\t" << setw(varLength) << "Bits Per Pixel:" << (int)h1.bitsPerPixel << endl;
+        cout << "\t" << setw(varLength) << "Image Descriptor:" << (int)h1.imageDescriptor << endl;
+    }
+}
+
+void testHeaderEqual() {
+    const int varLength = 20;
+
+    ifstream file("input/car.tga", ios::binary);
+    Header h1(file);
+    file.close();
+
+    file.open("input/car.tga", ios::binary);
     Header h2(file);
 
     cout << setfill('.') << setw(testCaseName) << left << "Test Header Equals";
@@ -130,5 +179,53 @@ void testHeaderEqual() {
         cout << "\t" << setw(varLength) << "Height:" << h1.height << " / " << h2.height << endl;
         cout << "\t" << setw(varLength) << "Bits Per Pixel:" << (int)h1.bitsPerPixel << " / " << (int)h2.bitsPerPixel << endl;
         cout << "\t" << setw(varLength) << "Image Descriptor:" << (int)h1.imageDescriptor << " / " << (int)h2.imageDescriptor << endl;
+    }
+}
+
+void testHeaderNotEqual() {
+    ifstream file("input/car.tga", ios::binary);
+    Header h1(file);
+    file.close();
+
+    file.open("input/layer_blue.tga", ios::binary);
+    Header h2(file);
+
+    cout << setfill('.') << setw(testCaseName) << left << "Test Header Not Equals";
+    if (h1 != h2) {
+        cout << "Passed\n";
+    } else {
+        cout << "Failed\n";
+    }
+}
+
+void testImageEqual() {
+    ifstream file("input/car.tga", ios::binary);
+    Image i1(file);
+    file.close();
+
+    file.open("input/car.tga", ios::binary);
+    Image i2(file);
+
+    cout << setfill('.') << setw(testCaseName) << left << "Test Image Equals";
+    if (i1 == i2) {
+        cout << "Passed\n";
+    } else {
+        cout << "Failed\n";
+    }
+}
+
+void testImageNotEqual() {
+    ifstream file("input/car.tga", ios::binary);
+    Image i1(file);
+    file.close();
+
+    file.open("input/circles.tga", ios::binary);
+    Image i2(file);
+
+    cout << setfill('.') << setw(testCaseName) << left << "Test Image Equals";
+    if (i1 != i2) {
+        cout << "Passed\n";
+    } else {
+        cout << "Failed\n";
     }
 }
