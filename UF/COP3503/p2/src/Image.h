@@ -6,7 +6,7 @@
 
 class Image {
     Header header;
-    std::vector<std::vector<Pixel>> pixels;
+    std::vector<Pixel> pixels;
 
     public:
         Image(std::ifstream& file);
