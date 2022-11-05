@@ -1,8 +1,6 @@
 #include "Image.h"
 
-Image::Image(std::ifstream& file) {
-    header = Header(file);
-
+Image::Image(std::ifstream& file) : header(file) {
     for (short i{}; i < height(); ++i) {
         for (short j{}; j < width(); ++j) {
             pixels[i].push_back(Pixel(file));
@@ -13,7 +11,7 @@ Image::Image(std::ifstream& file) {
 bool Image::operator==(const Image& rhs) {
     if (header != rhs.header) {return false;}
 
-    for (size_t i{}; i < pixels.size(), ++i) {
+    for (size_t i{}; i < pixels.size(); ++i) {
         for (size_t j{}; j < width(); ++j) {
             if (pixels[i][j] != rhs.pixels[i][j]) {
                 return false;

@@ -19,7 +19,7 @@ bool Header::operator==(const Header& rhs) {
     return idLength == rhs.idLength
            && colorMapType == rhs.colorMapType
            && dataTypeCode == rhs.dataTypeCode
-           && colorMapOrigin = rhs.colorMapOrigin
+           && colorMapOrigin == rhs.colorMapOrigin
            && colorMapLength == rhs.colorMapLength
            && colorMapDepth == rhs.colorMapDepth
            && xOrigin == rhs.xOrigin
@@ -27,5 +27,5 @@ bool Header::operator==(const Header& rhs) {
            && width == rhs.width
            && height == rhs.height
            && bitsPerPixel == rhs.bitsPerPixel
-           && imageDescriptor == rhs.imageDescriptor
+           && imageDescriptor == rhs.imageDescriptor;
 }
