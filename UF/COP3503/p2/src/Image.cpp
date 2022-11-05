@@ -17,6 +17,10 @@ bool Image::operator==(const Image& rhs) {
     return true;
 }
 
+bool Image::operator!=(const Image& rhs) {
+    return !(*this == rhs);
+}
+
 Image Image::multiply(Image source, const Image& mask) {
 
 }

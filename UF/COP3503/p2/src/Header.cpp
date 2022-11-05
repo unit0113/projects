@@ -29,3 +29,7 @@ bool Header::operator==(const Header& rhs) {
            && bitsPerPixel == rhs.bitsPerPixel
            && imageDescriptor == rhs.imageDescriptor;
 }
+
+bool Header::operator!=(const Header& rhs) {
+    return !(*this == rhs);
+}

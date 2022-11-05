@@ -14,6 +14,10 @@ bool Pixel::operator==(const Pixel& rhs) {
     return m_blue == rhs.m_blue && m_green == rhs.m_green && m_red == rhs.m_red;
 }
 
+bool Pixel::operator!=(const Pixel& rhs) {
+    return !(*this == rhs);
+}
+
 Pixel& Pixel::operator*=(const Pixel& rhs) {
     m_blue = 0.5f + (m_blue * rhs.m_blue) / 255;
     m_green = 0.5f + (m_green * rhs.m_green) / 255;

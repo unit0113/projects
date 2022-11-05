@@ -10,6 +10,7 @@ class Pixel {
     Pixel(std::ifstream& file);
     Pixel(unsigned char blue, unsigned char green, unsigned char red);
     bool operator==(const Pixel& rhs);
+    bool operator!=(const Pixel& rhs);
     Pixel& operator*=(const Pixel& rhs);
     Pixel& operator-=(const Pixel& rhs);
     unsigned char clamp(int val);

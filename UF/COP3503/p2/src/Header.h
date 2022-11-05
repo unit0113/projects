@@ -17,4 +17,5 @@ struct Header {
 
     Header(std::ifstream& file);
     bool operator==(const Header& rhs);
+    bool operator!=(const Header& rhs);
 };
