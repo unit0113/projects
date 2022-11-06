@@ -261,7 +261,7 @@ void testPart1() {
         cout << "\tPixels: ";
         vector<Pixel> p1 = i1.getPixels();
         vector<Pixel> p2 = i2.getPixels();
-        cout << "Size: " << p1.size() << ' ' << p2.size() << endl;
+        //cout << "Size: " << p1.size() << ' ' << p2.size() << endl;
         size_t i;
         for (i = 0; i < p1.size(); ++i) {
             if (p1[i] != p2[i]) {

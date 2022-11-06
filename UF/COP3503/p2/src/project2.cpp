@@ -1,6 +1,7 @@
 #include "Image.h"
 #include <fstream>
 #include <stdexcept>
+#include <iostream>
 using namespace std;
 
 void part1();
