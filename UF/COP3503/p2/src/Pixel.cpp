@@ -19,9 +19,9 @@ bool Pixel::operator!=(const Pixel& rhs) {
 }
 
 Pixel& Pixel::operator*=(const Pixel& rhs) {
-    m_blue = 0.5f + (m_blue * rhs.m_blue) / 255;
-    m_green = 0.5f + (m_green * rhs.m_green) / 255;
-    m_red = 0.5f + (m_red * rhs.m_red) / 255;
+    m_blue = 0.5f + m_blue * rhs.m_blue / 255.0f;
+    m_green = 0.5f + m_green * rhs.m_green / 255.0f;
+    m_red = 0.5f + m_red * rhs.m_red / 255.0f;
 
     return *this;
 }
@@ -48,7 +48,7 @@ void Pixel::screen(const Pixel& p) {
 }
 
 unsigned char Pixel::screenHelper(const unsigned char& val1, const unsigned char& val2) {
-    float temp = 1 - (1 - val1 / 255.0) * (1 - val2 / 255.0);
+    float temp = 1 - (1 - val1 / 255.0f) * (1 - val2 / 255.0f);
     return 0.5f + 255 * temp;
 }
 
@@ -65,16 +65,22 @@ void Pixel::overlay(const Pixel& p) {
 }
 
 unsigned char Pixel::overlayHelperMultiply(const unsigned char& val1, const unsigned char& val2) {
-    int temp = 0.5f + 2 * (val1 * val2) / 255;
+    int temp = 0.5f + 2 * (val1 * val2) / 255.0f;
     return clamp(temp);
 }
 
 unsigned char Pixel::overlayHelperScreen(const unsigned char& val1, const unsigned char& val2) {
-    float temp = 1 - 2* (1 - val1 / 255.0) * (1 - val2 / 255.0);
+    float temp = 1 - 2* (1 - val1 / 255.0) * (1 - val2 / 255.0f);
     return 0.5f + 255 * temp;
 }
 
 bool Pixel::isDark() const {
     float temp = m_blue / 255.0f + m_green / 255.0f + m_red / 255.0f;
     return ((temp / 3.0) <= 0.5);
+}
+
+void Pixel::write(std::ofstream& file) {
+    file.write(reinterpret_cast<const char*>(&m_blue), sizeof(m_blue));
+    file.write(reinterpret_cast<const char*>(&m_green), sizeof(m_green));
+    file.write(reinterpret_cast<const char*>(&m_red), sizeof(m_red));
 }

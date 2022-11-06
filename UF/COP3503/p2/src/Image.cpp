@@ -21,21 +21,36 @@ bool Image::operator!=(const Image& rhs) {
     return !(*this == rhs);
 }
 
-Image Image::multiply(Image source, const Image& mask) {
-
+void Image::multiply(const Image& mask) {
+    for (size_t i{}; i < pixels.size(); ++i) {
+        pixels[i] *= mask.pixels[i];
+    }
 }
 
 
-Image Image::subtract(Image source, const Image& mask) {
-
+void Image::subtract(const Image& mask) {
+    for (size_t i{}; i < pixels.size(); ++i) {
+        pixels[i] -= mask.pixels[i];
+    }
 }
 
 
-Image Image::screen(Image source, const Image& mask) {
-
+void Image::screen(const Image& mask) {
+    for (size_t i{}; i < pixels.size(); ++i) {
+        pixels[i].screen(mask.pixels[i]);
+    }
 }
 
 
-Image Image::overlay(Image source, const Image& mask) {
+void Image::overlay(const Image& mask) {
+    for (size_t i{}; i < pixels.size(); ++i) {
+        pixels[i].overlay(mask.pixels[i]);
+    }
+}
 
+void Image::write(std::ofstream& file) {
+    header.write(file);
+    for (Pixel p: pixels) {
+        p.write(file);
+    }
 }

@@ -16,6 +16,8 @@ void testHeaderNotEqual();
 void testImageEqual();
 void testImageNotEqual();
 
+void testPart1();
+
 int main() {
     cout << "Pixel Tests:\n";
     testPixelMult();
@@ -23,13 +25,16 @@ int main() {
     testPixelScreen();
     testPixelOverlayDark();
     testPixelOverlayLight();
-    cout << "Header Tests:\n";
+    cout << "\nHeader Tests:\n";
     testHeaderLoad();
     testHeaderEqual();
     testHeaderNotEqual();
-    cout << "Image Tests:\n";
+    cout << "\nImage Tests:\n";
     testImageEqual();
     testImageNotEqual();
+
+    cout << "\nMain tests:\n";
+    testPart1();
 }
 
 
@@ -227,5 +232,61 @@ void testImageNotEqual() {
         cout << "Passed\n";
     } else {
         cout << "Failed\n";
+    }
+}
+
+void testPart1() {
+    ifstream file("output/part1.tga", ios::binary);
+    Image i1(file);
+    file.close();
+
+    file.open("examples/EXAMPLE_part1.tga", ios::binary);
+    Image i2(file);
+
+    cout << setfill('.') << setw(testCaseName) << left << "Test Part 1";
+    if (i1 == i2) {
+        cout << "Passed\n";
+    } else {
+        cout << "Failed\n";
+
+        // Check Header
+        cout << "\tHeader: ";
+        if (i1.getHeader() == i2.getHeader()) {
+            cout << "Passed\n";
+        } else {
+            cout << "Failed\n";
+        }
+
+        // Check Pixels
+        cout << "\tPixels: ";
+        vector<Pixel> p1 = i1.getPixels();
+        vector<Pixel> p2 = i2.getPixels();
+        cout << "Size: " << p1.size() << ' ' << p2.size() << endl;
+        size_t i;
+        for (i = 0; i < p1.size(); ++i) {
+            if (p1[i] != p2[i]) {
+                cout << "Failed Pixel at index " << i << endl;
+                cout << "\tResult Image Pixel:  [" << (int)p1[i].getBlue() << ' ' << (int)p1[i].getGreen() << ' ' << (int)p1[i].getRed() << "]\n";
+                cout << "\tExample Image Pixel: [" << (int)p2[i].getBlue() << ' ' << (int)p2[i].getGreen() << ' ' << (int)p2[i].getRed() << "]\n";
+                break;
+            }
+        }
+
+        // Get Original Values
+        ifstream file("input/layer1.tga", ios::binary);
+        Image in1(file);
+        file.close();
+
+        file.open("input/pattern1.tga", ios::binary);
+        Image in2(file);
+
+        Pixel inp1 = in1.getPixels()[i];
+        Pixel inp2 = in2.getPixels()[i];
+        cout << "\tOriginal Pixel 1: [" << (int)inp1.getBlue() << ' ' << (int)inp1.getGreen() << ' ' << (int)inp1.getRed() << "]\n";
+        cout << "\tOriginal Pixel 2: [" << (int)inp2.getBlue() << ' ' << (int)inp2.getGreen() << ' ' << (int)inp2.getRed() << "]\n";
+        inp1 *= inp2;
+        cout << "\tMultiplied Pixel: [" << (int)inp1.getBlue() << ' ' << (int)inp1.getGreen() << ' ' << (int)inp1.getRed() << "]\n";
+
+
     }
 }

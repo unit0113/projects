@@ -14,8 +14,11 @@ class Image {
         short height() const {return header.height;};
         bool operator==(const Image& rhs);
         bool operator!=(const Image& rhs);
-        Image multiply(Image source, const Image& mask);
-        Image subtract(Image source, const Image& mask);
-        Image screen(Image source, const Image& mask);
-        Image overlay(Image source, const Image& mask);
+        void multiply(const Image& mask);
+        void subtract(const Image& mask);
+        void screen(const Image& mask);
+        void overlay(const Image& mask);
+        void write(std::ofstream& file);
+        Header getHeader() const {return header;};
+        std::vector<Pixel> getPixels() const {return pixels;};
 };
