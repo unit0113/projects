@@ -1,7 +1,8 @@
 #include "Image.h"
 
 Image::Image(std::ifstream& file) : header(file) {
-    while (file) {
+    size_t numPixels = header.width * header.height;
+    for (size_t i{}; i < numPixels; ++i) {
         pixels.push_back(Pixel(file));
     }
 }
@@ -48,7 +49,8 @@ void Image::overlay(const Image& mask) {
     }
 }
 
-void Image::write(std::ofstream& file) {
+void Image::write(const char* filePath) {
+    std::ofstream file(filePath, std::ios::binary);
     header.write(file);
     for (Pixel p: pixels) {
         p.write(file);

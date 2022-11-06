@@ -1,4 +1,5 @@
 #include "Pixel.h"
+#include <algorithm>
 
 Pixel::Pixel(std::ifstream& file) {
     m_blue = file.get();
@@ -27,12 +28,9 @@ Pixel& Pixel::operator*=(const Pixel& rhs) {
 }
 
 Pixel& Pixel::operator-=(const Pixel& rhs) {
-    int temp = m_blue - rhs.m_blue;
-    m_blue = clamp(temp);
-    temp = m_green - rhs.m_green;
-    m_green = clamp(temp);
-    temp = m_red - rhs.m_red;
-    m_red = clamp(temp);
+    m_blue = clamp((int)m_blue - (int)rhs.m_blue);
+    m_green = clamp((int)m_green - (int)rhs.m_green);
+    m_red = clamp((int)m_red - (int)rhs.m_red);
     
     return *this;
 }
@@ -52,15 +50,23 @@ unsigned char Pixel::screenHelper(const unsigned char& val1, const unsigned char
     return 0.5f + 255 * temp;
 }
 
-void Pixel::overlay(const Pixel& p) {
-    if (p.isDark()) {
-        m_blue = overlayHelperMultiply(m_blue, p.m_blue);
-        m_green = overlayHelperMultiply(m_green, p.m_green);
-        m_red = overlayHelperMultiply(m_red, p.m_red);
+void Pixel::overlay(const Pixel& mask) {
+    if (isDark(mask.m_blue)) {
+        m_blue = overlayHelperMultiply(m_blue, mask.m_blue);
     } else {
-        m_blue = overlayHelperScreen(m_blue, p.m_blue);
-        m_green = overlayHelperScreen(m_green, p.m_green);
-        m_red = overlayHelperScreen(m_red, p.m_red);
+        m_blue = overlayHelperScreen(m_blue, mask.m_blue);
+    }
+
+    if (isDark(mask.m_green)) {
+        m_green = overlayHelperMultiply(m_green, mask.m_green);
+    } else {
+        m_green = overlayHelperScreen(m_green, mask.m_green);
+    }
+
+    if (isDark(mask.m_red)) {
+        m_red = overlayHelperMultiply(m_red, mask.m_red);
+    } else {
+        m_red = overlayHelperScreen(m_red, mask.m_red);
     }
 }
 
@@ -70,13 +76,12 @@ unsigned char Pixel::overlayHelperMultiply(const unsigned char& val1, const unsi
 }
 
 unsigned char Pixel::overlayHelperScreen(const unsigned char& val1, const unsigned char& val2) {
-    float temp = 1 - 2* (1 - val1 / 255.0) * (1 - val2 / 255.0f);
-    return 0.5f + 255 * temp;
+    float temp = 1 - 2 * (1 - val1 / 255.0f) * (1 - val2 / 255.0f);
+    return 0.5f + 255.0f * temp;
 }
 
-bool Pixel::isDark() const {
-    float temp = m_blue / 255.0f + m_green / 255.0f + m_red / 255.0f;
-    return ((temp / 3.0) <= 0.5);
+bool Pixel::isDark(const unsigned char& val) const {
+    return (val / 255.0f) <= 0.5f;
 }
 
 void Pixel::write(std::ofstream& file) {

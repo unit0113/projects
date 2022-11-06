@@ -18,7 +18,7 @@ class Image {
         void subtract(const Image& mask);
         void screen(const Image& mask);
         void overlay(const Image& mask);
-        void write(std::ofstream& file);
+        void write(const char* filePath);
         Header getHeader() const {return header;};
         std::vector<Pixel> getPixels() const {return pixels;};
 };

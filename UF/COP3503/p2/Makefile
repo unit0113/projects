@@ -4,6 +4,11 @@ main:
 test:
 	g++ -std=c++11 -o tests.exe src/tests.cpp src/Image.cpp src/Pixel.cpp src/Header.cpp
 
+full:
+	main
+	test
+
 clean:
 	del project2.out
 	del tests.exe
+	del output/*.tga

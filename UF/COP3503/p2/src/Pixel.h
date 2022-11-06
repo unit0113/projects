@@ -21,7 +21,7 @@ class Pixel {
     void overlay(const Pixel& p);
     unsigned char overlayHelperMultiply(const unsigned char& val1, const unsigned char& val2);
     unsigned char overlayHelperScreen(const unsigned char& val1, const unsigned char& val2);
-    bool isDark() const;
+    bool isDark(const unsigned char& val) const;
 
     void write(std::ofstream& file);
 

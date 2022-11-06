@@ -16,7 +16,13 @@ void testHeaderNotEqual();
 void testImageEqual();
 void testImageNotEqual();
 
+bool byteCheck(const char* outputFilePath, const char* exampleFilePath);
+void isSameFile(const char* outputFilePath, const char* exampleFilePath);
 void testPart1();
+void testPart2();
+void testPart3();
+void testPart4();
+void testPart5();
 
 int main() {
     cout << "Pixel Tests:\n";
@@ -35,8 +41,11 @@ int main() {
 
     cout << "\nMain tests:\n";
     testPart1();
+    testPart2();
+    testPart3();
+    testPart4();
+    testPart5();
 }
-
 
 
 void testPixelMult() {
@@ -109,7 +118,7 @@ void testPixelOverlayLight() {
     p1.overlay(p2);
 
     cout << setfill('.') << setw(testCaseName) << left << "Test Pixel Overlay-Light";
-    Pixel p3 = Pixel(67, 158, 255);
+    Pixel p3 = Pixel(78, 158, 255);
     if (p1 == p3) {
         cout << "Passed\n";
     } else {
@@ -235,58 +244,77 @@ void testImageNotEqual() {
     }
 }
 
-void testPart1() {
-    ifstream file("output/part1.tga", ios::binary);
-    Image i1(file);
+bool byteCheck(const char* outputFilePath, const char* exampleFilePath) {
+    ifstream outputFile(outputFilePath, ios::binary);
+    ifstream exampleFile(exampleFilePath, ios::binary);
+    while (outputFile) {
+        if (outputFile.get() != exampleFile.get()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void isSameFile(const char* outputFilePath, const char* exampleFilePath) {
+    ifstream file(outputFilePath, ios::binary);
+    Image output(file);
     file.close();
 
-    file.open("examples/EXAMPLE_part1.tga", ios::binary);
-    Image i2(file);
+    file.open(exampleFilePath, ios::binary);
+    Image example(file);
+    file.close();
 
-    cout << setfill('.') << setw(testCaseName) << left << "Test Part 1";
-    if (i1 == i2) {
+    if (output == example && byteCheck(outputFilePath, exampleFilePath)) {
         cout << "Passed\n";
     } else {
         cout << "Failed\n";
 
         // Check Header
         cout << "\tHeader: ";
-        if (i1.getHeader() == i2.getHeader()) {
+        if (output.getHeader() == example.getHeader()) {
             cout << "Passed\n";
         } else {
             cout << "Failed\n";
         }
 
         // Check Pixels
-        cout << "\tPixels: ";
-        vector<Pixel> p1 = i1.getPixels();
-        vector<Pixel> p2 = i2.getPixels();
-        //cout << "Size: " << p1.size() << ' ' << p2.size() << endl;
+        cout << "\tPixels:\n";
+        vector<Pixel> outputPixels = output.getPixels();
+        vector<Pixel> examplePixels = example.getPixels();
+        cout << "\t\tSize: " << outputPixels.size() << ' ' << examplePixels.size() << endl;
         size_t i;
-        for (i = 0; i < p1.size(); ++i) {
-            if (p1[i] != p2[i]) {
-                cout << "Failed Pixel at index " << i << endl;
-                cout << "\tResult Image Pixel:  [" << (int)p1[i].getBlue() << ' ' << (int)p1[i].getGreen() << ' ' << (int)p1[i].getRed() << "]\n";
-                cout << "\tExample Image Pixel: [" << (int)p2[i].getBlue() << ' ' << (int)p2[i].getGreen() << ' ' << (int)p2[i].getRed() << "]\n";
+        for (i = 0; i < outputPixels.size(); ++i) {
+            if (outputPixels[i] != examplePixels[i]) {
+                cout << "\t\tFailed Pixel at index " << i << endl;
+                cout << "\t\tResult Image Pixel:  [" << (int)outputPixels[i].getBlue() << ' ' << (int)outputPixels[i].getGreen() << ' ' << (int)outputPixels[i].getRed() << "]\n";
+                cout << "\t\tExample Image Pixel: [" << (int)examplePixels[i].getBlue() << ' ' << (int)examplePixels[i].getGreen() << ' ' << (int)examplePixels[i].getRed() << "]\n";
                 break;
             }
         }
-
-        // Get Original Values
-        ifstream file("input/layer1.tga", ios::binary);
-        Image in1(file);
-        file.close();
-
-        file.open("input/pattern1.tga", ios::binary);
-        Image in2(file);
-
-        Pixel inp1 = in1.getPixels()[i];
-        Pixel inp2 = in2.getPixels()[i];
-        cout << "\tOriginal Pixel 1: [" << (int)inp1.getBlue() << ' ' << (int)inp1.getGreen() << ' ' << (int)inp1.getRed() << "]\n";
-        cout << "\tOriginal Pixel 2: [" << (int)inp2.getBlue() << ' ' << (int)inp2.getGreen() << ' ' << (int)inp2.getRed() << "]\n";
-        inp1 *= inp2;
-        cout << "\tMultiplied Pixel: [" << (int)inp1.getBlue() << ' ' << (int)inp1.getGreen() << ' ' << (int)inp1.getRed() << "]\n";
-
-
     }
+}
+
+void testPart1() {
+    cout << setfill('.') << setw(testCaseName) << left << "Test Part 1";
+    isSameFile("output/part1.tga", "examples/EXAMPLE_part1.tga");
+}
+
+void testPart2() {
+    cout << setfill('.') << setw(testCaseName) << left << "Test Part 2";
+    isSameFile("output/part2.tga", "examples/EXAMPLE_part2.tga");
+}
+
+void testPart3() {
+    cout << setfill('.') << setw(testCaseName) << left << "Test Part 3";
+    isSameFile("output/part3.tga", "examples/EXAMPLE_part3.tga");
+}
+
+void testPart4() {
+    cout << setfill('.') << setw(testCaseName) << left << "Test Part 4";
+    isSameFile("output/part4.tga", "examples/EXAMPLE_part4.tga");
+}
+
+void testPart5() {
+    cout << setfill('.') << setw(testCaseName) << left << "Test Part 5";
+    isSameFile("output/part5.tga", "examples/EXAMPLE_part5.tga");
 }
