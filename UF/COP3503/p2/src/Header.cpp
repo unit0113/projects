@@ -15,6 +15,7 @@ Header::Header(std::ifstream& file) {
     file.read(&imageDescriptor, sizeof(imageDescriptor));
 }
 
+
 bool Header::operator==(const Header& rhs) {
     return idLength == rhs.idLength
            && colorMapType == rhs.colorMapType
@@ -30,11 +31,13 @@ bool Header::operator==(const Header& rhs) {
            && imageDescriptor == rhs.imageDescriptor;
 }
 
+
 bool Header::operator!=(const Header& rhs) {
     return !(*this == rhs);
 }
 
-void Header::write(std::ofstream& file) {
+
+void Header::write(std::ofstream& file) const {
     file.write(&idLength, sizeof(idLength));
     file.write(&colorMapType, sizeof(colorMapType));
     file.write(&dataTypeCode, sizeof(dataTypeCode));

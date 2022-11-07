@@ -23,6 +23,8 @@ void testPart2();
 void testPart3();
 void testPart4();
 void testPart5();
+void testPart6();
+void testPart7();
 
 int main() {
     cout << "Pixel Tests:\n";
@@ -45,6 +47,8 @@ int main() {
     testPart3();
     testPart4();
     testPart5();
+    testPart6();
+    testPart7();
 }
 
 
@@ -64,6 +68,7 @@ void testPixelMult() {
     }
 }
 
+
 void testPixelSubtract() {
     Pixel p1 = Pixel(100, 100, 100);
     Pixel p2 = Pixel(100, 0, 255);
@@ -79,6 +84,7 @@ void testPixelSubtract() {
         cout << "\tPixel 2: [" << p3.getBlue() << ' ' << p3.getGreen() << ' ' << p3.getRed() << "]\n";
     }
 }
+
 
 void testPixelScreen() {
     Pixel p1 = Pixel(100, 100, 100);
@@ -96,6 +102,7 @@ void testPixelScreen() {
     }
 }
 
+
 void testPixelOverlayDark() {
     Pixel p1 = Pixel(100, 100, 100);
     Pixel p2 = Pixel(0, 50, 100);
@@ -112,6 +119,7 @@ void testPixelOverlayDark() {
     }
 }
 
+
 void testPixelOverlayLight() {
     Pixel p1 = Pixel(100, 100, 100);
     Pixel p2 = Pixel(100, 175, 255);
@@ -127,6 +135,7 @@ void testPixelOverlayLight() {
         cout << "\tPixel 2: [" << (int)p3.getBlue() << ' ' << (int)p3.getGreen() << ' ' << (int)p3.getRed() << "]\n";
     }
 }
+
 
 void testHeaderLoad() {
     const int varLength = 20;
@@ -166,6 +175,7 @@ void testHeaderLoad() {
     }
 }
 
+
 void testHeaderEqual() {
     const int varLength = 20;
 
@@ -196,6 +206,7 @@ void testHeaderEqual() {
     }
 }
 
+
 void testHeaderNotEqual() {
     ifstream file("input/car.tga", ios::binary);
     Header h1(file);
@@ -211,6 +222,7 @@ void testHeaderNotEqual() {
         cout << "Failed\n";
     }
 }
+
 
 void testImageEqual() {
     ifstream file("input/car.tga", ios::binary);
@@ -228,6 +240,7 @@ void testImageEqual() {
     }
 }
 
+
 void testImageNotEqual() {
     ifstream file("input/car.tga", ios::binary);
     Image i1(file);
@@ -244,6 +257,7 @@ void testImageNotEqual() {
     }
 }
 
+
 bool byteCheck(const char* outputFilePath, const char* exampleFilePath) {
     ifstream outputFile(outputFilePath, ios::binary);
     ifstream exampleFile(exampleFilePath, ios::binary);
@@ -254,6 +268,7 @@ bool byteCheck(const char* outputFilePath, const char* exampleFilePath) {
     }
     return true;
 }
+
 
 void isSameFile(const char* outputFilePath, const char* exampleFilePath) {
     ifstream file(outputFilePath, ios::binary);
@@ -294,27 +309,44 @@ void isSameFile(const char* outputFilePath, const char* exampleFilePath) {
     }
 }
 
+
 void testPart1() {
     cout << setfill('.') << setw(testCaseName) << left << "Test Part 1";
     isSameFile("output/part1.tga", "examples/EXAMPLE_part1.tga");
 }
+
 
 void testPart2() {
     cout << setfill('.') << setw(testCaseName) << left << "Test Part 2";
     isSameFile("output/part2.tga", "examples/EXAMPLE_part2.tga");
 }
 
+
 void testPart3() {
     cout << setfill('.') << setw(testCaseName) << left << "Test Part 3";
     isSameFile("output/part3.tga", "examples/EXAMPLE_part3.tga");
 }
+
 
 void testPart4() {
     cout << setfill('.') << setw(testCaseName) << left << "Test Part 4";
     isSameFile("output/part4.tga", "examples/EXAMPLE_part4.tga");
 }
 
+
 void testPart5() {
     cout << setfill('.') << setw(testCaseName) << left << "Test Part 5";
     isSameFile("output/part5.tga", "examples/EXAMPLE_part5.tga");
+}
+
+
+void testPart6() {
+    cout << setfill('.') << setw(testCaseName) << left << "Test Part 6";
+    isSameFile("output/part6.tga", "examples/EXAMPLE_part6.tga");
+}
+
+
+void testPart7() {
+    cout << setfill('.') << setw(testCaseName) << left << "Test Part 7";
+    isSameFile("output/part7.tga", "examples/EXAMPLE_part7.tga");
 }

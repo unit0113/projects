@@ -1,6 +1,7 @@
 #include "Image.h"
 #include <fstream>
 #include <stdexcept>
+#include <iostream>
 using namespace std;
 
 Image openFile(const char* file);
@@ -9,6 +10,8 @@ void part2();
 void part3();
 void part4();
 void part5();
+void part6();
+void part7();
 
 int main() {
     part1();
@@ -16,6 +19,8 @@ int main() {
     part3();
     part4();
     part5();
+    part6();
+    part7();
 }
 
 
@@ -76,4 +81,20 @@ void part5() {
 
     base.overlay(mask);
     base.write("output/part5.tga");
+}
+
+
+void part6() {
+    Image base = openFile("input/car.tga");
+    Pixel green(0, 200, 0);
+
+    base.add(green);
+    base.write("output/part6.tga");
+}
+
+
+void part7() {
+    Image base = openFile("input/car.tga");
+    base.scale(0, 1, 4);
+    base.write("output/part7.tga");
 }

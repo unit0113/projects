@@ -7,6 +7,7 @@ Image::Image(std::ifstream& file) : header(file) {
     }
 }
 
+
 bool Image::operator==(const Image& rhs) {
     if (header != rhs.header) {return false;}
 
@@ -18,9 +19,11 @@ bool Image::operator==(const Image& rhs) {
     return true;
 }
 
+
 bool Image::operator!=(const Image& rhs) {
     return !(*this == rhs);
 }
+
 
 void Image::multiply(const Image& mask) {
     for (size_t i{}; i < pixels.size(); ++i) {
@@ -32,6 +35,13 @@ void Image::multiply(const Image& mask) {
 void Image::subtract(const Image& mask) {
     for (size_t i{}; i < pixels.size(); ++i) {
         pixels[i] -= mask.pixels[i];
+    }
+}
+
+
+void Image::add(const Pixel& inPixel) {
+    for (Pixel& p: pixels) {
+        p += inPixel;
     }
 }
 
@@ -49,10 +59,18 @@ void Image::overlay(const Image& mask) {
     }
 }
 
-void Image::write(const char* filePath) {
+
+void Image::write(const char* filePath) const {
     std::ofstream file(filePath, std::ios::binary);
     header.write(file);
-    for (Pixel p: pixels) {
+    for (const Pixel& p: pixels) {
         p.write(file);
+    }
+}
+
+
+void Image::scale(const short blueScale, const short greenScale, const short redScale) {
+    for (Pixel& p: pixels) {
+        p.scale(blueScale, greenScale, redScale);
     }
 }
