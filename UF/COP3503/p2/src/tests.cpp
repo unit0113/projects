@@ -3,7 +3,7 @@
 #include "Image.h"
 using namespace std;
 
-static int testCaseName = 30;
+static int testCaseNameLength = 30;
 
 void testPixelMult();
 void testPixelSubtract();
@@ -25,6 +25,9 @@ void testPart4();
 void testPart5();
 void testPart6();
 void testPart7();
+void testPart8();
+void testPart9();
+void testPart10();
 
 int main() {
     cout << "Pixel Tests:\n";
@@ -49,6 +52,9 @@ int main() {
     testPart5();
     testPart6();
     testPart7();
+    testPart8();
+    testPart9();
+    testPart10();
 }
 
 
@@ -57,7 +63,7 @@ void testPixelMult() {
     Pixel p2 = Pixel(100, 0, 255);
     p1 *= p2;
 
-    cout << setfill('.') << setw(testCaseName) << left << "Test Pixel Multiply";
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Pixel Multiply";
     Pixel p3 = Pixel(39, 0, 100);
     if (p1 == p3) {
         cout << "Passed\n";
@@ -74,7 +80,7 @@ void testPixelSubtract() {
     Pixel p2 = Pixel(100, 0, 255);
     p1 -= p2;
 
-    cout << setfill('.') << setw(testCaseName) << left << "Test Pixel Subtract";
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Pixel Subtract";
     Pixel p3 = Pixel(0, 100, 0);
     if (p1 == p3) {
         cout << "Passed\n";
@@ -91,7 +97,7 @@ void testPixelScreen() {
     Pixel p2 = Pixel(100, 0, 255);
     p1.screen(p2);
 
-    cout << setfill('.') << setw(testCaseName) << left << "Test Pixel Screen";
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Pixel Screen";
     Pixel p3 = Pixel(161, 100, 255);
     if (p1 == p3) {
         cout << "Passed\n";
@@ -108,7 +114,7 @@ void testPixelOverlayDark() {
     Pixel p2 = Pixel(0, 50, 100);
     p1.overlay(p2);
 
-    cout << setfill('.') << setw(testCaseName) << left << "Test Pixel Overlay-Dark";
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Pixel Overlay-Dark";
     Pixel p3 = Pixel(0, 39, 78);
     if (p1 == p3) {
         cout << "Passed\n";
@@ -125,7 +131,7 @@ void testPixelOverlayLight() {
     Pixel p2 = Pixel(100, 175, 255);
     p1.overlay(p2);
 
-    cout << setfill('.') << setw(testCaseName) << left << "Test Pixel Overlay-Light";
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Pixel Overlay-Light";
     Pixel p3 = Pixel(78, 158, 255);
     if (p1 == p3) {
         cout << "Passed\n";
@@ -144,7 +150,7 @@ void testHeaderLoad() {
     Header h1(file);
     file.close();
 
-    cout << setfill('.') << setw(testCaseName) << left << "Test Header Load";
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Header Load";
     if ((int)h1.idLength == 0
         && (int)h1.colorMapType == 0
         && (int)h1.dataTypeCode == 2
@@ -186,7 +192,7 @@ void testHeaderEqual() {
     file.open("input/car.tga", ios::binary);
     Header h2(file);
 
-    cout << setfill('.') << setw(testCaseName) << left << "Test Header Equals";
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Header Equals";
     if (h1 == h2) {
         cout << "Passed\n";
     } else {
@@ -215,7 +221,7 @@ void testHeaderNotEqual() {
     file.open("input/layer_blue.tga", ios::binary);
     Header h2(file);
 
-    cout << setfill('.') << setw(testCaseName) << left << "Test Header Not Equals";
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Header Not Equals";
     if (h1 != h2) {
         cout << "Passed\n";
     } else {
@@ -232,7 +238,7 @@ void testImageEqual() {
     file.open("input/car.tga", ios::binary);
     Image i2(file);
 
-    cout << setfill('.') << setw(testCaseName) << left << "Test Image Equals";
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Image Equals";
     if (i1 == i2) {
         cout << "Passed\n";
     } else {
@@ -249,7 +255,7 @@ void testImageNotEqual() {
     file.open("input/circles.tga", ios::binary);
     Image i2(file);
 
-    cout << setfill('.') << setw(testCaseName) << left << "Test Image Equals";
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Image Equals";
     if (i1 != i2) {
         cout << "Passed\n";
     } else {
@@ -311,42 +317,66 @@ void isSameFile(const char* outputFilePath, const char* exampleFilePath) {
 
 
 void testPart1() {
-    cout << setfill('.') << setw(testCaseName) << left << "Test Part 1";
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Part 1";
     isSameFile("output/part1.tga", "examples/EXAMPLE_part1.tga");
 }
 
 
 void testPart2() {
-    cout << setfill('.') << setw(testCaseName) << left << "Test Part 2";
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Part 2";
     isSameFile("output/part2.tga", "examples/EXAMPLE_part2.tga");
 }
 
 
 void testPart3() {
-    cout << setfill('.') << setw(testCaseName) << left << "Test Part 3";
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Part 3";
     isSameFile("output/part3.tga", "examples/EXAMPLE_part3.tga");
 }
 
 
 void testPart4() {
-    cout << setfill('.') << setw(testCaseName) << left << "Test Part 4";
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Part 4";
     isSameFile("output/part4.tga", "examples/EXAMPLE_part4.tga");
 }
 
 
 void testPart5() {
-    cout << setfill('.') << setw(testCaseName) << left << "Test Part 5";
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Part 5";
     isSameFile("output/part5.tga", "examples/EXAMPLE_part5.tga");
 }
 
 
 void testPart6() {
-    cout << setfill('.') << setw(testCaseName) << left << "Test Part 6";
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Part 6";
     isSameFile("output/part6.tga", "examples/EXAMPLE_part6.tga");
 }
 
 
 void testPart7() {
-    cout << setfill('.') << setw(testCaseName) << left << "Test Part 7";
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Part 7";
     isSameFile("output/part7.tga", "examples/EXAMPLE_part7.tga");
+}
+
+
+void testPart8() {
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Part 8 Blue";
+    isSameFile("output/part8_b.tga", "examples/EXAMPLE_part8_b.tga");
+
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Part 8 Green";
+    isSameFile("output/part8_g.tga", "examples/EXAMPLE_part8_g.tga");
+
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Part 8 Red";
+    isSameFile("output/part8_r.tga", "examples/EXAMPLE_part8_r.tga");
+}
+
+
+void testPart9() {
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Part 9";
+    isSameFile("output/part9.tga", "examples/EXAMPLE_part9.tga");
+}
+
+
+void testPart10() {
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Part 10";
+    isSameFile("output/part10.tga", "examples/EXAMPLE_part10.tga");
 }

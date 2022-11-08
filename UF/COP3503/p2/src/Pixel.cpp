@@ -112,3 +112,23 @@ void Pixel::write(std::ofstream& file) const {
     file.write(reinterpret_cast<const char*>(&m_green), sizeof(m_green));
     file.write(reinterpret_cast<const char*>(&m_red), sizeof(m_red));
 }
+
+void Pixel::writeBlue(std::ofstream& file) const {
+    file.write(reinterpret_cast<const char*>(&m_blue), sizeof(m_blue));
+    file.write(reinterpret_cast<const char*>(&m_blue), sizeof(m_blue));
+    file.write(reinterpret_cast<const char*>(&m_blue), sizeof(m_blue));
+}
+
+
+void Pixel::writeGreen(std::ofstream& file) const {
+    file.write(reinterpret_cast<const char*>(&m_green), sizeof(m_green));
+    file.write(reinterpret_cast<const char*>(&m_green), sizeof(m_green));
+    file.write(reinterpret_cast<const char*>(&m_green), sizeof(m_green));
+}
+
+
+void Pixel::writeRed(std::ofstream& file) const {
+    file.write(reinterpret_cast<const char*>(&m_red), sizeof(m_red));
+    file.write(reinterpret_cast<const char*>(&m_red), sizeof(m_red));
+    file.write(reinterpret_cast<const char*>(&m_red), sizeof(m_red));
+}

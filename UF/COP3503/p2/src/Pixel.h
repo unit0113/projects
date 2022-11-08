@@ -25,6 +25,9 @@ class Pixel {
     void scale(const short blueScale, const short greenScale, const short redScale);
 
     void write(std::ofstream& file) const;
+    void writeBlue(std::ofstream& file) const;
+    void writeGreen(std::ofstream& file) const;
+    void writeRed(std::ofstream& file) const;
 
     unsigned char getBlue() const {return m_blue;};
     unsigned char getGreen() const {return m_green;};

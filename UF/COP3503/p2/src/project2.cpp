@@ -12,6 +12,9 @@ void part4();
 void part5();
 void part6();
 void part7();
+void part8();
+void part9();
+void part10();
 
 int main() {
     part1();
@@ -21,6 +24,9 @@ int main() {
     part5();
     part6();
     part7();
+    part8();
+    part9();
+    part10();
 }
 
 
@@ -97,4 +103,26 @@ void part7() {
     Image base = openFile("input/car.tga");
     base.scale(0, 1, 4);
     base.write("output/part7.tga");
+}
+
+
+void part8() {
+    Image base = openFile("input/car.tga");
+    base.writeChannel("output/part8_b.tga", "output/part8_g.tga", "output/part8_r.tga");
+}
+
+
+void part9() {
+    Image blue = openFile("input/layer_blue.tga");
+    Image green = openFile("input/layer_green.tga");
+    Image red = openFile("input/layer_red.tga");
+    Image result(blue, green, red);
+    result.write("output/part9.tga");
+}
+
+
+void part10() {
+    Image base = openFile("input/text2.tga");
+    base.flip();
+    base.write("output/part10.tga");
 }
