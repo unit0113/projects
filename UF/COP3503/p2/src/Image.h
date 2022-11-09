@@ -11,6 +11,7 @@ class Image {
     public:
         Image(std::ifstream& file);
         Image(const Image& blue, const Image& green, const Image& red);
+        Image(const Image& topLeft, const Image& topRight, const Image& bottomLeft, const Image& bottomRight);
         
         short width() const {return header.width;};
         short height() const {return header.height;};

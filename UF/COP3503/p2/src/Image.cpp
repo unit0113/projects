@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <iterator>
 #include "Image.h"
 
 Image::Image(std::ifstream& file) : header(file) {
@@ -18,6 +19,42 @@ Image::Image(const Image& blue, const Image& green, const Image& red) : header(b
     for (size_t i{}; i < numPixels; ++i) {
         pixels.push_back(Pixel(bluePixels[i].getBlue(), greenPixels[i].getGreen(), redPixels[i].getRed()));
     }
+}
+
+
+Image::Image(const Image& topLeft, const Image& topRight, const Image& bottomLeft, const Image& bottomRight) : header(topLeft.getHeader()) {
+    std::vector<Pixel> topLeftPixels = topLeft.getPixels();
+    std::vector<Pixel> topRightPixels = topRight.getPixels();
+    std::vector<Pixel> bottomLeftPixels = bottomLeft.getPixels();
+    std::vector<Pixel> bottomRightPixels = bottomRight.getPixels();
+
+    std::vector<Pixel>::iterator topLeftIt = topLeftPixels.begin();
+    std::vector<Pixel>::iterator topRightIt = topRightPixels.begin();
+    std::vector<Pixel>::iterator bottomLeftIt = bottomLeftPixels.begin();
+    std::vector<Pixel>::iterator bottomRightIt = bottomRightPixels.begin();
+
+    // Bottom half
+    for (size_t row{}; row < header.height; ++row) {
+        for (size_t col{}; col < header.width; ++col) {
+            pixels.push_back(*bottomLeftIt++);
+        }
+        for (size_t col{}; col < header.width; ++col) {
+            pixels.push_back(*bottomRightIt++);
+        }
+    }
+
+    // Top half
+    for (size_t row{}; row < header.height; ++row) {
+        for (size_t col{}; col < header.width; ++col) {
+            pixels.push_back(*topLeftIt++);
+        }
+        for (size_t col{}; col < header.width; ++col) {
+            pixels.push_back(*topRightIt++);
+        }
+    }
+
+    header.width *= 2;
+    header.height *= 2;
 }
 
 

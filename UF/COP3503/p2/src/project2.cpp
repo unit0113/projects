@@ -15,6 +15,7 @@ void part7();
 void part8();
 void part9();
 void part10();
+void extraCredit();
 
 int main() {
     part1();
@@ -27,6 +28,7 @@ int main() {
     part8();
     part9();
     part10();
+    extraCredit();
 }
 
 
@@ -125,4 +127,15 @@ void part10() {
     Image base = openFile("input/text2.tga");
     base.flip();
     base.write("output/part10.tga");
+}
+
+
+void extraCredit() {
+    Image topLeft = openFile("input/car.tga");
+    Image topRight = openFile("input/circles.tga");
+    Image bottomLeft = openFile("input/text.tga");
+    Image bottomRight = openFile("input/pattern1.tga");
+
+    Image quad(topLeft, topRight, bottomLeft, bottomRight);
+    quad.write("output/extracredit.tga");
 }

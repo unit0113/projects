@@ -28,6 +28,7 @@ void testPart7();
 void testPart8();
 void testPart9();
 void testPart10();
+void testExtraCredit();
 
 int main() {
     cout << "Pixel Tests:\n";
@@ -55,6 +56,7 @@ int main() {
     testPart8();
     testPart9();
     testPart10();
+    testExtraCredit();
 }
 
 
@@ -379,4 +381,10 @@ void testPart9() {
 void testPart10() {
     cout << setfill('.') << setw(testCaseNameLength) << left << "Test Part 10";
     isSameFile("output/part10.tga", "examples/EXAMPLE_part10.tga");
+}
+
+
+void testExtraCredit() {
+    cout << setfill('.') << setw(testCaseNameLength) << left << "Test Extra Credit";
+    isSameFile("output/extracredit.tga", "examples/EXAMPLE_extracredit.tga");
 }
