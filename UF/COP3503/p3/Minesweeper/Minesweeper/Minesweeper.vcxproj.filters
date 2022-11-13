@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Resource Files\images">
+      <UniqueIdentifier>{a4afc35e-ee30-4703-9efc-624b39e2d06a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\boards">
+      <UniqueIdentifier>{8a8b880f-1eac-4589-9c14-592e7ad68b74}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\project3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\board.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\tile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\board.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\images\debug.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\digits.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\face_happy.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\face_lose.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\face_win.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\flag.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\mine.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\number_1.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\number_2.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\number_3.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\number_4.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\number_5.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\number_6.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\number_7.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\number_8.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\test_1.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\test_2.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\test_3.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\tile_hidden.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+    <Image Include="..\..\images\tile_revealed.png">
+      <Filter>Resource Files\images</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\boards\config.cfg">
+      <Filter>Resource Files\boards</Filter>
+    </None>
+    <None Include="..\..\boards\lots_o_mines.brd">
+      <Filter>Resource Files\boards</Filter>
+    </None>
+    <None Include="..\..\boards\recursion_test.brd">
+      <Filter>Resource Files\boards</Filter>
+    </None>
+    <None Include="..\..\boards\testboard1.brd">
+      <Filter>Resource Files\boards</Filter>
+    </None>
+    <None Include="..\..\boards\testboard2.brd">
+      <Filter>Resource Files\boards</Filter>
+    </None>
+    <None Include="..\..\boards\testboard3.brd">
+      <Filter>Resource Files\boards</Filter>
+    </None>
+  </ItemGroup>
+</Project>

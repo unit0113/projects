@@ -1,0 +1,6 @@
+﻿  main.cpp
+  Generating code
+  Previous IPDB not found, fall back to full compilation.
+  All 4 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  Minesweeper.vcxproj -> C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\Minesweeper\x64\Release\Minesweeper.exe
