@@ -20,12 +20,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\board.cpp" />
+    <ClCompile Include="..\..\src\debugTile.cpp" />
+    <ClCompile Include="..\..\src\faceTile.cpp" />
     <ClCompile Include="..\..\src\project3.cpp" />
     <ClCompile Include="..\..\src\textureManager.cpp" />
     <ClCompile Include="..\..\src\tile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\board.h" />
+    <ClInclude Include="..\..\src\debugTile.h" />
+    <ClInclude Include="..\..\src\faceTile.h" />
     <ClInclude Include="..\..\src\textureManager.h" />
     <ClInclude Include="..\..\src\tile.h" />
   </ItemGroup>

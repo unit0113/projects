@@ -15,6 +15,7 @@ TextureManager::TextureManager() {
 	texture.loadFromFile("images/digits.png", sf::IntRect(21 * i, 0, 21, 32));
 	textureMap["-"] = texture;
 
+
 	texture.loadFromFile("images/face_happy.png");
 	textureMap["happy"] = texture;
 

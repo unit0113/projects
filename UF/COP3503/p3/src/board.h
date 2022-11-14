@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <memory>
+#include <string_view>
 #include "textureManager.h"
 #include "tile.h"
 
@@ -15,6 +16,6 @@ class Board {
 	std::vector<sf::Sprite> minesDisplay;
 	std::vector<Tile> testTiles;
 
-	sf::RenderWindow window;
-	std::shared_ptr<TextureManager> textureManager;
+	std::shared_ptr<TextureManager> m_textureManager;
+	std::shared_ptr<sf::RenderWindow> m_window;
 };
