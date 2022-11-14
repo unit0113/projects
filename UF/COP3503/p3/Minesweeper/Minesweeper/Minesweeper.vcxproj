@@ -21,10 +21,12 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\board.cpp" />
     <ClCompile Include="..\..\src\project3.cpp" />
+    <ClCompile Include="..\..\src\textureManager.cpp" />
     <ClCompile Include="..\..\src\tile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\board.h" />
+    <ClInclude Include="..\..\src\textureManager.h" />
     <ClInclude Include="..\..\src\tile.h" />
   </ItemGroup>
   <ItemGroup>
@@ -144,6 +146,8 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -161,6 +165,8 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\SFML-2.5.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
