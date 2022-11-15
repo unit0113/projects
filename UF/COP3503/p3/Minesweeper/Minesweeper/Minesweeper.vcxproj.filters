@@ -33,10 +33,7 @@
     <ClCompile Include="..\..\src\textureManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\debugTile.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\faceTile.cpp">
+    <ClCompile Include="..\..\src\buttonTile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -50,10 +47,7 @@
     <ClInclude Include="..\..\src\textureManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\debugTile.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\faceTile.h">
+    <ClInclude Include="..\..\src\buttonTile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

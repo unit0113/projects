@@ -16,6 +16,10 @@ void Tile::draw() const {
 	}
 }
 
+void Tile::setAsBomb() {
+	m_isBomb = true;
+}
+
 void Tile::flag() {
 	m_isFlag = true;
 	m_image.setTexture(m_textureManager->getTexture("flag"));

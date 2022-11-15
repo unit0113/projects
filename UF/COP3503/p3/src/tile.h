@@ -16,6 +16,7 @@ class Tile {
 public:
 	Tile(float x, float y, std::shared_ptr<TextureManager> textureManager, std::shared_ptr<sf::RenderWindow> window);
 	void draw() const;
+	void setAsBomb();
 	void flag();
 	bool reveal(const std::string_view& contents);
 
