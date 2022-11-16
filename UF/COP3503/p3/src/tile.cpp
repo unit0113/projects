@@ -1,7 +1,7 @@
 #include "tile.h"
 
-Tile::Tile(float x, float y, std::shared_ptr<TextureManager> textureManager, std::shared_ptr<sf::RenderWindow> window)
-	: m_textureManager(textureManager), m_background(m_textureManager->getTexture("hidden")), m_window(window){
+Tile::Tile(float x, float y, sf::RenderWindow& window)
+	: m_background(TextureManager::getTexture("hidden")), m_window(window){
 	m_isBomb = false;
 	m_isRevealed = false;
 	m_isFlag = false;
@@ -10,9 +10,9 @@ Tile::Tile(float x, float y, std::shared_ptr<TextureManager> textureManager, std
 }
 
 void Tile::draw() const {
-	m_window->draw(m_background);
+	m_window.draw(m_background);
 	if (m_image.getTexture()) {
-		m_window->draw(m_image);
+		m_window.draw(m_image);
 	}
 }
 
@@ -20,19 +20,19 @@ void Tile::setAsBomb() {
 	m_isBomb = true;
 }
 
-void Tile::flag() {
+void Tile::toggleFlag() {
 	m_isFlag = true;
-	m_image.setTexture(m_textureManager->getTexture("flag"));
+	m_image.setTexture(TextureManager::getTexture("flag"));
 }
 
 // Return true if trigger recursive reveal of surrounding tiles
-bool Tile::reveal(const std::string_view& contents) {
-	m_background.setTexture(m_textureManager->getTexture("revealed"));
+/*bool Tile::reveal() {
+	m_background.setTexture(m_textureManager.getTexture("revealed"));
 	if (contents != "") {
-		m_image.setTexture(m_textureManager->getTexture(contents));
+		m_image.setTexture(m_textureManager.getTexture(contents));
 		return false;
 	}
 	else {
 		return true;
 	}
-}
+}*/

@@ -1,23 +1,7 @@
-﻿  board.cpp
-  debugTile.cpp
-  faceTile.cpp
-  project3.cpp
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\project3.cpp(8,20): warning C4930: 'TextureManager textureManager(void)': prototyped function not called (was a variable definition intended?)
-  textureManager.cpp
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\textureManager.cpp(12,75): warning C4267: 'argument': conversion from 'size_t' to 'T', possible loss of data
-          with
-          [
-              T=int
-          ]
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\textureManager.cpp(15,74): warning C4267: 'argument': conversion from 'size_t' to 'T', possible loss of data
-          with
-          [
-              T=int
-          ]
-  tile.cpp
+﻿  tile.cpp
   Generating code
-  121 of 121 functions (100.0%) were compiled.
-    111 functions were new in current compilation
+  2 of 395 functions ( 0.5%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
     0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Minesweeper.vcxproj -> C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\Minesweeper\x64\Release\Minesweeper.exe

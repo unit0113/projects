@@ -1,6 +1,6 @@
 #pragma once
 #include <SFML\Graphics.hpp>
-#include <string_view>
+#include <string>
 #include <memory>
 #include "textureManager.h"
 
@@ -10,15 +10,14 @@ class Tile {
 	bool m_isBomb;
 	bool m_isRevealed;
 	bool m_isFlag;
-	std::shared_ptr<TextureManager> m_textureManager;
-	std::shared_ptr<sf::RenderWindow> m_window;
+	sf::RenderWindow& m_window;
 
 public:
-	Tile(float x, float y, std::shared_ptr<TextureManager> textureManager, std::shared_ptr<sf::RenderWindow> window);
+	Tile(float x, float y, sf::RenderWindow& window);
 	void draw() const;
 	void setAsBomb();
-	void flag();
-	bool reveal(const std::string_view& contents);
+	void toggleFlag();
+	//bool reveal();
 
 	bool isBomb() const { return m_isBomb; };
 	bool isRevealed() const { return m_isRevealed; };
