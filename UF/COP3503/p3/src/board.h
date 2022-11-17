@@ -3,13 +3,13 @@
 #include <memory>
 #include <string_view>
 #include <random>
-#include <fstream>
 #include "textureManager.h"
 #include "tile.h"
 #include "buttonTile.h"
+#include "boardConfig.h"
 
 class Board {
-	std::vector<Tile> tiles;
+	std::vector<Tile> m_tiles;
 	size_t m_rows;
 	size_t m_columns;
 	int m_numMines;
@@ -26,9 +26,13 @@ class Board {
 	void initializeTiles();
 	void initializeMines();
 	int getRandInt() const;
+	std::vector<Tile> getSurroundingTiles(const Tile& source);
+	int countNeighborsBombs(const std::vector<Tile>& neighbors) const;
 
 public:
-	Board(sf::RenderWindow& window);
+	Board(sf::RenderWindow& window, BoardConfig config);
 	//Board(const std::string_view& testBoard, std::shared_ptr<TextureManager> textureManager, std::shared_ptr<sf::RenderWindow> window);
 	void draw() const;
+	void toggleFlag(sf::Vector2i mousePosition);
+	void reveal(sf::Vector2i mousePosition);
 };

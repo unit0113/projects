@@ -2,15 +2,24 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "C/C++: gcc.exe build active file",
-            "command": "C:\\msys64\\mingw64\\bin\\g++.exe",
+            "label": "Compile SFML executable",
+            "command": "C:\\mingw32\\bin\\g++.exe",
             "args": [
-                "-fdiagnostics-color=always",
                 "-g",
-                "-std=c++20",
-                "${file}",
+                "-fdiagnostics-color=always",
+                "-std=c++17",
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+                "${fileDirname}\\${fileBasenameNoExtension}.exe",
+                "-IA:/SFML-2.5.1/include/",
+                "-LA:/SFML-2.5.1/lib/",
+                "C:/Users/unit0/Desktop/Python/projects/UF/COP3503/p3/src/project3.cpp",
+                "C:/Users/unit0/Desktop/Python/projects/UF/COP3503/p3/src/textureManager.cpp",
+                "C:/Users/unit0/Desktop/Python/projects/UF/COP3503/p3/src/board.cpp",
+                "C:/Users/unit0/Desktop/Python/projects/UF/COP3503/p3/src/tile.cpp",
+                "C:/Users/unit0/Desktop/Python/projects/UF/COP3503/p3/src/buttonTile.cpp",
+                "-lsfml-graphics",
+                "-lsfml-window",
+                "-lsfml-system"
             ],
             "options": {
                 "cwd": "${fileDirname}"

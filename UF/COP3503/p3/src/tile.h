@@ -17,13 +17,15 @@ public:
 	void draw() const;
 	void setAsBomb();
 	void toggleFlag();
-	//bool reveal();
+	void reveal(int bombs);
 
 	bool isBomb() const { return m_isBomb; };
 	bool isRevealed() const { return m_isRevealed; };
 	bool isFlag() const { return m_isFlag; };
 
-	bool contains(float x, float y) const { return m_background.getGlobalBounds().contains(x, y); };
+	bool contains(sf::Vector2i position) const { return m_background.getGlobalBounds().contains(position.x, position.y); };
+
+	bool operator==(const Tile& other) const;
 };
 
 
