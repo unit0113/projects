@@ -28,6 +28,7 @@ void Tile::toggleFlag() {
 	}
 	else {
 		m_image = sf::Sprite();
+		m_image.setPosition(m_background.getPosition());
 	}
 	
 }

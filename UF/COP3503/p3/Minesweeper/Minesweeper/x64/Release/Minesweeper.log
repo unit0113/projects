@@ -1,4 +1,4 @@
-﻿  board.cpp
+﻿  tile.cpp
 C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\tile.h(26,114): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
           with
           [
@@ -17,17 +17,8 @@ C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\tile.h(26,102): warning
           [
               T=float
           ]
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(4,32): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(7,90): warning C4267: 'argument': conversion from 'size_t' to '_Ty', possible loss of data
-          with
-          [
-              _Ty=int
-          ]
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(21,30): warning C4244: 'argument': conversion from 'size_t' to 'float', possible loss of data
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(21,27): warning C4244: 'argument': conversion from 'size_t' to 'float', possible loss of data
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(47,12): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
   Generating code
-  2 of 545 functions ( 0.4%) were compiled, the rest were copied from previous compilation.
+  3 of 545 functions ( 0.6%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
