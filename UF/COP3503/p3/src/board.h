@@ -1,6 +1,5 @@
 #pragma once
 #include <vector>
-#include <memory>
 #include <string_view>
 #include <random>
 #include "textureManager.h"
@@ -10,10 +9,10 @@
 
 class Board {
 	std::vector<Tile> m_tiles;
-	size_t m_rows;
-	size_t m_columns;
+	int m_rows;
+	int m_columns;
 	int m_numMines;
-	size_t m_numFlags;
+	int m_numFlags;
 	bool m_debugMode;
 	//sf::Sprite m_face;
 	//std::vector<sf::Sprite> m_minesDisplay;
@@ -26,8 +25,9 @@ class Board {
 	void initializeTiles();
 	void initializeMines();
 	int getRandInt() const;
-	std::vector<Tile> getSurroundingTiles(const Tile& source);
-	int countNeighborsBombs(const std::vector<Tile>& neighbors) const;
+	std::vector<int> getSurroundingTileIndices(const Tile& source);
+	int countNeighborsBombs(const std::vector<int>& neighbors) const;
+	void revealTile(Tile& tile);
 
 public:
 	Board(sf::RenderWindow& window, BoardConfig config);

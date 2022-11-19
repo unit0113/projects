@@ -29,11 +29,9 @@ int main()
                 }
             }
         }
-
         window.clear();
         board.draw();
         window.display();
     }
-
     TextureManager::clear();
 }
