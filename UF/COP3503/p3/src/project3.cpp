@@ -36,7 +36,11 @@ int main()
                 }
             }
         }
+<<<<<<< HEAD
         window.clear(sf::Color(255, 255, 255, 0));
+=======
+        window.clear();
+>>>>>>> 0ccd0b0a384688078aae3e9aee02738403d988fe
         board.draw();
         window.display();
     }

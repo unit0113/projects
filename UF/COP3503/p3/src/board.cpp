@@ -85,7 +85,11 @@ int Board::countNeighborsBombs(const std::vector<int>& neighbors) const {
 	return bombs;
 }
 
+<<<<<<< HEAD
 void Board::draw() {
+=======
+void Board::draw() const {
+>>>>>>> 0ccd0b0a384688078aae3e9aee02738403d988fe
 	for (const Tile& t : m_tiles) {
 		t.draw();
 	}
@@ -138,6 +142,7 @@ void Board::revealTile(Tile& tile) {
 	}
 }
 
+<<<<<<< HEAD
 void Board::boardReset() {
 	BoardConfig config;
 	m_dist = std::uniform_int_distribution<int>(0, config.m_columns * config.m_rows - 1);
@@ -162,4 +167,8 @@ void Board::checkButtonSelection(sf::Vector2i mousePosition) {
 	if (m_face.contains(mousePosition)) {
 		boardReset();
 	}
+=======
+bool Tile::operator==(const Tile& other) const {
+	return (m_background.getPosition() == other.m_background.getPosition());
+>>>>>>> 0ccd0b0a384688078aae3e9aee02738403d988fe
 }

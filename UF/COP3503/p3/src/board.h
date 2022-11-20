@@ -13,6 +13,10 @@ class Board {
 	int m_rows;
 	int m_columns;
 	int m_numMines;
+<<<<<<< HEAD
+=======
+	int m_numFlags;
+>>>>>>> 0ccd0b0a384688078aae3e9aee02738403d988fe
 	bool m_debugMode;
 
 	ButtonTile m_face;
@@ -32,7 +36,10 @@ class Board {
 	std::vector<int> getSurroundingTileIndices(const Tile& source);
 	int countNeighborsBombs(const std::vector<int>& neighbors) const;
 	void revealTile(Tile& tile);
+<<<<<<< HEAD
 	void boardReset();
+=======
+>>>>>>> 0ccd0b0a384688078aae3e9aee02738403d988fe
 
 public:
 	Board(sf::RenderWindow& window, BoardConfig config);
