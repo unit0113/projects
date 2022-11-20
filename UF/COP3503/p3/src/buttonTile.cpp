@@ -12,3 +12,11 @@ void ButtonTile::setTexture(std::string newTexture) {
 void ButtonTile::draw() const {
 	m_window.draw(m_sprite);
 }
+
+void ButtonTile::swapTexture(std::string texture) {
+	m_sprite.setTexture(TextureManager::getTexture(texture));
+}
+
+void ButtonTile::reposition(int x, int y) {
+	m_sprite.setPosition(x, y);
+}

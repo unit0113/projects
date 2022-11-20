@@ -21,19 +21,24 @@ int main()
             }
             else if (event.type == sf::Event::MouseButtonReleased) {
                 sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
-                if (event.mouseButton.button == sf::Mouse::Left) {
-                    board.reveal(mousePosition);
+                // If Tile
+                if (mousePosition.y < board.getNumRows() * 32) {
+                    if (event.mouseButton.button == sf::Mouse::Left) {
+                        board.reveal(mousePosition);
+                    }
+                    else if (event.mouseButton.button == sf::Mouse::Right) {
+                        board.toggleFlag(mousePosition);
+                    }
                 }
-                else if (event.mouseButton.button == sf::Mouse::Right) {
-                    board.toggleFlag(mousePosition);
+                // If Button
+                else {
+                    board.checkButtonSelection(mousePosition);
                 }
             }
         }
-
-        window.clear();
+        window.clear(sf::Color(255, 255, 255, 0));
         board.draw();
         window.display();
     }
-
     TextureManager::clear();
 }

@@ -7,7 +7,6 @@ class TextureManager {
 	static std::unordered_map<std::string, sf::Texture> textureMap;
 
 public:
-	//TextureManager();
 	static sf::Texture& getTexture(const std::string texture);
 	static void clear();
 };

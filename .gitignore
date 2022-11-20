@@ -1,1 +1,6 @@
 **/__pycache__
+**/*.ipch
+**/ipch
+*.ipch
+**/.vs
+.ipch

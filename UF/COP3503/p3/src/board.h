@@ -1,38 +1,47 @@
 #pragma once
 #include <vector>
-#include <memory>
 #include <string_view>
 #include <random>
 #include "textureManager.h"
 #include "tile.h"
 #include "buttonTile.h"
 #include "boardConfig.h"
+#include "mineCounter.h"
 
 class Board {
 	std::vector<Tile> m_tiles;
-	size_t m_rows;
-	size_t m_columns;
+	int m_rows;
+	int m_columns;
 	int m_numMines;
-	size_t m_numFlags;
 	bool m_debugMode;
-	//sf::Sprite m_face;
-	//std::vector<sf::Sprite> m_minesDisplay;
-	//std::vector<Tile> m_testTiles;
 
+	ButtonTile m_face;
+	ButtonTile m_debug;
+	ButtonTile m_test1;
+	ButtonTile m_test2;
+	ButtonTile m_test3;
+	MineCounter m_mineCounter;
 	sf::RenderWindow& m_window;
 
 	static std::mt19937 random;
 	std::uniform_int_distribution<int> m_dist;
+
 	void initializeTiles();
 	void initializeMines();
 	int getRandInt() const;
-	std::vector<Tile> getSurroundingTiles(const Tile& source);
-	int countNeighborsBombs(const std::vector<Tile>& neighbors) const;
+	std::vector<int> getSurroundingTileIndices(const Tile& source);
+	int countNeighborsBombs(const std::vector<int>& neighbors) const;
+	void revealTile(Tile& tile);
+	void boardReset();
 
 public:
 	Board(sf::RenderWindow& window, BoardConfig config);
 	//Board(const std::string_view& testBoard, std::shared_ptr<TextureManager> textureManager, std::shared_ptr<sf::RenderWindow> window);
-	void draw() const;
+	void draw();
 	void toggleFlag(sf::Vector2i mousePosition);
 	void reveal(sf::Vector2i mousePosition);
+	void checkButtonSelection(sf::Vector2i mousePosition);
+
+	int getNumRows() const { return m_rows; };
+	int getNumColumns() const { return m_columns; };
 };

@@ -40,3 +40,7 @@ void Tile::reveal(int bombs) {
 		m_image.setTexture(TextureManager::getTexture("number_" + std::to_string(bombs)));
 	}
 }
+
+bool Tile::operator==(const Tile& other) const {
+	return (m_background.getPosition() == other.m_background.getPosition());
+}

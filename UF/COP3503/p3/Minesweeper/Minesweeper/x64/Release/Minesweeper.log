@@ -1,25 +1,19 @@
-﻿  tile.cpp
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\tile.h(26,114): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
+﻿  mineCounter.cpp
+C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\mineCounter.cpp(8,97): warning C4267: 'argument': conversion from 'size_t' to 'T', possible loss of data
           with
           [
               T=int
           ]
-          and
-          [
-              T=float
-          ]
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\tile.h(26,102): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
+C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\mineCounter.cpp(10,82): warning C4267: 'argument': conversion from 'size_t' to 'T', possible loss of data
           with
           [
               T=int
           ]
-          and
-          [
-              T=float
-          ]
+C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\mineCounter.cpp(14,30): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\mineCounter.cpp(14,24): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
   Generating code
-  3 of 545 functions ( 0.6%) were compiled, the rest were copied from previous compilation.
+  4 of 666 functions ( 0.6%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    0 functions had inline decision re-evaluated but remain unchanged
+    1 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Minesweeper.vcxproj -> C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\Minesweeper\x64\Release\Minesweeper.exe
