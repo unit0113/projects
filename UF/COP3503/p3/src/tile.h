@@ -14,7 +14,9 @@ class Tile {
 
 public:
 	Tile(float x, float y, sf::RenderWindow& window);
+	Tile(float x, float y, sf::RenderWindow& window, bool isBomb);
 	void draw() const;
+	void drawDebug() const;
 	void setAsBomb();
 	void toggleFlag();
 	void reveal(int bombs);

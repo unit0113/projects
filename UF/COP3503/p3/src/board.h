@@ -1,6 +1,5 @@
 #pragma once
 #include <vector>
-#include <string_view>
 #include <random>
 #include "textureManager.h"
 #include "tile.h"
@@ -13,10 +12,6 @@ class Board {
 	int m_rows;
 	int m_columns;
 	int m_numMines;
-<<<<<<< HEAD
-=======
-	int m_numFlags;
->>>>>>> 0ccd0b0a384688078aae3e9aee02738403d988fe
 	bool m_debugMode;
 
 	ButtonTile m_face;
@@ -36,15 +31,12 @@ class Board {
 	std::vector<int> getSurroundingTileIndices(const Tile& source);
 	int countNeighborsBombs(const std::vector<int>& neighbors) const;
 	void revealTile(Tile& tile);
-<<<<<<< HEAD
 	void boardReset();
-=======
->>>>>>> 0ccd0b0a384688078aae3e9aee02738403d988fe
+	void loadTestConfig(int boardNum);
 
 public:
 	Board(sf::RenderWindow& window, BoardConfig config);
-	//Board(const std::string_view& testBoard, std::shared_ptr<TextureManager> textureManager, std::shared_ptr<sf::RenderWindow> window);
-	void draw();
+	void draw() const;
 	void toggleFlag(sf::Vector2i mousePosition);
 	void reveal(sf::Vector2i mousePosition);
 	void checkButtonSelection(sf::Vector2i mousePosition);

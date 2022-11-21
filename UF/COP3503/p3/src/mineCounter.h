@@ -10,10 +10,13 @@ class MineCounter {
 	std::vector<sf::Sprite> m_display;
 	std::unordered_map<std::string, sf::Texture> textureMap;
 
+	void setTextures();
+
 public:
 	MineCounter(sf::RenderWindow& window, int numMines, int height);
-	void draw();
+	void draw() const;
 	void clear();
+	void reset(int numMines, int height);
 
 	MineCounter& operator++();
 	MineCounter& operator--();

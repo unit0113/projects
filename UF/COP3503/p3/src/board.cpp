@@ -1,5 +1,7 @@
 #include <ctime>
 #include "board.h"
+#include <fstream>
+#include <sstream>
 #include <iostream>
 
 std::mt19937 Board::random(time(0));
@@ -51,7 +53,7 @@ int Board::getRandInt() const{
 }
 
 std::vector<int> Board::getSurroundingTileIndices(const Tile& source) {
-	//https://www.delftstack.com/howto/cpp/find-in-vector-in-cpp/
+	// https://www.delftstack.com/howto/cpp/find-in-vector-in-cpp/
 	std::vector<Tile>::iterator it = std::find(m_tiles.begin(), m_tiles.end(), source);
 	int index = std::distance(m_tiles.begin(), it);
 
@@ -85,13 +87,16 @@ int Board::countNeighborsBombs(const std::vector<int>& neighbors) const {
 	return bombs;
 }
 
-<<<<<<< HEAD
-void Board::draw() {
-=======
 void Board::draw() const {
->>>>>>> 0ccd0b0a384688078aae3e9aee02738403d988fe
-	for (const Tile& t : m_tiles) {
-		t.draw();
+	if (m_debugMode) {
+		for (const Tile& t : m_tiles) {
+			t.drawDebug();
+		}
+	}
+	else {
+		for (const Tile& t : m_tiles) {
+			t.draw();
+		}
 	}
 
 	m_face.draw();
@@ -142,7 +147,6 @@ void Board::revealTile(Tile& tile) {
 	}
 }
 
-<<<<<<< HEAD
 void Board::boardReset() {
 	BoardConfig config;
 	m_dist = std::uniform_int_distribution<int>(0, config.m_columns * config.m_rows - 1);
@@ -159,16 +163,70 @@ void Board::boardReset() {
 	m_tiles.clear();
 	initializeTiles();
 	initializeMines();
+	m_mineCounter.reset(m_numMines, m_rows * 32);
 
-	m_window.setSize(sf::Vector2u(config.m_columns * 32, config.m_rows * 32 + 100));
+	m_window.setSize(sf::Vector2u(m_columns * 32, m_rows * 32 + 100));
 }
 
 void Board::checkButtonSelection(sf::Vector2i mousePosition) {
 	if (m_face.contains(mousePosition)) {
 		boardReset();
 	}
-=======
-bool Tile::operator==(const Tile& other) const {
-	return (m_background.getPosition() == other.m_background.getPosition());
->>>>>>> 0ccd0b0a384688078aae3e9aee02738403d988fe
+	else if (m_debug.contains(mousePosition)) {
+		m_debugMode = !m_debugMode;
+	}
+	else if (m_test1.contains(mousePosition)) {
+		loadTestConfig(1);
+	}
+	else if (m_test2.contains(mousePosition)) {
+		loadTestConfig(2);
+	}
+	else if (m_test3.contains(mousePosition)) {
+		loadTestConfig(3);
+	}
+}
+
+void Board::loadTestConfig(int boardNum) {
+	m_tiles.clear();
+
+	std::istringstream inStream;
+	std::string inLine;
+	char isMine{};
+	int rowCount{};
+	int bombCount{};
+	int x{};
+	int y{};
+	std::ifstream file("boards/testboard" + std::to_string(boardNum) + ".brd");
+
+	while (std::getline(file, inLine)) {
+		inStream.clear();
+		inStream.str(inLine);
+		while (inStream >> isMine) {
+			m_tiles.push_back(Tile(x, y, m_window, isMine == '1'));
+			x += 32;
+
+			if (isMine == '1') ++bombCount;
+		}
+		x = 0;
+		y += 32;	
+		++rowCount;
+	}
+
+	file.close();
+	file.seekg(0, std::ios::beg);
+	std::getline(file, inLine);
+
+	m_columns = inLine.length();
+	m_rows = rowCount;
+	m_numMines = bombCount;
+	m_debugMode = false;
+
+	m_face.reposition((m_columns - 1) * 16, m_rows * 32);
+	m_test3.reposition((m_columns - 2) * 32, m_rows * 32);
+	m_test2.reposition((m_columns - 4) * 32, m_rows * 32);
+	m_test1.reposition((m_columns - 6) * 32, m_rows * 32);
+	m_debug.reposition((m_columns - 8) * 32, m_rows * 32);
+	m_mineCounter.reset(m_numMines, m_rows * 32);
+	m_window.setSize(sf::Vector2u(m_columns * 32, m_rows * 32 + 100));
+
 }
