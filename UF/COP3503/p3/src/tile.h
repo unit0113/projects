@@ -6,11 +6,15 @@
 
 class Tile {
 	sf::Sprite m_background;
-	sf::Sprite m_image;
+	sf::Sprite m_mineImage;
+	sf::Sprite m_flagImage;
+	sf::Sprite m_mineCountImage;
 	bool m_isBomb;
 	bool m_isRevealed;
 	bool m_isFlag;
 	sf::RenderWindow& m_window;
+
+	void setImageLocations(float x, float y);
 
 public:
 	Tile(float x, float y, sf::RenderWindow& window);

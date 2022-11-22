@@ -182,7 +182,7 @@ void Board::checkButtonSelection(sf::Vector2i mousePosition) {
 		boardReset();
 	}
 	else if (m_debug.contains(mousePosition)) {
-		m_debugMode = !m_debugMode;
+		if (!m_isDead) m_debugMode = !m_debugMode;
 	}
 	else if (m_test1.contains(mousePosition)) {
 		loadTestConfig(1);
