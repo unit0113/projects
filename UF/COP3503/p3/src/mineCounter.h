@@ -17,6 +17,7 @@ public:
 	void draw() const;
 	void clear();
 	void reset(int numMines, int height);
+	void setWin();
 
 	MineCounter& operator++();
 	MineCounter& operator--();

@@ -13,6 +13,7 @@ class Board {
 	int m_columns;
 	int m_numMines;
 	bool m_debugMode;
+	bool m_isDead;
 
 	ButtonTile m_face;
 	ButtonTile m_debug;
@@ -33,6 +34,9 @@ class Board {
 	void revealTile(Tile& tile);
 	void boardReset();
 	void loadTestConfig(int boardNum);
+	void win();
+	void lose();
+	bool isWinCondition() const;
 
 public:
 	Board(sf::RenderWindow& window, BoardConfig config);

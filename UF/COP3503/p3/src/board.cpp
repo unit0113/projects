@@ -3,12 +3,15 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <algorithm>
 
 std::mt19937 Board::random(time(0));
 
 Board::Board(sf::RenderWindow& window, BoardConfig config)
 	: m_dist(0, config.m_columns * config.m_rows - 1),
-	m_debugMode(false), m_window(window),
+	m_debugMode(false),
+	m_isDead(false),
+	m_window(window),
 	m_face((config.m_columns -1) * 16, config.m_rows * 32, window, "face_happy"),
 	m_test3((config.m_columns - 2) * 32, config.m_rows * 32, window, "test_3"),
 	m_test2((config.m_columns - 4) * 32, config.m_rows * 32, window, "test_2"),
@@ -123,15 +126,20 @@ void Board::toggleFlag(sf::Vector2i mousePosition) {
 			break;
 		}
 	}
+	if (isWinCondition()) win();		// Game win
 }
 
 void Board::reveal(sf::Vector2i mousePosition) {
+	if (m_isDead) return;				// Prevent reveals if game over
+
 	for (Tile& t : m_tiles) {
 		if (t.contains(mousePosition)) {
 			revealTile(t);
+			if (t.isBomb()) lose();		// Game over
 			break;
 		}
 	}
+	if (isWinCondition()) win();		// Game win
 }
 
 void Board::revealTile(Tile& tile) {
@@ -148,24 +156,17 @@ void Board::revealTile(Tile& tile) {
 }
 
 void Board::boardReset() {
-	BoardConfig config;
-	m_dist = std::uniform_int_distribution<int>(0, config.m_columns * config.m_rows - 1);
 	m_debugMode = false;
-	m_columns = config.m_columns;
-	m_rows = config.m_rows;
+	m_isDead = false;
+	BoardConfig config;
 	m_numMines = config.m_numMines;
-	m_face.reposition((m_columns - 1) * 16, m_rows * 32);
-	m_test3.reposition((m_columns - 2) * 32, m_rows * 32);
-	m_test2.reposition((m_columns - 4) * 32, m_rows * 32);
-	m_test1.reposition((m_columns - 6) * 32, m_rows * 32);
-	m_debug.reposition((m_columns - 8) * 32, m_rows * 32);
 
 	m_tiles.clear();
 	initializeTiles();
 	initializeMines();
-	m_mineCounter.reset(m_numMines, m_rows * 32);
 
-	m_window.setSize(sf::Vector2u(m_columns * 32, m_rows * 32 + 100));
+	m_mineCounter.reset(m_numMines, m_rows * 32);
+	m_face.setTexture("face_happy");
 }
 
 void Board::checkButtonSelection(sf::Vector2i mousePosition) {
@@ -229,4 +230,22 @@ void Board::loadTestConfig(int boardNum) {
 	m_mineCounter.reset(m_numMines, m_rows * 32);
 	m_window.setSize(sf::Vector2u(m_columns * 32, m_rows * 32 + 100));
 
+}
+
+void Board::win() {
+	for (Tile& t : m_tiles) {
+		if (t.isBomb() and !t.isFlag()) t.toggleFlag();
+	}
+	m_mineCounter.setWin();
+	m_face.setTexture("face_win");
+}
+
+void Board::lose() {
+	m_isDead = true;
+	m_debugMode = true;
+	m_face.setTexture("face_lose");
+}
+
+bool Board::isWinCondition() const {
+	return std::all_of(m_tiles.begin(), m_tiles.end(), [](Tile t) { return t.isFlag() && t.isBomb() || t.isRevealed() || t.isBomb(); });
 }

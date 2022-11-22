@@ -46,7 +46,9 @@ void Tile::toggleFlag() {
 	else if (m_isBomb) {
 		m_image.setTexture(TextureManager::getTexture("mine"));
 	}
-	
+	if (!m_isFlag) {
+		m_image = sf::Sprite();
+	}
 }
 
 void Tile::reveal(int bombs) {

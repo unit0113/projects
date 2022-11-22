@@ -49,6 +49,11 @@ void MineCounter::reset(int numMines, int height) {
 	setTextures();
 }
 
+void MineCounter::setWin() {
+	m_numMines = 0;
+	setTextures();
+}
+
 MineCounter& MineCounter::operator++() {
 	++m_numMines;
 	setTextures();
