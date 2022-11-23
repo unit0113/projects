@@ -112,6 +112,9 @@ void Board::draw() const {
 }
 
 void Board::toggleFlag(sf::Vector2i mousePosition) {
+	// Prevent new flags if game over
+	if (m_isDead) return;
+
 	for (Tile& t : m_tiles) {
 		if (t.contains(mousePosition)) {
 			if (!t.isRevealed()) {
@@ -126,20 +129,21 @@ void Board::toggleFlag(sf::Vector2i mousePosition) {
 			break;
 		}
 	}
-	if (isWinCondition()) win();		// Game win
+	if (isWinCondition()) win();
 }
 
 void Board::reveal(sf::Vector2i mousePosition) {
-	if (m_isDead) return;				// Prevent reveals if game over
+	// Prevent reveals if game over
+	if (m_isDead) return;
 
 	for (Tile& t : m_tiles) {
 		if (t.contains(mousePosition)) {
 			revealTile(t);
-			if (t.isBomb()) lose();		// Game over
+			if (t.isBomb()) lose();
 			break;
 		}
 	}
-	if (isWinCondition()) win();		// Game win
+	if (isWinCondition()) win();
 }
 
 void Board::revealTile(Tile& tile) {
@@ -221,7 +225,7 @@ void Board::loadTestConfig(int boardNum) {
 		++rowCount;
 	}
 
-	file.close();
+	file.clear();
 	file.seekg(0, std::ios::beg);
 	std::getline(file, inLine);
 
@@ -231,6 +235,7 @@ void Board::loadTestConfig(int boardNum) {
 	m_debugMode = false;
 
 	m_face.reposition((m_columns - 1) * 16, m_rows * 32);
+	m_face.setTexture("face_happy");
 	m_test3.reposition((m_columns - 2) * 32, m_rows * 32);
 	m_test2.reposition((m_columns - 4) * 32, m_rows * 32);
 	m_test1.reposition((m_columns - 6) * 32, m_rows * 32);
