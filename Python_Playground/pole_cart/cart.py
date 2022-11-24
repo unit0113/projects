@@ -10,6 +10,7 @@ FPS = 60
 GRAVITY = 9.8
 FRICTION = 0.02
 DAMPING_FACTOR = 0.1
+DAMPING_FACTOR_2 = 0.5
 
 class Cart:
     def __init__(self, window, base_height):
@@ -21,7 +22,7 @@ class Cart:
         self.wheel_radius = self.window_height // 40
         self.body = pygame.Rect(self.window_width // 2 - body_width // 2, base_height - body_height - self.wheel_radius, body_width, body_height)
         
-        self.pole_angle = pi
+        self.pole_angle = pi / 2
         self.angular_velocity = 0
         self.pole_length = body_width
 
@@ -37,16 +38,24 @@ class Cart:
     def update(self):
         self.angular_velocity += DAMPING_FACTOR * cos(self.pole_angle) * self.pole_length * GRAVITY / (2 * FPS)
         self.angular_velocity *= 1 - FRICTION
-        self.pole_angle += self.angular_velocity / FPS
+        self.pole_angle += DAMPING_FACTOR * self.angular_velocity / FPS
 
     def left(self):
         if self.body.x > 0 + CART_SPEED // FPS:
             self.body.x -= CART_SPEED // FPS
+            if sin(self.pole_angle) > 0:
+                self.angular_velocity -= DAMPING_FACTOR_2 * CART_SPEED / (FPS * pi)
+            else:    
+                self.angular_velocity += DAMPING_FACTOR_2 * CART_SPEED / (FPS * pi)
         else:
             self.body.x = 0
 
     def right(self):
         if self.body.x + self.body.width < self.window_width - CART_SPEED // FPS:
             self.body.x += CART_SPEED // FPS
+            if sin(self.pole_angle) > 0:
+                self.angular_velocity += DAMPING_FACTOR_2 * CART_SPEED / (FPS * pi)
+            else:    
+                self.angular_velocity -= DAMPING_FACTOR_2 * CART_SPEED / (FPS * pi)
         else:
             self.body.x = self.window_width - self.body.width

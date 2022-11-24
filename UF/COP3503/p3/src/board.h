@@ -44,6 +44,7 @@ public:
 	void toggleFlag(sf::Vector2i mousePosition);
 	void reveal(sf::Vector2i mousePosition);
 	void checkButtonSelection(sf::Vector2i mousePosition);
+	void clear() { m_mineCounter.clear(); };
 
 	int getNumRows() const { return m_rows; };
 	int getNumColumns() const { return m_columns; };
