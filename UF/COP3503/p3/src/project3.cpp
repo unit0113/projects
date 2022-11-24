@@ -22,7 +22,7 @@ int main()
             else if (event.type == sf::Event::Resized)
             {
                 // Update the view to the new size of the window
-                //https://www.sfml-dev.org/tutorials/2.4/graphics-view.php#showing-more-when-the-window-is-resized
+                // https://www.sfml-dev.org/tutorials/2.4/graphics-view.php#showing-more-when-the-window-is-resized
                 sf::FloatRect visibleArea(0, 0, event.size.width, event.size.height);
                 window.setView(sf::View(visibleArea));
             }
