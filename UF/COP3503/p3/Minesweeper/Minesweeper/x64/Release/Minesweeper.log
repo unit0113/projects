@@ -112,8 +112,8 @@ C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\project3.cpp(26,59): wa
               T=float
           ]
   Generating code
-  4 of 728 functions ( 0.5%) were compiled, the rest were copied from previous compilation.
-    1 functions were new in current compilation
-    0 functions had inline decision re-evaluated but remain unchanged
+  5 of 728 functions ( 0.7%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    1 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Minesweeper.vcxproj -> C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\Minesweeper\x64\Release\Minesweeper.exe

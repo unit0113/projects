@@ -2,7 +2,7 @@ from os import system, name
 import time
 import gym
 import numpy as np
-env = gym.make('FrozenLake-v0')
+env = gym.make('FrozenLake-v1')
 env.reset()
 
 def clear():

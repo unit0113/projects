@@ -13,7 +13,7 @@ class Board {
 	int m_columns;
 	int m_numMines;
 	bool m_debugMode;
-	bool m_isDead;
+	bool m_isGameOver;
 
 	ButtonTile m_face;
 	ButtonTile m_debug;

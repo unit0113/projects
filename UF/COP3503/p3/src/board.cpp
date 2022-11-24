@@ -10,7 +10,7 @@ std::mt19937 Board::random(time(0));
 Board::Board(sf::RenderWindow& window, BoardConfig config)
 	: m_dist(0, config.m_columns * config.m_rows - 1),
 	m_debugMode(false),
-	m_isDead(false),
+	m_isGameOver(false),
 	m_window(window),
 	m_face((config.m_columns -1) * 16, config.m_rows * 32, window, "face_happy"),
 	m_test3((config.m_columns - 2) * 32, config.m_rows * 32, window, "test_3"),
@@ -113,7 +113,7 @@ void Board::draw() const {
 
 void Board::toggleFlag(sf::Vector2i mousePosition) {
 	// Prevent new flags if game over
-	if (m_isDead) return;
+	if (m_isGameOver) return;
 
 	for (Tile& t : m_tiles) {
 		if (t.contains(mousePosition)) {
@@ -134,7 +134,7 @@ void Board::toggleFlag(sf::Vector2i mousePosition) {
 
 void Board::reveal(sf::Vector2i mousePosition) {
 	// Prevent reveals if game over
-	if (m_isDead) return;
+	if (m_isGameOver) return;
 
 	for (Tile& t : m_tiles) {
 		if (t.contains(mousePosition)) {
@@ -161,7 +161,7 @@ void Board::revealTile(Tile& tile) {
 
 void Board::boardReset() {
 	m_debugMode = false;
-	m_isDead = false;
+	m_isGameOver = false;
 	BoardConfig config;
 	m_numMines = config.m_numMines;
 	m_columns = config.m_columns;
@@ -186,7 +186,7 @@ void Board::checkButtonSelection(sf::Vector2i mousePosition) {
 		boardReset();
 	}
 	else if (m_debug.contains(mousePosition)) {
-		if (!m_isDead) m_debugMode = !m_debugMode;
+		if (!m_isGameOver) m_debugMode = !m_debugMode;
 	}
 	else if (m_test1.contains(mousePosition)) {
 		loadTestConfig(1);
@@ -233,6 +233,7 @@ void Board::loadTestConfig(int boardNum) {
 	m_rows = rowCount;
 	m_numMines = bombCount;
 	m_debugMode = false;
+	m_isGameOver = false;
 
 	m_face.reposition((m_columns - 1) * 16, m_rows * 32);
 	m_face.setTexture("face_happy");
@@ -245,6 +246,7 @@ void Board::loadTestConfig(int boardNum) {
 }
 
 void Board::win() {
+	m_isGameOver = true;
 	for (Tile& t : m_tiles) {
 		if (t.isBomb() and !t.isFlag()) t.toggleFlag();
 	}
@@ -253,7 +255,7 @@ void Board::win() {
 }
 
 void Board::lose() {
-	m_isDead = true;
+	m_isGameOver = true;
 	m_debugMode = true;
 	m_face.setTexture("face_lose");
 }
