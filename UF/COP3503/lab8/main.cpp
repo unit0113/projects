@@ -65,9 +65,10 @@ void ReadFile(const char* filename, map<string, Color>& colors) {
 }
 
 void PrintColors(const map<string, Color>& colors) {
-    for (const auto& [name, color] : colors) {
-        PrintColor(color);
+    for (const auto& item : colors) {
+        PrintColor(item.second);
     }
+	cout << "Number of colors: " << colors.size() << endl;
 }
 
 void PrintColor(const Color& color) {
@@ -78,5 +79,11 @@ void PrintColor(const Color& color) {
 
 void SearchForColor(map<string, Color>& colors) {
     // TODO: Get some input, check if that key exists, then print out the color (or an error message)
-
+	string color;
+	cin >> color;
+	if (colors.find(color) == colors.end()) {
+		cout << color << " not found!" << endl;
+	} else {
+		PrintColor(colors.at(color));
+	}
 }
