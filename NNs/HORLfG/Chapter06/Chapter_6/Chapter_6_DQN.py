@@ -145,6 +145,3 @@ for episode in tr:
         
     if episode % 2000 == 0:
         plot(episode, all_rewards, losses)  
-
-
-

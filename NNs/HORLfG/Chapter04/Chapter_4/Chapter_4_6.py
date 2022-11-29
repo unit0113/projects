@@ -3,7 +3,7 @@ import gym
 import random
 from tqdm import tqdm
 
-env = gym.make("Taxi-v2")
+env = gym.make("Taxi-v3")
 env.render()
 
 action_size = env.action_space.n

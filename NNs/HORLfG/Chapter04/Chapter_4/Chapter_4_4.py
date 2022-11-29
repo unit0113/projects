@@ -5,7 +5,7 @@ import gym
 import random
 from tqdm import tqdm
 
-env = gym.make("FrozenLake-v0")
+env = gym.make("FrozenLake-v1")
 env.render()
 
 action_size = env.action_space.n

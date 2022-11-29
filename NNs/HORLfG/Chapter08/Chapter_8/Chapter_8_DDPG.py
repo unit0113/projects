@@ -87,6 +87,7 @@ def train(mu, mu_target, q, q_target, memory, q_optimizer, mu_optimizer):
     s,a,r,s_prime,done_mask  = memory.sample(batch_size)
     
     target = r + gamma * q_target(s_prime, mu_target(s_prime))
+    a = a.float()
     q_loss = F.smooth_l1_loss(q(s,a), target.detach())
     q_optimizer.zero_grad()
     q_loss.backward()
@@ -103,7 +104,7 @@ def soft_update(net, net_target):
           
     
 
-env = gym.make('Pendulum-v0')
+env = gym.make('Pendulum-v1')
 memory = ReplayBuffer()
 
 q, q_target = QNet(), QNet()
@@ -135,7 +136,7 @@ def play_game():
 for iteration in range(iterations):
     s = env.reset()        
     for t in range(300): # maximum length of episode is 200 for Pendulum-v0
-        a = mu(torch.from_numpy(s).float()) 
+        a = mu(torch.from_numpy(s).float())
         a = a.item() + ou_noise()[0]
         s_prime, r, done, info = env.step([a])
         memory.put((s,a,r/100.0,s_prime,done))

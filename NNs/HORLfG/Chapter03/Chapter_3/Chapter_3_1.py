@@ -2,7 +2,7 @@ from random import *
 from math import sqrt
 
 ins = 0
-n = 100000
+n = 10000000
 
 for i in range(0, n):
     x = (random()-.5) * 2

@@ -57,63 +57,15 @@ C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(23,24): warni
 C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(35,30): warning C4244: 'argument': conversion from 'size_t' to 'float', possible loss of data
 C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(35,27): warning C4244: 'argument': conversion from 'size_t' to 'float', possible loss of data
 C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(61,12): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(153,34): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(167,30): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(168,24): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(218,30): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(218,27): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(232,29): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-  project3.cpp
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\tile.h(33,114): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
-          with
-          [
-              T=int
-          ]
-          and
-          [
-              T=float
-          ]
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\tile.h(33,102): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
-          with
-          [
-              T=int
-          ]
-          and
-          [
-              T=float
-          ]
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\buttonTile.h(16,110): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
-          with
-          [
-              T=int
-          ]
-          and
-          [
-              T=float
-          ]
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\buttonTile.h(16,98): warning C4244: 'argument': conversion from 'T' to 'T', possible loss of data
-          with
-          [
-              T=int
-          ]
-          and
-          [
-              T=float
-          ]
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\project3.cpp(10,42): warning C4267: 'argument': conversion from 'size_t' to 'unsigned int', possible loss of data
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\project3.cpp(26,77): warning C4244: 'argument': conversion from 'unsigned int' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\project3.cpp(26,59): warning C4244: 'argument': conversion from 'unsigned int' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
+C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(155,34): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(169,30): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(170,24): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(220,30): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(220,27): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\src\board.cpp(234,29): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
   Generating code
-  5 of 728 functions ( 0.7%) were compiled, the rest were copied from previous compilation.
+  8 of 728 functions ( 1.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    1 functions had inline decision re-evaluated but remain unchanged
+    2 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Minesweeper.vcxproj -> C:\Users\unit0\Desktop\Python\projects\UF\COP3503\p3\Minesweeper\x64\Release\Minesweeper.exe

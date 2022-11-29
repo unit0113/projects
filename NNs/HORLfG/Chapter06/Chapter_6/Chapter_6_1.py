@@ -11,7 +11,7 @@ y = torch.randn(batch_size, outputs, device=device, dtype=dtype)
 
 layer1 = torch.randn(inputs, hidden, device=device, dtype=dtype)
 layer2 = torch.randn(hidden, outputs, device=device, dtype=dtype)
-
+learning_rate = 1e-6
 
 for t in range(500):    
     h = x.mm(layer1)

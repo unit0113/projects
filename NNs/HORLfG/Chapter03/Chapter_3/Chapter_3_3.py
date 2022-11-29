@@ -112,7 +112,7 @@ def monte_carlo_e_soft(env, episodes=100, policy=None, epsilon=0.01, test_policy
 
     return policy
 
-env = gym.make('FrozenLake8x8-v0')
+env = gym.make('FrozenLake8x8-v1')
 #env = gym.make('FrozenLake-v0')
 policy = monte_carlo_e_soft(env,episodes=50000)
 print(test_policy(policy, env))

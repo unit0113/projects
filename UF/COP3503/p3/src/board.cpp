@@ -138,6 +138,8 @@ void Board::reveal(sf::Vector2i mousePosition) {
 
 	for (Tile& t : m_tiles) {
 		if (t.contains(mousePosition)) {
+			if (!t.isRevealable()) return;
+
 			revealTile(t);
 			if (t.isBomb()) lose();
 			break;
