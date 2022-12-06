@@ -1,80 +1,95 @@
+from functools import reduce
+from itertools import permutations
+from math import floor, ceil
 
 
-def magnitude(data: list) -> int:
-    left = data[0]
-    if isinstance(left, list):
-        left = magnitude(left)
-
-    right = data[1]
-    if isinstance(right, list):
-        right = magnitude(right)
-
-    return 3 * left + 2 * right
+def input_per_line(file: str):
+    """This is for when each line is an input to the puzzle. The newline character is stripped."""
+    with open(file, 'r') as input_file:
+        return [line.rstrip() for line in input_file.readlines()]
 
 
-def add(left: list, right: list) -> list:
-    result = [left] + [right]
-    return result
+def remove_brackets(puzzle_input: list) -> list:
+    """Take the puzzle input and return a list of tuples.
+    Rather than have to deal with parsing brackets post-addition, instead record the number along with its depth.
+    """
+    final_list = []
+    for line in puzzle_input:
+        this_line, depth = [], 0
+        for character in line:
+            if character == '[':
+                depth += 1
+            elif character == "]":
+                depth -= 1
+            elif character.isdigit():
+                this_line.append([int(character), depth])
+        final_list.append(this_line)
+    return final_list
 
 
-def explode(data: list):
-    path_to_explode = find_path_to_explode(data, [])
-
-    if path_to_explode:
-        sub_data = data
-        for index in path_to_explode:
-            sub_data = sub_data[index]
-        
-        left = sub_data[0]
-        right = sub_data[1]
-
-        # Add left
-        if 1 in path_to_explode:
-            last_1 = last_index(last_index, 1)
-
-
-
-
-        # Add right
-        if 0 in path_to_explode:
-            last_0 = last_index(path_to_explode, 0)
-            sub_data = data
-            for index in path_to_explode[:last_0]:
-                sub_data = sub_data[index]
-
-            while isinstance(sub_data, list):
-                sub_data = sub_data[0]
-
-            sub_data += right
-
-    print(data)
+def explode_reduction(snailfish_number: list) -> tuple[bool, list]:
+    """Figure out if snailfish number needs to explode. If it does, return it.
+    We return both a boolean and the exploded snailfish number because we may need to do this a few times.
+    """
+    for index, ((number_one, depth_one), (number_two, depth_two)) in enumerate(zip(snailfish_number,
+                                                                                   snailfish_number[1:])):
+        if depth_one < 5 or depth_one != depth_two:
+            continue  # this isn't nested deeply enough or we're going to descend (or ascend) another level
+        # if we're here, we need to do an explosion
+        if index > 0:  # this is not the first number
+            snailfish_number[index - 1][0] += number_one
+        if index < len(snailfish_number) - 2:  # we're near the end of the number
+            snailfish_number[index + 2][0] += number_two
+        return True, snailfish_number[:index] + [[0, depth_one - 1]] + snailfish_number[index + 2:]
+    return False, snailfish_number  # this is reached if we keep doing the continue step
 
 
-
-def find_path_to_explode(data: list, path: list) -> list:
-    if path and len(path) >= 4:
-        return path
-
-
-    sub_data = data
-    if path:
-        for index in path:
-            sub_data = sub_data[index]
-
-    for index, elem in enumerate(sub_data):
-        if isinstance(elem, list):
-            new_path = path + [index]
-            return find_path_to_explode(data, new_path)
-
-    return []
+def split_reduction(snailfish_number: list) -> tuple[bool, list]:
+    """If snailfish number needs a split (has a number >= 10), do it and return the number."""
+    # go through all your items (number, depth) and find any that are 10 or greater
+    for index, (number, depth) in enumerate(snailfish_number):
+        if number < 10:  # go on the next tuple without doing anything
+            continue
+        round_down = floor(number / 2.0)  # a departure from the solution I was following for clarity
+        round_up = ceil(number / 2.0)
+        # now we need to add in a pair where we used to have a number
+        return True, snailfish_number[:index] + [[round_down, depth + 1],
+                                                 [round_up, depth + 1]] + snailfish_number[index + 1:]
+    return False, snailfish_number
 
 
-def last_index(data: list, val: int):
-    rev_data = data[::-1]
-    i = rev_data.index(val)
-    return len(data) - i - 1
+def add_snailfish_numbers(number_one, number_two):
+    """Add together 2 snailfish numbers"""
+    new_number = [[number, depth + 1] for number, depth in number_one + number_two]
+    while True:
+        reduction_happened, new_number = explode_reduction(new_number)
+        if reduction_happened:
+            # we just did an explosion, according to instructions we have to check for new explosions before reducing
+            continue
+        reduction_happened, new_number = split_reduction(new_number)
+        if not reduction_happened:
+            # if we didn't split, we're done with this step. Break out of the while loop
+            break
+    return new_number
 
 
-data = [[[[[9,8],1],2],3],4]
-explode(data)
-print(data)
+def magnitude(snailfish_number: list) -> int:
+    if len(snailfish_number) > 1:
+        for index, ((number_one, depth_one), (number_two, depth_two)) in enumerate(zip(snailfish_number, snailfish_number[1:])):
+            if depth_one != depth_two:
+                continue  # we're not at the lowest level of recursion
+            inner_magnitude = number_one * 3 + number_two * 2
+            snailfish_number = snailfish_number[:index] + [[inner_magnitude, depth_one - 1]] + snailfish_number[index + 2:]
+            return magnitude(snailfish_number)
+
+    return snailfish_number[0][0]
+
+
+if __name__ == "__main__":
+    snailfish_numbers_to_sum = input_per_line(r"AoC\2021\Day_18\input.txt")
+    snailfish_numbers_without_brackets = remove_brackets(snailfish_numbers_to_sum)
+    part_one_answer = magnitude(reduce(add_snailfish_numbers, snailfish_numbers_without_brackets))
+    print(f"After helping the snailfish with its homework, we calculated the magnitude of the sum to be {part_one_answer}")
+
+    part_two_answer = max(magnitude(add_snailfish_numbers(number_one, number_two)) for number_one, number_two in permutations(snailfish_numbers_without_brackets, 2))
+    print(f"The largest magnitude of any sum of two different snailfish numbers is: {part_two_answer}")
