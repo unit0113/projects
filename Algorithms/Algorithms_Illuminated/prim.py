@@ -32,7 +32,6 @@ def prim(adj_list: dict[list[tuple[str, int]]]) -> list:
 
         mst.append(min_edge)
         U.add(min_edge[1])
-        #adj_list[node].remove(min_edge)
 
     return mst
 
