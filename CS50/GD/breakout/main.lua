@@ -67,7 +67,8 @@ function love.load()
         ['balls'] = GenerateQuadsBalls(gTextures['main']),
         ['bricks'] = GenerateQuadsBricks(gTextures['main']),
         ['hearts'] = GenerateQuads(gTextures['hearts'], 10, 9),
-        ['powerups'] = GenerateQuadsPowerups(gTextures['main'])
+        ['powerups'] = GenerateQuadsPowerups(gTextures['main']),
+        ['locked_brick'] = GenerateLockedBrick(gTextures['main'])
     }
     
     -- initialize our virtual resolution, which will be rendered within our
@@ -94,6 +95,7 @@ function love.load()
         ['recover'] = love.audio.newSource('sounds/recover.wav', 'static'),
         ['high-score'] = love.audio.newSource('sounds/high_score.wav', 'static'),
         ['pause'] = love.audio.newSource('sounds/pause.wav', 'static'),
+        ['locked'] = love.audio.newSource('sounds/locked.wav', 'static'),
 
         ['music'] = love.audio.newSource('sounds/music.wav', 'static')
     }

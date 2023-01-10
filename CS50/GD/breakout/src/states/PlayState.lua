@@ -32,6 +32,7 @@ function PlayState:enter(params)
     self.powerup_timer = 0
     self.next_powerup_time = self:getNextPowerupTime()
     self.level = params.level
+    self.key = false
 
     self.recoverPoints = 5000
 
@@ -59,14 +60,19 @@ function PlayState:update(dt)
     if self.powerup_timer > self.next_powerup_time then
         self.powerup_timer = 0
         self.next_powerup_time = self:getNextPowerupTime()
-        self.powerups[#self.powerups+1] = Powerup(9)
+        powerup_index = (math.random() <= 0.2) and 10 or 9     --One in five powerups is key
+        self.powerups[#self.powerups+1] = Powerup(powerup_index)
     end
 
     -- Update powerups
     for k, powerup in pairs(self.powerups) do
         powerup:update(dt)
         if powerup:collides(self.paddle) then
-            self:multiball()
+            if powerup.type == 9 then
+                self:multiball()
+            else
+                self.key = true
+            end
             table.remove(self.powerups, k)
             break
         end
@@ -123,10 +129,15 @@ function PlayState:update(dt)
             if brick.inPlay and ball:collides(brick) then
 
                 -- add to score
-                self.score = self.score + (brick.tier * 200 + brick.color * 25)
+                if not brick.locked then
+                    self.score = self.score + (brick.tier * 200 + brick.color * 25)
+                end
 
                 -- trigger the brick's hit function, which removes it from play
-                brick:hit()
+                brick:hit(self.key)
+                if brick.locked and not brick.inPlay then
+                    self.score = self.score + 2000
+                end
 
                 -- go to our victory screen if there are no more bricks left
                 if self:checkVictory() then

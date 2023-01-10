@@ -23,6 +23,9 @@ ALTERNATE = 2       -- alternate colors
 SKIP = 3            -- skip every other block
 NONE = 4            -- no blocks this row
 
+-- Chance of locked brick
+LOCKED_CHANCE = 1.0
+
 LevelMaker = Class{}
 
 --[[
@@ -118,6 +121,13 @@ function LevelMaker.createMap(level)
             ::continue::
         end
     end 
+
+    -- Add locked brick
+    if math.random() <= LOCKED_CHANCE then
+        for i = 1, math.random(1, #bricks / 10) do
+            bricks[math.random(1, #bricks)].locked = true
+        end
+    end
 
     -- in the event we didn't generate any bricks, try again
     if #bricks == 0 then
