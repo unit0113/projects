@@ -1,10 +1,20 @@
 from __future__ import division
-
+from util import *
 import torch 
 import torch.nn as nn
 import torch.nn.functional as F 
 from torch.autograd import Variable
 import numpy as np
+
+
+def get_test_input():
+    img = cv2.imread(r"NNs\YOLO\dog-cycle-car.png")
+    img = cv2.resize(img, (416,416))          #Resize to the input dimension
+    img_ =  img[:,:,::-1].transpose((2,0,1))  # BGR -> RGB | H X W C -> C X H X W 
+    img_ = img_[np.newaxis,:,:,:]/255.0       #Add a channel at 0 (for batch) | Normalise
+    img_ = torch.from_numpy(img_).float()     #Convert to float
+    img_ = Variable(img_)                     # Convert to Variable
+    return img_
 
 
 def parse_cfg(cfgfile):
@@ -306,5 +316,11 @@ class Darknet(nn.Module):
 
 
 if __name__ == "__main__":
-    blocks = parse_cfg("NNs\YOLO\cfg\yolov3.cfg")
-    print(create_modules(blocks))
+    #blocks = parse_cfg("NNs\YOLO\cfg\yolov3.cfg")
+    #print(create_modules(blocks))
+
+    model = Darknet(r"NNs\YOLO\cfg\yolov3.cfg")
+    model.load_weights(r"NNs\YOLO\yolov3.weights")
+    inp = get_test_input()
+    pred = model(inp, torch.cuda.is_available())
+    print (pred)
