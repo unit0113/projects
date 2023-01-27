@@ -319,8 +319,9 @@ if __name__ == "__main__":
     #blocks = parse_cfg("NNs\YOLO\cfg\yolov3.cfg")
     #print(create_modules(blocks))
 
-    model = Darknet(r"NNs\YOLO\cfg\yolov3.cfg")
-    model.load_weights(r"NNs\YOLO\yolov3.weights")
+    model = Darknet(r"cfg\yolov3.cfg")
+    model.load_weights(r"yolov3.weights")
     inp = get_test_input()
     pred = model(inp, torch.cuda.is_available())
-    print (pred)
+    print(pred)
+    print(pred.shape)
