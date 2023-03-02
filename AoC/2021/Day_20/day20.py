@@ -50,7 +50,7 @@ def decode(x, y, image, image_enhancer):
 
 def enhance_cycle(image, image_enhancer, num_iters):
     for _ in range(num_iters):
-        pad(image)
+        image = pad(image)
         image = enhance(image, image_enhancer)
 
     return image
