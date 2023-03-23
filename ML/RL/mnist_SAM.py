@@ -6,9 +6,9 @@ import torchvision as TV
 from einops import rearrange
 
 
-mnist_data = TV.datasets.MNIST("MNIST/", train=True, transform=None,\
+mnist_data = TV.datasets.MNIST("ML/MNIST/Data/", train=True, transform=None,\
                                         target_transform=None, download=True) #A
-mnist_test = TV.datasets.MNIST("MNIST/", train=False, transform=None,\
+mnist_test = TV.datasets.MNIST("ML/MNIST/Data/", train=False, transform=None,\
                                         target_transform=None, download=True) #B
 
 
