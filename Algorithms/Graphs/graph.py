@@ -42,26 +42,24 @@ class Graph:
         
         self.adj_list[source].add(dest)
 
-    def _dfs_recursive(self, current, V, visited):
-        V[current] = True
+    def _dfs_recursive(self, current, visited):
+        visited[current] = True
 
         for neighbor in self.adj_list[current]:
-            if not V[neighbor]:
-                self._dfs_recursive(neighbor, V, visited)
-        visited.append(current)
+            if not visited[neighbor]:
+                self._dfs_recursive(neighbor, visited)
+        visited[current] = True
 
     def topological_sort(self):
-        V = {node: False for node in self.adj_list.keys()}
+        visited = {node: False for node in self.adj_list.keys()}
         ordering = []
 
         for current in self.adj_list.keys():
-            if not V[current]:
-                visited = []
-                self._dfs_recursive(current, V, visited)
+            if not visited[current]:
+                self._dfs_recursive(current, visited)
                 for vertex in visited:
                     ordering.append(vertex)
 
-        ordering.reverse()
         return ordering
     
     def topological_sort_kahn(self):
@@ -86,3 +84,43 @@ class Graph:
             if ordering.index(source) > ordering.index(dest):
                 return False
         return True
+
+    def get_msccs(self):
+        visited = []
+        stack = []
+        for vertex in self.adj_list.keys():
+            if vertex not in visited:
+                self._dfs_msccs(vertex, visited, stack)
+
+        reversed_graph = self.get_reverse()
+        visited = []
+        msccs = []
+        while stack:
+            current = stack.pop()
+            if current in visited:
+                continue
+            seen = []
+            reversed_graph._dfs_msccs(current, visited, seen)
+            msccs.append(sorted(seen))
+        
+        return msccs
+
+    def _dfs_msccs(self, vertex, visited, stack):
+        visited.append(vertex)
+        for u in self.adj_list[vertex]:
+            if u not in visited:
+                self._dfs_msccs(u, visited, stack)
+        stack.append(vertex)
+
+    def get_reverse(self):
+        reversed_adj_list = defaultdict(set)
+        for vertex in self.adj_list.keys():
+            for edge in self.adj_list[vertex]:
+                reversed_adj_list[edge].add(vertex)
+        
+        reversed_graph = self
+        reversed_graph.adj_list = reversed_adj_list
+        return reversed_graph
+
+    def get_min_spanning_tree(self):
+        pass
