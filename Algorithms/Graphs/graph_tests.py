@@ -1,4 +1,5 @@
 from graph import Graph
+from weighted_graph import WeightedGraph
 import unittest
 
 
@@ -105,7 +106,7 @@ class TestTopologicalSearchKahn(unittest.TestCase):
         self.assertTrue(g._valid_topological_order(g.topological_sort_kahn()), 'Incorrect topological ordering; large test')
 
 
-class TestGraphCreation(unittest.TestCase):
+class TestMaximalStronglyConnectedComponents(unittest.TestCase):
     def runTest(self):
         g = Graph()
         g.add_vertex('A')
@@ -138,7 +139,45 @@ class TestGraphCreation(unittest.TestCase):
         self.assertEqual(g1.get_msccs(), [[0, 1, 2, 3], [4, 5, 6], [7]], 'Incorrect MSCC; large test')
 
 
+class TestMinimumSpanningTree(unittest.TestCase):
+    def runTest(self):
+        g = WeightedGraph()
+        g.add_vertex('A')
+        g.add_vertex('B')
+        g.add_vertex('C')
+        g.add_vertex('D')
+        g.add_directed_edge('A', 'B', 0.5)
+        g.add_directed_edge('B', 'C', 1)
+        g.add_directed_edge('A', 'D', 2)
+        g.add_directed_edge('C', 'D', 5)
+        self.assertEqual(g.get_min_spanning_tree()[1], 3.5, 'Incorrect Minimum Spanning Tree; small test')
 
+        g = WeightedGraph()
+        g.add_vertex('A')
+        g.add_vertex('B')
+        g.add_vertex('C')
+        g.add_vertex('D')
+        g.add_vertex('E')
+        g.add_vertex('F')
+        g.add_vertex('G')
+        g.add_vertex('H')
+        g.add_vertex('I')
+
+        g.add_directed_edge('A', 'B', 4)
+        g.add_directed_edge('B', 'C', 8)
+        g.add_directed_edge('C', 'D', 7)
+        g.add_directed_edge('D', 'E', 9)
+        g.add_directed_edge('E', 'F', 10)
+        g.add_directed_edge('F', 'G', 2)
+        g.add_directed_edge('G', 'H', 1)
+        g.add_directed_edge('A', 'H', 8)
+        g.add_directed_edge('B', 'H', 11)
+        g.add_directed_edge('H', 'I', 7)
+        g.add_directed_edge('G', 'I', 6)
+        g.add_directed_edge('C', 'I', 2)
+        g.add_directed_edge('C', 'F', 4)
+        g.add_directed_edge('D', 'F', 14)
+        self.assertEqual(g.get_min_spanning_tree()[1], 37, 'Incorrect Minimum Spanning Tree; large test')
 
 
 

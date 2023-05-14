@@ -121,6 +121,3 @@ class Graph:
         reversed_graph = self
         reversed_graph.adj_list = reversed_adj_list
         return reversed_graph
-
-    def get_min_spanning_tree(self):
-        pass
