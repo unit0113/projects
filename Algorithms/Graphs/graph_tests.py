@@ -180,6 +180,85 @@ class TestMinimumSpanningTree(unittest.TestCase):
         self.assertEqual(g.get_min_spanning_tree()[1], 37, 'Incorrect Minimum Spanning Tree; large test')
 
 
+class TestSingleSourceShortestPathBellmanFord(unittest.TestCase):
+    def runTest(self):
+        g = WeightedGraph()
+        g.add_vertex('A')
+        g.add_vertex('B')
+        g.add_vertex('C')
+        g.add_vertex('D')
+        g.add_vertex('E')
+        g.add_directed_edge('A', 'B', -1)
+        g.add_directed_edge('A', 'C', 4)
+        g.add_directed_edge('B', 'C', 3)
+        g.add_directed_edge('B', 'E', 2)
+        g.add_directed_edge('E', 'D', -3)
+        g.add_directed_edge('B', 'D', 2)
+        g.add_directed_edge('D', 'B', 1)
+        g.add_directed_edge('D', 'C', 5)
+        answer = {'A': 0, 'B': -1, 'C': 2, 'D': -2, 'E': 1}
+        self.assertEqual(g.get_sssp_bf('A'), answer, 'Incorrect Bellman-Ford single source shortest path')
+
+        g.add_directed_edge('C', 'A', -5)
+        with self.assertRaises(ValueError):
+            g.get_sssp_bf('A')
+
+
+class TestSingleSourceShortestPathDijkstra(unittest.TestCase):
+    def runTest(self):
+        g = WeightedGraph()
+        g.add_vertex('A')
+        g.add_vertex('B')
+        g.add_vertex('C')
+        g.add_vertex('D')
+        g.add_vertex('E')
+        g.add_vertex('F')
+        g.add_vertex('G')
+        g.add_vertex('H')
+        g.add_vertex('I')
+
+        g.add_undirected_edge('A', 'B', 4)
+        g.add_undirected_edge('B', 'C', 8)
+        g.add_undirected_edge('C', 'D', 7)
+        g.add_undirected_edge('D', 'E', 9)
+        g.add_undirected_edge('E', 'F', 10)
+        g.add_undirected_edge('F', 'G', 2)
+        g.add_undirected_edge('G', 'H', 1)
+        g.add_undirected_edge('A', 'H', 8)
+        g.add_undirected_edge('B', 'H', 11)
+        g.add_undirected_edge('H', 'I', 7)
+        g.add_undirected_edge('G', 'I', 6)
+        g.add_undirected_edge('C', 'I', 2)
+        g.add_undirected_edge('C', 'F', 4)
+        g.add_undirected_edge('D', 'F', 14)
+        answer = {'A': 0, 'B': 4, 'C': 12, 'D': 19, 'E': 21, 'F': 11, 'G': 9, 'H': 8, 'I': 14}
+        self.assertEqual(g.get_sssp_dijkstra('A')[0], answer, 'Incorrect Dijkstra single source shortest path')
+
+        self.assertEqual(g.get_shortest_path_dijkstra('A', 'E'), (['A', 'H', 'G', 'F', 'E'], 21), 'Incorrect shortest path via Dijkstra')
+
+
+class TestAllPairsShortestPathFloydWarshall(unittest.TestCase):
+    def runTest(self):
+        g = WeightedGraph()
+        g.add_vertex('A')
+        g.add_vertex('B')
+        g.add_vertex('C')
+        g.add_vertex('D')
+        g.add_directed_edge('A', 'B', 3)
+        g.add_directed_edge('A', 'D', 5)
+        g.add_directed_edge('B', 'A', 2)
+        g.add_directed_edge('B', 'D', 4)
+        g.add_directed_edge('C', 'B', 1)
+        g.add_directed_edge('D', 'C', 2)
+        answer = [[0, 3, 7, 5], [2, 0, 6, 4], [3, 1, 0, 5], [5, 3, 2, 0]]
+        self.assertEqual(g.get_apsp_fw(), answer, 'Incorrect Floyd Warshall all pairs shortest path')
+
+
+
+
+
+
+
 
 
 

@@ -1,6 +1,6 @@
 from typing import Self
-from heapq import heapify, heappop
-
+from heapq import heapify, heappop, heappush
+import math
 
 class UnionFind:
     def __init__(self, vertices=None) -> None:
@@ -80,6 +80,19 @@ class WeightedGraph:
                 edges.append(Edge(source, dest, weight))
         
         return edges
+    
+    @property
+    def adj_matrix(self) -> list[list]:
+        n = len(self.adj_list.keys())
+        matrix = [[math.inf] * n for _ in range(n)]
+        for i, source in enumerate(self.adj_list.keys()):
+            for j, dest in enumerate(self.adj_list.keys()):
+                for vertex, weight in self.adj_list[source]:
+                    if dest == vertex:
+                        matrix[i][j] = weight
+
+        return matrix
+                
 
     def add_vertex(self, edge_name) -> None:
         if edge_name not in self.adj_list.keys():
@@ -126,3 +139,69 @@ class WeightedGraph:
         for index, edge in enumerate(spanning_tree):
             print(f'\nEdge {index + 1}:')
             print(edge)
+
+    def get_sssp_bf(self, source) -> dict[object, int]:
+        distances = {vertex: math.inf for vertex in self.adj_list.keys()}
+        distances[source] = 0
+
+        for _ in range(len(self.directed_edge_list)):
+            for edge in self.directed_edge_list:
+                if edge.source == edge.dest:
+                    continue
+                elif distances[edge.source] != math.inf and distances[edge.source] + edge.weight < distances[edge.dest]:
+                    distances[edge.dest] = distances[edge.source] + edge.weight
+
+        for edge in self.directed_edge_list:
+            if distances[edge.source] != math.inf and distances[edge.source] + edge.weight < distances[edge.dest]:
+                raise ValueError('Graph contains a negative weight cycle')
+        
+        return distances    
+
+    def get_sssp_dijkstra(self, source) -> dict[object, int]:
+        distances = {vertex: math.inf for vertex in self.adj_list.keys()}
+        distances[source] = 0
+        prev = {vertex: None for vertex in self.adj_list.keys()}
+
+        heap = [(0, source)]
+        while heap:
+            current_distance, current_vertex = heappop(heap)
+            if current_distance > distances[current_vertex]:
+                continue
+
+            for neighbor, weight in self.adj_list[current_vertex]:
+                distance = current_distance + weight
+
+                if distance < distances[neighbor]:
+                    distances[neighbor] = distance
+                    prev[neighbor] = current_vertex
+                    heappush(heap, (distance, neighbor))
+
+        return distances, prev
+    
+    def get_shortest_path_dijkstra(self, source, dest) -> list[object]:
+        distances, prev = self.get_sssp_dijkstra(source)
+        path = []
+        if distances[dest] == math.inf:
+            return path, distances[dest]
+        
+        current = dest
+        while current:
+            path.append(current)
+            current = prev[current]
+        
+        path.reverse()
+        return path, distances[dest]
+
+    def get_apsp_fw(self) -> dict[object, int]:
+        n = len(self.adj_list.keys())
+        matrix = self.adj_matrix
+        for i in range(n):
+            matrix[i][i] = 0                
+
+        for k in range(n):
+            for i in range(n):
+                for j in range(n):
+                    matrix[i][j] = min(matrix[i][j], matrix[i][k] + matrix[k][j])
+        
+        return matrix
+    
