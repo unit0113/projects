@@ -31,8 +31,19 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 bool arePermutations(std::vector<std::string> strs) {
     // Your code here
-    return 0;
+    int n = strs[0].length();
+    std::string first = strs[0];
+    std::sort(first.begin(), first.end());
+    for (std::string str: strs) {
+        std::sort(str.begin(), str.end());
+        if (str.length() != n || str != first) {
+            return false;
+        }
+    }
+
+    return true;
 }
