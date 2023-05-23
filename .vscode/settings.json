@@ -51,6 +51,7 @@
         "xtr1common": "cpp",
         "xtree": "cpp",
         "xutility": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "unordered_set": "cpp"
     }
 }
