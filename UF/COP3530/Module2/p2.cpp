@@ -20,6 +20,7 @@ unordered_set<string> getUnique(const array<array<string, m>, n> &books) {
     for (int i{}; i < n; ++i) {
         for (int j{}; j < m; ++j) {
             unique_books.insert(books[i][j]);
+            cout << unique_books.bucket_count() << endl;
         }
     }
 
@@ -32,7 +33,7 @@ int main() {
     array<array<string, m>, n> books;
 
     // Fill array with book titles
-    ifstream file("p2data.txt");
+    ifstream file("p2data_worst_case.txt");
     string text;
     for (int i{}; i < n; ++i) {
         for (int j{}; j < m; ++j) {
