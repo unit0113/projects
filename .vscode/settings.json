@@ -54,6 +54,11 @@
         "algorithm": "cpp",
         "unordered_set": "cpp",
         "vector": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "stack": "cpp",
+        "deque": "cpp",
+        "format": "cpp",
+        "list": "cpp",
+        "forward_list": "cpp"
     }
 }

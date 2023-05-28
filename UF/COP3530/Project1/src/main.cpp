@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include <queue>
+#include <deque>
 
 using namespace std;
 
@@ -32,10 +32,10 @@ class AVL_Tree {
 		unsigned int get_balance_factor(Node* root);
 		Node* left_rotation(Node* old_root);
 		Node* right_rotation(Node* old_root);
-		void in_order_helper(Node* root, queue<string>& names) const;
-		void print_helper(queue<string>& names) const;
-		void pre_order_helper(Node* root, queue<string>& names) const;
-		void post_order_helper(Node* root, queue<string>& names) const;
+		void in_order_helper(Node* root, deque<Node*>& nodes) const;
+		void print_helper(deque<Node*>& nodes) const;
+		void pre_order_helper(Node* root, deque<Node*>& nodes) const;
+		void post_order_helper(Node* root, deque<Node*>& nodes) const;
 
 	public:
 		void insert(string name, unsigned int ID);
@@ -221,64 +221,70 @@ void AVL_Tree::search(const unsigned int& search_ID) const {
 
 
 void AVL_Tree::search(const string& search_name) const {
-
+	deque<Node*> nodes;
+	pre_order_helper(head, nodes);
+	for (Node* node: nodes) {
+		if (node->name == search_name) {
+			cout << node->ID << endl;
+		}
+	}
 }
 
 
 void AVL_Tree::printInOrder() const {
-	queue<string> names;
-	in_order_helper(head, names);
-	print_helper(names);
+	deque<Node*> nodes;
+	in_order_helper(head, nodes);
+	print_helper(nodes);
 }
 
 
-void AVL_Tree::in_order_helper(Node* root, queue<string>& names) const {
+void AVL_Tree::in_order_helper(Node* root, deque<Node*>& nodes) const {
 	if (root) {
-		in_order_helper(root->l_child, names);
-		names.push(root->name);
-		in_order_helper(root->r_child, names);
+		in_order_helper(root->l_child, nodes);
+		nodes.push_back(root);
+		in_order_helper(root->r_child, nodes);
 	}
 }
 
 
 void AVL_Tree::printPreOrder() const {
-	queue<string> names;
-	pre_order_helper(head, names);
-	print_helper(names);
+	deque<Node*> nodes;
+	pre_order_helper(head, nodes);
+	print_helper(nodes);
 }
 
 
-void AVL_Tree::pre_order_helper(Node* root, queue<string>& names) const {
+void AVL_Tree::pre_order_helper(Node* root, deque<Node*>& nodes) const {
 	if (root) {
-		names.push(root->name);
-		in_order_helper(root->l_child, names);
-		in_order_helper(root->r_child, names);
+		nodes.push_back(root);
+		in_order_helper(root->l_child, nodes);
+		in_order_helper(root->r_child, nodes);
 	}
 }
 
 		
 void AVL_Tree::printPostOrder() const {
-	queue<string> names;
-	post_order_helper(head, names);
-	print_helper(names);
+	deque<Node*> nodes;
+	post_order_helper(head, nodes);
+	print_helper(nodes);
 }
 
 
-void AVL_Tree::post_order_helper(Node* root, queue<string>& names) const {
+void AVL_Tree::post_order_helper(Node* root, deque<Node*>& nodes) const {
 	if (root) {
-		in_order_helper(root->l_child, names);
-		in_order_helper(root->r_child, names);
-		names.push(root->name);
+		in_order_helper(root->l_child, nodes);
+		in_order_helper(root->r_child, nodes);
+		nodes.push_back(root);
 	}
 }
 
 
-void AVL_Tree::print_helper(queue<string>& names) const {
-	cout << names.front();
-	names.pop();
-	while (!names.empty()) {
-		cout << ", " << names.front();
-		names.pop();
+void AVL_Tree::print_helper(deque<Node*>& nodes) const {
+	cout << nodes.front()->name;
+	nodes.pop_front();
+	while (!nodes.empty()) {
+		cout << ", " << nodes.front()->name;
+		nodes.pop_front();
 	}
 	cout << endl;
 }
@@ -322,9 +328,12 @@ int main(){
 	tree.insert("Bob", 42);
 	tree.insert("Alice", 25);
 	tree.insert("Charlie", 72);
+	tree.insert("Alice", 94);
+	tree.insert("Bad", 25);
 	tree.printInOrder();
 	tree.printPreOrder();
 	tree.printPostOrder();
 	tree.printLevelCount();
+	tree.search("Alice");
 }
 
