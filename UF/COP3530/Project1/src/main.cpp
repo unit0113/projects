@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <deque>
+#include <algorithm>
 
 using namespace std;
 
@@ -9,39 +10,58 @@ using namespace std;
 	2. You will submit this main.cpp file and any header files you have on Gradescope. 
 */
 
-struct Node {
-	string name;
-	unsigned int ID;
-	unsigned int height = 1;
-	Node* parent = nullptr;
-	Node* l_child = nullptr;
-	Node* r_child = nullptr;
-
-	Node(string new_name, unsigned int new_ID, Node* new_parent=nullptr) : name(new_name), ID(new_ID), parent(new_parent) {}
-};
-
-
 class AVL_Tree {
 	private:
+	
+		/*
+		*	Private node struct for use in tree
+		*/
+		struct Node {
+			string name;
+			string ID;
+			unsigned int height = 1;
+			Node* parent = nullptr;
+			Node* l_child = nullptr;
+			Node* r_child = nullptr;
+
+			Node(string new_name, string new_ID, Node* new_parent=nullptr) :
+				name(new_name),
+				ID(new_ID),
+				parent(new_parent) {}
+			bool is_left_child() const;
+		};
+
 		Node* head = nullptr;
 
 		// Helper methods
-		Node* insert_helper(string name, unsigned int ID, Node* root);
-		unsigned int get_height(Node* root);
+		Node* insert_helper(string name, string ID, Node* root);
+		unsigned int get_height(Node* root) const;
 		Node* rebalance(Node* root);
-		unsigned int get_balance_factor(Node* root);
+		short get_balance_factor(Node* root) const;
 		Node* left_rotation(Node* old_root);
 		Node* right_rotation(Node* old_root);
+		// Seach helpers
+		bool is_number(const string& item) const;
+		Node* search_ID(const string& search_ID) const;
+		void search_name(const string& search_name) const;
+		// Traversal helpers
 		void in_order_helper(Node* root, deque<Node*>& nodes) const;
 		void print_helper(deque<Node*>& nodes) const;
 		void pre_order_helper(Node* root, deque<Node*>& nodes) const;
 		void post_order_helper(Node* root, deque<Node*>& nodes) const;
+		// Removal helpers
+		void remove_node(Node* deleting_node);
+		void delete_node_no_children(Node* deleting_node);
+		void delete_node_one_child(Node* deleting_node);
+		void transplant(Node* deleting_node, Node* replacing_node=nullptr);
+		void delete_fixup(Node* deleting_node);
+		Node* get_successor(Node* root);
 
 	public:
-		void insert(string name, unsigned int ID);
-		void remove(const unsigned int& remove_ID);
-		void search(const unsigned int& search_ID) const;
-		void search(const string& search_name) const;
+		~AVL_Tree();
+		void insert(string name, string ID);
+		void remove(const string& remove_ID);
+		void search(const string& search_item) const;
 		void printInOrder() const;
 		void printPreOrder() const;
 		void printPostOrder() const;
@@ -50,7 +70,31 @@ class AVL_Tree {
 };
 
 
-void AVL_Tree::insert(string name, unsigned int ID) {
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Node methods~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+bool AVL_Tree::Node::is_left_child() const {
+	/*
+	*	Checks if node is the left child of its parent node
+	*/
+	return parent->l_child && parent->l_child->ID == ID;
+}
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Destructor~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+AVL_Tree::~AVL_Tree() {
+	deque<Node*> nodes;
+	in_order_helper(head, nodes);
+	for (Node* node: nodes) {
+		delete node;
+	}
+}
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Insertion methods~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+void AVL_Tree::insert(string name, string ID) {
+	/*
+	*	Inserts new item into tree
+	*/
+
 	// For empty tree
 	if (head == nullptr) {
 		head = new Node(name, ID);
@@ -58,12 +102,18 @@ void AVL_Tree::insert(string name, unsigned int ID) {
 		return;
 	}
 
-	// Else
+	// Else find proper position and insert new node
 	insert_helper(name, ID, head);
 }
 
 
-Node* AVL_Tree::insert_helper(string name, unsigned int ID, Node* root) {
+AVL_Tree::Node* AVL_Tree::insert_helper(string name, string ID, Node* root) {
+	/*
+	*	Determines the correct position of the new data and inserts into tree
+	*	Once inserted, tree is rebalanced as required
+	*	Prints results (successful or unseccussful) to console on completion of insertion
+	*/
+
 	// Base case for reaching end of tree
 	if (root == nullptr) {
 		cout << "successful" << endl;
@@ -97,14 +147,24 @@ Node* AVL_Tree::insert_helper(string name, unsigned int ID, Node* root) {
 }
 
 
-unsigned int AVL_Tree::get_height(Node* root) {
+unsigned int AVL_Tree::get_height(Node* root) const {
+	/*
+	*	Helper function to account for leaf nodes in determing height of branches/Nodes
+	*/
+
 	if (root == nullptr) {return 0;}
 	return root->height;
 }
 
 
-Node* AVL_Tree::rebalance(Node* root) {
-	int balance_factor = get_balance_factor(root);
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Rebalance methods~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+AVL_Tree::Node* AVL_Tree::rebalance(Node* root) {
+	/*
+	*	Gets the balance factor of the node in question
+	*	Performs appropriate rotations to balance the tree
+	*/
+
+	short balance_factor = get_balance_factor(root);
 
 	// Right or left-right rotation
 	if (balance_factor > 1) {
@@ -126,13 +186,21 @@ Node* AVL_Tree::rebalance(Node* root) {
 }
 
 
-unsigned int AVL_Tree::get_balance_factor(Node* root) {
+short AVL_Tree::get_balance_factor(Node* root) const {
+	/*
+	*	Determines the balance factor of a specific node
+	*/
+
 	if (root == nullptr) {return 0;}
 	return get_height(root->l_child) - get_height(root->r_child);
 }
 
 
-Node* AVL_Tree::left_rotation(Node* old_root) {
+AVL_Tree::Node* AVL_Tree::left_rotation(Node* old_root) {
+	/*
+	*	Performs a left rotation on the specified node
+	*/
+
 	Node* new_root = old_root->r_child;
 	old_root->r_child = new_root->l_child;
 
@@ -144,7 +212,7 @@ Node* AVL_Tree::left_rotation(Node* old_root) {
 	// Adjust parent/child relationship with new root and it's new parent
 	if (old_root->parent) {
 		// Check which child the old root was
-		if (old_root->ID == old_root->parent->l_child->ID) {
+		if (old_root->is_left_child()) {
 			old_root->parent->l_child = new_root;
 		} else {
 			old_root->parent->r_child = new_root;
@@ -156,7 +224,7 @@ Node* AVL_Tree::left_rotation(Node* old_root) {
 		head = new_root;
 	}
 
-	// Clean up final connection and update heights
+	// Clean up final connections and update heights
 	new_root->l_child = old_root;
 	new_root->parent = old_root->parent;
 	old_root->parent = new_root;
@@ -167,7 +235,11 @@ Node* AVL_Tree::left_rotation(Node* old_root) {
 }
 
 
-Node* AVL_Tree::right_rotation(Node* old_root) {
+AVL_Tree::Node* AVL_Tree::right_rotation(Node* old_root) {
+	/*
+	*	Performs a right rotation on the specified node
+	*/
+
 	Node* new_root = old_root->l_child;
 	old_root->l_child = new_root->r_child;
 
@@ -179,7 +251,7 @@ Node* AVL_Tree::right_rotation(Node* old_root) {
 	// Adjust parent/child relationship with new root and it's new parent
 	if (old_root->parent) {
 		// Check which child the old root was
-		if (old_root->ID == old_root->parent->l_child->ID) {
+		if (old_root->is_left_child()) {
 			old_root->parent->l_child = new_root;
 		} else {
 			old_root->parent->r_child = new_root;
@@ -202,36 +274,176 @@ Node* AVL_Tree::right_rotation(Node* old_root) {
 }
 
 
-void AVL_Tree::remove(const unsigned int& remove_ID) {
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Removal methods~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+void AVL_Tree::remove(const string& remove_ID) {
+	/*
+	*	Removes the node with the specified ID from the tree
+	*	Rebalances as required
+	*/
+
+	Node* node_to_remove = search_ID(remove_ID);
+	if (node_to_remove) {
+		remove_node(node_to_remove);
+	} else {
+		cout << "unsuccessful" << endl;
+	}
+}
+
+
+void AVL_Tree::remove_node(Node* deleting_node) {
+	/*
+	*	Removes specified node and rebalances as required
+	*/
+
+	// Case no-children
+	if (!deleting_node->l_child && !deleting_node->r_child) {
+		delete_node_no_children(deleting_node);
+	}
+	// Case two-children
+	else if (deleting_node->l_child && deleting_node->r_child) {
+
+	}
+	// Case one-child
+	else {
+
+	}
+
+	cout << "successful" << endl;
+}
+
+
+void AVL_Tree::delete_node_no_children(Node* deleting_node) {
+	/*
+	*	Delete node that has no children
+	*/
+	Node* parent = deleting_node->parent;
+	transplant(deleting_node);
+	if (parent) {//move to end of delete? or start of delete fixup?
+		delete_fixup(parent);
+	}
+}
+
+
+void AVL_Tree::delete_node_one_child(Node* deleting_node) {
+	/*
+	*	Delete node that has one child
+	*/
+	Node* parent = deleting_node->parent;
+	Node* replacing_node = (deleting_node->r_child) ? deleting_node->r_child : deleting_node->l_child;
+	transplant(deleting_node, replacing_node);
+	if (parent) {
+		delete_fixup(parent);
+	}
+}
+
+
+void AVL_Tree::transplant(Node* deleting_node, Node* replacing_node) {
 
 }
 
 
-void AVL_Tree::search(const unsigned int& search_ID) const {
+void AVL_Tree::delete_fixup(Node* deleting_node) {
+
+}
+
+
+AVL_Tree::Node* AVL_Tree::get_successor(Node* root) {
+	return root;
+}
+
+
+void AVL_Tree::removeInOrder(unsigned int N) {
+	/*
+	*	Removes the Nth in order node from the tree
+	*	Rebalances as required
+	*/
+
+	// Get in order deque of nodes
+	deque<Node*> nodes;
+	in_order_helper(head, nodes);
+
+	// Check if Nth node exists
+	if (N >= nodes.size()) {
+		cout << "unsuccessful" << endl;
+	}
+
+	// Find Nth node and remove
+	remove_node(nodes[N]);
+}
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Search methods~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+void AVL_Tree::search(const string& search_item) const {
+	/*
+	*	User facing search method
+	*	Determines what is being searched for and calls appropriate helper function
+	*/
+
+	if (is_number(search_item)) {
+		Node* node = search_ID(search_item);
+		if (node) {cout << node->name << endl;}
+	} else {
+		search_name(search_item);
+	}
+}
+
+
+bool AVL_Tree::is_number(const string& item) const {
+	/*
+	*	Determines if given string is a number (ID) or not
+	*/
+
+	return !item.empty() && all_of(item.begin(), item.end(), ::isdigit);
+}
+
+
+AVL_Tree::Node* AVL_Tree::search_ID(const string& search_ID) const {
+	/*
+	*	Helper function to search for a node with a specified ID
+	*	If ID is found, returns node with that ID
+	*	If ID is not found, prints unsuccessful and return nullptr
+	*/
+
 	Node* curr = head;
 	while (curr) {
 		if (curr->ID == search_ID) {
-			cout << curr->name << endl;
-			return;
+			return curr;
 		}
 		curr = (search_ID < curr->ID) ? curr->l_child : curr->r_child;
 	}
-	cout << "unsuccessful" << endl;
+	cout << "unsuccessful" << endl;	
+	return nullptr;
 }
 
 
-void AVL_Tree::search(const string& search_name) const {
+void AVL_Tree::search_name(const string& search_name) const {
+	/*
+	*	Helper function to search for all nodes with a specified name
+	*	Prints the all ID's associated with the name, or unsuccessful if name was not found;
+	*/
+
 	deque<Node*> nodes;
+	bool found{false};
 	pre_order_helper(head, nodes);
 	for (Node* node: nodes) {
 		if (node->name == search_name) {
+			found = true;
 			cout << node->ID << endl;
 		}
+	}
+
+	if (!found) {
+		cout << "unsuccessful" << endl;
 	}
 }
 
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Traversal methods~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 void AVL_Tree::printInOrder() const {
+	/*
+	*	In order print of all names in the tree, based on ID
+	*/
+
 	deque<Node*> nodes;
 	in_order_helper(head, nodes);
 	print_helper(nodes);
@@ -239,6 +451,10 @@ void AVL_Tree::printInOrder() const {
 
 
 void AVL_Tree::in_order_helper(Node* root, deque<Node*>& nodes) const {
+	/*
+	*	Recursive helper function for in order print
+	*/
+
 	if (root) {
 		in_order_helper(root->l_child, nodes);
 		nodes.push_back(root);
@@ -248,6 +464,10 @@ void AVL_Tree::in_order_helper(Node* root, deque<Node*>& nodes) const {
 
 
 void AVL_Tree::printPreOrder() const {
+	/*
+	*	Pre order print of all names in the tree, based on ID
+	*/
+
 	deque<Node*> nodes;
 	pre_order_helper(head, nodes);
 	print_helper(nodes);
@@ -255,6 +475,10 @@ void AVL_Tree::printPreOrder() const {
 
 
 void AVL_Tree::pre_order_helper(Node* root, deque<Node*>& nodes) const {
+	/*
+	*	Recursive helper function for pre order print
+	*/
+
 	if (root) {
 		nodes.push_back(root);
 		in_order_helper(root->l_child, nodes);
@@ -264,6 +488,10 @@ void AVL_Tree::pre_order_helper(Node* root, deque<Node*>& nodes) const {
 
 		
 void AVL_Tree::printPostOrder() const {
+	/*
+	*	Post order print of all names in the tree, based on ID
+	*/
+
 	deque<Node*> nodes;
 	post_order_helper(head, nodes);
 	print_helper(nodes);
@@ -271,6 +499,10 @@ void AVL_Tree::printPostOrder() const {
 
 
 void AVL_Tree::post_order_helper(Node* root, deque<Node*>& nodes) const {
+	/*
+	*	Recursive helper function for post order print
+	*/
+
 	if (root) {
 		in_order_helper(root->l_child, nodes);
 		in_order_helper(root->r_child, nodes);
@@ -280,6 +512,10 @@ void AVL_Tree::post_order_helper(Node* root, deque<Node*>& nodes) const {
 
 
 void AVL_Tree::print_helper(deque<Node*>& nodes) const {
+	/*
+	*	Helper function to print results of various traversals
+	*/
+
 	cout << nodes.front()->name;
 	nodes.pop_front();
 	while (!nodes.empty()) {
@@ -290,17 +526,18 @@ void AVL_Tree::print_helper(deque<Node*>& nodes) const {
 }
 
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Other methods~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 void AVL_Tree::printLevelCount() const {
+	/*
+	*	Prints the current height of the tree
+	*/
+
 	if (!head) {
 		cout << 0 << endl;
 	}
 	cout << head->height << endl;
 }
 
-
-void AVL_Tree::removeInOrder(unsigned int N) {
-
-}
 
 
 
@@ -325,15 +562,16 @@ void AVL_Tree::removeInOrder(unsigned int N) {
 
 int main(){
 	AVL_Tree tree;
-	tree.insert("Bob", 42);
-	tree.insert("Alice", 25);
-	tree.insert("Charlie", 72);
-	tree.insert("Alice", 94);
-	tree.insert("Bad", 25);
+	tree.insert("Bob", "42");
+	tree.insert("Alice", "25");
+	tree.insert("Charlie", "72");
+	tree.insert("Alice", "94");
+	tree.insert("Bad", "25");
 	tree.printInOrder();
 	tree.printPreOrder();
 	tree.printPostOrder();
 	tree.printLevelCount();
 	tree.search("Alice");
+	tree.search("94");
 }
 
