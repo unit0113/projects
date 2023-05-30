@@ -11,12 +11,17 @@ using namespace std;
 */
 
 class AVL_Tree {
+	/*
+	*	Balanced AVL binary search tree
+	*	Support insertion, search, deletion, delete Nth, and traversals
+	*/
+
 	private:
 	
-		/*
-		*	Private node struct for use in tree
-		*/
 		struct Node {
+			/*
+			*	Private node struct for use in tree
+			*/
 			string name;
 			string ID;
 			unsigned int height = 1;
@@ -28,6 +33,7 @@ class AVL_Tree {
 				name(new_name),
 				ID(new_ID),
 				parent(new_parent) {}
+			Node& operator=(const Node& other);
 			bool is_left_child() const;
 		};
 
@@ -53,8 +59,9 @@ class AVL_Tree {
 		void remove_node(Node* deleting_node);
 		void delete_node_no_children(Node* deleting_node);
 		void delete_node_one_child(Node* deleting_node);
+		void delete_node_two_children(Node* deleting_node);
 		void transplant(Node* deleting_node, Node* replacing_node=nullptr);
-		void delete_fixup(Node* deleting_node);
+		void delete_fixup(Node* fixing_node);
 		Node* get_successor(Node* root);
 
 	public:
@@ -71,6 +78,17 @@ class AVL_Tree {
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Node methods~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+AVL_Tree::Node& AVL_Tree::Node::operator=(const Node& other) {
+	/*
+	* Copy assignment operator for swapping two nodes
+	*/
+	ID = other.ID;
+	name = other.name;
+	return *this;
+}
+
+
+
 bool AVL_Tree::Node::is_left_child() const {
 	/*
 	*	Checks if node is the left child of its parent node
@@ -305,7 +323,7 @@ void AVL_Tree::remove_node(Node* deleting_node) {
 	}
 	// Case one-child
 	else {
-
+		delete_node_one_child(deleting_node);
 	}
 
 	cout << "successful" << endl;
@@ -316,6 +334,7 @@ void AVL_Tree::delete_node_no_children(Node* deleting_node) {
 	/*
 	*	Delete node that has no children
 	*/
+
 	Node* parent = deleting_node->parent;
 	transplant(deleting_node);
 	if (parent) {//move to end of delete? or start of delete fixup?
@@ -328,6 +347,7 @@ void AVL_Tree::delete_node_one_child(Node* deleting_node) {
 	/*
 	*	Delete node that has one child
 	*/
+
 	Node* parent = deleting_node->parent;
 	Node* replacing_node = (deleting_node->r_child) ? deleting_node->r_child : deleting_node->l_child;
 	transplant(deleting_node, replacing_node);
@@ -337,18 +357,100 @@ void AVL_Tree::delete_node_one_child(Node* deleting_node) {
 }
 
 
-void AVL_Tree::transplant(Node* deleting_node, Node* replacing_node) {
-
+void AVL_Tree::delete_node_two_children(Node* deleting_node) {
+	/*
+	*	Delete node that has two children
+	*/
+	Node* replacing_node = get_successor(deleting_node);
+	*deleting_node = *replacing_node;
+	remove_node(replacing_node);
 }
 
 
-void AVL_Tree::delete_fixup(Node* deleting_node) {
+void AVL_Tree::transplant(Node* deleting_node, Node* replacing_node) {
+	/*
+	*	Swaps two nodes during deletion and actually deletes
+	*/
 
+	// If deleting root node
+	if (!deleting_node->parent) {
+		head = replacing_node;
+	} else if (deleting_node->is_left_child()) {
+		deleting_node->parent->l_child = replacing_node;
+	} else {
+		deleting_node->parent->r_child = replacing_node;
+	}
+
+	if (replacing_node) {
+		replacing_node->parent = deleting_node->parent;
+	}
+	delete deleting_node;
+}
+
+
+void AVL_Tree::delete_fixup(Node* fixing_node) {
+	/*
+	*	Rebalance tree after deletion
+	*/
+
+	while (fixing_node) {
+		fixing_node->height = 1 + max(get_height(fixing_node->l_child), get_height(fixing_node->r_child));
+
+		if (get_balance_factor(fixing_node) > 1) {
+			// Case left-left
+			if (get_balance_factor(fixing_node->l_child) >= 0) {
+				right_rotation(fixing_node);
+			}
+			// Case left-right
+			else {
+				left_rotation(fixing_node->l_child);
+				right_rotation(fixing_node);
+			}
+		}
+
+		else if (get_balance_factor(fixing_node) < -1) {
+			// Case right-right
+			if (get_balance_factor(fixing_node->r_child) <= 0) {
+				left_rotation(fixing_node);
+			}
+			//C Case right-left
+			else {
+				right_rotation(fixing_node->r_child);
+				left_rotation(fixing_node);
+			}
+		}
+
+		fixing_node = fixing_node->parent;
+	}
 }
 
 
 AVL_Tree::Node* AVL_Tree::get_successor(Node* root) {
-	return root;
+	/*
+	*	Finds the immediate successor of specified node
+	*/
+
+	Node* curr = nullptr;
+	// If successor is in root's tree
+	if (root->r_child) {
+		curr = root->r_child;
+		while(curr->l_child) {
+			curr = curr->l_child;
+		}
+		return curr;
+	}
+
+	// If successor is ancestor
+	Node* parent_node = root->parent;
+	curr = root;
+	while (parent_node) {
+		if (curr->ID == parent_node->l_child->ID) {
+			break;
+		}
+		curr = parent_node;
+		parent_node = parent_node->parent;
+	}
+	return parent_node;
 }
 
 
