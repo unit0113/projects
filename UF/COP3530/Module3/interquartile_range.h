@@ -1,11 +1,29 @@
+#include <iostream>
+#include <iomanip>
+
 class Node {
     public:
         int value;
         Node* next = nullptr;
 };
 
+Node* insertEnd(Node* head, int key)
+{
+    Node* temp = new Node();
+    temp->value = key;
+    if(head == nullptr)
+        head = temp;
+    else
+    {
+        Node* curr = head;
+        while(curr->next != nullptr)
+            curr = curr->next;
+        curr->next = temp;
+    }
+    return head;
+}
 
-//https://stackoverflow.com/questions/73735926/how-to-find-quartile-3-of-a-linked-list-given-that-you-can-only-iterate-through
+
 float interQuartile(Node* head)
 {
     //your code here
