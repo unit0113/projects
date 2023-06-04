@@ -61,6 +61,8 @@
         "list": "cpp",
         "forward_list": "cpp",
         "chrono": "cpp",
-        "future": "cpp"
+        "future": "cpp",
+        "regex": "cpp",
+        "xhash": "cpp"
     }
 }

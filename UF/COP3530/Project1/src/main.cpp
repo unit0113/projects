@@ -1,7 +1,9 @@
 #include <iostream>
 #include <string>
-#include <deque>
 #include <algorithm>
+#include <vector>
+#include <regex>
+#include <sstream>
 
 using namespace std;
 
@@ -51,10 +53,10 @@ class AVL_Tree {
 		Node* search_ID(const string& search_ID) const;
 		void search_name(const string& search_name) const;
 		// Traversal helpers
-		void in_order_helper(Node* root, deque<Node*>& nodes) const;
-		void print_helper(deque<Node*>& nodes) const;
-		void pre_order_helper(Node* root, deque<Node*>& nodes) const;
-		void post_order_helper(Node* root, deque<Node*>& nodes) const;
+		void in_order_helper(Node* root, vector<Node*>& nodes) const;
+		void print_helper(vector<Node*>& nodes) const;
+		void pre_order_helper(Node* root, vector<Node*>& nodes) const;
+		void post_order_helper(Node* root, vector<Node*>& nodes) const;
 		// Removal helpers
 		void remove_node(Node* deleting_node);
 		void delete_node_no_children(Node* deleting_node);
@@ -99,7 +101,7 @@ bool AVL_Tree::Node::is_left_child() const {
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Destructor~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 AVL_Tree::~AVL_Tree() {
-	deque<Node*> nodes;
+	vector<Node*> nodes;
 	in_order_helper(head, nodes);
 	for (Node* node: nodes) {
 		delete node;
@@ -302,6 +304,7 @@ void AVL_Tree::remove(const string& remove_ID) {
 	Node* node_to_remove = search_ID(remove_ID);
 	if (node_to_remove) {
 		remove_node(node_to_remove);
+		cout << "successful" << endl;
 	} else {
 		cout << "unsuccessful" << endl;
 	}
@@ -319,14 +322,12 @@ void AVL_Tree::remove_node(Node* deleting_node) {
 	}
 	// Case two-children
 	else if (deleting_node->l_child && deleting_node->r_child) {
-
+		delete_node_two_children(deleting_node);
 	}
 	// Case one-child
 	else {
 		delete_node_one_child(deleting_node);
 	}
-
-	cout << "successful" << endl;
 }
 
 
@@ -460,8 +461,8 @@ void AVL_Tree::removeInOrder(unsigned int N) {
 	*	Rebalances as required
 	*/
 
-	// Get in order deque of nodes
-	deque<Node*> nodes;
+	// Get in order vector of nodes
+	vector<Node*> nodes;
 	in_order_helper(head, nodes);
 
 	// Check if Nth node exists
@@ -524,7 +525,7 @@ void AVL_Tree::search_name(const string& search_name) const {
 	*	Prints the all ID's associated with the name, or unsuccessful if name was not found;
 	*/
 
-	deque<Node*> nodes;
+	vector<Node*> nodes;
 	bool found{false};
 	pre_order_helper(head, nodes);
 	for (Node* node: nodes) {
@@ -546,13 +547,13 @@ void AVL_Tree::printInOrder() const {
 	*	In order print of all names in the tree, based on ID
 	*/
 
-	deque<Node*> nodes;
+	vector<Node*> nodes;
 	in_order_helper(head, nodes);
 	print_helper(nodes);
 }
 
 
-void AVL_Tree::in_order_helper(Node* root, deque<Node*>& nodes) const {
+void AVL_Tree::in_order_helper(Node* root, vector<Node*>& nodes) const {
 	/*
 	*	Recursive helper function for in order print
 	*/
@@ -570,13 +571,13 @@ void AVL_Tree::printPreOrder() const {
 	*	Pre order print of all names in the tree, based on ID
 	*/
 
-	deque<Node*> nodes;
+	vector<Node*> nodes;
 	pre_order_helper(head, nodes);
 	print_helper(nodes);
 }
 
 
-void AVL_Tree::pre_order_helper(Node* root, deque<Node*>& nodes) const {
+void AVL_Tree::pre_order_helper(Node* root, vector<Node*>& nodes) const {
 	/*
 	*	Recursive helper function for pre order print
 	*/
@@ -594,13 +595,13 @@ void AVL_Tree::printPostOrder() const {
 	*	Post order print of all names in the tree, based on ID
 	*/
 
-	deque<Node*> nodes;
+	vector<Node*> nodes;
 	post_order_helper(head, nodes);
 	print_helper(nodes);
 }
 
 
-void AVL_Tree::post_order_helper(Node* root, deque<Node*>& nodes) const {
+void AVL_Tree::post_order_helper(Node* root, vector<Node*>& nodes) const {
 	/*
 	*	Recursive helper function for post order print
 	*/
@@ -613,17 +614,18 @@ void AVL_Tree::post_order_helper(Node* root, deque<Node*>& nodes) const {
 }
 
 
-void AVL_Tree::print_helper(deque<Node*>& nodes) const {
+void AVL_Tree::print_helper(vector<Node*>& nodes) const {
 	/*
 	*	Helper function to print results of various traversals
 	*/
 
-	cout << nodes.front()->name;
-	nodes.pop_front();
-	while (!nodes.empty()) {
-		cout << ", " << nodes.front()->name;
-		nodes.pop_front();
+	for (int i{}; i < nodes.size(); ++i) {
+		if (i != 0) {
+			cout << ", ";
+		}
+		cout << nodes[i]->name;
 	}
+
 	cout << endl;
 }
 
@@ -642,38 +644,153 @@ void AVL_Tree::printLevelCount() const {
 
 
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Interface~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+class AVL_Interface {
+	private:
+		AVL_Tree tree;
+
+		// Helper Functions
+		bool isValidName(const string& str);
+		bool isValidID(const string& str);
+		void commandSwitchboard(AVL_Tree& tree, const vector<string>& commands);
+		bool isValidInsert(const vector<string>& commands);
+		bool isValidRemove(const vector<string>& commands);
+		bool isValidSearch(const vector<string>& commands);
+		bool isValidRemoveNth(const vector<string>& commands);
+		string stripQuotes(string name);
+
+	public:
+		void run();
+
+};
 
 
+void AVL_Interface::run() {
+	/*
+	*	Main interface between AVL tree and user
+	*	Gets input from user and calls appropriate AVL tree functions
+	*/
+
+	// Get number of commands
+	int num_commands{};
+	cin >> num_commands;
+	
+	// Clear new line character
+	cin.ignore();
+
+	// Read and store commands
+	vector<string> commands;
+	string line, word;
+	for (int i{}; i < num_commands; ++i) {
+		commands.clear();
+
+		// Tokenize input
+		getline(cin, line);
+		istringstream ss(line);
+		while (getline(ss, word, ' ')) {
+			commands.push_back(word);
+		}
+
+		// Parse input and call appropriate command in tree
+		commandSwitchboard(tree, commands);
+	}
+}
 
 
+bool AVL_Interface::isValidName(const string& str) {
+	/*
+	*	Checks for valid name, allows only letters and spaces
+	*	Must be enclosed in double quotes
+	*/
+
+	return regex_match(str, regex("^\"[A-Z a-z]+\"$"));
+}
 
 
+bool AVL_Interface::isValidID(const string& str) {
+	/*
+	*	Checks for valid ID, allows only numbers and must be 8 digits long
+	*/
+
+	return regex_match(str, regex("^[0-9]{8}$"));
+}
 
 
+void AVL_Interface::commandSwitchboard(AVL_Tree& tree, const vector<string>& commands) {
+	/*
+	*	Checks for valid inputs and calls appropriate commands
+	*	Prints new line if input is invalid
+	*/
+	if (isValidInsert(commands)) {
+		tree.insert(stripQuotes(commands[1]), commands[2]);
+	} else if (isValidRemove(commands)) {
+		tree.remove(commands[1]);
+	} else if (isValidSearch(commands)) {
+		tree.search(stripQuotes(commands[1]));
+	} else if (commands[0] == "printInorder") {
+		tree.printInOrder();
+	} else if (commands[0] == "printPreorder") {
+		tree.printPreOrder();
+	} else if (commands[0] == "printPostorder") {
+		tree.printPostOrder();
+	} else if (commands[0] == "printLevelCount") {
+		tree.printLevelCount();
+	} else if (isValidRemoveNth(commands)) {
+		tree.removeInOrder(stoi(commands[1]));
+	} else {
+		// If invalid
+		cout << "unsuccessful" << endl;
+	}
+}
 
 
+bool AVL_Interface::isValidInsert(const vector<string>& commands) {
+	/*
+	*	Helper function to abstract away checking for valid insert command
+	*/
+
+	return commands[0] == "insert" && isValidName(commands[1]) && isValidID(commands[2]);
+}
 
 
+bool AVL_Interface::isValidRemove(const vector<string>& commands) {
+	/*
+	*	Helper function to abstract away checking for valid remove command
+	*/
+
+	return commands[0] == "remove" && isValidID(commands[1]);
+}
 
 
+bool AVL_Interface::isValidSearch(const vector<string>& commands) {
+	/*
+	*	Helper function to abstract away checking for valid search command
+	*/
+
+	return commands[0] == "search" && (isValidName(commands[1]) || isValidID(commands[1]));
+}
 
 
+bool AVL_Interface::isValidRemoveNth(const vector<string>& commands) {
+	/*
+	*	Helper function to abstract away checking for valid insert command
+	*/
+
+	return commands[0] == "removeInorder" && all_of(commands[1].begin(), commands[1].end(), ::isdigit);
+}
 
 
+string AVL_Interface::stripQuotes(string name) {
+	/*
+	*	Strips double quotes from name inputs
+	*/	
+	string newName = name;
+	newName.erase(remove(newName.begin(), newName.end(), '"'), newName.end());
+	return newName;
+}
 
 
 int main(){
-	AVL_Tree tree;
-	tree.insert("Bob", "42");
-	tree.insert("Alice", "25");
-	tree.insert("Charlie", "72");
-	tree.insert("Alice", "94");
-	tree.insert("Bad", "25");
-	tree.printInOrder();
-	tree.printPreOrder();
-	tree.printPostOrder();
-	tree.printLevelCount();
-	tree.search("Alice");
-	tree.search("94");
+	AVL_Interface interface;
+	interface.run();
 }
-
