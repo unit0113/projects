@@ -749,7 +749,7 @@ bool AVL_Interface::isValidInsert(const vector<string>& commands) {
 	*	Helper function to abstract away checking for valid insert command
 	*/
 
-	return commands[0] == "insert" && isValidName(commands[1]) && isValidID(commands[2]);
+	return commands.size() == 3 && commands[0] == "insert" && isValidName(commands[1]) && isValidID(commands[2]);
 }
 
 
@@ -758,7 +758,7 @@ bool AVL_Interface::isValidRemove(const vector<string>& commands) {
 	*	Helper function to abstract away checking for valid remove command
 	*/
 
-	return commands[0] == "remove" && isValidID(commands[1]);
+	return commands.size() == 2 && commands[0] == "remove" && isValidID(commands[1]);
 }
 
 
@@ -767,7 +767,7 @@ bool AVL_Interface::isValidSearch(const vector<string>& commands) {
 	*	Helper function to abstract away checking for valid search command
 	*/
 
-	return commands[0] == "search" && (isValidName(commands[1]) || isValidID(commands[1]));
+	return commands.size() == 2 && commands[0] == "search" && (isValidName(commands[1]) || isValidID(commands[1]));
 }
 
 
@@ -776,7 +776,7 @@ bool AVL_Interface::isValidRemoveNth(const vector<string>& commands) {
 	*	Helper function to abstract away checking for valid insert command
 	*/
 
-	return commands[0] == "removeInorder" && all_of(commands[1].begin(), commands[1].end(), ::isdigit);
+	return commands.size() == 2 && commands[0] == "removeInorder" && all_of(commands[1].begin(), commands[1].end(), ::isdigit);
 }
 
 
