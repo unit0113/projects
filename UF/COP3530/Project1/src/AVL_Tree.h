@@ -35,7 +35,7 @@ class AVL_Tree {
 		Node* head = nullptr;
 
 		// Helper methods
-		Node* insert_helper(std::string name, std::string ID, Node* root);
+		Node* insert_helper(const std::string& name, const std::string& ID, Node* root);
 		unsigned int get_height(Node* root) const;
 		Node* rebalance(Node* root);
 		short get_balance_factor(Node* root) const;
@@ -46,10 +46,9 @@ class AVL_Tree {
 		Node* search_ID(const std::string& search_ID) const;
 		void search_name(const std::string& search_name) const;
 		// Traversal helpers
-		void in_order_helper(Node* root, std::vector<Node*>& nodes) const;
-		void print_helper(std::vector<Node*>& nodes) const;
-		void pre_order_helper(Node* root, std::vector<Node*>& nodes) const;
-		void post_order_helper(Node* root, std::vector<Node*>& nodes) const;
+		void in_order_helper(Node* const root, std::vector<Node*>& nodes) const;
+		void pre_order_helper(Node* const root, std::vector<Node*>& nodes) const;
+		void post_order_helper(Node* const root, std::vector<Node*>& nodes) const;
 		// Removal helpers
 		void remove_node(Node* deleting_node);
 		void delete_node_no_children(Node* deleting_node);
@@ -57,17 +56,17 @@ class AVL_Tree {
 		void delete_node_two_children(Node* deleting_node);
 		void transplant(Node* deleting_node, Node* replacing_node=nullptr);
 		void delete_fixup(Node* fixing_node);
-		Node* get_successor(Node* root);
+		Node* get_successor(Node* const root) const;
 
 	public:
 		~AVL_Tree();
-		void insert(std::string name, std::string ID);
+		void insert(const std::string& name, const std::string& ID);
 		void remove(const std::string& remove_ID);
 		void search(const std::string& search_item) const;
-		void printInOrder() const;
-		void printPreOrder() const;
-		void printPostOrder() const;
 		void printLevelCount() const;
-		void removeInOrder(unsigned int N);
-		std::vector<std::string> InOrderTraversal(std::string val) const;
+		void removeInOrder(const unsigned int N);
+		bool empty() const;
+		std::vector<std::string> InOrderTraversal(const std::string& val="name") const;
+		std::vector<std::string> PreOrderTraversal(const std::string& val="name") const;
+		std::vector<std::string> PostOrderTraversal(const std::string& val="name") const;
 };

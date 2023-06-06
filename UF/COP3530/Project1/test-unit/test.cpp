@@ -4,45 +4,264 @@
 
 using namespace std;
 
+
 /*
 	To check output (At the Project1 directory):
-		g++ -std=c++14 -Werror -Wuninitialized -o build/test test-unit/test.cpp && build/test
 		g++ -std=c++14 -Werror -Wuninitialized -o build/test test-unit/test.cpp src/AVL_Interface.cpp src/AVL_Tree.cpp
 		./build/test
 */
 
 
+/*
+!!!!!Notes!!!!!
+Change private to public on line 7 in AVL_Interface.h (please change back when complete)
+Add -DDBUG=1 to compile command to supress successful/unsuccessful printouts
 
-// IMPORTANT!! For all tests, comment out main function (lines 817-820) in order to not interfere with catch
+*/
 
 
-TEST_CASE("BST Insert", "[tree]"){
-	/*
-		MyAVLTree tree;   // Create a Tree object 
-		tree.insert(3);
-		tree.insert(2);
-		tree.insert(1);
-		std::vector<int> actualOutput = tree.inorder();
-		std::vector<int> expectedOutput = {1, 2, 3};
-		REQUIRE(expectedOutput.size() == actualOutput.size());
-		REQUIRE(actualOutput == expectedOutput);
-	*/
-	REQUIRE(1 == 1);
+
+
+std::string IDToName(const std::string& ID) {
+	// Testing function to convert ID's to names to validate correctness of traversals
+	std::string name;
+	for (const auto& num: ID) {
+		name += 17 + (int)num;	//ASCII 'A' = 65, numbers start at 48
+	}
+	return name;
+}
+
+std::string NameToID(const std::string& name) {
+	// Testing function to convert names ID's to validate correctness of removals
+	std::string ID;
+	for (const auto& num: name) {
+		ID += (int)num - 17;	//ASCII 'A' = 65, numbers start at 48
+	}
+	return ID;
+}
+
+std::string getRandomID(const std::string& seed) {
+	// Generate random IDs for large tests
+	srand(stoi(seed));
+	std::string ID;
+	for (size_t i{}; i < 8; ++i) {
+		ID += std::to_string(rand() % 10);
+	}
+	return ID;
 }
 
 
+TEST_CASE("BST Basic Insert", "[tree]"){
+	AVL_Tree tree;
+	vector<std::string> names;
+	std::string ID = "12345678";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
 
+	sort(names.begin(), names.end());
+	REQUIRE(names == tree.InOrderTraversal());
+}
 
+TEST_CASE("BST Small Insert", "[tree]"){
+	// Test case #5
+	AVL_Tree tree;
+	vector<std::string> names;
+	std::string ID = "50005000";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
+	ID = "35354334";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
+	ID = "76543210";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
+	ID = "56567342";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
+	ID = "83711221";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
+	ID = "17449900";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
 
+	sort(names.begin(), names.end());
+	REQUIRE(names == tree.InOrderTraversal());
+}
 
+TEST_CASE("BST Small Inorder Insert", "[tree]"){
+	// Test case #5
+	AVL_Tree tree;
+	vector<std::string> names;
+	std::string ID = "17449900";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
+	ID = "35354334";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
+	ID = "50005000";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
+	ID = "56567342";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
+	ID = "76543210";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
+	ID = "83711221";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
 
+	sort(names.begin(), names.end());
+	REQUIRE(names == tree.InOrderTraversal());
+}
 
+TEST_CASE("BST Small Reverse Insert", "[tree]"){
+	// Test case #5
+	AVL_Tree tree;
+	vector<std::string> names;
+	std::string ID = "83711221";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
+	ID = "76543210";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
+	ID = "56567342";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
+	ID = "50005000";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
+	ID = "35354334";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
+	ID = "17449900";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
 
+	sort(names.begin(), names.end());
+	REQUIRE(names == tree.InOrderTraversal());
+}
 
+TEST_CASE("BST Pre and PostOrder Traversal", "[tree]"){
+	// Test Pre and post order traversals
+	AVL_Tree tree;
+	std::string ID = "00000000";
+	tree.insert(IDToName(ID), ID);
+	ID = "11111111";
+	tree.insert(IDToName(ID), ID);
+	ID = "22222222";
+	tree.insert(IDToName(ID), ID);
 
+	std::vector<string> names = {"BBBBBBBB", "AAAAAAAA", "CCCCCCCC"};
+	REQUIRE(names == tree.PreOrderTraversal());
+	names = {"AAAAAAAA", "CCCCCCCC", "BBBBBBBB"};
+	REQUIRE(names == tree.PostOrderTraversal());
+}
 
+TEST_CASE("BST Removal", "[tree]"){
+	// Test case #4
+	AVL_Tree tree;
+	vector<std::string> names;
+	std::string ID = "45674567";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
+	ID = "35455565";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
+	ID = "87878787";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
+	ID = "95462138";
+	names.push_back(IDToName(ID));
+	tree.insert(IDToName(ID), ID);
 
+	sort(names.begin(), names.end());
+	REQUIRE(names == tree.InOrderTraversal());
 
+	tree.remove("45674567");
+	names.erase(names.begin() + 1);
+	REQUIRE(names == tree.InOrderTraversal());
+
+	tree.removeInOrder(2);
+	names.erase(names.begin() + 2);
+	REQUIRE(names == tree.InOrderTraversal());
+}
+
+TEST_CASE("BST Large Insert", "[tree]"){
+	// The penultimate insertion test
+	AVL_Tree tree;
+	vector<std::string> names;
+	std::string ID = "12345678";
+	for (size_t i{1}; i <= 1'000; ++i) {
+		ID = getRandomID(ID);
+		names.push_back(IDToName(ID));
+		tree.insert(IDToName(ID), ID);
+		
+		if (i % 5 == 0) {
+			sort(names.begin(), names.end());
+			REQUIRE(names == tree.InOrderTraversal());
+		}
+	}
+}
+
+TEST_CASE("BST Large Insert with Removals", "[tree]"){
+	// The penultimate test
+	AVL_Tree tree;
+	vector<std::string> names;
+	std::string ID = "12345678";
+	int index_to_remove{};
+
+	for (size_t i{1}; i <= 1'000; ++i) {
+		ID = getRandomID(ID);
+		names.push_back(IDToName(ID));
+		tree.insert(IDToName(ID), ID);
+		
+		if (i % 10 == 0) {
+			sort(names.begin(), names.end());
+			for (size_t j{}; j < 2; ++j) {
+				index_to_remove = rand() % names.size();
+				tree.remove(NameToID(names[index_to_remove]));
+				names.erase(names.begin() + index_to_remove);
+			}
+			for (size_t j{}; j < 2; ++j) {
+				index_to_remove = rand() % names.size();
+				tree.removeInOrder(index_to_remove);
+				names.erase(names.begin() + index_to_remove);
+			}
+			REQUIRE(names == tree.InOrderTraversal());
+		}
+	}
+}
+
+TEST_CASE("BST Largest Insert with Removals", "[tree]"){
+	// The ultimate test
+	AVL_Tree tree;
+	vector<std::string> names;
+	std::string ID = "12345678";
+	int index_to_remove{};
+
+	for (size_t i{1}; i <= 10'000; ++i) {
+		ID = getRandomID(ID);
+		names.push_back(IDToName(ID));
+		tree.insert(IDToName(ID), ID);
+		
+		if (i % 20 == 0) {
+			sort(names.begin(), names.end());
+			for (size_t j{}; j < 4; ++j) {
+				index_to_remove = rand() % names.size();
+				tree.remove(NameToID(names[index_to_remove]));
+				names.erase(names.begin() + index_to_remove);
+			}
+			for (size_t j{}; j < 4; ++j) {
+				index_to_remove = rand() % names.size();
+				tree.removeInOrder(index_to_remove);
+				names.erase(names.begin() + index_to_remove);
+			}
+			REQUIRE(names == tree.InOrderTraversal());
+		}
+	}
+}
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Interface Tests~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//

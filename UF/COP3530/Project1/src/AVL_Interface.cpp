@@ -28,12 +28,12 @@ void AVL_Interface::run() {
 		}
 
 		// Parse input and call appropriate command in tree
-		commandSwitchboard(tree, commands);
+		commandSwitchboard(commands);
 	}
 }
 
 
-bool AVL_Interface::isValidName(const string& str) {
+bool AVL_Interface::isValidName(const string& str) const {
 	/*
 	*	Checks for valid name, allows only letters and spaces
 	*	Must be enclosed in double quotes
@@ -43,7 +43,7 @@ bool AVL_Interface::isValidName(const string& str) {
 }
 
 
-bool AVL_Interface::isValidID(const string& str) {
+bool AVL_Interface::isValidID(const string& str) const {
 	/*
 	*	Checks for valid ID, allows only numbers and must be 8 digits long
 	*/
@@ -52,7 +52,7 @@ bool AVL_Interface::isValidID(const string& str) {
 }
 
 
-void AVL_Interface::commandSwitchboard(AVL_Tree& tree, const vector<string>& commands) {
+void AVL_Interface::commandSwitchboard(const vector<string>& commands) {
 	/*
 	*	Checks for valid inputs and calls appropriate commands
 	*	Prints new line if input is invalid
@@ -64,23 +64,25 @@ void AVL_Interface::commandSwitchboard(AVL_Tree& tree, const vector<string>& com
 	} else if (isValidSearch(commands)) {
 		tree.search(stripQuotes(commands[1]));
 	} else if (commands[0] == "printInorder") {
-		tree.printInOrder();
+		printInOrder();
 	} else if (commands[0] == "printPreorder") {
-		tree.printPreOrder();
+		printPreOrder();
 	} else if (commands[0] == "printPostorder") {
-		tree.printPostOrder();
+		printPostOrder();
 	} else if (commands[0] == "printLevelCount") {
 		tree.printLevelCount();
 	} else if (isValidRemoveNth(commands)) {
 		tree.removeInOrder(stoi(commands[1]));
 	} else {
 		// If invalid
+		#if (DEBUG != 1)
 		cout << "unsuccessful" << endl;
+		#endif
 	}
 }
 
 
-bool AVL_Interface::isValidInsert(const vector<string>& commands) {
+bool AVL_Interface::isValidInsert(const vector<string>& commands) const {
 	/*
 	*	Helper function to abstract away checking for valid insert command
 	*/
@@ -89,7 +91,7 @@ bool AVL_Interface::isValidInsert(const vector<string>& commands) {
 }
 
 
-bool AVL_Interface::isValidRemove(const vector<string>& commands) {
+bool AVL_Interface::isValidRemove(const vector<string>& commands) const {
 	/*
 	*	Helper function to abstract away checking for valid remove command
 	*/
@@ -98,7 +100,7 @@ bool AVL_Interface::isValidRemove(const vector<string>& commands) {
 }
 
 
-bool AVL_Interface::isValidSearch(const vector<string>& commands) {
+bool AVL_Interface::isValidSearch(const vector<string>& commands) const {
 	/*
 	*	Helper function to abstract away checking for valid search command
 	*/
@@ -107,7 +109,7 @@ bool AVL_Interface::isValidSearch(const vector<string>& commands) {
 }
 
 
-bool AVL_Interface::isValidRemoveNth(const vector<string>& commands) {
+bool AVL_Interface::isValidRemoveNth(const vector<string>& commands) const {
 	/*
 	*	Helper function to abstract away checking for valid insert command
 	*/
@@ -116,11 +118,69 @@ bool AVL_Interface::isValidRemoveNth(const vector<string>& commands) {
 }
 
 
-string AVL_Interface::stripQuotes(string name) {
+string AVL_Interface::stripQuotes(const string& name) const {
 	/*
 	*	Strips double quotes from name inputs
 	*/	
 	string newName = name;
 	newName.erase(remove(newName.begin(), newName.end(), '"'), newName.end());
 	return newName;
+}
+
+
+void AVL_Interface::printInOrder() const {
+	/*
+	*	In order print of all names in the tree, based on ID
+	*/
+
+    if (!tree.empty()) {
+        cout << endl;;
+        return;
+    }
+	vector<string> names = tree.InOrderTraversal();
+	print_helper(names);
+}
+
+
+void AVL_Interface::printPreOrder() const {
+	/*
+	*	Pre order print of all names in the tree, based on ID
+	*/
+
+    if (!tree.empty()) {
+        cout << endl;;
+        return;
+    }
+	vector<string> names = tree.PreOrderTraversal();
+	print_helper(names);
+}
+
+
+void AVL_Interface::printPostOrder() const {
+	/*
+	*	Pre order print of all names in the tree, based on ID
+	*/
+
+    if (!tree.empty()) {
+        cout << endl;;
+        return;
+    }
+	vector<string> names = tree.PostOrderTraversal();
+	print_helper(names);
+}
+
+
+void AVL_Interface::print_helper(const vector<string>& items) const {
+	/*
+	*	Helper function to print results of various traversals
+	*/
+
+	for (int i{}; i < items.size(); ++i) {
+		if (i != 0) {
+			cout << ", ";
+		}
+		cout << items[i];
+	}
+
+	cout << endl;
 }

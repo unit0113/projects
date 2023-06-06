@@ -32,7 +32,7 @@ AVL_Tree::~AVL_Tree() {
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Insertion methods~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-void AVL_Tree::insert(string name, string ID) {
+void AVL_Tree::insert(const std::string& name, const std::string& ID) {
 	/*
 	*	Inserts new item into tree
 	*/
@@ -40,7 +40,9 @@ void AVL_Tree::insert(string name, string ID) {
 	// For empty tree
 	if (head == nullptr) {
 		head = new Node(name, ID);
+		#if (DEBUG != 1)
 		cout << "successful" << endl;
+		#endif
 		return;
 	}
 
@@ -49,7 +51,7 @@ void AVL_Tree::insert(string name, string ID) {
 }
 
 
-AVL_Tree::Node* AVL_Tree::insert_helper(string name, string ID, Node* root) {
+AVL_Tree::Node* AVL_Tree::insert_helper(const std::string& name, const std::string& ID, Node* root) {
 	/*
 	*	Determines the correct position of the new data and inserts into tree
 	*	Once inserted, tree is rebalanced as required
@@ -58,7 +60,9 @@ AVL_Tree::Node* AVL_Tree::insert_helper(string name, string ID, Node* root) {
 
 	// Base case for reaching end of tree
 	if (root == nullptr) {
+		#if (DEBUG != 1)
 		cout << "successful" << endl;
+		#endif
 		return new Node(name, ID);
 	}
 	// Go to left
@@ -70,7 +74,9 @@ AVL_Tree::Node* AVL_Tree::insert_helper(string name, string ID, Node* root) {
 
 	// If ID already in tree
 	else if (ID == root->ID) {
+		#if (DEBUG != 1)
 		cout << "unsuccessful" << endl;
+		#endif
 		return root;
 	}
 
@@ -226,9 +232,13 @@ void AVL_Tree::remove(const string& remove_ID) {
 	Node* node_to_remove = search_ID(remove_ID);
 	if (node_to_remove) {
 		remove_node(node_to_remove);
+		#if (DEBUG != 1)
 		cout << "successful" << endl;
+		#endif
 	} else {
+		#if (DEBUG != 1)
 		cout << "unsuccessful" << endl;
+		#endif
 	}
 }
 
@@ -260,7 +270,7 @@ void AVL_Tree::delete_node_no_children(Node* deleting_node) {
 
 	Node* parent = deleting_node->parent;
 	transplant(deleting_node);
-	if (parent) {//move to end of delete? or start of delete fixup?
+	if (parent) {
 		delete_fixup(parent);
 	}
 }
@@ -286,7 +296,12 @@ void AVL_Tree::delete_node_two_children(Node* deleting_node) {
 	*/
 	Node* replacing_node = get_successor(deleting_node);
 	*deleting_node = *replacing_node;
-	remove_node(replacing_node);
+	if (replacing_node->r_child) {
+		delete_node_one_child(replacing_node);
+	} else {
+		delete_node_no_children(replacing_node);
+	}
+	//remove_node(replacing_node);
 }
 
 
@@ -348,7 +363,7 @@ void AVL_Tree::delete_fixup(Node* fixing_node) {
 }
 
 
-AVL_Tree::Node* AVL_Tree::get_successor(Node* root) {
+AVL_Tree::Node* AVL_Tree::get_successor(Node* const root) const {
 	/*
 	*	Finds the immediate successor of specified node
 	*/
@@ -377,7 +392,7 @@ AVL_Tree::Node* AVL_Tree::get_successor(Node* root) {
 }
 
 
-void AVL_Tree::removeInOrder(unsigned int N) {
+void AVL_Tree::removeInOrder(const unsigned int N) {
 	/*
 	*	Removes the Nth in order node from the tree
 	*	Rebalances as required
@@ -389,12 +404,16 @@ void AVL_Tree::removeInOrder(unsigned int N) {
 
 	// Check if Nth node exists
 	if (N >= nodes.size()) {
+		#if (DEBUG != 1)
 		cout << "unsuccessful" << endl;
+		#endif
 	}
 
 	// Find Nth node and remove
 	remove_node(nodes[N]);
+	#if (DEBUG != 1)
     cout << "successful" << endl;
+	#endif
 }
 
 
@@ -459,41 +478,15 @@ void AVL_Tree::search_name(const string& search_name) const {
 	}
 
 	if (!found) {
+		#if (DEBUG != 1)
 		cout << "unsuccessful" << endl;
+		#endif
 	}
 }
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Traversal methods~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-void AVL_Tree::printInOrder() const {
-	/*
-	*	In order print of all names in the tree, based on ID
-	*/
-
-    if (!head) {
-        cout << endl;;
-        return;
-    }
-	vector<Node*> nodes;
-	in_order_helper(head, nodes);
-	print_helper(nodes);
-}
-
-
-void AVL_Tree::in_order_helper(Node* root, vector<Node*>& nodes) const {
-	/*
-	*	Recursive helper function for in order print
-	*/
-
-	if (root) {
-		in_order_helper(root->l_child, nodes);
-		nodes.push_back(root);
-		in_order_helper(root->r_child, nodes);
-	}
-}
-
-
-vector<string> AVL_Tree::InOrderTraversal(string val) const {
+vector<string> AVL_Tree::InOrderTraversal(const string& val) const {
 	/*
 	*	Return in order vector of nodes
 	*	Designed for testing
@@ -516,22 +509,43 @@ vector<string> AVL_Tree::InOrderTraversal(string val) const {
 }
 
 
-void AVL_Tree::printPreOrder() const {
+void AVL_Tree::in_order_helper(Node* const root, vector<Node*>& nodes) const {
 	/*
-	*	Pre order print of all names in the tree, based on ID
+	*	Recursive helper function for in order print
 	*/
 
-    if (!head) {
-        cout << endl;;
-        return;
-    }
-	vector<Node*> nodes;
-	pre_order_helper(head, nodes);
-	print_helper(nodes);
+	if (root) {
+		in_order_helper(root->l_child, nodes);
+		nodes.push_back(root);
+		in_order_helper(root->r_child, nodes);
+	}
 }
 
 
-void AVL_Tree::pre_order_helper(Node* root, vector<Node*>& nodes) const {
+vector<string> AVL_Tree::PreOrderTraversal(const string& val) const {
+	/*
+	*	Return in order vector of nodes
+	*	Designed for testing
+	*/
+
+	vector<Node*> nodes;
+	pre_order_helper(head, nodes);
+	
+	vector<string> result;
+	if (val == "name") {
+		for (const Node* node: nodes) {
+			result.push_back(node->name);
+		}
+	} else if (val == "ID") {
+		for (const Node* node: nodes) {
+			result.push_back(node->ID);
+		}
+	}
+	return result;
+}
+
+
+void AVL_Tree::pre_order_helper(Node* const root, vector<Node*>& nodes) const {
 	/*
 	*	Recursive helper function for pre order print
 	*/
@@ -543,23 +557,31 @@ void AVL_Tree::pre_order_helper(Node* root, vector<Node*>& nodes) const {
 	}
 }
 
-		
-void AVL_Tree::printPostOrder() const {
+
+vector<string> AVL_Tree::PostOrderTraversal(const string& val) const {
 	/*
-	*	Post order print of all names in the tree, based on ID
+	*	Return in order vector of nodes
+	*	Designed for testing
 	*/
 
-    if (!head) {
-        cout << endl;;
-        return;
-    }
 	vector<Node*> nodes;
 	post_order_helper(head, nodes);
-	print_helper(nodes);
+	
+	vector<string> result;
+	if (val == "name") {
+		for (const Node* node: nodes) {
+			result.push_back(node->name);
+		}
+	} else if (val == "ID") {
+		for (const Node* node: nodes) {
+			result.push_back(node->ID);
+		}
+	}
+	return result;
 }
 
 
-void AVL_Tree::post_order_helper(Node* root, vector<Node*>& nodes) const {
+void AVL_Tree::post_order_helper(Node* const root, vector<Node*>& nodes) const {
 	/*
 	*	Recursive helper function for post order print
 	*/
@@ -569,22 +591,6 @@ void AVL_Tree::post_order_helper(Node* root, vector<Node*>& nodes) const {
 		post_order_helper(root->r_child, nodes);
 		nodes.push_back(root);
 	}
-}
-
-
-void AVL_Tree::print_helper(vector<Node*>& nodes) const {
-	/*
-	*	Helper function to print results of various traversals
-	*/
-
-	for (int i{}; i < nodes.size(); ++i) {
-		if (i != 0) {
-			cout << ", ";
-		}
-		cout << nodes[i]->name;
-	}
-
-	cout << endl;
 }
 
 
@@ -598,4 +604,9 @@ void AVL_Tree::printLevelCount() const {
 		cout << 0 << endl;
 	}
 	cout << head->height << endl;
+}
+
+
+bool AVL_Tree::empty() const {
+	return head == nullptr;
 }
