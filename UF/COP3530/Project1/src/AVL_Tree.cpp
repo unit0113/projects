@@ -301,7 +301,6 @@ void AVL_Tree::delete_node_two_children(Node* deleting_node) {
 	} else {
 		delete_node_no_children(replacing_node);
 	}
-	//remove_node(replacing_node);
 }
 
 

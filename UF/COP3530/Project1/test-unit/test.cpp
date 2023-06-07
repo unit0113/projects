@@ -263,6 +263,35 @@ TEST_CASE("BST Largest Insert with Removals", "[tree]"){
 	}
 }
 
+TEST_CASE("BST Largest Insert with ExtraRemovals", "[tree]"){
+	// The ultimate test
+	AVL_Tree tree;
+	vector<std::string> names;
+	std::string ID = "12345678";
+	int index_to_remove{};
+
+	for (size_t i{1}; i <= 10'000; ++i) {
+		ID = getRandomID(ID);
+		names.push_back(IDToName(ID));
+		tree.insert(IDToName(ID), ID);
+		
+		if (i % 20 == 0) {
+			sort(names.begin(), names.end());
+			for (size_t j{}; j < 8; ++j) {
+				index_to_remove = rand() % names.size();
+				tree.remove(NameToID(names[index_to_remove]));
+				names.erase(names.begin() + index_to_remove);
+			}
+			for (size_t j{}; j < 8; ++j) {
+				index_to_remove = rand() % names.size();
+				tree.removeInOrder(index_to_remove);
+				names.erase(names.begin() + index_to_remove);
+			}
+			REQUIRE(names == tree.InOrderTraversal());
+		}
+	}
+}
+
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Interface Tests~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
