@@ -4,7 +4,7 @@
 #include "AVL_Tree.h"
 
 class AVL_Interface {
-	public:
+	private:
 		AVL_Tree tree;
 
 		// Helper Functions
