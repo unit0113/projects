@@ -133,7 +133,7 @@ void AVL_Interface::printInOrder() const {
 	*	In order print of all names in the tree, based on ID
 	*/
 
-    if (!tree.empty()) {
+    if (tree.empty()) {
         cout << endl;;
         return;
     }
@@ -147,7 +147,7 @@ void AVL_Interface::printPreOrder() const {
 	*	Pre order print of all names in the tree, based on ID
 	*/
 
-    if (!tree.empty()) {
+    if (tree.empty()) {
         cout << endl;;
         return;
     }
@@ -161,7 +161,7 @@ void AVL_Interface::printPostOrder() const {
 	*	Pre order print of all names in the tree, based on ID
 	*/
 
-    if (!tree.empty()) {
+    if (tree.empty()) {
         cout << endl;;
         return;
     }
