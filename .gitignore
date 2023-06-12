@@ -4,3 +4,5 @@
 *.ipch
 **/.vs
 .ipch
+**/venv
+**/.venv

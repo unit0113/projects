@@ -2,45 +2,23 @@ import numpy as np
 import random
 import operator
 import pandas as pd
-import matplotlib.pyplot as plt
+
+from src import functions
 
 
-class City:
-    def __init__(self, map_size):
-        self.x = int(random.random() * map_size)
-        self.y = int(random.random() * map_size)
-    
-    def distance(self, city):
-        xDis = abs(self.x - city.x)
-        yDis = abs(self.y - city.y)
-        distance = np.sqrt((xDis ** 2) + (yDis ** 2))
-        return distance
-    
-    def __repr__(self):
-        return "(" + str(self.x) + "," + str(self.y) + ")"
-
-
-class GeneticAlgorithm:
+class GeneticApproximation:
     def __init__(self, init_population, pop_size, elite_size, mutation_rate, num_generations, plot = True) -> None:
-        self.population = [self.createRoute(init_population) for _ in range(pop_size)]
+        self.population = [functions.createRandomRoute(init_population) for _ in range(pop_size)]
         self.elite_size = elite_size
         self.mutation_rate = mutation_rate
         self.num_generations = num_generations
         self.progress = [1 / self.rank_pops()[0][1]]
         self.plot = plot
 
-    def createRoute(self, gene_list):
-        return random.sample(gene_list, len(gene_list))
-
     def evolve(self):
         for _ in range(self.num_generations):
             self.evolve_next_generation()
             self.progress.append(1 / self.rank_pops()[0][1])
-
-        plt.plot(self.progress)
-        plt.ylabel('Distance')
-        plt.xlabel('Generation')
-        plt.show()
 
     def evolve_next_generation(self):
         pop_ranked = self.rank_pops()
@@ -52,16 +30,8 @@ class GeneticAlgorithm:
     def rank_pops(self):
         fitnessResults = {}
         for i in range(len(self.population)):
-            fitnessResults[i] = self.calc_fitness(self.population[i])
+            fitnessResults[i] = functions.calc_fitness(self.population[i])
         return sorted(fitnessResults.items(), key = operator.itemgetter(1), reverse = True)
-
-    def calc_fitness(self, organism):
-        distance = organism[0].distance(organism[-1])
-        for i, start_organism in enumerate(organism[:-1]):
-            end_organism = organism[i + 1]                
-            distance += start_organism.distance(end_organism)
-
-        return 1 / distance
 
     def selection(self, pop_ranked):
         selectionResults = []
@@ -115,12 +85,3 @@ class GeneticAlgorithm:
                 individual[swapped], individual[swapWith] = individual[swapWith], individual[swapped]
 
         return individual
-
-
-if __name__ == "__main__":
-    num_cities = 25
-    map_size = 200
-    city_list = [City(map_size) for _ in range(num_cities)]
-
-    genetic_tsp = GeneticAlgorithm(city_list, 100, 20, 0.01, 500)
-    genetic_tsp.evolve()

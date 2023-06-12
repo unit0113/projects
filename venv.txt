@@ -1,0 +1,15 @@
+python -m venv project_name\venv
+project_name\venv\Scripts\activate
+deactivate
+
+where python
+pip list
+pip freeze
+pip install -r requirements.txt
+
+
+-----------------------------------------------------
+
+virtualenv --python=python3.10.9 .venv
+.venv\Scripts\activate
+deactivate
