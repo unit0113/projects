@@ -5,7 +5,11 @@ from src.settings import HEIGHT, WIDTH, FPS
 from states.title_state import TitleState
 from states.main_menu import MainMenuState
 
+from src.button import Button
 from src.genetic_approximation import GeneticApproximation
+
+
+BUTTON_SPACING = 15
 
 
 class Game:
@@ -16,6 +20,10 @@ class Game:
         pygame.display.set_caption("TSP Approximation")
         pygame.font.init()
 
+        # Assets
+        self._load_assets()
+        self._create_buttons()
+
         # Game states
         self.state_dict = {'title': TitleState, 'main_menu': MainMenuState}
         self.state = self.state_dict['title'](self)
@@ -23,23 +31,21 @@ class Game:
         # Approximation functions
         self.approx_functions_dict = {'genetic': GeneticApproximation}
 
-        # Assets
-        self.load_assets()
-
         # Timing members
         self.run = True
         self.clock = pygame.time.Clock()
         self.prev_time = time.time()
 
-    def load_assets(self) -> None:
+    def _load_assets(self) -> None:
         self.assets_dict = {}
         self.assets_dict['map'] = pygame.image.load(r'assets\florida.jpg').convert_alpha()
+        # Start map as transparent
+        self.assets_dict['map'].set_alpha(0)
 
-    def update(self, delta_time: float, actions: list) -> None:
-        self.state.update(delta_time, actions)
-
-    def draw(self) -> None:
-        self.state.draw()
+    def _create_buttons(self):
+        self.buttons = []
+        self.buttons.append(Button(-150, 500, "Genetic"))
+        self.buttons.append(Button(-150, 500 + self.buttons[-1].rect_outer.height + BUTTON_SPACING, "Quit"))
 
     def set_state(self, new_state: str) -> None:
         self.state = self.state_dict[new_state](self)
@@ -61,7 +67,7 @@ class Game:
             quit()
 
         if keys[pygame.K_r]:
-            self = Game()
+            self.__init__()
 
         # For FPS independence
         now = time.time()
@@ -69,5 +75,5 @@ class Game:
         self.prev_time = now
 
         # Run state functions
-        self.update(dt, [events, keys])
-        self.draw()
+        self.state.update(dt, [events, keys])
+        self.state.draw()
