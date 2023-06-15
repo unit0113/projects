@@ -10,3 +10,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# have window be init param on everything
