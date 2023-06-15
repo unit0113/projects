@@ -16,7 +16,7 @@ MAP_Y = HEIGHT - 900
 
 BUTTON_SPACING = 15
 BUTTON_START_X = -125
-BUTTON_START_Y = 500
+BUTTON_START_Y = 400
 
 
 class Game:
@@ -29,7 +29,6 @@ class Game:
 
         # Assets
         self._load_assets()
-        self._create_buttons()
 
         # Game states
         self.state_dict = {'title': TitleState, 'main_menu': MainMenuState}
@@ -44,24 +43,24 @@ class Game:
         self.prev_time = time.time()
 
     def _load_assets(self) -> None:
-        self.assets_dict = {}
-        '''self.assets_dict['map'] = pygame.image.load(r'assets\florida.jpg').convert_alpha()
-        # Start map as transparent
-        self.assets_dict['map'].set_alpha(0)'''
-        self.assets_dict['map'] = Map(MAP_X, MAP_Y)
+        self.assets = {}
+        
+        # Map
+        self.assets['map'] = Map(self.window, MAP_X, MAP_Y)
 
-    def _create_buttons(self):
         # Title Card
         title_font = pygame.font.SysFont('verdana', 40, bold=True)
         title_text = title_font.render('Traveling Salesman Problem Approximation', 1, MENU_PURPLE) 
-        self.title = Button(WIDTH, -100, "Traveling Salesman Problem Approximation", title_text.get_width(), 40)
+        self.assets['title'] = Button(self.window, WIDTH, -100, "Traveling Salesman Problem Approximation", title_text.get_width(), 40)
 
-        self.buttons = []
-        self.buttons.append(Button(BUTTON_START_X, BUTTON_START_Y, "Greedy"))
-        self.buttons.append(Button(BUTTON_START_X, BUTTON_START_Y + self.buttons[-1].rect_outer.height + BUTTON_SPACING, "2-Opt"))
-        self.buttons.append(Button(BUTTON_START_X, BUTTON_START_Y + 2 * (self.buttons[-1].rect_outer.height + BUTTON_SPACING), "3-Opt"))
-        self.buttons.append(Button(BUTTON_START_X, BUTTON_START_Y + 3 * (self.buttons[-1].rect_outer.height + BUTTON_SPACING), "Genetic"))
-        self.buttons.append(Button(BUTTON_START_X, BUTTON_START_Y + 4 * (self.buttons[-1].rect_outer.height + BUTTON_SPACING), "Quit"))
+        # Menu buttons
+        buttons = []
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y, "Greedy"))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + buttons[-1].rect_outer.height + BUTTON_SPACING, "2-Opt"))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 2 * (buttons[-1].rect_outer.height + BUTTON_SPACING), "3-Opt"))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 3 * (buttons[-1].rect_outer.height + BUTTON_SPACING), "Genetic"))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 4 * (buttons[-1].rect_outer.height + BUTTON_SPACING), "Quit"))
+        self.assets['buttons'] = buttons
 
     def set_state(self, new_state: str) -> None:
         self.state = self.state_dict[new_state](self)

@@ -8,22 +8,31 @@ class MainMenuState(State):
     def __init__(self, game) -> None:
         self.game = game
         self.timer = 0
+        self.highlighted_button = None
 
     def update(self, dt: float, actions: list) -> None:
-        pass
+        # Up/down arrows highlighting menu options
+        if actions[1][pygame.K_UP]:
+            if self.highlighted_button == None:
+                pass
+                #self.highlighted_button = len(game)
+
+        if actions[1][pygame.K_DOWN]:
+            pass
+            
 
     def draw(self) -> None:
         self.game.window.fill(BLACK)
 
         # Buttons
-        for button in self.game.buttons:
-            button.draw(self.game.window)
+        for button in self.game.assets['buttons']:
+            button.draw()
 
         # Map
-        self.game.assets_dict['map'].draw(self.game.window)
+        self.game.assets['map'].draw()
 
         # Title bar
-        self.game.title.draw(self.game.window)
+        self.game.assets['title'].draw()
 
         pygame.display.update()
         

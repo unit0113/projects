@@ -10,9 +10,10 @@ INNER_REC_SIZE = 14
 SIZE = 100
 
 class Button:
-    def __init__(self, x: int, y: int, text: str, size: int=SIZE, text_size: int=20) -> None:
+    def __init__(self, window:pygame.surface.Surface, x: int, y: int, text: str, size: int=SIZE, text_size: int=20) -> None:
         self.font = pygame.font.SysFont('verdana', text_size, bold=True)
         self.text = self.font.render(text, 1, MENU_PURPLE) 
+        self.window = window
 
         # Upper left corner of text
         self.start_x = x // 2 - size // 2
@@ -75,10 +76,10 @@ class Button:
             self.rect_outer.y = self.start_y - OUTER_REC_SIZE // 2 + self.offset_y
             self.rect_inner.y = self.start_y - INNER_REC_SIZE // 2 + self.offset_y
 
-    def draw(self, window: pygame.surface.Surface) -> None:
+    def draw(self) -> None:
         if self.highlighted:
-            pygame.draw.rect(window, HIGHLIGHT_WHITE, self.rect_highlight, border_radius=10)
+            pygame.draw.rect(self.window, HIGHLIGHT_WHITE, self.rect_highlight, border_radius=10)
             
-        pygame.draw.rect(window, MENU_PURPLE, self.rect_outer, border_radius=10)
-        pygame.draw.rect(window, BLACK, self.rect_inner, border_radius=10)
-        window.blit(self.text, (self.start_x + self.offset_x, self.start_y + self.offset_y))
+        pygame.draw.rect(self.window, MENU_PURPLE, self.rect_outer, border_radius=10)
+        pygame.draw.rect(self.window, BLACK, self.rect_inner, border_radius=10)
+        self.window.blit(self.text, (self.start_x + self.offset_x, self.start_y + self.offset_y))
