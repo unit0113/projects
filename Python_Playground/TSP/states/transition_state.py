@@ -3,23 +3,24 @@ import pytweening as tween
 
 from states.state import State
 from src.colors import BLACK
-from src.settings import TITLE_TWEEN_DURATION, MAP_DELAY, MAP_TWEEN_DURATION, BUTTON_DELAY, LOAD_TIME
+from src.settings import TITLE_TWEEN_DURATION, BUTTON_DELAY, TRANSITION_TIME, MAP_DELAY_TRANSITION, MAP_TWEEN_TRANSITION_DURATION
 
 
-class TitleState(State):
-    def __init__(self, game, params) -> None:
+class Transition(State):
+    def __init__(self, game, approx_fxn_index) -> None:
         self.game = game
         self.timer = 0
+        self.approx_fxn_index = approx_fxn_index
 
         # Initiate title card tweening
-        self.game.assets['title'].set_tween(tween.easeInOutQuad, 0, TITLE_TWEEN_DURATION, False, 150)
+        self.game.assets['title'].set_tween(tween.easeInOutQuad, 0, TITLE_TWEEN_DURATION, False, -150)
 
         # Initiate game button tweening
         for index, button in enumerate(self.game.assets['buttons']):
-            button.set_tween(tween.easeOutSine, 1.5 + index * BUTTON_DELAY, 2, True, 150)
+            button.set_tween(tween.easeOutSine, (len(self.game.assets['buttons']) - 1 - index) * BUTTON_DELAY, 2, True, -150)
 
-        # Initiate map fade in tweening
-        self.game.assets['map'].set_fade_tween(tween.easeInOutQuad, MAP_DELAY, MAP_TWEEN_DURATION)
+        # Enlarge map tweening
+        self.game.assets['map'].set_enlarge_tween(tween.easeInOutSine, MAP_DELAY_TRANSITION, MAP_TWEEN_TRANSITION_DURATION)
 
     def update(self, dt: float, actions: list) -> None:
         self.timer += dt
@@ -28,15 +29,15 @@ class TitleState(State):
         for button in self.game.assets['buttons']:
             button.update(self.timer)
 
-        # Tween map, fade in
+        # Tween map, enlarge
         self.game.assets['map'].update(self.timer)
 
         # Tween title card
         self.game.assets['title'].update(self.timer)
 
         # Transfer control to menu state
-        if self.timer > LOAD_TIME:
-            self.game.set_state('main_menu')
+        if self.timer > TRANSITION_TIME:
+            self.game.set_state('run', self.approx_fxn_index)
 
     def draw(self) -> None:
         self.game.window.fill(BLACK)
@@ -50,5 +51,6 @@ class TitleState(State):
 
         # Title bar
         self.game.assets['title'].draw()
+
 
         pygame.display.update()

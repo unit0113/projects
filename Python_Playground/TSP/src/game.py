@@ -1,22 +1,17 @@
 import pygame
 import time
 
-from src.settings import HEIGHT, WIDTH, FPS
+from src.settings import HEIGHT, WIDTH, FPS, MAP_X, MAP_Y, BUTTON_SPACING, BUTTON_START_X, BUTTON_START_Y
 from src.colors import BLACK, MENU_PURPLE
+
 from states.title_state import TitleState
 from states.main_menu_state import MainMenuState
+from states.transition_state import Transition
+from states.run_state import Run
 
 from src.button import Button
-from src.map import Map
+from src.image import Image
 from src.genetic_approximation import GeneticApproximation
-
-
-MAP_X = WIDTH - 900
-MAP_Y = HEIGHT - 900
-
-BUTTON_SPACING = 15
-BUTTON_START_X = -125
-BUTTON_START_Y = 400
 
 
 class Game:
@@ -31,8 +26,8 @@ class Game:
         self._load_assets()
 
         # Game states
-        self.state_dict = {'title': TitleState, 'main_menu': MainMenuState}
-        self.state = self.state_dict['title'](self)
+        self.state_dict = {'title': TitleState, 'main_menu': MainMenuState, 'transition': Transition, 'run': Run}
+        self.state = self.state_dict['title'](self, None)
 
         # Approximation functions
         self.approx_functions_dict = {'genetic': GeneticApproximation}
@@ -46,7 +41,7 @@ class Game:
         self.assets = {}
         
         # Map
-        self.assets['map'] = Map(self.window, MAP_X, MAP_Y)
+        self.assets['map'] = Image(self.window, MAP_X, MAP_Y)
 
         # Title Card
         title_font = pygame.font.SysFont('verdana', 40, bold=True)
@@ -62,8 +57,13 @@ class Game:
         buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 4 * (buttons[-1].rect_outer.height + BUTTON_SPACING), "Quit"))
         self.assets['buttons'] = buttons
 
-    def set_state(self, new_state: str) -> None:
-        self.state = self.state_dict[new_state](self)
+        # Approximation functions
+        fxn = []
+        fxn.append(GeneticApproximation)
+        self.assets['approximations'] = fxn
+
+    def set_state(self, new_state: str, params=None) -> None:
+        self.state = self.state_dict[new_state](self, params)
 
     def game_loop(self) -> None:
         self.clock.tick(FPS)
@@ -77,10 +77,12 @@ class Game:
 
         keys = pygame.key.get_pressed()
 
-        if keys[pygame.K_q]:
+        # Quit if escape is pressed
+        if keys[pygame.K_ESCAPE]:
             pygame.quit()
             quit()
 
+        # Reset if r is pressed
         if keys[pygame.K_r]:
             self.__init__()
 

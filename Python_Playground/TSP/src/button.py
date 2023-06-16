@@ -43,11 +43,14 @@ class Button:
         self.tween_x = tween_x
         self.range = range
 
-    def highlight(self):
+    def highlight(self) -> None:
         self.highlighted = True
 
-    def dehighlight(self):
+    def dehighlight(self) -> None:
         self.highlighted = False
+
+    def is_clicked(self, mouse_pos: tuple[float]) -> bool:
+        return self.rect_outer.collidepoint(mouse_pos)
 
     def update(self, timer: float) -> None:
         # Tween if active
