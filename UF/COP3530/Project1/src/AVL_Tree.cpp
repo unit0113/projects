@@ -235,10 +235,6 @@ void AVL_Tree::remove(const string& remove_ID) {
 		#if (DEBUG != 1)
 		cout << "successful" << endl;
 		#endif
-	} else {
-		#if (DEBUG != 1)
-		cout << "unsuccessful" << endl;
-		#endif
 	}
 }
 
@@ -406,6 +402,7 @@ void AVL_Tree::removeInOrder(const unsigned int N) {
 		#if (DEBUG != 1)
 		cout << "unsuccessful" << endl;
 		#endif
+		return;
 	}
 
 	// Find Nth node and remove

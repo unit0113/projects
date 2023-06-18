@@ -16,7 +16,7 @@ void AVL_Interface::run() {
 
 	// Read and store commands
 	vector<string> commands;
-	string line, word;
+	string line, word, name;
 	for (int i{}; i < num_commands; ++i) {
 		commands.clear();
 
@@ -24,6 +24,16 @@ void AVL_Interface::run() {
 		getline(cin, line);
 		istringstream ss(line);
 		while (getline(ss, word, ' ')) {
+			if (count(word.begin(), word.end(), '"') == 1) {
+				name = word;
+				getline(ss, word, ' ');
+				while (word.find('"') == string::npos) {
+					name += ' ' + word;
+					getline(ss, word, ' ');
+				}
+				name += ' ' + word;
+				word = name;
+			}
 			commands.push_back(word);
 		}
 
