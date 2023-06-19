@@ -35,15 +35,16 @@ class GeneticAlgorithm:
     def evolve(self):
         for _ in range(self.num_generations):
             self.evolve_next_generation()
-            self.progress.append(1 / self.rank_pops()[0][1])
 
-        plt.plot(self.progress)
-        plt.ylabel('Distance')
-        plt.xlabel('Generation')
-        plt.show()
+        if self.plot:
+            plt.plot(self.progress)
+            plt.ylabel('Distance')
+            plt.xlabel('Generation')
+            plt.show()
 
     def evolve_next_generation(self):
         pop_ranked = self.rank_pops()
+        self.progress.append(1 / pop_ranked[0][1])
         selection_results = self.selection(pop_ranked)
         mating_pool = self.create_mating_pool(selection_results)
         children = self.breed_population(mating_pool)
@@ -51,9 +52,30 @@ class GeneticAlgorithm:
 
     def rank_pops(self):
         fitnessResults = {}
-        for i in range(len(self.population)):
-            fitnessResults[i] = self.calc_fitness(self.population[i])
+        for index, pop in enumerate(self.population):
+            fitnessResults[index] = self.calc_fitness(pop)
         return sorted(fitnessResults.items(), key = operator.itemgetter(1), reverse = True)
+    
+    def rank_pops2(self) -> list[tuple[list, float]]:
+        """Creates a sorted list of tuples containing the population and its fitness
+
+        Returns:
+            list: lists of two element tuples, containing the population and its fitness
+        """
+        return sorted([(pop, self.calc_fitness(pop)) for pop in self.population], key=lambda x: x[1], reverse = True)
+    
+    def selection2(self, ranked_pops: list[tuple[list, float]]) -> list:
+
+        # Specified number of top populations survive
+        selection_results = [pop for pop, score in ranked_pops[:self.elite_size]]
+
+        # Random selection of other populations
+        
+
+
+
+
+
 
     def calc_fitness(self, organism):
         distance = organism[0].distance(organism[-1])

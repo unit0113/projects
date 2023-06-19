@@ -7,35 +7,44 @@ from src import functions
 
 
 class GeneticApproximation:
-    def __init__(self, init_population, pop_size, elite_size, mutation_rate, num_generations, plot = True) -> None:
-        self.population = [functions.createRandomRoute(init_population) for _ in range(pop_size)]
+    def __init__(self, init_population, pop_size, elite_size, mutation_rate, num_generations) -> None:
+        self.population = [functions.randomize_route(init_population) for _ in range(pop_size)]
         self.elite_size = elite_size
         self.mutation_rate = mutation_rate
+        self.current_generation = 0
         self.num_generations = num_generations
         self.progress = [1 / self.rank_pops()[0][1]]
-        self.plot = plot
 
-    def evolve(self):
-        for _ in range(self.num_generations):
-            self.evolve_next_generation()
-            self.progress.append(1 / self.rank_pops()[0][1])
+    def run(self) -> tuple[list, bool]:
+        self._evolve_next_generation()
 
-    def evolve_next_generation(self):
-        pop_ranked = self.rank_pops()
-        selection_results = self.selection(pop_ranked)
-        mating_pool = self.create_mating_pool(selection_results)
-        children = self.breed_population(mating_pool)
-        self.population = self.mutatePopulation(children)
 
-    def rank_pops(self):
+
+
+
+
+
+
+
+
+
+
+    def _evolve_next_generation(self):
+        pop_ranked = self._rank_pops()
+        selection_results = self._selection(pop_ranked)
+        mating_pool = self._create_mating_pool(selection_results)
+        children = self._breed_population(mating_pool)
+        self.population = self._mutate_population(children)
+
+    def _rank_pops(self):
         fitnessResults = {}
-        for i in range(len(self.population)):
-            fitnessResults[i] = functions.calc_fitness(self.population[i])
+        for index, pop in enumerate(self.population):
+            fitnessResults[index] = functions.calc_fitness(pop)
         return sorted(fitnessResults.items(), key = operator.itemgetter(1), reverse = True)
 
-    def selection(self, pop_ranked):
+    def _selection(self, pop_ranked):
         selectionResults = []
-        df = pd.DataFrame(np.array(pop_ranked), columns=["Index","Fitness"])
+        df = pd.DataFrame(np.array(pop_ranked), columns=['Index', 'Fitness'])
         df['cum_sum'] = df.Fitness.cumsum()
         df['cum_perc'] = 100 * df.cum_sum / df.Fitness.sum()
 
@@ -49,10 +58,10 @@ class GeneticApproximation:
 
         return selectionResults
 
-    def create_mating_pool(self, selectionResults):
+    def _create_mating_pool(self, selectionResults):
         return [self.population[index] for index in selectionResults]
 
-    def breed_population(self, mating_pool):
+    def _breed_population(self, mating_pool):
         length = len(mating_pool) - self.elite_size
         pool = random.sample(mating_pool, len(mating_pool))
 
@@ -75,7 +84,7 @@ class GeneticApproximation:
 
         return childP1 + childP2
 
-    def mutatePopulation(self, population):
+    def _mutate_population(self, population):
         return [self._mutate(population[i]) for i in range(len(population))]
 
     def _mutate(self, individual):
