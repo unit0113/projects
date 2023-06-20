@@ -6,6 +6,7 @@ import random
 import operator
 import pandas as pd
 import matplotlib.pyplot as plt
+import time
 
 
 class City:
@@ -136,9 +137,13 @@ def geneticAlgorithmPlot(population, popSize, eliteSize, mutationRate, generatio
     progress = []
     progress.append(1 / rankRoutes(pop)[0][1])
     
+    start = time.time()
+
     for _ in range(0, generations):
         pop = evolve_next_generation(pop, eliteSize, mutationRate)
         progress.append(1 / rankRoutes(pop)[0][1])
+    
+    print(time.time() - start)
     
     plt.plot(progress)
     plt.ylabel('Distance')

@@ -1,74 +1,83 @@
 import numpy as np
 import random
-import operator
 import pandas as pd
+import sys
 
-from src import functions
+from .approximation import Approximation
+sys.path.append('..')
+from TSP.src import functions
 
 
-class GeneticApproximation:
+class GeneticApproximation(Approximation):
     def __init__(self, init_population, pop_size, elite_size, mutation_rate, num_generations) -> None:
         self.population = [functions.randomize_route(init_population) for _ in range(pop_size)]
         self.elite_size = elite_size
         self.mutation_rate = mutation_rate
         self.current_generation = 0
         self.num_generations = num_generations
-        self.progress = [1 / self.rank_pops()[0][1]]
+        self.best = None
 
     def run(self) -> tuple[list, bool]:
         self._evolve_next_generation()
-
-
-
-
-
-
-
-
-
-
-
+        return self.best, self.current_generation >= self.num_generations
 
     def _evolve_next_generation(self):
         pop_ranked = self._rank_pops()
-        selection_results = self._selection(pop_ranked)
-        mating_pool = self._create_mating_pool(selection_results)
-        children = self._breed_population(mating_pool)
+        self.best = pop_ranked[0][0]
+        selection_results = self._selection_FPS(pop_ranked)
+        children = self._breed_population(selection_results)
         self.population = self._mutate_population(children)
+        self.current_generation += 1
 
-    def _rank_pops(self):
-        fitnessResults = {}
-        for index, pop in enumerate(self.population):
-            fitnessResults[index] = functions.calc_fitness(pop)
-        return sorted(fitnessResults.items(), key = operator.itemgetter(1), reverse = True)
+    def _rank_pops(self) -> list[tuple[list, float]]:
+        """Creates a sorted list of tuples containing the population and its fitness
 
-    def _selection(self, pop_ranked):
-        selectionResults = []
-        df = pd.DataFrame(np.array(pop_ranked), columns=['Index', 'Fitness'])
+        Returns:
+            list: list of two element tuples, containing the population and its fitness
+        """
+        return sorted([(pop, functions.calc_fitness(pop)) for pop in self.population], key=lambda x: x[1], reverse = True)
+
+    def _selection_FPS(self, ranked_pops: list[tuple[list, float]]) -> list:
+        """Selects populations for the mating pool via fitness proportionate selection. Top populations proceed based on elite size value.
+           Remaining populations are selected via weighted random sampling.
+
+        Args:
+            ranked_pops (list[tuple[list, float]]): list of two element tuples, containing the population and its fitness
+
+        Returns:
+            list: selected populations for the mating pool
+        """
+
+        # Specified number of top-ranked populations continue to next generation
+        selection_results = [pop for pop, score in ranked_pops[:self.elite_size]]
+        ranked_pops_weights = [weight for pop, weight in ranked_pops]
+
+        df = pd.DataFrame(np.array(ranked_pops_weights), columns=["Fitness"])
         df['cum_sum'] = df.Fitness.cumsum()
         df['cum_perc'] = 100 * df.cum_sum / df.Fitness.sum()
 
-        selectionResults = [pop_ranked[i][0] for i in range(self.elite_size)]
-
-        for _ in range(0, len(pop_ranked) - self.elite_size):
-            for i in range(0, len(pop_ranked)):
-                if 100 * random.random() <= df.iat[i,3]:
-                    selectionResults.append(pop_ranked[i][0])
+        for _ in range(0, len(ranked_pops) - self.elite_size):
+            for i in range(0, len(ranked_pops)):
+                if 100 * random.random() <= df.iat[i,2]:
+                    selection_results.append(ranked_pops[i][0])
                     break
 
-        return selectionResults
+        return selection_results
 
-    def _create_mating_pool(self, selectionResults):
-        return [self.population[index] for index in selectionResults]
+    def _breed_population(self, mating_pool: list) -> list:
+        """Breeds the mating pool to create children using ordered crossover
 
-    def _breed_population(self, mating_pool):
-        length = len(mating_pool) - self.elite_size
-        pool = random.sample(mating_pool, len(mating_pool))
+        Args:
+            mating_pool (list): selected populations for the mating pool
 
-        children = [mating_pool[i] for i in range(self.elite_size)]
-        
-        for i in range(length):
-            children.append(self._breed(pool[i], pool[len(mating_pool) - i - 1]))
+        Returns:
+            list: children that result from the breeding process
+        """
+        children = [pop for pop in mating_pool[:self.elite_size]]
+
+        pool = random.sample(mating_pool, len(mating_pool))        
+        for index, pop in enumerate(pool[:-self.elite_size]):
+            children.append(self._breed(pop, pool[len(mating_pool) - index - 1]))
 
         return children
 

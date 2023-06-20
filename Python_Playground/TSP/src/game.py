@@ -11,7 +11,7 @@ from states.run_state import Run
 
 from src.button import Button
 from src.image import Image
-from src.genetic_approximation import GeneticApproximation
+from src.approximations.genetic_approximation import GeneticApproximation
 
 
 class Game:
