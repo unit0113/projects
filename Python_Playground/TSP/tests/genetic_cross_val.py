@@ -1,29 +1,13 @@
 import itertools
-import random
-import numpy as np
 import time
 import sys
+
+from random_city import City
 
 # Allows importing from directories higher in file path
 sys.path.append('..')
 from TSP.src.approximations.genetic_approximation import GeneticApproximation
-from TSP.src import functions
-
-
-# City class with random initilization
-class City:
-    def __init__(self, map_size):
-        self.x = int(random.random() * map_size)
-        self.y = int(random.random() * map_size)
-    
-    def distance_from(self, city):
-        xDis = abs(self.x - city.x)
-        yDis = abs(self.y - city.y)
-        distance = np.sqrt((xDis ** 2) + (yDis ** 2))
-        return distance
-    
-    def __repr__(self):
-        return "(" + str(self.x) + "," + str(self.y) + ")"
+from TSP.src.functions import calc_fitness
 
 
 class GeneticCrossVal:
@@ -52,7 +36,7 @@ class GeneticCrossVal:
                 done = False
                 while not done:
                     best, done = gen_approx.run()
-                    run_scores.append(functions.calc_fitness(best))
+                    run_scores.append(calc_fitness(best))
                 final_avg_dist += 1 / run_scores[-1]
             
             duration = time.time() - start

@@ -18,10 +18,22 @@ class GeneticApproximation(Approximation):
         self.best = None
 
     def run(self) -> tuple[list, bool]:
+        """Perform a single step in the genetic process
+
+        Returns:
+            tuple[list, bool]: returns the top performing organism and whether the approximation is completed
+        """
+
         self._evolve_next_generation()
         return self.best, self.current_generation >= self.num_generations
 
-    def _evolve_next_generation(self):
+    def _evolve_next_generation(self) -> None:
+        """Runs algorithm through the genetic evolution process
+           First: Ranks and sorts the current population
+           Performs fitness proportionate selection on the population
+           Breeds and mutatates population
+        """
+
         pop_ranked = self._rank_pops()
         self.best = pop_ranked[0][0]
         selection_results = self._selection_FPS(pop_ranked)
@@ -64,7 +76,7 @@ class GeneticApproximation(Approximation):
 
         return selection_results
 
-    def _breed_population(self, mating_pool: list) -> list:
+    def _breed_population(self, mating_pool: list[list]) -> list:
         """Breeds the mating pool to create children using ordered crossover
 
         Args:
@@ -73,6 +85,7 @@ class GeneticApproximation(Approximation):
         Returns:
             list: children that result from the breeding process
         """
+
         children = [pop for pop in mating_pool[:self.elite_size]]
 
         pool = random.sample(mating_pool, len(mating_pool))        
@@ -81,7 +94,17 @@ class GeneticApproximation(Approximation):
 
         return children
 
-    def _breed(self, parent1, parent2):
+    def _breed(self, parent1: list, parent2: list) -> list:
+        """Breeds two parents and creates child
+
+        Args:
+            parent1 (list): 1st parent
+            parent2 (list): 2nd parent
+
+        Returns:
+            list: result of breeding process
+        """
+
         geneA = int(random.random() * len(parent1))
         geneB = int(random.random() * len(parent1))
         
@@ -93,10 +116,30 @@ class GeneticApproximation(Approximation):
 
         return childP1 + childP2
 
-    def _mutate_population(self, population):
-        return [self._mutate(population[i]) for i in range(len(population))]
+    def _mutate_population(self, population: list[list]) -> list:
+        """Mutates population
 
-    def _mutate(self, individual):
+        Args:
+            population (list): Current population
+
+        Returns:
+            list: mutated population
+        """
+
+        mutated_population = [pop for pop in population[:self.elite_size]]
+        mutated_population.extend([self._mutate(population[i]) for i in range(self.elite_size,len(population))])
+        return mutated_population
+
+    def _mutate(self, individual: list) -> list:
+        """Mutates a selected individual
+
+        Args:
+            individual (list): individual to be mutated
+
+        Returns:
+            list: a mutated individual
+        """
+        
         for swapped in range(len(individual)):
             if random.random() < self.mutation_rate:
                 swapWith = int(random.random() * len(individual))

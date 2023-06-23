@@ -1,4 +1,10 @@
 import random
+import sys
+
+# Allows importing from directories higher in file path
+sys.path.append('..')
+from TSP.src.city import City
+
 
 def randomize_route(route: list) -> list:
     """Randomizes the input
@@ -27,3 +33,11 @@ def calc_fitness(route: list) -> float:
         distance += start.distance_from(end)
 
     return 1 / distance
+
+
+def get_cities(window, num_cities: int) -> list[City]:
+    with open(r'assets/cities.csv', 'r') as file:
+        cities = [City(window, *params.strip().split(',')) for params in file.readlines()[1:num_cities + 1]]
+
+    random.shuffle(cities)
+    return cities
