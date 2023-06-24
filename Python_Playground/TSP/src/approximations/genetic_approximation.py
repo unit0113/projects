@@ -47,7 +47,8 @@ class GeneticApproximation(Approximation):
         Returns:
             list: list of two element tuples, containing the population and its fitness
         """
-        return sorted([(pop, functions.calc_fitness(pop)) for pop in self.population], key=lambda x: x[1], reverse = True)
+
+        return sorted([(pop, functions.calc_fitness_memo(pop)) for pop in self.population], key=lambda x: x[1], reverse = True)
 
     def _selection_FPS(self, ranked_pops: list[tuple[list, float]]) -> list:
         """Selects populations for the mating pool via fitness proportionate selection. Top populations proceed based on elite size value.
@@ -65,12 +66,11 @@ class GeneticApproximation(Approximation):
         ranked_pops_weights = [weight for pop, weight in ranked_pops]
 
         df = pd.DataFrame(np.array(ranked_pops_weights), columns=["Fitness"])
-        df['cum_sum'] = df.Fitness.cumsum()
-        df['cum_perc'] = 100 * df.cum_sum / df.Fitness.sum()
+        df['cum_perc'] = 100 * df.Fitness.cumsum() / df.Fitness.sum()
 
         for _ in range(0, len(ranked_pops) - self.elite_size):
             for i in range(0, len(ranked_pops)):
-                if 100 * random.random() <= df.iat[i,2]:
+                if 100 * random.random() <= df.iat[i,1]:
                     selection_results.append(ranked_pops[i][0])
                     break
 
