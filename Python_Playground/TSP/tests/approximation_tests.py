@@ -56,7 +56,7 @@ def genetic_test(city_list, brute_force_score):
 
 
 if __name__ == '__main__':
-    num_cities = 25
+    num_cities = 15
     map_size = 200
     city_list = [City(map_size) for _ in range(num_cities)]
 
