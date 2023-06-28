@@ -29,6 +29,10 @@ class Game:
         self.state_dict = {'title': TitleState, 'main_menu': MainMenuState, 'transition': Transition, 'run': Run}
         self.state = self.state_dict['title'](self, None)
 
+
+        # Need to decide how to handle approximation function selection/storage
+
+
         # Approximation functions
         self.approx_functions_dict = {'genetic': GeneticApproximation}
 
@@ -54,7 +58,8 @@ class Game:
         buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + buttons[-1].rect_outer.height + BUTTON_SPACING, "2-Opt"))
         buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 2 * (buttons[-1].rect_outer.height + BUTTON_SPACING), "3-Opt"))
         buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 3 * (buttons[-1].rect_outer.height + BUTTON_SPACING), "Genetic"))
-        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 4 * (buttons[-1].rect_outer.height + BUTTON_SPACING), "Quit"))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 4 * (buttons[-1].rect_outer.height + BUTTON_SPACING), "Brute Force"))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 5 * (buttons[-1].rect_outer.height + BUTTON_SPACING), "Quit"))
         self.assets['buttons'] = buttons
 
         # Approximation functions

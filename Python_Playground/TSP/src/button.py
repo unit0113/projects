@@ -7,7 +7,7 @@ from src.colors import BLACK, MENU_PURPLE, HIGHLIGHT_WHITE
 HIGHLIGHT_REC_SIZE = 24
 OUTER_REC_SIZE = 20
 INNER_REC_SIZE = 14
-SIZE = 100
+SIZE = 135
 
 class Button:
     def __init__(self, window:pygame.surface.Surface, x: int, y: int, text: str, size: int=SIZE, text_size: int=20) -> None:
@@ -37,6 +37,16 @@ class Button:
         self.range = 0
 
     def set_tween(self, tween_fx: Callable[[float], float], start: float, duration: float, tween_x: bool, range: int) -> None:
+        """Starts a new tweening operation on the button
+
+        Args:
+            tween_fx (Callable[[float], float]): Tween function
+            start (float): Start time
+            duration (float): Duration of tween
+            tween_x (bool): If tween is occurring in the X direction. True for X movement, False for Y movement
+            range (int): Distance to tween
+        """
+
         self.tween_fx = tween_fx
         self.start = start
         self.duration = duration
@@ -44,15 +54,36 @@ class Button:
         self.range = range
 
     def highlight(self) -> None:
+        """Set button as highlighted
+        """
+
         self.highlighted = True
 
     def dehighlight(self) -> None:
+        """Dehighlight this button
+        """
+
         self.highlighted = False
 
-    def is_clicked(self, mouse_pos: tuple[float]) -> bool:
+    def mouse_over(self, mouse_pos: tuple[float]) -> bool:
+        """Check if mouse position is on this button
+
+        Args:
+            mouse_pos (tuple[float]): X, Y position that the mouse clicked on
+
+        Returns:
+            bool: Whether this button was clicked on
+        """
+
         return self.rect_outer.collidepoint(mouse_pos)
 
     def update(self, timer: float) -> None:
+        """Perform tweening operations and calculate the new positions for owned objects
+
+        Args:
+            timer (float): Time since start of game state
+        """
+
         # Tween if active
         if self.tween_fx:
             if self.start < timer < self.start + self.duration:
@@ -80,6 +111,9 @@ class Button:
             self.rect_inner.y = self.start_y - INNER_REC_SIZE // 2 + self.offset_y
 
     def draw(self) -> None:
+        """Draw objects to the pygame window
+        """
+
         if self.highlighted:
             pygame.draw.rect(self.window, HIGHLIGHT_WHITE, self.rect_highlight, border_radius=10)
             

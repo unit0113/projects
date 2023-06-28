@@ -16,7 +16,7 @@ MAP_TWEEN_TRANSITION_DURATION = 1.5
 
 # Starting location of menu buttons and spacing and timing between them
 BUTTON_SPACING = 15
-BUTTON_START_X = -125
+BUTTON_START_X = -160
 BUTTON_START_Y = 400
 BUTTON_DELAY = 0.25
 

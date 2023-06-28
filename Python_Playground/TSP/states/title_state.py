@@ -16,7 +16,7 @@ class TitleState(State):
 
         # Initiate game button tweening
         for index, button in enumerate(self.game.assets['buttons']):
-            button.set_tween(tween.easeOutSine, 1.5 + index * BUTTON_DELAY, 2, True, 150)
+            button.set_tween(tween.easeOutSine, 1.5 + index * BUTTON_DELAY, 2, True, 190)
 
         # Initiate map fade in tweening
         self.game.assets['map'].set_fade_tween(tween.easeInOutQuad, MAP_DELAY, MAP_TWEEN_DURATION)

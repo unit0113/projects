@@ -45,27 +45,42 @@ class MainMenuState(State):
             self.game.assets['buttons'][self.highlighted_button].highlight()
             self.last_key_press = self.timer
 
-        # If mouse selection
+        # Mouse over
+        pos = pygame.mouse.get_pos()
+        for index, button in enumerate(self.game.assets['buttons']):
+            if button.mouse_over(pos):
+                if self.highlighted_button != None:
+                    self.game.assets['buttons'][self.highlighted_button].dehighlight()
+                self.highlighted_button = index
+                self.game.assets['buttons'][self.highlighted_button].highlight()
+                break
+
+        # If enter or space is pressed
+        if actions[1][pygame.K_RETURN] or actions[1][pygame.K_SPACE]:
+            self.select_menu_option()
+
+        # If mouse clicked
         for event in actions[0]:
             if event.type == pygame.MOUSEBUTTONUP:
                 pos = pygame.mouse.get_pos()
                 for index, button in enumerate(self.game.assets['buttons']):
-                    if button.is_clicked(pos):
-                        if self.highlighted_button != None:
-                            self.game.assets['buttons'][self.highlighted_button].dehighlight()
-                        self.highlighted_button = index
-                        self.game.assets['buttons'][self.highlighted_button].highlight()
+                    if button.mouse_over(pos):
+                        self.select_menu_option()
                         break
+                break
 
-        # If enter is pressed
-        if actions[1][pygame.K_RETURN]:
-            # If quit
-            if self.highlighted_button == len(self.game.assets['buttons']) - 1:
-                pygame.quit()
-                quit()
-            elif self.highlighted_button != None:
-                self.game.set_state('transition', self.highlighted_button)
-            
+    def select_menu_option(self) -> None:
+        """Sub function that allows selection of a menu option
+        """
+
+        # If quit
+        if self.highlighted_button == len(self.game.assets['buttons']) - 1:
+            pygame.quit()
+            quit()
+        
+        # If other
+        elif self.highlighted_button != None:
+            self.game.set_state('transition', self.highlighted_button)
 
     def draw(self) -> None:
         self.game.window.fill(BLACK)
