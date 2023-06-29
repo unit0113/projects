@@ -94,7 +94,7 @@ def calc_fitness_memo(route: list[City]) -> float:
     return 1 / distance
 
 
-def get_cities(window, num_cities: int) -> list[City]:
+def get_cities(window, num_cities: int=200) -> list[City]:
     """Loads specified number of cities from file and shuffles
 
     Args:

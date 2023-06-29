@@ -12,6 +12,8 @@ from states.run_state import Run
 from src.button import Button
 from src.image import Image
 from src.approximations.genetic_approximation import GeneticApproximation
+from src.approximations.brute_force import BruteForce
+from src.functions import get_cities
 
 
 class Game:
@@ -29,13 +31,6 @@ class Game:
         self.state_dict = {'title': TitleState, 'main_menu': MainMenuState, 'transition': Transition, 'run': Run}
         self.state = self.state_dict['title'](self, None)
 
-
-        # Need to decide how to handle approximation function selection/storage
-
-
-        # Approximation functions
-        self.approx_functions_dict = {'genetic': GeneticApproximation}
-
         # Timing members
         self.run = True
         self.clock = pygame.time.Clock()
@@ -52,6 +47,13 @@ class Game:
         title_text = title_font.render('Traveling Salesman Problem Approximation', 1, MENU_PURPLE) 
         self.assets['title'] = Button(self.window, WIDTH, -100, "Traveling Salesman Problem Approximation", title_text.get_width(), 40)
 
+        # Approximation functions, requires Python v3.7 or later for ordered dicts
+        self.assets['approximations'] = {'Greedy': GeneticApproximation,
+                                      '2-Opt': GeneticApproximation,
+                                      '3-Opt': GeneticApproximation,
+                                      'Genetic': GeneticApproximation,
+                                      'Brute Force': BruteForce}
+
         # Menu buttons
         buttons = []
         buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y, "Greedy"))
@@ -62,10 +64,8 @@ class Game:
         buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 5 * (buttons[-1].rect_outer.height + BUTTON_SPACING), "Quit"))
         self.assets['buttons'] = buttons
 
-        # Approximation functions
-        fxn = []
-        fxn.append(GeneticApproximation)
-        self.assets['approximations'] = fxn
+        # Load cities from file
+        self.assets['cities'] = get_cities(self.window)
 
     def set_state(self, new_state: str, params=None) -> None:
         self.state = self.state_dict[new_state](self, params)

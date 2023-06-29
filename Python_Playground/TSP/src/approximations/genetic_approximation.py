@@ -9,7 +9,7 @@ from TSP.src import functions
 
 
 class GeneticApproximation(Approximation):
-    def __init__(self, init_population, pop_size, elite_size, mutation_rate, num_generations) -> None:
+    def __init__(self, init_population, pop_size=200, elite_size=10, mutation_rate=0.001, num_generations=500) -> None:
         self.population = [functions.randomize_route(init_population) for _ in range(pop_size)]
         self.elite_size = elite_size
         self.mutation_rate = mutation_rate
