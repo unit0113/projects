@@ -5,9 +5,11 @@
 
 class PageRank {
 	private:
-		AdjacencyList tree;
+		AdjacencyList adjacencyList;
 
 		// Helper Functions
+		int parseInput();
+		void iteratePageRank(int power);
 
 	public:
 		void run();
