@@ -19,6 +19,7 @@ BUTTON_SPACING = 15
 BUTTON_START_X = -160
 BUTTON_START_Y = 400
 BUTTON_DELAY = 0.25
+BUTTON_TWEEEN_DISTANCE = 190
 
 # Title card start position, tweening destination, and size of surrounding rects
 TITLE_HEIGHT_POS_START = -100
@@ -35,3 +36,12 @@ TRANSITION_TIME = 5
 
 # Delay to allow ease of use of arrow keys in menu
 KEY_PRESS_DELAY = 0.2
+
+# Run state menu button position
+BUTTON_Y_LOC_RUN = 50
+
+# Further cardinal coordinates of Florida
+FL_N = 31.001
+FL_S = 24.5412
+FL_E = 80.0309
+FL_W = 87.6346

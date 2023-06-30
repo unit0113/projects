@@ -80,7 +80,7 @@ class MainMenuState(State):
         
         # If other
         elif self.highlighted_button != None:
-            self.game.set_state('transition', self.highlighted_button)
+            self.game.set_state('transition', self.game.assets['buttons'][self.highlighted_button].name)
 
     def draw(self) -> None:
         self.game.window.fill(BLACK)

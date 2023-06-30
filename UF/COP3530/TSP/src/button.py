@@ -11,6 +11,7 @@ SIZE = 135
 
 class Button:
     def __init__(self, window:pygame.surface.Surface, x: int, y: int, text: str, size: int=SIZE, text_size: int=20) -> None:
+        self.name = text
         self.font = pygame.font.SysFont('verdana', text_size, bold=True)
         self.text = self.font.render(text, 1, MENU_PURPLE) 
         self.window = window
@@ -52,6 +53,14 @@ class Button:
         self.duration = duration
         self.tween_x = tween_x
         self.range = range
+
+    def is_highlighted(self) -> bool:
+        """Check if button is currently highlighted
+
+        Returns:
+            bool: If button is highlighted
+        """
+        return self.highlighted
 
     def highlight(self) -> None:
         """Set button as highlighted

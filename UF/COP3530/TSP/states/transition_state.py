@@ -3,21 +3,30 @@ import pytweening as tween
 
 from states.state import State
 from src.colors import BLACK
-from src.settings import TITLE_TWEEN_DURATION, BUTTON_DELAY, TRANSITION_TIME, MAP_DELAY_TRANSITION, MAP_TWEEN_TRANSITION_DURATION
+from src.settings import TITLE_TWEEN_DURATION, BUTTON_DELAY, BUTTON_TWEEEN_DISTANCE, TRANSITION_TIME, MAP_DELAY_TRANSITION, MAP_TWEEN_TRANSITION_DURATION, BUTTON_Y_LOC_RUN
 
 
 class Transition(State):
-    def __init__(self, game, approx_fxn_index) -> None:
+    def __init__(self, game, approx_fxn_name) -> None:
         self.game = game
         self.timer = 0
-        self.approx_fxn_index = approx_fxn_index
+        self.approx_fxn_name = approx_fxn_name
 
         # Initiate title card tweening
         self.game.assets['title'].set_tween(tween.easeInOutQuad, 0, TITLE_TWEEN_DURATION, False, -150)
 
         # Initiate game button tweening
+        seen_highlighted = False
         for index, button in enumerate(self.game.assets['buttons']):
-            button.set_tween(tween.easeOutSine, (len(self.game.assets['buttons']) - 1 - index) * BUTTON_DELAY, 2, True, -150)
+            # Move highlighted button up to act as label/title
+            if button.is_highlighted():
+                # Delay so no overlap, move up
+                button.set_tween(tween.easeOutSine, (len(self.game.assets['buttons']) + 5) * BUTTON_DELAY, 2, False, -(button.start_y - BUTTON_Y_LOC_RUN))
+            else:
+                if seen_highlighted:
+                    button.set_tween(tween.easeOutSine, (len(self.game.assets['buttons']) - index) * BUTTON_DELAY, 2, True, -BUTTON_TWEEEN_DISTANCE)
+                else:
+                    button.set_tween(tween.easeOutSine, (len(self.game.assets['buttons']) - 1 - index) * BUTTON_DELAY, 2, True, -BUTTON_TWEEEN_DISTANCE)
 
         # Enlarge map tweening
         self.game.assets['map'].set_enlarge_tween(tween.easeInOutSine, MAP_DELAY_TRANSITION, MAP_TWEEN_TRANSITION_DURATION)
@@ -37,7 +46,7 @@ class Transition(State):
 
         # Transfer control to menu state
         if self.timer > TRANSITION_TIME:
-            self.game.set_state('run', self.approx_fxn_index)
+            self.game.set_state('run', self.approx_fxn_name)
 
     def draw(self) -> None:
         self.game.window.fill(BLACK)
