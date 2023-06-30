@@ -112,7 +112,9 @@ class GeneticAlgorithm:
         return childP1 + childP2
 
     def mutatePopulation(self, population):
-        return [self._mutate(population[i]) for i in range(len(population))]
+        mutated_population = [pop for pop in population[:self.elite_size]]
+        mutated_population.extend([self._mutate(population[i]) for i in range(self.elite_size,len(population))])
+        return mutated_population
 
     def _mutate(self, individual):
         for swapped in range(len(individual)):
@@ -183,9 +185,9 @@ class GeneticAlgorithm:
 
 
 if __name__ == "__main__":
-    num_cities = 100
+    num_cities = 200
     map_size = 200
     city_list = [City(map_size) for _ in range(num_cities)]
 
-    genetic_tsp = GeneticAlgorithm(city_list, 100, 20, 0.01, 500)
+    genetic_tsp = GeneticAlgorithm(city_list, 200, 10, 0.001, 750)
     genetic_tsp.evolve()
