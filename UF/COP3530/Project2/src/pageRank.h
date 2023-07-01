@@ -9,7 +9,8 @@ class PageRank {
 
 		// Helper Functions
 		int parseInput();
-		void iteratePageRank(int power);
+		std::map<std::string, double> iteratePageRank(int power);
+		void printResults(std::map<std::string, double> ranks) const;
 
 	public:
 		void run();
