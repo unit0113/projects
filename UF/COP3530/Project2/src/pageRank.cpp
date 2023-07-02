@@ -5,7 +5,6 @@
 
 using namespace std;
 
-
 void PageRank::run() {
 	/*
 	*	Main runner method
