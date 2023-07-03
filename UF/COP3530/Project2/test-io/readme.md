@@ -16,21 +16,10 @@ To test your output locally, open a terminal preferably bash based e.g. **git ba
 
 Alternatively, you can test your output with the expected output for the sample tests using the diff command. The diff command will not generate any output if your output matched the expected output. To run io based tests (At the Project1 directory): 
 
-#### Public Test 1:
 
-Run these three commands:
-
-> g++ -std=c++14 -Werror -Wuninitialized -o build/test_io src/main.cpp    
-
-> build/test_io < test-io/input-files/1.txt > test-io/output-files/1.txt  
-
-> diff -w test-io/expected-output-files/1.txt test-io/output-files/1.txt
-
-
-##### Or Run this: 
+##### Public Test 1: 
 
 `g++ -std=c++14 -Werror -Wuninitialized -o build/test_io src/*.cpp && build/test_io < test-io/input-files/1.txt > test-io/output-files/1.txt && diff -w test-io/expected-output-files/1.txt test-io/output-files/1.txt`
-
 
 #### Public Test 2:
 
@@ -47,4 +36,8 @@ Run these three commands:
 #### Public Test 5:
 
 `g++ -std=c++14 -Werror -Wuninitialized -o build/test_io src/*.cpp && build/test_io < test-io/input-files/5.txt > test-io/output-files/5.txt && diff -w test-io/expected-output-files/5.txt test-io/output-files/5.txt`
+
+#### Public Test 6:
+
+`g++ -std=c++14 -Werror -Wuninitialized -o build/test_io src/*.cpp && build/test_io < test-io/input-files/6.txt > test-io/output-files/6.txt && diff -w test-io/expected-output-files/6.txt test-io/output-files/6.txt`
 
