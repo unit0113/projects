@@ -1,13 +1,13 @@
 #pragma once
 
-#include <map>
+#include <unordered_map>
 #include <list>
 #include <string>
 
 class AdjacencyList {
 	private:
-		std::map<std::string, std::list<std::string>> adjacencyList;
-		typedef typename std::map<std::string, std::list<std::string>>::iterator it;
+		std::unordered_map<std::string, std::list<std::string>> adjacencyList;
+		typedef typename std::unordered_map<std::string, std::list<std::string>>::iterator it;
 
 		// Helper Functions
 
