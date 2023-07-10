@@ -1,145 +1,56 @@
 import numpy as np
 import random
-import operator
 import pandas as pd
-import matplotlib.pyplot as plt
-import time
 
-
-class City:
-    def __init__(self, map_size):
-        self.x = int(random.random() * map_size)
-        self.y = int(random.random() * map_size)
-    
-    def distance(self, city):
-        xDis = abs(self.x - city.x)
-        yDis = abs(self.y - city.y)
-        distance = np.sqrt((xDis ** 2) + (yDis ** 2))
-        return distance
-    
-    def __repr__(self):
-        return "(" + str(self.x) + "," + str(self.y) + ")"
+from utils import City, calc_fitness_memo
 
 
 class GeneticAlgorithm:
-    def __init__(self, init_population, pop_size, elite_size, mutation_rate, num_generations, plot = True) -> None:
+    def __init__(self, init_population: list[City], pop_size: int=100, elite_size: int=10, mutation_rate: float=0.001, num_generations: int=250) -> None:
         self.pop_size = pop_size
         self.population = [self.createRoute(init_population) for _ in range(self.pop_size)]
         self.elite_size = elite_size
         self.mutation_rate = mutation_rate
+        self.current_generation = 0
         self.num_generations = num_generations
-        self.progress = [1 / self.rank_pops()[0][1]]
-        self.plot = plot
-
+        self.best = None
+    
     def createRoute(self, gene_list):
         return random.sample(gene_list, len(gene_list))
 
-    def evolve(self):
-        start = time.time()
-        for _ in range(self.num_generations):
-            self.evolve_next_generation2()
+    def evolve(self) -> tuple[float, bool]:
+        """Perform a single step in the genetic process
 
-        print(time.time() - start)
+        Returns:
+            tuple[float, bool]: returns the score of the top performing organism and whether the approximation is completed
+        """
 
-        if self.plot:
-            plt.plot(self.progress)
-            plt.ylabel('Distance')
-            plt.xlabel('Generation')
-            plt.show()
+        self._evolve_next_generation()
+        return calc_fitness_memo(self.best), self.current_generation >= self.num_generations
 
-    def evolve_next_generation(self):
-        pop_ranked = self.rank_pops()
-        self.progress.append(1 / pop_ranked[0][1])
-        selection_results = self.selection(pop_ranked)
-        mating_pool = self.create_mating_pool(selection_results)
-        children = self.breed_population(mating_pool)
-        self.population = self.mutatePopulation(children)
+    def _evolve_next_generation(self) -> None:
+        """Runs algorithm through the genetic evolution process
+           First: Ranks and sorts the current population
+           Performs fitness proportionate selection on the population
+           Breeds and mutatates population
+        """
 
-    def rank_pops(self):
-        fitnessResults = {}
-        for index, pop in enumerate(self.population):
-            fitnessResults[index] = self.calc_fitness(pop)
-        return sorted(fitnessResults.items(), key = operator.itemgetter(1), reverse = True)
-
-    def calc_fitness(self, organism):
-        distance = organism[0].distance(organism[-1])
-        for i, start_organism in enumerate(organism[:-1]):
-            end_organism = organism[i + 1]                
-            distance += start_organism.distance(end_organism)
-
-        return 1 / distance
-
-    def selection(self, pop_ranked):
-        selectionResults = []
-        df = pd.DataFrame(np.array(pop_ranked), columns=["Index","Fitness"])
-        df['cum_sum'] = df.Fitness.cumsum()
-        df['cum_perc'] = 100 * df.cum_sum / df.Fitness.sum()
-
-        selectionResults = [pop_ranked[i][0] for i in range(self.elite_size)]
-
-        for _ in range(0, len(pop_ranked) - self.elite_size):
-            for i in range(0, len(pop_ranked)):
-                if 100 * random.random() <= df.iat[i,3]:
-                    selectionResults.append(pop_ranked[i][0])
-                    break
-
-        return selectionResults
-
-    def create_mating_pool(self, selectionResults):
-        return [self.population[index] for index in selectionResults]
-
-    def breed_population(self, mating_pool):
-        length = len(mating_pool) - self.elite_size
-        pool = random.sample(mating_pool, len(mating_pool))
-
-        children = [mating_pool[i] for i in range(self.elite_size)]
-        
-        for i in range(length):
-            children.append(self._breed(pool[i], pool[len(mating_pool) - i - 1]))
-
-        return children
-
-    def _breed(self, parent1, parent2):
-        geneA = int(random.random() * len(parent1))
-        geneB = int(random.random() * len(parent1))
-        
-        startGene = min(geneA, geneB)
-        endGene = max(geneA, geneB)
-
-        childP1 = [parent1[i] for i in range(startGene, endGene)]    
-        childP2 = [item for item in parent2 if item not in childP1]
-
-        return childP1 + childP2
-
-    def mutatePopulation(self, population):
-        mutated_population = [pop for pop in population[:self.elite_size]]
-        mutated_population.extend([self._mutate(population[i]) for i in range(self.elite_size,len(population))])
-        return mutated_population
-
-    def _mutate(self, individual):
-        for swapped in range(len(individual)):
-            if random.random() < self.mutation_rate:
-                swapWith = int(random.random() * len(individual))
-                individual[swapped], individual[swapWith] = individual[swapWith], individual[swapped]
-
-        return individual
+        pop_ranked = self._rank_pops()
+        self.best = pop_ranked[0][0]
+        selection_results = self._selection_FPS(pop_ranked)
+        children = self._breed_population(selection_results)
+        self.population = self._mutate_population(children)
+        self.current_generation += 1
     
-    def evolve_next_generation2(self):
-        pop_ranked = self.rank_pops2()
-        self.progress.append(1 / pop_ranked[0][1])
-        mating_pool = self.selection_FPS(pop_ranked)
-        children = self.breed_population2(mating_pool)
-        self.population = self.mutatePopulation(children)
-    
-    def rank_pops2(self) -> list[tuple[list, float]]:
+    def _rank_pops(self) -> list[tuple[list, float]]:
         """Creates a sorted list of tuples containing the population and its fitness
 
         Returns:
             list: list of two element tuples, containing the population and its fitness
         """
-        return sorted([(pop, self.calc_fitness(pop)) for pop in self.population], key=lambda x: x[1], reverse = True)
+        return sorted([(pop, calc_fitness_memo(pop)) for pop in self.population], key=lambda x: x[1], reverse = True)
     
-    def selection_FPS(self, ranked_pops: list[tuple[list, float]]) -> list:
+    def _selection_FPS(self, ranked_pops: list[tuple[list, float]]) -> list:
         """Selects populations for the mating pool via fitness proportionate selection. Top populations proceed based on elite size value.
            Remaining populations are selected via weighted random sampling.
 
@@ -166,7 +77,7 @@ class GeneticAlgorithm:
 
         return selection_results
 
-    def breed_population2(self, mating_pool: list) -> list:
+    def _breed_population(self, mating_pool: list) -> list:
         """Breeds the mating pool to create children using ordered crossover
 
         Args:
@@ -183,11 +94,55 @@ class GeneticAlgorithm:
 
         return children
 
+    def _breed(self, parent1: list, parent2: list) -> list:
+        """Breeds two parents and creates child
 
-if __name__ == "__main__":
-    num_cities = 200
-    map_size = 200
-    city_list = [City(map_size) for _ in range(num_cities)]
+        Args:
+            parent1 (list): 1st parent
+            parent2 (list): 2nd parent
 
-    genetic_tsp = GeneticAlgorithm(city_list, 200, 10, 0.001, 750)
-    genetic_tsp.evolve()
+        Returns:
+            list: result of breeding process
+        """
+
+        geneA = int(random.random() * len(parent1))
+        geneB = int(random.random() * len(parent1))
+        
+        startGene = min(geneA, geneB)
+        endGene = max(geneA, geneB)
+
+        childP1 = [parent1[i] for i in range(startGene, endGene)]    
+        childP2 = [item for item in parent2 if item not in childP1]
+
+        return childP1 + childP2
+    
+    def _mutate_population(self, population: list[list]) -> list:
+        """Mutates population
+
+        Args:
+            population (list): Current population
+
+        Returns:
+            list: mutated population
+        """
+
+        mutated_population = [pop for pop in population[:self.elite_size]]
+        mutated_population.extend([self._mutate(population[i]) for i in range(self.elite_size, len(population))])
+        return mutated_population
+
+    def _mutate(self, individual: list) -> list:
+        """Mutates a selected individual
+
+        Args:
+            individual (list): individual to be mutated
+
+        Returns:
+            list: a mutated individual
+        """
+        
+        for swapped in range(len(individual)):
+            if random.random() < self.mutation_rate:
+                swapWith = int(random.random() * len(individual))
+                individual[swapped], individual[swapWith] = individual[swapWith], individual[swapped]
+
+        return individual
