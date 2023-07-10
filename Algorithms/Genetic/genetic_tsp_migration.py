@@ -4,23 +4,20 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import time
 
-from utils import City, calc_fitness_memo
+from utils import City, calc_fitness_memo, create_individual
 
 
 class GeneticAlgorithmMigration:
-    def __init__(self, init_population: list[City], pop_size: int=100, elite_size: int=10, mutation_rate: float=0.001, num_generations: int=250, num_migrants: int=10) -> None:
+    def __init__(self, init_population: list[City], pop_size: int=100, elite_size: int=10, mutation_rate: float=0.001, num_generations: int=250, num_migrants: int=50) -> None:
         self.init_population = init_population
         self.pop_size = pop_size
-        self.population = [self._createRoute(init_population) for _ in range(self.pop_size)]
+        self.population = [create_individual(init_population) for _ in range(self.pop_size)]
         self.elite_size = elite_size
         self.mutation_rate = mutation_rate
         self.current_generation = 0
         self.num_generations = num_generations
         self.num_migrants = num_migrants
         self.best = None
-    
-    def _createRoute(self, gene_list):
-        return random.sample(gene_list, len(gene_list))
 
     def evolve(self) -> tuple[float, bool]:
         """Perform a single step in the genetic process
@@ -156,4 +153,4 @@ class GeneticAlgorithmMigration:
         """Adds new random individuals to population
         """
 
-        self.population.extend([self._createRoute(self.init_population) for _ in range(self.num_migrants)])
+        self.population.extend([create_individual(self.init_population) for _ in range(self.num_migrants)])

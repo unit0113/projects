@@ -18,6 +18,10 @@ class City:
         return "(" + str(self.x) + "," + str(self.y) + ")"
 
 
+def create_individual(gene_list):
+        return random.sample(gene_list, len(gene_list))
+
+
 #https://codereview.stackexchange.com/questions/110221/tsp-brute-force-optimization-in-python
 def memoize(func: callable) -> float:
     """Create a memoization dictionary for calculating the distance between cities
