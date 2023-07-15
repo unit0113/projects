@@ -5,12 +5,13 @@ import pandas as pd
 from utils import City, calc_fitness_memo, create_individual
 
 
-class GeneticAlgorithm:
+class GeneticAlgorithmNewMutations:
     def __init__(self, init_population: list[City], pop_size: int=100, elite_size: int=5, mutation_rate: float=0.001, num_generations: int=250) -> None:
         self.pop_size = pop_size
         self.population = [create_individual(init_population) for _ in range(self.pop_size)]
         self.elite_size = elite_size
         self.mutation_rate = mutation_rate
+        self.mutation_functions = [self._insert, self._inverse, self._swap, self._swap_routes]
         self.current_generation = 0
         self.num_generations = num_generations
         self.best = None
@@ -137,9 +138,82 @@ class GeneticAlgorithm:
             list: a mutated individual
         """
         
-        for swapped in range(len(individual)):
+        '''for swapped in range(len(individual)):
             if random.random() < self.mutation_rate:
                 swapWith = int(random.random() * len(individual))
                 individual[swapped], individual[swapWith] = individual[swapWith], individual[swapped]
 
+        return individual'''
+
+        for _ in range(int(self.mutation_rate * random.randint(1, len(individual)))):
+            mutation_fxn = random.choice(self.mutation_functions)
+            individual = mutation_fxn(individual)
         return individual
+  
+
+    def _inverse(self, individual: list) -> list:
+        """ Inverses the order of cities in a route between node one and node two
+
+        Args:
+            individual (list): Potential TPS solution
+
+        Returns:
+            list: Potential TPS solution with inverted section
+        """
+    
+        node_one, node_two = random.sample(range(len(individual) - 1), 2)
+        individual[min(node_one,node_two):max(node_one,node_two)] = individual[min(node_one,node_two):max(node_one,node_two)][::-1]
+        
+        return individual
+    
+    def _swap(self, individual: list) -> list:
+        """ Swap cities at positions i and j with each other
+
+        Args:
+            individual (list): Potential TPS solution
+
+        Returns:
+            list: Potential TPS solution with two positions swapped
+        """
+
+        pos_one, pos_two = random.sample(range(len(individual)), 2)
+        individual[pos_one], individual[pos_two] = individual[pos_two], individual[pos_one]
+        
+        return individual
+    
+    def _insert(self, individual: list) -> list:
+        """ Insert city at node j before node i
+
+        Args:
+            individual (list): Potential TPS solution
+
+        Returns:
+            list: Potential TPS solution with a city moved to a new position
+        """
+
+        node_j = random.choice(individual)
+        individual.remove(node_j)
+        index = random.randint(0, len(individual) - 1)
+        individual.insert(index, node_j)
+        
+        return individual
+    
+    def _swap_routes(self, individual: list) -> list:
+        """Select a subroute from a to b and insert it at another position in the route
+
+        Args:
+            individual (list): Potential TPS solution
+
+        Returns:
+            list: Potential TPS solution with a subroute moved to a different location
+        """
+
+        subroute_a, subroute_b = random.sample(range(len(individual)), 2)
+        subroute = individual[min(subroute_a, subroute_b):max(subroute_a, subroute_b)]
+        del individual[min(subroute_a,subroute_b):max(subroute_a, subroute_b)]
+        insert_pos = random.choice(range(len(individual)))
+        individual[insert_pos:insert_pos] = subroute
+
+        return individual
+
+

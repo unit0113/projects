@@ -8,7 +8,7 @@ from utils import City, calc_fitness_memo, create_individual
 
 
 class GeneticAlgorithmMigration:
-    def __init__(self, init_population: list[City], pop_size: int=100, elite_size: int=10, mutation_rate: float=0.001, num_generations: int=250, num_migrants: int=50) -> None:
+    def __init__(self, init_population: list[City], pop_size: int=100, elite_size: int=5, mutation_rate: float=0.001, num_generations: int=250, num_migrants: int=50) -> None:
         self.init_population = init_population
         self.pop_size = pop_size
         self.population = [create_individual(init_population) for _ in range(self.pop_size)]

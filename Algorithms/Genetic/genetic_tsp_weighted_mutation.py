@@ -6,7 +6,7 @@ from utils import City, calc_fitness_memo, create_individual, calc_distance
 
 
 class GeneticAlgorithmWeightedMutation:
-    def __init__(self, init_population: list[City], pop_size: int=100, elite_size: int=10, mutation_rate: float=0.00001, num_generations: int=250) -> None:
+    def __init__(self, init_population: list[City], pop_size: int=100, elite_size: int=5, mutation_rate: float=0.00001, num_generations: int=250) -> None:
         self.pop_size = pop_size
         self.init_population = init_population
         self.population = [create_individual(init_population) for _ in range(self.pop_size)]

@@ -1,18 +1,17 @@
-import numpy as np
 import random
-import pandas as pd
 
 from utils import City, calc_fitness_memo, create_individual
 
 
-class GeneticAlgorithm:
-    def __init__(self, init_population: list[City], pop_size: int=100, elite_size: int=5, mutation_rate: float=0.001, num_generations: int=250) -> None:
+class GeneticAlgorithmTournement:
+    def __init__(self, init_population: list[City], pop_size: int=200, elite_size: int=5, mutation_rate: float=0.001, num_generations: int=250, tournement_size: int=5) -> None:
         self.pop_size = pop_size
         self.population = [create_individual(init_population) for _ in range(self.pop_size)]
         self.elite_size = elite_size
         self.mutation_rate = mutation_rate
         self.current_generation = 0
         self.num_generations = num_generations
+        self.tournement_size = tournement_size
         self.best = None
 
     def evolve(self) -> tuple[float, bool]:
@@ -34,7 +33,7 @@ class GeneticAlgorithm:
 
         pop_ranked = self._rank_pops()
         self.best = pop_ranked[0][0]
-        selection_results = self._selection_FPS(pop_ranked)
+        selection_results = self._selection_tournement(pop_ranked)
         children = self._breed_population(selection_results)
         self.population = self._mutate_population(children)
         self.current_generation += 1
@@ -47,9 +46,9 @@ class GeneticAlgorithm:
         """
         return sorted([(pop, calc_fitness_memo(pop)) for pop in self.population], key=lambda x: x[1], reverse = True)
     
-    def _selection_FPS(self, ranked_pops: list[tuple[list, float]]) -> list:
-        """Selects populations for the mating pool via fitness proportionate selection. Top populations proceed based on elite size value.
-           Remaining populations are selected via weighted random sampling.
+    def _selection_tournement(self, ranked_pops: list[tuple[list, float]]) -> list:
+        """Selects populations for the mating pool via tournement selection. Top populations proceed based on elite size value.
+           Remaining populations are selected via random tournement between k individuals.
 
         Args:
             ranked_pops (list[tuple[list, float]]): list of two element tuples, containing the population and its fitness
@@ -60,17 +59,9 @@ class GeneticAlgorithm:
 
         # Specified number of top-ranked populations continue to next generation
         selection_results = [pop for pop, score in ranked_pops[:self.elite_size]]
-        ranked_pops_weights = [weight for pop, weight in ranked_pops]
-
-        df = pd.DataFrame(np.array(ranked_pops_weights), columns=["Fitness"])
-        df['cum_sum'] = df.Fitness.cumsum()
-        df['cum_perc'] = 100 * df.cum_sum / df.Fitness.sum()
-
-        for _ in range(0, len(ranked_pops) - self.elite_size):
-            for i in range(0, len(ranked_pops)):
-                if 100 * random.random() <= df.iat[i,2]:
-                    selection_results.append(ranked_pops[i][0])
-                    break
+        
+        for _ in range(self.pop_size - self.elite_size):
+            selection_results.append(max(random.sample(ranked_pops, self.tournement_size), key=lambda x: x[1])[0])
 
         return selection_results
 
