@@ -1,13 +1,14 @@
 import itertools
 import time
-import sys
 
-from random_city import City
+from random_city import RandomCity
 
-# Allows importing from directories higher in file path
-sys.path.append('..')
-from TSP.src.approximations.genetic_approximation import GeneticApproximation
-from TSP.src.functions import calc_fitness
+# Allow import from src folder
+from sys import path
+from os.path import dirname
+path.append(dirname(path[0]))
+from src.approximations.genetic_approximation import GeneticApproximation
+from src.functions import calc_fitness_memo
 
 
 class GeneticCrossVal:
@@ -36,7 +37,7 @@ class GeneticCrossVal:
                 done = False
                 while not done:
                     best, done = gen_approx.run()
-                    run_scores.append(calc_fitness(best))
+                    run_scores.append(best)
                 final_avg_dist += 1 / run_scores[-1]
             
             duration = time.time() - start
@@ -49,7 +50,7 @@ class GeneticCrossVal:
 if __name__ == "__main__":
     num_cities = 100
     map_size = 200
-    city_list = [City(map_size) for _ in range(num_cities)]
+    city_list = [RandomCity(map_size) for _ in range(num_cities)]
 
     params = {'pop_size': [100, 150, 200, 250], 'elite_size': [10, 20, 30, 40], 'mutation_rate': [0.0001, 0.001, 0.01, 0.1], 'num_generations': [250, 500]}
     genetic_cv = GeneticCrossVal(city_list, params)
