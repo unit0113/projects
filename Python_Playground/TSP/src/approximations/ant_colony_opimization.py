@@ -27,7 +27,9 @@ class Ant:
 
         # Add nodes to tour
         while len(self.tour) < self.n_nodes:
+            # Remove last added node from potential_nodes
             potential_nodes.remove(self.tour[-1])
+
             # Get total distance to possible new nodes
             heuristic_value = sum(map(lambda x: calc_distance(self.tour[-1], x), potential_nodes))
 
@@ -64,8 +66,8 @@ class Ant:
 
 
 class AntColonyOptimization(Approximation):
-    def __init__(self, cities: list, num_ants: int=10, elitist_weight: float=2.0, alpha: float=1.0, beta: float=3.0,
-                 rho: float=0.1, initial_pheromone_strength: float=0.0001, num_iterations: int=300) -> None:
+    def __init__(self, cities: list, num_ants: int=6, elitist_weight: float=2.0, alpha: float=1.0, beta: float=3.0,
+                 rho: float=0.1, initial_pheromone_strength: float=0.0001, num_iterations: int=250) -> None:
         self.num_ants = num_ants
         self.elitist_weight = elitist_weight
         self.rho = rho  # Pheremone evaporation rate

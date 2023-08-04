@@ -66,12 +66,7 @@ def calc_fitness_memo(route: list) -> float:
         float: score of the input route
     """
 
-    distance = calc_distance(route[0], route[-1])
-    for i, start in enumerate(route[:-1]):
-        end = route[i + 1]            
-        distance += calc_distance(start, end)
-
-    return 1 / distance
+    return 1 / sum(calc_distance(route[i], route[i-1]) for i in range(len(route)))
 
 
 def draw_route(window: pygame.surface.Surface, route: list) -> None:
@@ -111,3 +106,21 @@ def draw_grid(game, grid: dict[dict[float]]) -> None:
                 pygame.draw.line(route_surface, (*MAXIMUM_GREEN, alpha), outer_city.get_pixel_tuple(), inner_city.get_pixel_tuple(), 2)
 
     game.window.blit(route_surface, (x, y))
+
+def draw_edges(window: pygame.surface.Surface, edges: dict) -> None:
+    """ Draw connections based on a dict containing edges/segments
+
+    Args:
+        window (pygame.surface.Surface): Game window that route will be drawn onto
+        edges (dict): Dictionary of edges to draw
+    """
+
+    seen = set()
+
+    for endpoint in edges:
+        if len(edges[endpoint]) > 1 and endpoint not in seen:
+            seen.add(edges[endpoint][0])
+            seen.add(edges[endpoint][-1])
+            # Loop through remaining connections
+            for index, city in enumerate(edges[endpoint][1:]):
+                pygame.draw.line(window, MAXIMUM_GREEN, edges[endpoint][index].get_pixel_tuple(), city.get_pixel_tuple(), 2)

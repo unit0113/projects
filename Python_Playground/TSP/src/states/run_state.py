@@ -10,6 +10,8 @@ from math import sin
 from .state import State
 from src.colors import BLACK, MAXIMUM_GREEN_FLOAT, MENU_PURPLE_FLOAT, MENU_PURPLE
 
+from src.approximations.brute_force import BruteForce
+
 
 GRAPH_WIDTH = 10
 GRAPH_HEIGHT = 4
@@ -45,7 +47,7 @@ class RunState(State):
 
         # Variables for continue message
         self.font = pygame.font.SysFont('verdana', CONTINUE_TEXT_SIZE, bold=True)
-        self.continue_text = self.font.render("Press Space to Continue", 1, MENU_PURPLE)
+        self.continue_text = self.font.render("Press Space for Main Menu", 1, MENU_PURPLE)
         self.continue_alpha = 0
         self.continue_text.set_alpha(self.continue_alpha)
         self.tween_timer = 0
@@ -57,7 +59,7 @@ class RunState(State):
         if not self.approximation_complete:
             self._run_approximation()
         
-        else:
+        if self.approximation_complete or isinstance(self.approx_fxn, BruteForce):
             self.continue_alpha = 255 * sin(self.tween_timer)
             self.continue_text.set_alpha(self.continue_alpha)
             self.tween_timer += dt / 2

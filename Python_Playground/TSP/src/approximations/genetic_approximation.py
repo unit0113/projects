@@ -9,7 +9,7 @@ from .approximation_utils import draw_route, calc_fitness_memo, randomize_route
 
 
 class GeneticApproximation(Approximation):
-    def __init__(self, init_population: list, pop_size: int=500, elite_size:int =5, mutation_rate: float=0.001, num_generations: int=500, tournement_size: int=5) -> None:
+    def __init__(self, init_population: list, pop_size: int=250, elite_size:int =5, mutation_rate: float=0.001, num_generations: int=500, tournement_size: int=5) -> None:
         self.pop_size = pop_size
         self.population = [randomize_route(init_population) for _ in range(pop_size)]
         self.elite_size = elite_size
@@ -131,6 +131,10 @@ class GeneticApproximation(Approximation):
 
         childP1 = [parent1[i] for i in range(startGene, endGene)]    
         childP2 = [item for item in parent2 if item not in childP1]
+
+        # Randomly reverse crossover sequence
+        if random.random() < 0.5:
+            childP1.reverse()
 
         return childP1 + childP2
 

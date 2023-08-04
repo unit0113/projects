@@ -14,6 +14,8 @@ from src.states.run_menu_transition_state import RunMenuTransitionState
 from src.button import Button
 from src.image import Image
 from src.approximations.nearest_neighbor import NearestNeighbor
+from src.approximations.greedy import Greedy
+from src.approximations.approx_2opt import Opt2
 from src.approximations.genetic_approximation import GeneticApproximation
 from src.approximations.simulated_annealing import SimmulatedAnnealing
 from src.approximations.ant_colony_opimization import AntColonyOptimization
@@ -57,8 +59,8 @@ class Game:
 
         # Approximation functions, requires Python v3.7 or later for ordered dicts
         self.assets['approximations'] = {'Nearest Neighbor': NearestNeighbor,
-                                      'Greedy Heuristic': GeneticApproximation,
-                                      '2-Opt': GeneticApproximation,
+                                      'Greedy Heuristic': Greedy,
+                                      '2-Opt': Opt2,
                                       'Genetic': GeneticApproximation,
                                       'Simulated Annealing': SimmulatedAnnealing,
                                       'Ant Colony Optimization': AntColonyOptimization,

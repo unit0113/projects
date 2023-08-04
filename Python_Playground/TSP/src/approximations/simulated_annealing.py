@@ -8,19 +8,17 @@ from .approximation import Approximation
 from .approximation_utils import draw_route, calc_fitness_memo
 
 
-BATCH_SIZE = 100
-MAX_SAME_ROUTE = 1_500
-MAX_SAME_DISTANCE = 15_000
-DISTANCE_CORRECTIVE_FACTOR = 5_000_000_000
+BATCH_SIZE = 250
+DISTANCE_CORRECTIVE_FACTOR = 5_000_000
 
 
 class SimmulatedAnnealing(Approximation):
-    def __init__(self, cities: list, start_temp: int=5_000, alpha: float=0.99) -> None:
+    def __init__(self, cities: list, start_temp: int=5_000, alpha: float=0.99, num_iterations: int=500) -> None:
         self.best = cities
         self.current_temp = start_temp
         self.alpha = alpha
-        self.same_route_count = 0
-        self.same_distance_count = 0
+        self.current_iteration = 0
+        self.num_iterations = num_iterations
         self.mutation_functions = [self._inverse, self._insert, self._swap, self._swap_routes]
 
     def run(self) -> tuple[float, bool]:
@@ -33,7 +31,9 @@ class SimmulatedAnnealing(Approximation):
         for _ in range(BATCH_SIZE):
             self._anneal()
 
-        return calc_fitness_memo(self.best), self.same_route_count > MAX_SAME_ROUTE or self.same_distance_count > MAX_SAME_DISTANCE
+        self.current_iteration += 1
+
+        return calc_fitness_memo(self.best), self.current_iteration >= self.num_iterations
 
     def _anneal(self) -> None:
         """ Perform a single iteration of simulated annealing
@@ -42,33 +42,14 @@ class SimmulatedAnnealing(Approximation):
         candidate = self._get_candidate(self.best)
         cost_diff = calc_fitness_memo(candidate) - calc_fitness_memo(self.best)
 
-        # Accept if candidate is better
-        if cost_diff > 0:
+        # Accept if candidate is better, otherwise, accept it with a probability of e^(-cost/temp)
+        if cost_diff > 0 or random.uniform(0, 1) <= math.exp(DISTANCE_CORRECTIVE_FACTOR * float(cost_diff) / float(self.current_temp)):
             self.best = candidate
             self.same_route_count = 0
-            self.same_distance_count = 0
-
-        # Increment counter if the same
-        elif cost_diff == 0:
-            self.best = candidate
-            self.same_route_count = 0
-            self.same_distance_count += 1
-        
-        else:
-            # Otherwise, accept it with a probability of e^(-cost/temp)
-            if random.uniform(0, 1) <= math.exp(DISTANCE_CORRECTIVE_FACTOR * float(cost_diff) / float(self.current_temp)):
-                self.best = candidate
-                self.same_route_count = 0
-                self.same_distance_count = 0
-
-            # Increment both counters if candidate is rejected
-            else:
-                self.same_route_count += 1
-                self.same_distance_count += 1
-
+                
         # Reduce current temp
         self.current_temp = self.current_temp * self.alpha
-    
+        
     def _inverse(self, state: list) -> list:
         """ Inverses the order of cities in a route between node one and node two
 
