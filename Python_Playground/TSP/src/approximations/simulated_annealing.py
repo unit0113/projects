@@ -13,7 +13,7 @@ DISTANCE_CORRECTIVE_FACTOR = 5_000_000
 
 
 class SimmulatedAnnealing(Approximation):
-    def __init__(self, cities: list, start_temp: int=5_000, alpha: float=0.99, num_iterations: int=500) -> None:
+    def __init__(self, cities: list, start_temp: int=5_000, alpha: float=0.99, num_iterations: int=1200) -> None:
         self.best = cities
         self.current_temp = start_temp
         self.alpha = alpha

@@ -1,0 +1,35 @@
+# create and move to branch
+git checkout -b branch_name
+
+# switch to different branch
+git checkout branch_name
+
+# git branch lists all branches and has * next to the branch we are in
+
+# merge branch
+git merge source desitnation
+git merge branch_name main
+
+# Clone remote repo locally
+git clone path_to_project_directory repo_name
+git clone url
+
+# Update local from remote
+git pull origin main
+git pull remote_name local_branch
+
+# Get name of remote repo
+git remote
+
+# push local changes to remote
+# local changes must be commited first
+git push remote local_branch
+
+
+# Workflow
+pull
+branch
+add/commit
+merge into local main
+pull to update local main
+push

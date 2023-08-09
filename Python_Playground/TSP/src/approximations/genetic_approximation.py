@@ -9,7 +9,7 @@ from .approximation_utils import draw_route, calc_fitness_memo, randomize_route
 
 
 class GeneticApproximation(Approximation):
-    def __init__(self, init_population: list, pop_size: int=250, elite_size:int =5, mutation_rate: float=0.001, num_generations: int=500, tournement_size: int=5) -> None:
+    def __init__(self, init_population: list, pop_size: int=500, elite_size:int =5, mutation_rate: float=0.001, num_generations: int=500, tournement_size: int=5) -> None:
         self.pop_size = pop_size
         self.population = [randomize_route(init_population) for _ in range(pop_size)]
         self.elite_size = elite_size

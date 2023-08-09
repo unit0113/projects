@@ -1,1 +1,1 @@
-from src.approximations import approximation, brute_force, genetic_approximation, approx_2opt
+from src.approximations import approximation, brute_force, genetic_approximation, greedy_2opt, greedy_3opt, divide_conquer, ant_colony_opimization, simulated_annealing

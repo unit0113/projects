@@ -17,7 +17,7 @@ class Greedy(Approximation):
         self.route = self.get_route()
 
     def run(self) -> tuple[float, bool]:
-        """Add a single city to the current route
+        """Add a single edge to the current route
 
         Returns:
             tuple[float, bool]: returns the score of the current route and whether the approximation is completed

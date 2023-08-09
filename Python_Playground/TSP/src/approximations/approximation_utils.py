@@ -66,7 +66,20 @@ def calc_fitness_memo(route: list) -> float:
         float: score of the input route
     """
 
-    return 1 / sum(calc_distance(route[i], route[i-1]) for i in range(len(route)))
+    return 1 / calc_route_distance(route)
+
+
+def calc_route_distance(route: list) -> float:
+    """ Calculates the total distance of a particular route
+
+    Args:
+        route (list): the route
+
+    Returns:
+        float: total euclidean distance of the route
+    """
+
+    return sum(calc_distance(route[i], route[i-1]) for i in range(len(route)))
 
 
 def draw_route(window: pygame.surface.Surface, route: list) -> None:

@@ -66,7 +66,7 @@ class Ant:
 
 
 class AntColonyOptimization(Approximation):
-    def __init__(self, cities: list, num_ants: int=6, elitist_weight: float=2.0, alpha: float=1.0, beta: float=3.0,
+    def __init__(self, cities: list, num_ants: int=20, elitist_weight: float=2.0, alpha: float=1.0, beta: float=3.0,
                  rho: float=0.1, initial_pheromone_strength: float=0.0001, num_iterations: int=250) -> None:
         self.num_ants = num_ants
         self.elitist_weight = elitist_weight

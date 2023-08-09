@@ -13,7 +13,9 @@ from src.approximations.simulated_annealing import SimmulatedAnnealing
 from src.approximations.particle_swarm_optimization import ParticleSwarmOptimization
 from src.approximations.ant_colony_opimization import AntColonyOptimization
 from src.approximations.greedy import Greedy
-from src.approximations.approx_2opt import Opt2
+from src.approximations.greedy_2opt import Opt2
+from src.approximations.greedy_3opt import Opt3
+from src.approximations.divide_conquer import DivideAndConquer
 
 
 if __name__ == '__main__':
@@ -25,7 +27,7 @@ if __name__ == '__main__':
     map_size = 200
     city_list = [RandomCity(map_size) for _ in range(num_cities)]
 
-    approximations = [Greedy, Opt2]
+    approximations = [Opt3]
     names = []
     plt.figure(figsize=(20, 12), dpi=80)
     for approx in approximations:

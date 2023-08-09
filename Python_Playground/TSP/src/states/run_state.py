@@ -26,6 +26,10 @@ class RunState(State):
     def __init__(self, game, approx_fxn_name) -> None:
         self.game = game
         self.timer = 0
+
+        # Recalculate X, Y positions for cities
+        self.game.calculate_city_XY()
+
         self.approx_fxn = game.assets['approximations'][approx_fxn_name](self.game.assets['cities'])
         self.approximation_complete = False
         self.distances = []
@@ -38,9 +42,6 @@ class RunState(State):
             if button.is_highlighted():
                 self.title_button = button
                 break
-
-        # Recalculate X, Y positions for cities
-        self.game.calculate_city_XY()
 
         # Call an initial iteration of approximation to prime graph
         self._run_approximation()
