@@ -5,7 +5,7 @@ import random
 import pandas as pd
 
 from .approximation import Approximation
-from .approximation_utils import draw_route, calc_fitness_memo, randomize_route
+from .approximation_utils import draw_route, calc_fitness_memo, randomize_route, calc_route_distance
 
 
 class GeneticApproximation(Approximation):
@@ -27,7 +27,7 @@ class GeneticApproximation(Approximation):
         """
 
         self._evolve_next_generation()
-        return calc_fitness_memo(self.best), self.current_generation >= self.num_generations
+        return calc_route_distance(self.best), self.current_generation >= self.num_generations
 
     def _evolve_next_generation(self) -> None:
         """Runs algorithm through the genetic evolution process: selection, breeding, mutation

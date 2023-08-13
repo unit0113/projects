@@ -86,7 +86,7 @@ class AntColonyOptimization(Approximation):
 
         self.best_ant = self.ants[0]
         self.best_tour = self.best_ant.tour
-        self.best_fitness = calc_fitness_memo(self.best_tour)
+        self.best_fitness = self.best_ant.fitness
 
     def run(self) -> tuple[float, bool]:
         """Perform a single step of the optimization
@@ -100,6 +100,8 @@ class AntColonyOptimization(Approximation):
             ant.add_pheromones()
         
         self.best_ant = max(self.ants, key=lambda x: x.fitness)
+
+        # Only update if better than previous best
         if self.best_ant.fitness > self.best_fitness:
             self.best_tour = self.best_ant.tour
             self.best_fitness = self.best_ant.fitness
@@ -113,7 +115,7 @@ class AntColonyOptimization(Approximation):
                 self.grid[row][col] *= (1-self.rho)
 
         self.current_iteration += 1
-        return self.best_fitness, self.current_iteration >= self.num_iterations
+        return 1 / self.best_fitness, self.current_iteration >= self.num_iterations
     
     def draw(self, window) -> None:
         """ Draw ant trails

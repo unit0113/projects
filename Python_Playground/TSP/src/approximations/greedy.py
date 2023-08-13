@@ -3,7 +3,7 @@
 from itertools import combinations
 
 from .approximation import Approximation
-from .approximation_utils import draw_edges, draw_route, calc_distance, calc_fitness_memo
+from .approximation_utils import draw_edges, draw_route, calc_distance, calc_route_distance
 
 
 class Greedy(Approximation):
@@ -37,7 +37,7 @@ class Greedy(Approximation):
             self.current_link += 1
 
         self.route = self.get_route()
-        return calc_fitness_memo(self.route), self.done
+        return calc_route_distance(self.route), self.done
     
     def join_segments(self, city_a: 'City', city_b: 'City') -> list:
         """ Join segments [...,A] + [B,...] into one segment. Maintain `endpoints`.

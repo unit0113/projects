@@ -5,7 +5,7 @@ import copy
 import math
 
 from .approximation import Approximation
-from .approximation_utils import draw_route, calc_fitness_memo
+from .approximation_utils import draw_route, calc_fitness_memo, calc_route_distance
 
 
 BATCH_SIZE = 250
@@ -33,7 +33,7 @@ class SimmulatedAnnealing(Approximation):
 
         self.current_iteration += 1
 
-        return calc_fitness_memo(self.best), self.current_iteration >= self.num_iterations
+        return calc_route_distance(self.best), self.current_iteration >= self.num_iterations
 
     def _anneal(self) -> None:
         """ Perform a single iteration of simulated annealing

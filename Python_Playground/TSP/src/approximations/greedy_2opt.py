@@ -2,7 +2,7 @@
 
 from .approximation import Approximation
 from .greedy import Greedy
-from .approximation_utils import draw_edges, draw_route, calc_distance, calc_fitness_memo
+from .approximation_utils import draw_edges, draw_route, calc_distance, calc_route_distance
 
 
 class Opt2(Approximation):
@@ -27,7 +27,7 @@ class Opt2(Approximation):
         else:
             self.opt_done = self.opt_2()
 
-        return calc_fitness_memo(self.best), self.greedy_done and self.opt_done
+        return calc_route_distance(self.best), self.greedy_done and self.opt_done
     
     def opt_2(self) -> bool:
         """ Checks whether a single subsegment reversal is an improvement

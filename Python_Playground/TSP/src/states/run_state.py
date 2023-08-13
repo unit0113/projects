@@ -73,8 +73,8 @@ class RunState(State):
         """ Runs a single iteration of the approximation function and stores the results
         """
 
-        score, self.approximation_complete = self.approx_fxn.run()
-        self.distances.append(60 / score)
+        distance, self.approximation_complete = self.approx_fxn.run()
+        self.distances.append(60 * distance)
         self._update_graph()
 
     def _update_graph(self) -> None:

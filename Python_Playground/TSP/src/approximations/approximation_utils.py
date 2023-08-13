@@ -90,6 +90,9 @@ def draw_route(window: pygame.surface.Surface, route: list) -> None:
         route (list): Sequential list of city objects that represent the calculated route
     """
 
+    if len(route) < 2:
+        return
+
     # Connect first and last point
     pygame.draw.line(window, MAXIMUM_GREEN, route[0].get_pixel_tuple(), route[-1].get_pixel_tuple(), 2)
 
@@ -137,3 +140,15 @@ def draw_edges(window: pygame.surface.Surface, edges: dict) -> None:
             # Loop through remaining connections
             for index, city in enumerate(edges[endpoint][1:]):
                 pygame.draw.line(window, MAXIMUM_GREEN, edges[endpoint][index].get_pixel_tuple(), city.get_pixel_tuple(), 2)
+
+
+def draw_edge_list(window: pygame.surface.Surface, edges: list[tuple]) -> None:
+    for city_a, city_b in edges:
+        pygame.draw.line(window, MAXIMUM_GREEN, city_a.get_pixel_tuple(), city_b.get_pixel_tuple(), 2)
+
+
+def draw_mst(window: pygame.surface.Surface, edges: dict) -> None:
+
+    links = [(parent, child) for parent in edges for child in edges[parent]]
+    for parent, child in links:
+        pygame.draw.line(window, MAXIMUM_GREEN, parent.get_pixel_tuple(), child.get_pixel_tuple(), 2)

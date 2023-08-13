@@ -1,14 +1,14 @@
 import math
 
 from .approximation import Approximation
-from .approximation_utils import draw_route, calc_distance, calc_fitness_memo, randomize_route
+from .approximation_utils import draw_route, calc_distance, calc_route_distance, randomize_route
 
 
 class NearestNeighborAgent:
     def __init__(self, cities) -> None:
         self.route = [cities[0]]
         self.remaining_cities = cities[1:]
-        self.fitness = calc_fitness_memo(self.route + self.remaining_cities)
+        self.distance = calc_route_distance(self.route + self.remaining_cities)
 
     def done(self) -> bool:
         """ Tells main algorithm if there are any remaining cities to add to the route
@@ -37,8 +37,8 @@ class NearestNeighborAgent:
         # Move closest from remaining to route
         self.route.append(self.remaining_cities.pop(closest_idx))
 
-        # Recalculate fitness
-        self.fitness = calc_fitness_memo(self.route + self.remaining_cities)
+        # Recalculate route distance
+        self.distance = calc_route_distance(self.route + self.remaining_cities)
 
 
 class NearestNeighbor(Approximation):
@@ -56,8 +56,8 @@ class NearestNeighbor(Approximation):
         for agent in self.agents:
             agent._add_closest()
 
-        self.best_agent = max(self.agents, key=lambda x: x.fitness)
-        return self.best_agent.fitness, self.best_agent.done()
+        self.best_agent = min(self.agents, key=lambda x: x.distance)
+        return self.best_agent.distance, self.best_agent.done()
     
     def draw(self, window) -> None:
         """ Draw calculated route

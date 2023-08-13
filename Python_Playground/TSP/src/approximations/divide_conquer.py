@@ -1,7 +1,7 @@
 import itertools
 
 from .approximation import Approximation
-from .approximation_utils import draw_route, calc_fitness_memo
+from .approximation_utils import draw_route, calc_route_distance
 
 
 class DivideAndConquer(Approximation):
@@ -37,7 +37,7 @@ class DivideAndConquer(Approximation):
             self.new_segments.append(new_segment)
             self.curr_segments = self.curr_segments[2:]
 
-        return calc_fitness_memo(list(itertools.chain.from_iterable(self.curr_segments)) + list(itertools.chain.from_iterable(self.new_segments))), len(self.curr_segments) == 1 and len(self.new_segments) == 0
+        return calc_route_distance(list(itertools.chain.from_iterable(self.curr_segments)) + list(itertools.chain.from_iterable(self.new_segments))), len(self.curr_segments) == 1 and len(self.new_segments) == 0
     
     def split_cities(self) -> None:
         """ Divide city list into smaller subsegments
@@ -136,7 +136,7 @@ class DivideAndConquer(Approximation):
             list: The best tour in the list of tours
         """
 
-        return max(tours, key=calc_fitness_memo)
+        return min(tours, key=calc_route_distance)
     
     def draw(self, window) -> None:
         """ Draw calculated route

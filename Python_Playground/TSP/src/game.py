@@ -18,6 +18,7 @@ from src.approximations.greedy import Greedy
 from src.approximations.greedy_2opt import Opt2
 from src.approximations.greedy_3opt import Opt3
 from src.approximations.divide_conquer import DivideAndConquer
+from src.approximations.cristofides import Cristofides
 from src.approximations.genetic_approximation import GeneticApproximation
 from src.approximations.simulated_annealing import SimmulatedAnnealing
 from src.approximations.ant_colony_opimization import AntColonyOptimization
@@ -65,6 +66,7 @@ class Game:
                                       'Greedy + 2-Opt': Opt2,
                                       'Greedy + 3-Opt': Opt3,
                                       'Divide and Conquer': DivideAndConquer,
+                                      'Cristofides': Cristofides,
                                       'Genetic': GeneticApproximation,
                                       'Simulated Annealing': SimmulatedAnnealing,
                                       'Ant Colony Optimization': AntColonyOptimization,
@@ -77,11 +79,12 @@ class Game:
         buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 2 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Greedy + 2-Opt'))
         buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 3 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Greedy + 3-Opt'))
         buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 4 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Divide and Conquer'))
-        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 5 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Genetic'))
-        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 6 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Simulated Annealing'))
-        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 7 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Ant Colony Optimization'))
-        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 8 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Brute Force'))
-        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 9 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Quit'))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 5 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Cristofides'))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 6 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Genetic'))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 7 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Simulated Annealing'))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 8 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Ant Colony Optimization'))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 9 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Brute Force'))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 10 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Quit'))
         self.assets['buttons'] = buttons
 
         # Load cities from file
