@@ -1,7 +1,7 @@
 import random
 
 from .approximation import Approximation
-from .approximation_utils import draw_route, calc_fitness_memo, randomize_route
+from .approximation_utils import draw_route, calc_route_distance, randomize_route
 
 
 class Particle:
@@ -15,7 +15,7 @@ class Particle:
         """ Update stored best values, and wipe old velocities. Preps particle for new iteration
         """
 
-        self.p_best = max(self.route, self.p_best, key=calc_fitness_memo)
+        self.p_best = min(self.route, self.p_best, key=calc_route_distance)
         self.velocity.clear()
 
         '''for swapped in range(len(self.route)):
@@ -57,13 +57,13 @@ class ParticleSwarmOptimization(Approximation):
         self.best = self._set_global_max()
 
     def _set_global_max(self) -> None:
-        self.best = max(self.particles, key=lambda p: calc_fitness_memo(p.route)).route
+        self.best = min(self.particles, key=lambda p: calc_route_distance(p.route)).route
 
     def run(self) -> tuple[float, bool]:
         """Perform an iteration of particle swarm optimization
 
         Returns:
-            tuple[float, bool]: The score of the current route and whether the approximation is completed
+            tuple[float, bool]: The length of the current route and whether the approximation is completed
         """
 
         # Update personal bests for particles
@@ -94,7 +94,7 @@ class ParticleSwarmOptimization(Approximation):
         self.global_best_prob *= 1.02
 
         self.current_iteration += 1
-        return calc_fitness_memo(self.best), self.current_iteration >= self.num_iterations
+        return calc_route_distance(self.best), self.current_iteration >= self.num_iterations
 
     def draw(self, window) -> None:
         """ Draw calculated route

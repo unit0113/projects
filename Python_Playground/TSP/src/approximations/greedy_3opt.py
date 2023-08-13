@@ -29,7 +29,7 @@ class Opt3(Approximation):
         """ Perform greedy heuristic to seed initial route, then iterate through route to find any possible improvements
 
         Returns:
-            tuple[float, bool]: returns the score of the current route and whether the approximation is completed
+            tuple[float, bool]: returns the length of the current route and whether the approximation is completed
         """
 
         if not self.greedy_2_opt_done:

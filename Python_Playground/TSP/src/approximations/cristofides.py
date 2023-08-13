@@ -58,7 +58,7 @@ class Cristofides(Approximation):
             Step 6: Add cities from hamiltonian cycle to final path, ignoring repeats
 
         Returns:
-            tuple[float, bool]: score of the current route and whether the approximation is completed
+            tuple[float, bool]: length of the current route and whether the approximation is completed
         """
         # Step 1
         if not self.mst_done:

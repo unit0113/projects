@@ -50,7 +50,7 @@ class NearestNeighbor(Approximation):
         """Add a single city to the current route
 
         Returns:
-            tuple[float, bool]: returns the score of the current route and whether the approximation is completed
+            tuple[float, bool]: returns the length of the current route and whether the approximation is completed
         """
 
         for agent in self.agents:

@@ -23,7 +23,7 @@ class GeneticApproximation(Approximation):
         """Perform a single step in the genetic process
 
         Returns:
-            tuple[float, bool]: returns the score of the top performing organism and whether the approximation is completed
+            tuple[float, bool]: returns the length of the route of the top performing organism and whether the approximation is completed
         """
 
         self._evolve_next_generation()

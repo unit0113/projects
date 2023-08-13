@@ -20,7 +20,7 @@ class Greedy(Approximation):
         """Add a single edge to the current route
 
         Returns:
-            tuple[float, bool]: returns the score of the current route and whether the approximation is completed
+            tuple[float, bool]: returns the length of the current route and whether the approximation is completed
         """
 
         # Add link to solution
@@ -39,7 +39,7 @@ class Greedy(Approximation):
         self.route = self.get_route()
         return calc_route_distance(self.route), self.done
     
-    def join_segments(self, city_a: 'City', city_b: 'City') -> list:
+    def join_segments(self, city_a: object, city_b: object) -> list:
         """ Join segments [...,A] + [B,...] into one segment. Maintain `endpoints`.
 
         Args:

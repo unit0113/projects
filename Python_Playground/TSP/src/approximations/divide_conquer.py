@@ -15,7 +15,7 @@ class DivideAndConquer(Approximation):
         """ Divide list of cities into smaller subsegments. Then, combine subsegments in an optimal manner
 
         Returns:
-            tuple[float, bool]: The score of the current route and whether the approximation is completed
+            tuple[float, bool]: The length of the current route and whether the approximation is completed
         """
 
         # Divide

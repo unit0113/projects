@@ -25,7 +25,7 @@ class SimmulatedAnnealing(Approximation):
         """Perform a batch of simulated annealing
 
         Returns:
-            tuple[float, bool]: The score of the current route and whether the approximation is completed
+            tuple[float, bool]: The length of the current route and whether the approximation is completed
         """
 
         for _ in range(BATCH_SIZE):

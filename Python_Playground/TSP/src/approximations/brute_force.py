@@ -1,7 +1,7 @@
 from itertools import permutations
 
 from .approximation import Approximation
-from .approximation_utils import draw_route, calc_distance, calc_fitness_memo
+from .approximation_utils import draw_route, calc_distance, calc_route_distance
 
 
 class BruteForce(Approximation):
@@ -10,19 +10,19 @@ class BruteForce(Approximation):
         self.routes = permutations(city_list[1:])
         self.next_route = 0
         self.minimum_route = [self.start] + list(next(self.routes))
-        self.minimum_distance = 1 / calc_fitness_memo(self.minimum_route)
+        self.minimum_distance = calc_route_distance(self.minimum_route)
 
     def run(self) -> tuple[list, bool]:
         """Runs a single iteration of the brute force method
 
         Returns:
-            tuple[list, bool]: Current best route, boolean on whether the function is complete
+            tuple[list, bool]: The length of the current best route, boolean on whether the function is complete
         """
         
         try:
             route = [self.start] + list(next(self.routes))
         except StopIteration:
-            return 1 / self.minimum_distance, True
+            return self.minimum_distance, True
         
         return self._run(route)
 
@@ -30,7 +30,7 @@ class BruteForce(Approximation):
         """Subfunction to run a single iteration of the brute force method
 
         Returns:
-            tuple[list, bool]: Current best route, boolean on whether the function is complete
+            tuple[list, bool]: The length of the current best route, boolean on whether the function is complete
 
         Yields:
             Iterator[tuple[list, bool]]: Iterator that points to the results of a single run.
@@ -56,7 +56,7 @@ class BruteForce(Approximation):
 
         self.next_route += 1
 
-        return 1 / self.minimum_distance, False
+        return self.minimum_distance, False
     
     def draw(self, window) -> None:
         """ Draw calculated route

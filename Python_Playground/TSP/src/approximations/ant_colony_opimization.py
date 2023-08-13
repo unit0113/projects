@@ -92,7 +92,7 @@ class AntColonyOptimization(Approximation):
         """Perform a single step of the optimization
 
         Returns:
-            tuple[float, bool]: returns the score of the top performing organism and whether the approximation is completed
+            tuple[float, bool]: returns the length of the route of the top performing ant and whether the approximation is completed
         """
 
         for ant in self.ants:
