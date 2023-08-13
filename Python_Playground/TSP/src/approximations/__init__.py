@@ -1,1 +1,13 @@
-from src.approximations import approximation, brute_force, genetic_approximation, greedy_2opt, greedy_3opt, divide_conquer, ant_colony_opimization, simulated_annealing
+from .approximation import Approximation
+from .brute_force import BruteForce
+from .nearest_neighbor import NearestNeighbor
+from .greedy import Greedy
+from .greedy_2opt import Opt2
+from .greedy_3opt import Opt3
+from .divide_conquer import DivideAndConquer
+from .cristofides import Cristofides
+from .genetic_approximation import Genetic
+from .simulated_annealing import SimmulatedAnnealing
+from .ant_colony_opimization import AntColonyOptimization
+from .particle_swarm_optimization import ParticleSwarmOptimization
+from .approximation_utils import *

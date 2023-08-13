@@ -3,27 +3,11 @@ import time
 import random
 
 from src.settings import HEIGHT, WIDTH, FPS, MAP_X, MAP_Y, BUTTON_SPACING, BUTTON_START_X, BUTTON_START_Y
-from src.colors import BLACK, MENU_PURPLE
+from src.colors import MENU_PURPLE
 
-from src.states.title_state import TitleState
-from src.states.main_menu_state import MainMenuState
-from src.states.menu_run_transition_state import MenuRunTransitionState
-from src.states.run_state import RunState
-from src.states.run_menu_transition_state import RunMenuTransitionState
-
-from src.button import Button
-from src.image import Image
-from src.approximations.nearest_neighbor import NearestNeighbor
-from src.approximations.greedy import Greedy
-from src.approximations.greedy_2opt import Opt2
-from src.approximations.greedy_3opt import Opt3
-from src.approximations.divide_conquer import DivideAndConquer
-from src.approximations.cristofides import Cristofides
-from src.approximations.genetic_approximation import GeneticApproximation
-from src.approximations.simulated_annealing import SimmulatedAnnealing
-from src.approximations.ant_colony_opimization import AntColonyOptimization
-from src.approximations.brute_force import BruteForce
-from src.city import City
+from src.states import TitleState, MainMenuState, MenuRunTransitionState, RunState, RunMenuTransitionState
+from src.approximations import NearestNeighbor, Greedy, Opt2, Opt3, DivideAndConquer, Cristofides, Genetic, SimmulatedAnnealing, AntColonyOptimization, ParticleSwarmOptimization, BruteForce
+from src import Button, Image, City
 
 
 class Game:
@@ -67,7 +51,7 @@ class Game:
                                       'Greedy + 3-Opt': Opt3,
                                       'Divide and Conquer': DivideAndConquer,
                                       'Cristofides': Cristofides,
-                                      'Genetic': GeneticApproximation,
+                                      'Genetic': Genetic,
                                       'Simulated Annealing': SimmulatedAnnealing,
                                       'Ant Colony Optimization': AntColonyOptimization,
                                       'Brute Force': BruteForce}

@@ -5,18 +5,9 @@ from random_city import RandomCity
 
 # Allow import from src folder
 from sys import path
-from os.path import dirname
-path.append(dirname(path[0]))
-from src.approximations.genetic_approximation import GeneticApproximation
-from src.approximations.nearest_neighbor import NearestNeighbor
-from src.approximations.simulated_annealing import SimmulatedAnnealing
-from src.approximations.particle_swarm_optimization import ParticleSwarmOptimization
-from src.approximations.ant_colony_opimization import AntColonyOptimization
-from src.approximations.greedy import Greedy
-from src.approximations.greedy_2opt import Opt2
-from src.approximations.greedy_3opt import Opt3
-from src.approximations.divide_conquer import DivideAndConquer
-from src.approximations.cristofides import Cristofides
+from os import getcwd
+path.insert(0, getcwd())
+from src.approximations import NearestNeighbor, Greedy, Opt2, Opt3, DivideAndConquer, Cristofides, Genetic, SimmulatedAnnealing, AntColonyOptimization, ParticleSwarmOptimization, BruteForce
 
 
 if __name__ == '__main__':
@@ -28,7 +19,7 @@ if __name__ == '__main__':
     map_size = 200
     city_list = [RandomCity(map_size) for _ in range(num_cities)]
 
-    approximations = [Cristofides]
+    approximations = [Greedy]
     names = []
     plt.figure(figsize=(20, 12), dpi=80)
     for approx in approximations:
