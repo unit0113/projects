@@ -1,11 +1,11 @@
 --[[
-    GD50
-    Legend of Zelda
+	GD50
+	Legend of Zelda
 
-    -- constants --
+	-- constants --
 
-    Author: Colton Ogden
-    cogden@cs50.harvard.edu
+	Author: Colton Ogden
+	cogden@cs50.harvard.edu
 ]]
 
 VIRTUAL_WIDTH = 384
@@ -41,13 +41,17 @@ TILE_BOTTOM_RIGHT_CORNER = 24
 TILE_EMPTY = 19
 
 TILE_FLOORS = {
-    7, 8, 9, 10, 11, 12, 13,
-    26, 27, 28, 29, 30, 31, 32,
-    45, 46, 47, 48, 49, 50, 51,
-    64, 65, 66, 67, 68, 69, 70,
-    88, 89, 107, 108
+	7, 8, 9, 10, 11, 12, 13,
+	26, 27, 28, 29, 30, 31, 32,
+	45, 46, 47, 48, 49, 50, 51,
+	64, 65, 66, 67, 68, 69, 70,
+	88, 89, 107, 108
 }
-
+-- The pots themselves with their default state and also the broken one that is shown right before despawning.
+TILE_POTS = {
+	['normal']={14,15,16},
+	['broke']={52,53,54}
+}
 TILE_TOP_WALLS = {58, 59, 60}
 TILE_BOTTOM_WALLS = {79, 80, 81}
 TILE_LEFT_WALLS = {77, 96, 115}
