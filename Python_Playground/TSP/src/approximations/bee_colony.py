@@ -1,6 +1,4 @@
 import random
-import pandas as pd
-import numpy as np
 import copy
 
 from . import Approximation
@@ -101,7 +99,7 @@ class WorkerBee(Bee):
         """
 
         new_path = self._mutate(self.route)
-
+        
         # If new is better
         if calc_route_distance(new_path) < self.distance:
             self.route = new_path
@@ -140,21 +138,15 @@ class OnlookerBee(Bee):
             self.distance = calc_route_distance(self.route)
 
 
-def parallel_worker(bee: WorkerBee):
-    bee.forage()
-    return bee
-    
-
 class BeeColonyOptimization(Approximation):
-    def __init__(self, cities: list, num_worker: int=200, num_onlooker: int=50, num_iterations: int=1000) -> None:
+    def __init__(self, cities: list, num_worker: int=200, num_onlooker: int=1000, size_best: int=5, rescout_perc: float=0.25, num_iterations: int=500) -> None:
         self.workers = [WorkerBee(randomize_route(cities)) for _ in range(num_worker)]
         self.onlookers = [OnlookerBee(randomize_route(cities)) for _ in range(num_onlooker)]
         self.num_iterations = num_iterations
         self.curr_iterations = 0
-        self.best = self.workers[0].route
-        self.best_dist = self.workers[0].distance
-        self.FPS_df = pd.DataFrame(np.array([1 / worker.distance for worker in self.workers]), columns=["Fitness"])
-        self.FPS_df['cum_perc'] = 100 * self.FPS_df.Fitness.cumsum() / self.FPS_df.Fitness.sum()
+        self.best_bees = [worker for worker in self.workers[:size_best]]
+        self.size_best = size_best
+        self.rescout_perc = rescout_perc
 
     def run(self) -> tuple[float, bool]:
         """ Perform a single step in the bee colony process.
@@ -169,35 +161,33 @@ class BeeColonyOptimization(Approximation):
         # Forage with worker bees
         for worker in self.workers:
             worker.forage()
-            if worker.distance < self.best_dist:
-                self.best = worker.route
-                self.best_dist = worker.distance
 
-        # Evaluate results
-        self._update_FPS_selection_table()
+        # Exploit with onlookers
+        chunk_size = len(self.onlookers) // self.size_best
+        for i, bee in enumerate(self.best_bees):
+            for onlooker in self.onlookers[chunk_size*i:chunk_size*(i+1)]:
+                onlooker.exploit(bee.route)
 
-        # Deploy onlookers
-        for onlooker in self.onlookers:
-            rand_num = 100 * random.random()
-            for i in range(0, len(self.workers)):
-                if rand_num <= self.FPS_df.iat[i,1]:
-                    onlooker.exploit(self.workers[i].route)
-                    if onlooker.distance < self.best_dist:
-                        self.best = onlooker.route
-                        self.best_dist = onlooker.distance
-                    break
-
+        # Store best
+        self.workers.sort(key=lambda x: x.distance)
+        self.onlookers.sort(key=lambda x: x.distance)
+        self.best_bees = [bee for bee in sorted(self.workers[:self.size_best] + self.onlookers[:self.size_best] + self.best_bees, key=lambda x: x.distance)][:self.size_best]
+        
+        # Set worst workers to scout
+        for worker in self.workers[int(len(self.workers) * (1-self.size_best)):]:
+            worker.scout()
 
         self.curr_iterations += 1
 
         return self.best_dist, self.curr_iterations >= self.num_iterations
-
-    def _update_FPS_selection_table(self) -> None:
-        """ Creates dataframe for use in fitness proportionate selection
-        """
-
-        self.FPS_df['Fitness'] = np.array([1 / worker.distance for worker in self.workers])
-        self.FPS_df['cum_perc'] = 100 * self.FPS_df.Fitness.cumsum() / self.FPS_df.Fitness.sum()
+    
+    @property
+    def best(self) -> list:
+        return self.best_bees[0].route
+    
+    @property
+    def best_dist(self) -> float:
+        return self.best_bees[0].distance
     
     def draw(self, window) -> None:
         """ Draw calculated route

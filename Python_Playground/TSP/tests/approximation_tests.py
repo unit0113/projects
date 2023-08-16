@@ -32,7 +32,7 @@ if __name__ == '__main__':
             best, done = approx.run()
             scores.append(best)
 
-        print(f'{names[-1]}: {str(time.time() - start)}')
+        print(f'{names[-1]}: {str(time.time() - start)}, {scores[-1]}')
         plt.plot(scores)
 
     plt.ylabel('Distance')

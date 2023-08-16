@@ -20,7 +20,7 @@ MAP_TWEEN_TRANSITION_DURATION = 1.5
 # Starting location of menu buttons and spacing and timing between them
 BUTTON_SPACING = 15
 BUTTON_START_X = -BUTTON_SIZE - 25
-BUTTON_START_Y = 300
+BUTTON_START_Y = 200
 BUTTON_DELAY = 0.25
 BUTTON_FINAL_X = 25
 
@@ -32,7 +32,7 @@ TITLE_INNER_REC_SIZE = 14
 TITLE_TWEEN_DURATION = 2
 
 # Time spent in title state before transitioning to menu state
-LOAD_TIME = 6
+LOAD_TIME = 6.5
 
 # Time spent in transition state before transitioning to run state
 TRANSITION_TIME = LOAD_TIME
