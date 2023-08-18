@@ -4,13 +4,13 @@ from typing import Callable
 from src.colors import BLACK, MENU_PURPLE, HIGHLIGHT_WHITE
 from src.settings import BUTTON_SIZE
 
-HIGHLIGHT_REC_SIZE = 24
-OUTER_REC_SIZE = 20
-INNER_REC_SIZE = 14
+HIGHLIGHT_REC_SIZE = 20
+OUTER_REC_SIZE = 16
+INNER_REC_SIZE = 12
 
 
 class Button:
-    def __init__(self, window:pygame.surface.Surface, x: int, y: int, text: str, size: int=BUTTON_SIZE, text_size: int=20) -> None:
+    def __init__(self, window:pygame.surface.Surface, x: int, y: int, text: str, size: int=BUTTON_SIZE, text_size: int=16) -> None:
         self.name = text
         self.font = pygame.font.SysFont('verdana', text_size, bold=True)
         self.text = self.font.render(text, 1, MENU_PURPLE) 

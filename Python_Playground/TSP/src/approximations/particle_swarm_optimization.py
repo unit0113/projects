@@ -53,8 +53,7 @@ class ParticleSwarmOptimization(Approximation):
         self.particles = [Particle(randomize_route(cities)) for _ in range(swarm_size)]
         self.global_best_prob = global_best_prob
         self.personal_best_prob = personal_best_prob
-
-        self.best = self._set_global_max()
+        self._set_global_max()
 
     def _set_global_max(self) -> None:
         self.best = min(self.particles, key=lambda p: calc_route_distance(p.route)).route

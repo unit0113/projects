@@ -6,7 +6,7 @@ from src.settings import HEIGHT, WIDTH, FPS, MAP_X, MAP_Y, BUTTON_SPACING, BUTTO
 from src.colors import MENU_PURPLE
 
 from src.states import TitleState, MainMenuState, MenuRunTransitionState, RunState, RunMenuTransitionState
-from src.approximations import NearestNeighbor, Greedy, Opt2, Opt3, DivideAndConquer, Cristofides, Genetic, SimmulatedAnnealing, AntColonyOptimization, BeeColonyOptimization, ParticleSwarmOptimization, BruteForce
+from src.approximations import NearestNeighbor, Greedy, Opt2, Opt3, DivideAndConquer, NearestInsertion, FurthestInsertion, Cristofides, Genetic, SimmulatedAnnealing, AntColonyOptimization, BeeColonyOptimization, BlackHoleOptimization, ParticleSwarmOptimization, BruteForce
 from src import Button, Image, City
 
 
@@ -50,11 +50,14 @@ class Game:
                                       'Greedy + 2-Opt': Opt2,
                                       'Greedy + 3-Opt': Opt3,
                                       'Divide and Conquer': DivideAndConquer,
+                                      'Nearest Insertion': NearestInsertion,
+                                      'Furthest Insertion': FurthestInsertion,
                                       'Cristofides': Cristofides,
                                       'Genetic': Genetic,
                                       'Simulated Annealing': SimmulatedAnnealing,
                                       'Ant Colony Optimization': AntColonyOptimization,
                                       'Bee Colony Optimization': BeeColonyOptimization,
+                                      'Black Hole Optimization': BlackHoleOptimization,
                                       'Brute Force': BruteForce}
 
         # Menu buttons
@@ -64,13 +67,16 @@ class Game:
         buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 2 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Greedy + 2-Opt'))
         buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 3 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Greedy + 3-Opt'))
         buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 4 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Divide and Conquer'))
-        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 5 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Cristofides'))
-        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 6 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Genetic'))
-        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 7 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Simulated Annealing'))
-        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 8 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Ant Colony Optimization'))
-        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 9 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Bee Colony Optimization'))
-        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 10 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Brute Force'))
-        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 11 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Quit'))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 5 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Nearest Insertion'))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 6 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Furthest Insertion'))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 7 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Cristofides'))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 8 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Genetic'))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 9 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Simulated Annealing'))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 10 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Ant Colony Optimization'))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 11 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Bee Colony Optimization'))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 12 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Black Hole Optimization'))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 13 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Brute Force'))
+        buttons.append(Button(self.window, BUTTON_START_X, BUTTON_START_Y + 14 * (buttons[-1].rect_outer.height + BUTTON_SPACING), 'Quit'))
         self.assets['buttons'] = buttons
 
         # Load cities from file
