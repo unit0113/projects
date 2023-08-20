@@ -1,7 +1,7 @@
 # Traveling Salesman Problem Approximation Visualization
 This project explores various algorithims which can be used to approximate a solution to a traveling salesman problem.
 
-![Main Menu](screenshots/main.PNG)
+![Main Menu](screenshots/main.png)
 
 ## Approximation Algorithms
 1.  [Nearest Neighbor](#nearest_neighbor)
@@ -66,12 +66,12 @@ Tabu search is similar to the 2-opt algorithm in that in attempts to improve an 
 ## Genetic <a name="genetic">
 A genetic algorithm is one which attempts to mimic evolutionary processes. It works by intializing a population of random routes and determining their fitness. This fitness is then used to select which individuals from the population will be allowed to mate and have their information carry on into the next generation. Once the mating pool has been created, individuals are randomly paired, and offspring are produced using crossover. These new individuals then undergo random mutation before this process repeats.
 
-![Genetic Algorithm Flow Chart](screenshots/gaflowchart.PNG)
+![Genetic Algorithm Flow Chart](screenshots/gaflowchart.png)
 
 ## Simulated Annealing <a name="anneal">
 Simulated annealing works by mimicing metallurgical processes. It begins with an initial solution, then every iteration a new tour is created by performing a random perturbation on the current solution. If this solution is better than the current one, it is accepted. If it is worse, it is accepted with a percentage of e<sup>-(C/temp)</sup>. This temperature value is gradually reduced as the algorithm iterates, resulting in the probability of accepting a worse solution decreasing as the algorithm iterates.
 
-![Simulated Annealing Convergence](screenshots/anneal.PNG)
+![Simulated Annealing Convergence](screenshots/anneal.png)
 
 ## Ant Colony Optimization <a name="ant">
 Ant colony optimization utilizes worker ants to stochastically explore the solution space via pheromones. Every iteration, each ant will start at a random point and examine all possible neighbors. These neighbors are evaluated on the strength of the pheromones connecting the two cities (ants prefer to follow stronger pheromones) and the distance to the city. Once each ant has selected a route, they each increase the strength of the pheromones on the tour that they selected. Finally, a certain percentage of pheromones evaporate, gradually reducing the strength of the pheromone trails on unused connections.
