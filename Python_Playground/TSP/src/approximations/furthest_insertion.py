@@ -62,7 +62,7 @@ class FurthestInsertion(Approximation):
         # Find best insertion option
         best_route = [city] + self.route
         best_dist = calc_route_distance(best_route)
-        for index in range(1, len(self.route) - 1):
+        for index in range(1, len(self.route)):
             new_route = self.route[:]
             new_route.insert(index, city)
             new_dist = calc_route_distance(new_route)
