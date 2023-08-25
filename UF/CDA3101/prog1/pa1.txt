@@ -22,8 +22,8 @@ bl printf
 ldr x0, = input_spec
 mov x1, sp
 bl scanf
-# Retrieve X from stack
-ldr x19, [sp]
+# Retrieve X from stack, load signed per Prof
+LDURSW x19, [sp]
 
 
 # Print prompt for y, X0 arg is text string
@@ -33,8 +33,8 @@ bl printf
 ldr x0, = input_spec
 mov x1, sp
 bl scanf
-# Retrieve y from stack
-ldr x20, [sp]
+# Retrieve y from stack, load signed per Prof
+LDURSW x20, [sp]
 
 
 # X stored in X19
