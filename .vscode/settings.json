@@ -88,5 +88,6 @@
         "csignal": "cpp",
         "cwctype": "cpp",
         "shared_mutex": "cpp"
-    }
+    },
+    "dotnet.defaultSolution": "disable"
 }
