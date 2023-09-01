@@ -1,10 +1,9 @@
 import pygame
 import time
 
-from src.settings import WIDTH, HEIGHT, FPS
+from src.settings import WIDTH, HEIGHT, FPS, TILE_SIZE
 from src.world import World
-from src.player import Player
-
+from src.button import Button
 
 
 def init_pygame() -> tuple[pygame.surface.Surface, pygame.time.Clock]:
@@ -28,6 +27,11 @@ def load_images() -> dict[str: pygame.surface.Surface]:
     images['sky'] = pygame.image.load('assets/sky.png')
     images['dirt'] = pygame.image.load('assets/dirt.png')
     images['grass'] = pygame.image.load('assets/grass.png')
+    images['slime'] = pygame.image.load('assets/blob.png')
+    images['lava'] = pygame.image.load('assets/lava.png')
+    images['lava'] = pygame.transform.scale(images['lava'], (TILE_SIZE, TILE_SIZE // 2))
+    images['death'] = pygame.image.load('assets/ghost.png')
+    images['restart_btn'] = pygame.image.load('assets/restart_btn.png')
 
     player_sprites = {}
     player_sprites[0] = pygame.image.load('assets/guy1.png')
@@ -70,9 +74,11 @@ def main() -> None:
     window, clock = init_pygame()
     images, player_sprites = load_images()
     world = World(images, player_sprites, window, world_data)
+    restart_btn = Button(WIDTH // 2 - images['restart_btn'].get_width() // 2, HEIGHT // 2 - 100, images['restart_btn'], window)
 
     # Main loop
     run = True
+    round_over = False
     prev_time = time.time()
 
     while run:
@@ -86,6 +92,10 @@ def main() -> None:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
+            elif round_over and event.type == pygame.MOUSEBUTTONUP:
+                pos = pygame.mouse.get_pos()
+                if restart_btn.is_clicked(pos):
+                    main()
 
         inputs = pygame.key.get_pressed()
         # Quit if escape is pressed
@@ -98,10 +108,17 @@ def main() -> None:
             main()
 
         # Update world
-        world.update(dt, inputs)
+        round_over = world.update(dt, inputs)
 
         # Draw world
         world.draw()
+
+        # Draw restart buttons if round over
+        if round_over:
+            restart_btn.draw()  
+            # Check button clicking
+            if pygame.mouse.get_pressed()[0] == 1 and restart_btn.is_clicked(pygame.mouse.get_pos()):
+                main()
 
         pygame.display.update()
 
