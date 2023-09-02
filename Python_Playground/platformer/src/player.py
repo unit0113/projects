@@ -1,14 +1,17 @@
 import pygame
+from pygame import mixer
 
 from .settings import GRAVITY, TERMINAL_VELOCITY, HEIGHT
 
 FRAME_TIME = 0.1
 DEATH_TIME = 2.5
 GHOST_MAX_HEIGHT = 200
+OVERLAP_THESH = 20
 
 class Player:
-    def __init__(self, x: int, y: int, player_sprites: dict[int: pygame.surface.Surface], dead_img: pygame.surface.Surface, window: pygame.surface.Surface) -> None:
+    def __init__(self, x: int, y: int, player_sprites: dict[int: pygame.surface.Surface], dead_img: pygame.surface.Surface, sounds: dict[str: mixer.Sound], window: pygame.surface.Surface) -> None:
         self.sprites = player_sprites
+        self.sounds = sounds
         self.dead_img = dead_img
         self.rect = self.sprites[0].get_rect()
         self.rect.x = x
@@ -17,13 +20,13 @@ class Player:
         self.y_vel = 0
         self.prev_y_vel = 0
         self.face_left = False
-        self.jumped = False
         self.frame_index = 0
         self.frame_timer = 0
         self.dead = False
         self.death_timer = 0
+        self.in_air = True
 
-    def update(self, dt: float, inputs: pygame.key.ScancodeWrapper, tiles: list) -> None:
+    def update(self, dt: float, inputs: pygame.key.ScancodeWrapper, tiles: list, platform_group: pygame.sprite.Group) -> None:
         # No updates if dead
         if self.dead:
             self.death_animation(dt)
@@ -32,9 +35,9 @@ class Player:
         dx = 0
         dy = 0
         # Move player
-        if (inputs[pygame.K_SPACE] or inputs[pygame.K_w]) and not self.y_vel and not self.prev_y_vel:
+        if (inputs[pygame.K_SPACE] or inputs[pygame.K_w]) and ((not self.y_vel and not self.prev_y_vel) or not self.in_air):
             self.y_vel = -15
-            self.jumped = True
+            self.sounds['jump'].play()
         if inputs[pygame.K_LEFT] or inputs[pygame.K_a]:
             dx -= 5
             self.face_left = True
@@ -62,6 +65,7 @@ class Player:
         self.y_vel = min(self.y_vel, TERMINAL_VELOCITY)
         dy += self.y_vel
 
+        self.in_air = True
         # Check for collision
         for tile in tiles:
             # Break if no movement
@@ -75,11 +79,34 @@ class Player:
                 # If going down
                 else:
                     dy = tile.rect.top - self.rect.bottom
+                    self.in_air - False
                 # Reset vertical velocity
                 self.y_vel = 0
 
             # Check horizontal collision
             if tile.rect.colliderect(self.rect.x + dx, self.rect.y, self.rect.width, self.rect.height):
+                dx = 0
+
+        # Check collision with platform
+        for platform in platform_group:
+            # Check vertical collision
+            if platform.rect.colliderect(self.rect.x, self.rect.y + dy, self.rect.width, self.rect.height):
+                # If below platform
+                if abs((self.rect.top + dy) - platform.rect.bottom) < OVERLAP_THESH:
+                    self.y_vel = 0
+                    dy = platform.rect.bottom - self.rect.top
+
+                # If above platform
+                elif abs((self.rect.bottom + dy) - platform.rect.top) < OVERLAP_THESH:
+                    self.y_vel = 0
+                    dy = 0
+                    self.rect.bottom = platform.rect.top
+                    self.in_air = False
+                    if platform.move_x:
+                        dx += platform.move_direction
+
+            # Check horizontal collision
+            if platform.rect.colliderect(self.rect.x + dx, self.rect.y, self.rect.width, self.rect.height):
                 dx = 0
 
         # Update rect coords
@@ -108,6 +135,8 @@ class Player:
             return game_over
         # Check collision with death dealers:
         self.dead = pygame.sprite.spritecollide(self, slime_group, False) or pygame.sprite.spritecollide(self, lava_group, False)
+        if self.dead:
+            self.sounds['game_over'].play()
         return self.dead
     
     @property

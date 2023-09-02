@@ -1,8 +1,9 @@
 import pygame
+from pygame import mixer
 import time
 from os import listdir
 
-from src.settings import WIDTH, HEIGHT, FPS, TILE_SIZE
+from src.settings import WIDTH, HEIGHT, FPS, TILE_SIZE, BLUE
 from src.world import World
 from src.button import Button
 from src.game_state import GameState
@@ -23,6 +24,11 @@ def init_pygame() -> tuple[pygame.surface.Surface, pygame.time.Clock]:
     return window, clock
 
 
+def init_music():
+    mixer.pre_init(44100, -16, 2, 512)
+    mixer.init()
+
+
 def load_images() -> dict[str: pygame.surface.Surface]:
     images = {}
     images['sun'] = pygame.image.load('assets/sun.png')
@@ -38,6 +44,10 @@ def load_images() -> dict[str: pygame.surface.Surface]:
     images['exit_btn'] = pygame.image.load('assets/exit_btn.png')
     images['gate'] = pygame.image.load('assets/exit.png')
     images['gate'] = pygame.transform.scale(images['gate'], (TILE_SIZE, int(TILE_SIZE * 1.5)))
+    images['coin'] = pygame.image.load('assets/coin.png')
+    images['coin'] = pygame.transform.scale(images['coin'], (TILE_SIZE // 2, TILE_SIZE // 2))
+    images['platform'] = pygame.image.load('assets/platform.png')
+    images['platform'] = pygame.transform.scale(images['platform'], (TILE_SIZE, TILE_SIZE // 2))
 
     player_sprites = {}
     player_sprites[0] = pygame.image.load('assets/guy1.png')
@@ -52,13 +62,32 @@ def load_images() -> dict[str: pygame.surface.Surface]:
     return images, player_sprites
 
 
+def load_sounds():
+    sounds = {}
+    sounds['coin'] = mixer.Sound('assets/coin.wav')
+    sounds['coin'].set_volume(0.5)
+    sounds['jump'] = mixer.Sound('assets/jump.wav')
+    sounds['jump'].set_volume(0.5)
+    sounds['game_over'] = mixer.Sound('assets/game_over.wav')
+    sounds['game_over'].set_volume(0.5)
+
+    return sounds
+
+
+def draw_text(text: str, font: pygame.font.Font, color: tuple[int, int, int], x: int, y: int, window: pygame.surface.Surface) -> None:
+        img = font.render(text, True, color)
+        window.blit(img, (x - img.get_width() // 2, y - img.get_height() // 2))
+
+
 def main(level: int) -> None:
     window, clock = init_pygame()
     images, player_sprites = load_images()
-    world = World(images, player_sprites, window, level)
+    sounds = load_sounds()
+    world = World(images, sounds, player_sprites, window, level)
     restart_btn = Button(WIDTH // 2 - images['restart_btn'].get_width() // 2, HEIGHT // 2 - 100, images['restart_btn'], window)
     start_btn = Button(WIDTH // 2 - 350, HEIGHT // 2, images['start_btn'], window)
     exit_btn = Button(WIDTH // 2 +150, HEIGHT // 2, images['exit_btn'], window)
+    game_over_font = pygame.font.SysFont('Baushaus 93', 70)
 
     run = False
     game_state = False
@@ -111,7 +140,9 @@ def main(level: int) -> None:
 
         # Reset if r is pressed
         if inputs[pygame.K_r]:
-            world.reset(0)
+            world.score = 0
+            level = 0
+            world.reset(level)
 
         # Update world
         game_state = world.update(dt, inputs)
@@ -121,15 +152,24 @@ def main(level: int) -> None:
 
         # Draw restart buttons if round over
         if game_state == GameState.GAME_OVER:
-            restart_btn.draw()  
+            restart_btn.draw()
+            draw_text('YOU DIED!', game_over_font, BLUE, WIDTH // 2, HEIGHT // 4, window)
             # Check button clicking
             if pygame.mouse.get_pressed()[0] == 1 and restart_btn.is_clicked(pygame.mouse.get_pos()):
                 world.reset(level)
 
         # Advance if gate reached
         if game_state == GameState.ADVANCE:
-            level = (level + 1) % len(listdir('levels'))
-            world.reset(level)
+            level = level + 1
+            if level == len(listdir('levels')):
+                restart_btn.draw()
+                draw_text('YOU WIN!', game_over_font, BLUE, WIDTH // 2, HEIGHT // 4, window)
+                # Check button clicking
+                if pygame.mouse.get_pressed()[0] == 1 and restart_btn.is_clicked(pygame.mouse.get_pos()):
+                    world.score = 0
+                world.reset(0)
+            else:
+                world.reset(level)
 
         pygame.display.update()
 
@@ -138,4 +178,4 @@ def main(level: int) -> None:
 
 
 if __name__ == '__main__':
-    main(0)
+    main(3)
