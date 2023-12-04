@@ -1,0 +1,17 @@
+design patterns
+wave factory->enemy factory->movement profile factory + weapon factory + shield factory + fire behavior factory
+Fixed level mode vs random level mode
+Camera shake: trauma^2, trauma ~= percentage health taken
+State stack: title, game, store
+weapon animations
+different player ships/stats
+pre/post level animations
+score screen animations
+
+movement behavior has canFire flag
+Movement behaviors: straight down, zig-zag, omega shape, pause near top then travel down, mirror player, swarm boid (weight * path_following_steering + weight * boid_steering)
+Fire behaviors: random/interval, single-fire, double tap, burst (encapsulate in one behavior class?)
+primary weapons: standard, big/slow, gatling, beam
+secondary weapons: fan, rockets, guided missile, swarm missiles
+bomb, bomb upgrades (capacity, damage, AOE)
+power ups

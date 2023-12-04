@@ -1,0 +1,5 @@
+NEAT algorithm
+human play
+AI train
+AI save/load
+AI play
