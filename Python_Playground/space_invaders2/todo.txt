@@ -15,3 +15,5 @@ primary weapons: standard, big/slow, gatling, beam
 secondary weapons: fan, rockets, guided missile, swarm missiles
 bomb, bomb upgrades (capacity, damage, AOE)
 power ups
+
+particle effects on hits/deaths
