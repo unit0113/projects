@@ -33,3 +33,8 @@ class Ship(ABC):
                 )
 
         return sprites
+
+    def load_weapons(self, ship_data: dict) -> None:
+        self.primary_weapons = []
+        for weapon, args in ship_data["primary_weapons"]:
+            self.primary_weapons.append(weapon(*args))

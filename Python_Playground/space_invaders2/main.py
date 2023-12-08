@@ -35,7 +35,6 @@ def main() -> None:
         prev_time = now
 
         # Event handler
-        mouse_pos = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -52,6 +51,7 @@ def main() -> None:
             main()
 
         game.update(dt)
+        game.fire()
         game.draw(window)
 
         pygame.display.update()

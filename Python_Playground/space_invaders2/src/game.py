@@ -3,7 +3,6 @@ import pygame
 from .state_stack import StateStack
 from .background import Background
 from .player_ship import PlayerShip
-from .laser import Laser
 
 
 class Game:
@@ -15,8 +14,7 @@ class Game:
         self.state_stack = StateStack()
 
         self.player = PlayerShip("boomerang")
-        self.laserGroup = pygame.sprite.Group()
-        self.laserGroup.add(Laser(400, 100, "Green", "ThinLong", 500, (1, 1)))
+        self.PlayerLaserGroup = pygame.sprite.Group()
 
     def load_assets(self) -> None:
         self.assets = {}
@@ -31,15 +29,18 @@ class Game:
             f"{folder}/stars.png"
         ).convert_alpha()
 
-        # Load lasers
-
     def update(self, dt: float) -> None:
         self.background.update(dt)
         self.player.update(dt)
-        self.laserGroup.update(dt)
+        self.PlayerLaserGroup.update(dt)
+
+    def fire(self) -> None:
+        player_projectiles = self.player.fire()
+        if player_projectiles:
+            self.PlayerLaserGroup.add(player_projectiles)
 
     def draw(self, window: pygame.Surface) -> None:
         window.fill((0, 0, 0))
         self.background.draw(window)
+        self.PlayerLaserGroup.draw(window)
         self.player.draw(window)
-        self.laserGroup.draw(window)

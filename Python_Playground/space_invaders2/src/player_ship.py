@@ -24,15 +24,11 @@ class PlayerShip(Ship):
         self.last_frame = pygame.time.get_ticks()
 
         # Weapon data
-        self.primary_weapons = PLAYER_SHIP_DATA[ship_type]["primary_weapons"]
-        self.parse_weapon_loadout()
-
-    def parse_weapon_loadout(self) -> None:
-        for location, weapon in self.primary_weapons:
-            pass
+        self.is_firing_primary = False
+        self.load_weapons(PLAYER_SHIP_DATA[ship_type])
 
     def update(self, dt: float) -> None:
-        self.move(dt)
+        self.parse_control_input(dt)
         self.animate()
 
     def animate(self) -> None:
@@ -49,7 +45,10 @@ class PlayerShip(Ship):
     def draw(self, window: pygame.Surface) -> None:
         window.blit(self.image, self.rect)
 
-    def move(self, dt: float):
+    def parse_control_input(self, dt: float) -> None:
+        self.orientation = "level"
+        self.is_firing_primary = False
+
         keys = pygame.key.get_pressed()
         if keys[pygame.K_w] or keys[pygame.K_UP]:
             self.player_up(dt)
@@ -61,16 +60,31 @@ class PlayerShip(Ship):
         elif keys[pygame.K_d] or keys[pygame.K_RIGHT]:
             self.player_right(dt)
 
-    def player_up(self, dt: float):
+        if keys[pygame.K_SPACE]:
+            self.is_firing_primary = True
+
+    def player_up(self, dt: float) -> None:
         self.rect.y = max(0, self.rect.y - self.speed * dt)
 
-    def player_down(self, dt: float):
+    def player_down(self, dt: float) -> None:
         self.rect.y = min(
             HEIGHT - self.image.get_height(), self.rect.y + self.speed * dt
         )
 
-    def player_left(self, dt: float):
+    def player_left(self, dt: float) -> None:
+        self.orientation = "left"
         self.rect.x = max(0, self.rect.x - self.speed * dt)
 
-    def player_right(self, dt: float):
+    def player_right(self, dt: float) -> None:
+        self.orientation = "right"
         self.rect.x = min(WIDTH - self.image.get_width(), self.rect.x + self.speed * dt)
+
+    def fire(self):
+        projectiles = []
+        if self.is_firing_primary:
+            for weapon in self.primary_weapons:
+                projectile = weapon.fire(self.rect.topleft, (0, -1))
+                if projectile:
+                    projectiles.append(projectile)
+
+        return projectiles
