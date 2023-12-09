@@ -2,6 +2,8 @@ import pygame
 
 from .state_stack import StateStack
 from .background import Background
+from .state_test import TestState
+from .settings import WIDTH, HEIGHT
 from .player_ship import PlayerShip
 
 
@@ -11,10 +13,14 @@ class Game:
         self.background = Background(
             self.assets["background"], self.assets["foreground"]
         )
-        self.state_stack = StateStack()
 
-        self.player = PlayerShip("boomerang")
-        self.PlayerLaserGroup = pygame.sprite.Group()
+        self.state_stack = StateStack()
+        self.state_stack.push(TestState(self))
+
+        self.playerLaserGroup = pygame.sprite.Group()
+
+    def set_player(self, player: PlayerShip) -> None:
+        self.player = player
 
     def load_assets(self) -> None:
         self.assets = {}
@@ -31,16 +37,36 @@ class Game:
 
     def update(self, dt: float) -> None:
         self.background.update(dt)
+        self.state_stack.update(dt)
+
+    def update_player(self, dt: float) -> None:
         self.player.update(dt)
-        self.PlayerLaserGroup.update(dt)
+
+    def update_projectiles(self, dt: float) -> None:
+        self.playerLaserGroup.update(dt)
 
     def fire(self) -> None:
         player_projectiles = self.player.fire()
         if player_projectiles:
-            self.PlayerLaserGroup.add(player_projectiles)
+            self.playerLaserGroup.add(player_projectiles)
+
+    def remove_offscreen_objects(self) -> None:
+        for laser in self.playerLaserGroup:
+            if not self.object_is_onscreen(laser):
+                laser.kill()
+
+    def object_is_onscreen(self, obj) -> bool:
+        return (0 - obj.rect.width <= obj.rect.x <= WIDTH) and (
+            0 - obj.rect.height <= obj.rect.y <= HEIGHT
+        )
 
     def draw(self, window: pygame.Surface) -> None:
         window.fill((0, 0, 0))
         self.background.draw(window)
-        self.PlayerLaserGroup.draw(window)
+        self.state_stack.draw(window)
+
+    def draw_player(self, window: pygame.Surface) -> None:
         self.player.draw(window)
+
+    def draw_projectiles(self, window: pygame.Surface) -> None:
+        self.playerLaserGroup.draw(window)

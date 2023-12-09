@@ -6,6 +6,9 @@ class State(ABC):
     should_exit: bool = False
     next_state = None
 
+    def __init__(self, game) -> None:
+        self.game = game
+
     @abstractmethod
     def update(self, dt: float, **kwargs) -> None:
         ...

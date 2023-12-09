@@ -51,7 +51,6 @@ def main() -> None:
             main()
 
         game.update(dt)
-        game.fire()
         game.draw(window)
 
         pygame.display.update()

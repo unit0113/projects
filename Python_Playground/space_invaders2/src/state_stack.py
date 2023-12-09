@@ -36,7 +36,6 @@ class StateStack:
                 self.pop()
 
     def draw(self, window: pygame.Surface):
-        window.fill((0, 0, 0))
         for state in self.states:
             state.draw(window)
 
