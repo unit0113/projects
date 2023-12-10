@@ -11,6 +11,7 @@ class StandardLaser(pygame.sprite.Sprite):
         direction: tuple[float, float],
     ) -> None:
         pygame.sprite.Sprite.__init__(self)
+
         self.speed = speed
         self.direction = pygame.math.Vector2(direction)
 
@@ -21,4 +22,10 @@ class StandardLaser(pygame.sprite.Sprite):
         self.rect.midtop = pos
 
     def update(self, dt: float) -> None:
+        """Update game objects in game loop
+
+        Args:
+            dt (float): time since last frame
+        """
+
         self.rect.center += self.speed * self.direction * dt

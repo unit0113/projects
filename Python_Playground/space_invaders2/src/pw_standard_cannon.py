@@ -14,6 +14,12 @@ class StandardCannon(PrimaryWeapon):
     def fire(
         self, ship_pos: tuple[int, int], direction: tuple[int, int]
     ) -> Optional[StandardLaser]:
+        """Returns the projectiles that the ship fired this frame
+
+        Returns:
+            Optional[Projectile]: projectiles fired
+        """
+
         if self._can_fire:
             self.last_shot = pygame.time.get_ticks()
             return StandardLaser(

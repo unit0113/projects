@@ -17,8 +17,20 @@ class PrimaryWeapon(ABC):
 
     @abstractmethod
     def fire(self, muzzle_pos: tuple[int, int]):
+        """Returns the projectiles that the ship fired this frame
+
+        Returns:
+            Optional[Projectile]: projectiles fired
+        """
+
         ...
 
     @property
     def _can_fire(self) -> bool:
+        """Determines whether the weapon is capable of firing
+
+        Returns:
+            bool: if weapon can fire
+        """
+
         return pygame.time.get_ticks() > self.last_shot + self.cooldown

@@ -23,11 +23,10 @@ def init_pygame() -> tuple[pygame.surface.Surface, pygame.time.Clock]:
 def main() -> None:
     window, clock = init_pygame()
     game = Game()
-
-    # Main loop
     prev_time = time.time()
     run = True
 
+    # Main loop
     while run:
         clock.tick(FPS)
         now = time.time()
@@ -50,6 +49,7 @@ def main() -> None:
         if inputs[pygame.K_r]:
             main()
 
+        # Update game
         game.update(dt)
         game.draw(window)
 

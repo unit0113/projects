@@ -11,20 +11,42 @@ class State(ABC):
 
     @abstractmethod
     def update(self, dt: float, **kwargs) -> None:
+        """Update game object in game loop
+
+        Args:
+            dt (float): time since last frame
+        """
+
         ...
 
     @abstractmethod
     def draw(self, window: pygame.Surface) -> None:
+        """Draws to the game window
+
+        Args:
+            window (pygame.Surface): pygame surface to draw on
+        """
+
         ...
 
     @abstractmethod
     def enter(self, **kwargs) -> None:
+        """Actions to perform upon entering the state"""
+
         ...
 
     @abstractmethod
     def exit(self) -> None:
+        """Actions to perform upon exiting the state"""
+
         ...
 
     @abstractmethod
     def process_event(self, event: pygame.event.Event):
+        """Handle specific event
+
+        Args:
+            event (pygame.event.Event): event to handle
+        """
+
         ...

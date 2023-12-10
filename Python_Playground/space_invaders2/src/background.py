@@ -16,6 +16,12 @@ class Background:
         self.foreground_offset: int = 0
 
     def update(self, dt: float):
+        """Update game object in game loop
+
+        Args:
+            dt (float): time since last frame
+        """
+
         self.background_offset += int(dt * self.background_speed)
         self.foreground_offset += int(dt * self.foreground_speed)
 
@@ -25,6 +31,12 @@ class Background:
             self.foreground_offset -= self.height
 
     def draw(self, window: pygame.Surface):
+        """Draws to the game window
+
+        Args:
+            window (pygame.Surface): pygame surface to draw on
+        """
+
         for index in range(3):
             window.blit(
                 self.background,
