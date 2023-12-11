@@ -16,6 +16,7 @@ class TestState(State):
         """
 
         self.game.update_player(dt)
+        self.game.update_enemies(dt)
         self.game.update_projectiles(dt)
 
         self.game.fire()
@@ -29,6 +30,7 @@ class TestState(State):
         """
 
         self.game.draw_projectiles(window)
+        self.game.draw_enemies(window)
         self.game.draw_player(window)
 
     def enter(self, **kwargs) -> None:

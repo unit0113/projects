@@ -1,10 +1,12 @@
 import pygame
+from typing import Callable
 
 from .state_stack import StateStack
 from .background import Background
 from .state_test import TestState
 from .settings import WIDTH, HEIGHT
 from .player_ship import PlayerShip
+from .enemy import Enemy
 
 
 class Game:
@@ -19,6 +21,9 @@ class Game:
 
         # Initialize game asset groups
         self.playerLaserGroup = pygame.sprite.Group()
+        self.enemyGroup = pygame.sprite.Group()
+        self.enemyLaserGroup = pygame.sprite.Group()
+        self.enemyGroup.add(Enemy("bug_3_b", WIDTH // 2, 0))
 
     def set_player(self, player: PlayerShip) -> None:
         """Recieves the player ship from the ship select state
@@ -63,6 +68,15 @@ class Game:
 
         self.player.update(dt)
 
+    def update_enemies(self, dt: float) -> None:
+        """Public method to allow states to update enemies groups
+
+        Args:
+            dt (float): time since last frame
+        """
+
+        self.enemyGroup.update(dt)
+
     def update_projectiles(self, dt: float) -> None:
         """Public method to allow states to update projectile groups
 
@@ -71,25 +85,37 @@ class Game:
         """
 
         self.playerLaserGroup.update(dt)
+        self.enemyLaserGroup.update(dt)
 
     def fire(self) -> None:
         """Public method to allow ships to fire and add the
         resultant projectiles to the appropriate group
         """
 
+        # Get player projectiles
         player_projectiles = self.player.fire()
         if player_projectiles:
             self.playerLaserGroup.add(player_projectiles)
+
+        # Get enemy projectiles
+        for enemy in self.enemyGroup:
+            enemy_projectiles = enemy.fire()
+            if enemy_projectiles:
+                self.enemyLaserGroup.add(enemy_projectiles)
 
     def remove_offscreen_objects(self) -> None:
         """Deletes objects that have fallen off the screen"""
 
         for laser in self.playerLaserGroup:
-            if not self.object_is_onscreen(laser):
+            if not self.object_is_onscreen(laser, [self.is_offscreen_up]):
                 laser.kill()
 
-    def object_is_onscreen(self, obj) -> bool:
-        """Determines whether provide object is off screen
+        for enemy in self.enemyGroup:
+            if not self.object_is_onscreen(enemy, [self.is_offscreen_down]):
+                enemy.kill()
+
+    def object_is_onscreen(self, obj: object, conditionals: list[Callable]) -> bool:
+        """Determines whether provide object is off screen in specified directions
 
         Args:
             obj (_type_): game object to check, must have .rect attribute
@@ -98,9 +124,19 @@ class Game:
             bool: _description_
         """
 
-        return (0 - obj.rect.width <= obj.rect.x <= WIDTH) and (
-            0 - obj.rect.height <= obj.rect.y <= HEIGHT
-        )
+        return all([not conditional(obj) for conditional in conditionals])
+
+    def is_offscreen_up(self, obj: object) -> bool:
+        return 0 > obj.rect.y + obj.rect.height
+
+    def is_offscreen_down(self, obj: object) -> bool:
+        return obj.rect.y > HEIGHT
+
+    def is_offscreen_left(self, obj: object) -> bool:
+        return 0 > obj.rect.x + obj.rect.width
+
+    def is_offscreen_right(self, obj: object) -> bool:
+        return obj.rect.x > WIDTH
 
     def draw(self, window: pygame.Surface) -> None:
         """Draws to the game window
@@ -122,6 +158,15 @@ class Game:
 
         self.player.draw(window)
 
+    def draw_enemies(self, window: pygame.Surface) -> None:
+        """Public method to allow states to draw enemies
+
+        Args:
+            window (pygame.Surface): pygame surface to draw on
+        """
+
+        self.enemyGroup.draw(window)
+
     def draw_projectiles(self, window: pygame.Surface) -> None:
         """Public method to allow states to draw projectiles
 
@@ -130,3 +175,4 @@ class Game:
         """
 
         self.playerLaserGroup.draw(window)
+        self.enemyLaserGroup.draw(window)

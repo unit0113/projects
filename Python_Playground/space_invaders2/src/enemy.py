@@ -1,8 +1,94 @@
 import pygame
 
 from .ship import Ship
+from .enemy_ship_data import ENEMY_SHIP_DATA
+from .settings import FRAME_TIME
+
+from .forward_behavior import ForwardBehavior
+from .stall_behavior import StallBehavior
+from .random_single_fire_behavior import RandomSingleFireBehavior
+from .random_double_tap_fire_behavior import RandomDoubleTapFireBehavior
+from .random_burst_fire_behavior import RandomBurstFireBehavior
+
+BEHAVIORS = {
+    "forward_behavior": ForwardBehavior,
+    "stall_behavior": StallBehavior,
+    "random_single_fire_behavior": RandomSingleFireBehavior,
+    "random_double_tap_fire_behavior": RandomDoubleTapFireBehavior,
+    "random_burst_fire_behavior": RandomBurstFireBehavior,
+}
 
 
-class Enemy(Ship):
-    def __init__(self) -> None:
-        super().__init__()
+class Enemy(Ship, pygame.sprite.Sprite):
+    def __init__(self, ship_type: str, x: int, y: int) -> None:
+        pygame.sprite.Sprite.__init__(self)
+
+        self.max_health = ENEMY_SHIP_DATA[ship_type]["hp"]
+        self.health = self.max_health
+
+        self.sprites = self.load_sprite_sheet(
+            ENEMY_SHIP_DATA[ship_type]["sprite_sheet"], 1, 6
+        )
+
+        # Image and animation data
+        self.orientation = "level"
+        self.frame_index = 0
+        self.image = self.sprites[self.orientation][self.frame_index]
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+        self.last_frame = pygame.time.get_ticks()
+
+        # Weapon data
+        self.load_weapons(ENEMY_SHIP_DATA[ship_type])
+
+        # Behaviors
+        self.movement_behavior = BEHAVIORS[
+            ENEMY_SHIP_DATA[ship_type]["movement_behavior"]
+        ](*ENEMY_SHIP_DATA[ship_type]["movement_behavior_args"])
+        self.fire_behavior = BEHAVIORS[ENEMY_SHIP_DATA[ship_type]["fire_behavior"]](
+            *ENEMY_SHIP_DATA[ship_type]["fire_behavior_args"]
+        )
+
+    def update(self, dt: float) -> None:
+        """Update game object in game loop
+
+        Args:
+            dt (float): time since last frame
+        """
+        self.movement_behavior.update(dt)
+        self.fire_behavior.update(dt)
+        self.rect.center = self.rect.center + self.movement_behavior.get_movement()
+        self.animate()
+
+    def animate(self) -> None:
+        """Controls sprite animation of ship"""
+
+        if pygame.time.get_ticks() > self.last_frame + FRAME_TIME:
+            # Reset frame counter and increment frame
+            self.last_frame = pygame.time.get_ticks()
+            self.frame_index += 1
+            if self.frame_index >= len(self.sprites[self.orientation]):
+                # Loop animation
+                self.frame_index = 0
+
+            self.image = self.sprites[self.orientation][self.frame_index]
+
+    def fire(self):
+        projectiles = []
+        if self.movement_behavior.can_fire() and self.fire_behavior.can_fire():
+            for weapon in self.primary_weapons:
+                projectile = weapon.fire(self.rect.bottomleft, (0, 1))
+                if projectile:
+                    self.fire_behavior.fire()
+                    projectiles.append(projectile)
+
+        return projectiles
+
+    def draw(self, window: pygame.Surface) -> None:
+        """Draws to the game window
+
+        Args:
+            window (pygame.Surface): pygame surface to draw on
+        """
+
+        window.blit(self.image, self.rect)
