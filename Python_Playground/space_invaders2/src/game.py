@@ -23,7 +23,7 @@ class Game:
         self.playerLaserGroup = pygame.sprite.Group()
         self.enemyGroup = pygame.sprite.Group()
         self.enemyLaserGroup = pygame.sprite.Group()
-        self.enemyGroup.add(Enemy("bug_3_b", WIDTH // 2, 0))
+        self.enemyGroup.add(Enemy("bug_3_dt", 0, 50))
 
     def set_player(self, player: PlayerShip) -> None:
         """Recieves the player ship from the ship select state

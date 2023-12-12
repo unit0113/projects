@@ -16,7 +16,7 @@ ENEMY_SHIP_DATA = {
         "sprite_sheet": "bug_3",
         "primary_weapons": [[StandardCannon, ((32, 0), 0, "RedThinLong")]],
         "secondary_weapons": [],
-        "movement_behavior": "forward_behavior",
+        "movement_behavior": "s_behavior",
         "movement_behavior_args": [100],
         "fire_behavior": "random_double_tap_fire_behavior",
         "fire_behavior_args": [750],

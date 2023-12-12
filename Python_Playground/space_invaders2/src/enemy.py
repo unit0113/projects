@@ -6,6 +6,7 @@ from .settings import FRAME_TIME
 
 from .forward_behavior import ForwardBehavior
 from .stall_behavior import StallBehavior
+from .s_behavior import SBehavior
 from .random_single_fire_behavior import RandomSingleFireBehavior
 from .random_double_tap_fire_behavior import RandomDoubleTapFireBehavior
 from .random_burst_fire_behavior import RandomBurstFireBehavior
@@ -13,6 +14,7 @@ from .random_burst_fire_behavior import RandomBurstFireBehavior
 BEHAVIORS = {
     "forward_behavior": ForwardBehavior,
     "stall_behavior": StallBehavior,
+    "s_behavior": SBehavior,
     "random_single_fire_behavior": RandomSingleFireBehavior,
     "random_double_tap_fire_behavior": RandomDoubleTapFireBehavior,
     "random_burst_fire_behavior": RandomBurstFireBehavior,
@@ -29,13 +31,14 @@ class Enemy(Ship, pygame.sprite.Sprite):
         self.sprites = self.load_sprite_sheet(
             ENEMY_SHIP_DATA[ship_type]["sprite_sheet"], 1, 6
         )
+        self.pos = pygame.Vector2(x, y)
 
         # Image and animation data
         self.orientation = "level"
         self.frame_index = 0
         self.image = self.sprites[self.orientation][self.frame_index]
         self.rect = self.image.get_rect()
-        self.rect.center = (x, y)
+        self.rect.center = self.pos
         self.last_frame = pygame.time.get_ticks()
 
         # Weapon data
@@ -57,7 +60,8 @@ class Enemy(Ship, pygame.sprite.Sprite):
         """
         self.movement_behavior.update(dt)
         self.fire_behavior.update(dt)
-        self.rect.center = self.rect.center + self.movement_behavior.get_movement()
+        self.pos += self.movement_behavior.get_movement()
+        self.rect.center = self.pos
         self.animate()
 
     def animate(self) -> None:
