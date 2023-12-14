@@ -23,10 +23,8 @@ BEHAVIORS = {
 
 class Enemy(Ship, pygame.sprite.Sprite):
     def __init__(self, ship_type: str, x: int, y: int) -> None:
+        Ship.__init__(self, ENEMY_SHIP_DATA[ship_type]["hp"])
         pygame.sprite.Sprite.__init__(self)
-
-        self.max_health = ENEMY_SHIP_DATA[ship_type]["hp"]
-        self.health = self.max_health
 
         self.sprites = self.load_sprite_sheet(
             ENEMY_SHIP_DATA[ship_type]["sprite_sheet"], 1, 6
@@ -37,6 +35,7 @@ class Enemy(Ship, pygame.sprite.Sprite):
         self.orientation = "level"
         self.frame_index = 0
         self.image = self.sprites[self.orientation][self.frame_index]
+        self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
         self.rect.center = self.pos
         self.last_frame = pygame.time.get_ticks()

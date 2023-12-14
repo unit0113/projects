@@ -4,10 +4,19 @@ from abc import ABC, abstractmethod
 
 class PrimaryWeapon(ABC):
     def __init__(
-        self, muzzle_pos_offset: tuple[int, int], cooldown: int, projectile_type: str
+        self,
+        muzzle_pos_offset: tuple[int, int],
+        cooldown: int,
+        projectile_type: str,
+        base_dmg: int,
+        muzzle_velocity: int,
+        dispersion: float,
     ) -> None:
         self.muzzle_pos_offset = muzzle_pos_offset
         self.cooldown = cooldown
+        self.dmg = base_dmg
+        self.muzzle_velocity = muzzle_velocity
+        self.dispersion = dispersion
         self.last_shot = pygame.time.get_ticks()
 
         self.projectile_image = pygame.image.load(
@@ -23,6 +32,11 @@ class PrimaryWeapon(ABC):
             Optional[Projectile]: projectiles fired
         """
 
+        ...
+
+    @abstractmethod
+    def upgrade(self) -> None:
+        """Upgrade weapon stats"""
         ...
 
     @property

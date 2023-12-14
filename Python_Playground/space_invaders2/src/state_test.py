@@ -15,6 +15,7 @@ class TestState(State):
             dt (float): time since last frame
         """
 
+        self.game.check_collisions()
         self.game.update_player(dt)
         self.game.update_enemies(dt)
         self.game.update_projectiles(dt)

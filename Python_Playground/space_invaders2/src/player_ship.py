@@ -7,9 +7,8 @@ from .settings import WIDTH, HEIGHT, FRAME_TIME
 
 class PlayerShip(Ship):
     def __init__(self, ship_type: str) -> None:
+        Ship.__init__(self, PLAYER_SHIP_DATA[ship_type]["hp"])
         self.speed = PLAYER_SHIP_DATA[ship_type]["speed"]
-        self.max_health = PLAYER_SHIP_DATA[ship_type]["hp"]
-        self.health = self.max_health
 
         self.sprites = self.load_sprite_sheet(
             PLAYER_SHIP_DATA[ship_type]["sprite_sheet"], 5, 4
@@ -19,13 +18,14 @@ class PlayerShip(Ship):
         self.orientation = "level"
         self.frame_index = 0
         self.reset_image()
+        self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH // 2, HEIGHT // 2)
         self.last_frame = pygame.time.get_ticks()
 
         # Weapon data
         self.is_firing_primary = False
-        self.load_weapons(PLAYER_SHIP_DATA[ship_type])
+        self.load_weapons(PLAYER_SHIP_DATA[ship_type], True)
 
     def update(self, dt: float) -> None:
         """Update game objects in game loop

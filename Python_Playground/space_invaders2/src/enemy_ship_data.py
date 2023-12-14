@@ -1,10 +1,8 @@
-from .pw_standard_cannon import StandardCannon
-
 ENEMY_SHIP_DATA = {
     "bug_3": {
         "hp": 25,
         "sprite_sheet": "bug_3",
-        "primary_weapons": [[StandardCannon, ((32, 0), 0, "RedThinLong")]],
+        "primary_weapons": [["standard", (32, 0)]],
         "secondary_weapons": [],
         "movement_behavior": "forward_behavior",
         "movement_behavior_args": [100],
@@ -14,7 +12,7 @@ ENEMY_SHIP_DATA = {
     "bug_3_dt": {
         "hp": 25,
         "sprite_sheet": "bug_3",
-        "primary_weapons": [[StandardCannon, ((32, 0), 0, "RedThinLong")]],
+        "primary_weapons": [["standard", (32, 0)]],
         "secondary_weapons": [],
         "movement_behavior": "s_behavior",
         "movement_behavior_args": [100],
@@ -24,7 +22,7 @@ ENEMY_SHIP_DATA = {
     "bug_3_b": {
         "hp": 25,
         "sprite_sheet": "bug_3",
-        "primary_weapons": [[StandardCannon, ((32, 0), 0, "RedThinLong")]],
+        "primary_weapons": [["standard", (32, 0)]],
         "secondary_weapons": [],
         "movement_behavior": "stall_behavior",
         "movement_behavior_args": [100],

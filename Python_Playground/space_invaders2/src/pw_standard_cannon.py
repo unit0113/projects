@@ -7,9 +7,22 @@ from .laser_standard import StandardLaser
 
 class StandardCannon(PrimaryWeapon):
     def __init__(
-        self, muzzle_pos_offset: tuple[int, int], cooldown: int, projectile_type: str
+        self,
+        muzzle_pos_offset: tuple[int, int],
+        cooldown: int,
+        projectile_type: str,
+        base_dmg: int,
+        muzzle_velocity: int,
+        dispersion: float,
     ) -> None:
-        super().__init__(muzzle_pos_offset, cooldown, projectile_type)
+        super().__init__(
+            muzzle_pos_offset,
+            cooldown,
+            projectile_type,
+            base_dmg,
+            muzzle_velocity,
+            dispersion,
+        )
 
     def fire(
         self, ship_pos: tuple[int, int], direction: tuple[int, int]
@@ -28,6 +41,12 @@ class StandardCannon(PrimaryWeapon):
                     ship_pos[1] + self.muzzle_pos_offset[1],
                 ),
                 self.projectile_image,
-                1000,
+                self.muzzle_velocity,
                 direction,
+                self.dmg,
+                self.dispersion,
             )
+
+    def upgrade(self) -> None:
+        self.cooldown *= 0.95
+        self.dmg *= 1.05

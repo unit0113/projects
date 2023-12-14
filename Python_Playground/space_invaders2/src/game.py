@@ -23,7 +23,7 @@ class Game:
         self.playerLaserGroup = pygame.sprite.Group()
         self.enemyGroup = pygame.sprite.Group()
         self.enemyLaserGroup = pygame.sprite.Group()
-        self.enemyGroup.add(Enemy("bug_3_dt", 0, 50))
+        self.enemyGroup.add(Enemy("bug_3_b", WIDTH // 2, 0))
 
     def set_player(self, player: PlayerShip) -> None:
         """Recieves the player ship from the ship select state
@@ -86,6 +86,46 @@ class Game:
 
         self.playerLaserGroup.update(dt)
         self.enemyLaserGroup.update(dt)
+
+    def check_collisions(self) -> None:
+        """Public method to determine collisions and calculate damage done"""
+
+        # Check damage to enemies
+        for enemy in self.enemyGroup:
+            for laser in self.playerLaserGroup:
+                if self.is_collision(enemy, laser):
+                    enemy.take_damage(laser.get_damage())
+                    laser.kill()
+                    if enemy.is_dead:
+                        break
+            if enemy.is_dead:
+                pass
+
+        # Check damage to player
+        for laser in self.enemyLaserGroup:
+            if self.is_collision(self.player, laser):
+                self.player.take_damage(laser.get_damage())
+                laser.kill()
+
+        # Check ship to ship collision
+        for enemy in self.enemyGroup:
+            if self.is_collision(enemy, self.player):
+                self.player.take_damage(enemy.max_health)
+                enemy.kill()
+
+    def is_collision(self, obj1: object, obj2: object) -> bool:
+        """Effeciently check for object collisions
+
+        Args:
+            obj1 (object): game object
+            obj2 (object): game object
+
+        Returns:
+            bool: if objects are colliding
+        """
+        return pygame.Rect.colliderect(obj1.rect, obj2.rect) and obj1.mask.overlap(
+            obj2.mask, (obj2.rect.x - obj1.rect.x, obj2.rect.y - obj1.rect.y)
+        )
 
     def fire(self) -> None:
         """Public method to allow ships to fire and add the

@@ -1,10 +1,13 @@
 import pygame
 from abc import ABC, abstractmethod
 
+from .primary_weapon_factory import PrimaryWeaponFactory
+
 
 class Ship(ABC):
-    def __init__(self) -> None:
-        pass
+    def __init__(self, health: float) -> None:
+        self.health = health
+        self.max_health = health
 
     @abstractmethod
     def update(self, dt: float) -> None:
@@ -58,7 +61,7 @@ class Ship(ABC):
 
         return sprites
 
-    def load_weapons(self, ship_data: dict) -> None:
+    def load_weapons(self, ship_data: dict, is_player: bool = False) -> None:
         """Parse and create the weapons as specified in the ship_data
 
         Args:
@@ -66,5 +69,15 @@ class Ship(ABC):
         """
 
         self.primary_weapons = []
-        for weapon, args in ship_data["primary_weapons"]:
-            self.primary_weapons.append(weapon(*args))
+        for weapon, offset in ship_data["primary_weapons"]:
+            self.primary_weapons.append(
+                PrimaryWeaponFactory.get_weapon(weapon, offset, is_player)
+            )
+
+    def take_damage(self, damage: float) -> None:
+        self.health -= damage
+        print(self.health)
+
+    @property
+    def is_dead(self) -> bool:
+        return self.health <= 0
