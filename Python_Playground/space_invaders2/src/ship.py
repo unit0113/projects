@@ -8,6 +8,7 @@ class Ship(ABC):
     def __init__(self, health: float) -> None:
         self.health = health
         self.max_health = health
+        self.shield = None
 
     @abstractmethod
     def update(self, dt: float) -> None:
@@ -76,8 +77,11 @@ class Ship(ABC):
 
     def take_damage(self, damage: float) -> None:
         self.health -= damage
-        print(self.health)
 
     @property
     def is_dead(self) -> bool:
         return self.health <= 0
+
+    @property
+    def shield_active(self) -> bool:
+        return self.shield and self.shield.active

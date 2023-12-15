@@ -13,7 +13,9 @@ class PrimaryWeapon(ABC):
         dispersion: float,
     ) -> None:
         self.muzzle_pos_offset = muzzle_pos_offset
+        self.base_cooldown = cooldown
         self.cooldown = cooldown
+        self.base_dmg = base_dmg
         self.dmg = base_dmg
         self.muzzle_velocity = muzzle_velocity
         self.dispersion = dispersion
@@ -38,6 +40,13 @@ class PrimaryWeapon(ABC):
     def upgrade(self) -> None:
         """Upgrade weapon stats"""
         ...
+
+    def set_upgrade_level(self, level) -> None:
+        self.dmg = self.base_dmg
+        self.cooldown = self.base_cooldown
+
+        for _ in range(level - 1):
+            self.upgrade()
 
     @property
     def _can_fire(self) -> bool:

@@ -3,6 +3,7 @@ import pygame
 from .ship import Ship
 from .player_ship_data import PLAYER_SHIP_DATA
 from .settings import WIDTH, HEIGHT, FRAME_TIME
+from .shield import Shield
 
 
 class PlayerShip(Ship):
@@ -27,6 +28,8 @@ class PlayerShip(Ship):
         self.is_firing_primary = False
         self.load_weapons(PLAYER_SHIP_DATA[ship_type], True)
 
+        self.shield = Shield(100, 1, 1000, self.image.get_width() // 2)
+
     def update(self, dt: float) -> None:
         """Update game objects in game loop
 
@@ -36,6 +39,8 @@ class PlayerShip(Ship):
 
         self.parse_control_input(dt)
         self.animate()
+        if self.shield:
+            self.shield.update(self.rect.center)
 
     def animate(self) -> None:
         """Controls sprite animation of player ship"""
@@ -67,6 +72,7 @@ class PlayerShip(Ship):
         """
 
         window.blit(self.image, self.rect)
+        self.shield.draw(window)
 
     def parse_control_input(self, dt: float) -> None:
         """Moves player based on control input. Sets firing flag if player is firing

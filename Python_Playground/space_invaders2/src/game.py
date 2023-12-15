@@ -103,7 +103,12 @@ class Game:
 
         # Check damage to player
         for laser in self.enemyLaserGroup:
-            if self.is_collision(self.player, laser):
+            if self.player.shield_active and pygame.sprite.collide_circle(
+                self.player.shield, laser
+            ):
+                self.player.shield.take_damage(laser.get_damage())
+                laser.kill()
+            elif self.is_collision(self.player, laser):
                 self.player.take_damage(laser.get_damage())
                 laser.kill()
 
@@ -148,6 +153,10 @@ class Game:
 
         for laser in self.playerLaserGroup:
             if not self.object_is_onscreen(laser, [self.is_offscreen_up]):
+                laser.kill()
+
+        for laser in self.enemyLaserGroup:
+            if not self.object_is_onscreen(laser, [self.is_offscreen_down]):
                 laser.kill()
 
         for enemy in self.enemyGroup:
