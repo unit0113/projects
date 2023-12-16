@@ -33,11 +33,12 @@ class Shield:
         self.current_strength = max(0, self.current_strength - damage)
         self.last_hit = pygame.time.get_ticks()
 
-    def update(self, pos: tuple[int, int]) -> None:
+    def update(self, pos: tuple[int, int], last_ship_hit: int) -> None:
         self.rect.center = pos
         if (
             self.current_strength < self.strength
-            and pygame.time.get_ticks() - self.last_hit > self.regen_cooldown
+            and pygame.time.get_ticks() - max(self.last_hit, last_ship_hit)
+            > self.regen_cooldown
         ):
             self.current_strength = min(
                 self.strength, self.current_strength + self.regen

@@ -8,8 +8,7 @@ from .shield import Shield
 
 class PlayerShip(Ship):
     def __init__(self, ship_type: str) -> None:
-        Ship.__init__(self, PLAYER_SHIP_DATA[ship_type]["hp"])
-        self.speed = PLAYER_SHIP_DATA[ship_type]["speed"]
+        Ship.__init__(self, PLAYER_SHIP_DATA[ship_type])
 
         self.sprites = self.load_sprite_sheet(
             PLAYER_SHIP_DATA[ship_type]["sprite_sheet"], 5, 4
@@ -26,9 +25,13 @@ class PlayerShip(Ship):
 
         # Weapon data
         self.is_firing_primary = False
+        self.is_firing_secondary = False
         self.load_weapons(PLAYER_SHIP_DATA[ship_type], True)
 
-        self.shield = Shield(100, 1, 1000, self.image.get_width() // 2)
+        if PLAYER_SHIP_DATA[ship_type]["shield_args"]:
+            self.shield = Shield(
+                *PLAYER_SHIP_DATA[ship_type]["shield_args"], self.image.get_width() // 2
+            )
 
     def update(self, dt: float) -> None:
         """Update game objects in game loop
@@ -40,7 +43,7 @@ class PlayerShip(Ship):
         self.parse_control_input(dt)
         self.animate()
         if self.shield:
-            self.shield.update(self.rect.center)
+            self.shield.update(self.rect.center, self.last_hit)
 
     def animate(self) -> None:
         """Controls sprite animation of player ship"""
@@ -72,7 +75,8 @@ class PlayerShip(Ship):
         """
 
         window.blit(self.image, self.rect)
-        self.shield.draw(window)
+        if self.shield:
+            self.shield.draw(window)
 
     def parse_control_input(self, dt: float) -> None:
         """Moves player based on control input. Sets firing flag if player is firing
@@ -84,6 +88,7 @@ class PlayerShip(Ship):
         self.prev_orientation = self.orientation
         self.orientation = "level"
         self.is_firing_primary = False
+        self.is_firing_secondary = False
 
         keys = pygame.key.get_pressed()
         # Parse Movement
@@ -98,8 +103,13 @@ class PlayerShip(Ship):
             self.player_right(dt)
 
         # Parse firing state
-        if keys[pygame.K_SPACE]:
+        if keys[pygame.K_SPACE] or keys[pygame.K_z]:
             self.is_firing_primary = True
+            self.is_firing_secondary = True
+        elif keys[pygame.K_x]:
+            self.is_firing_primary = True
+        elif keys[pygame.K_c]:
+            self.is_firing_secondary = True
 
     def player_up(self, dt: float) -> None:
         """Moves player up
@@ -156,6 +166,12 @@ class PlayerShip(Ship):
         projectiles = []
         if self.is_firing_primary:
             for weapon in self.primary_weapons:
+                projectile = weapon.fire(self.rect.topleft, (0, -1))
+                if projectile:
+                    projectiles.append(projectile)
+
+        if self.is_firing_secondary:
+            for weapon in self.secondary_weapons:
                 projectile = weapon.fire(self.rect.topleft, (0, -1))
                 if projectile:
                     projectiles.append(projectile)

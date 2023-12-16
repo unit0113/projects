@@ -17,5 +17,5 @@ bomb, bomb upgrades (capacity, damage, AOE)
 power ups
 
 particle effects on hits/deaths
-utlities (turret, mines, activatable shield battery, repair bots, bomb fabricator, increase fire rate/damage (turbo mode), absorb shield dmg to reload)
+utlities (turret, mines, activatible shield battery, repair bots, bomb fabricator, increase fire rate/damage (turbo mode), absorb shield dmg to reload)
 tutorial screen/State

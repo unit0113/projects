@@ -93,7 +93,12 @@ class Game:
         # Check damage to enemies
         for enemy in self.enemyGroup:
             for laser in self.playerLaserGroup:
-                if self.is_collision(enemy, laser):
+                if enemy.shield_active and pygame.sprite.collide_circle(
+                    enemy.shield, laser
+                ):
+                    enemy.shield.take_damage(laser.get_damage())
+                    laser.kill()
+                elif self.is_collision(enemy, laser):
                     enemy.take_damage(laser.get_damage())
                     laser.kill()
                     if enemy.is_dead:
@@ -214,7 +219,8 @@ class Game:
             window (pygame.Surface): pygame surface to draw on
         """
 
-        self.enemyGroup.draw(window)
+        for enemy in self.enemyGroup:
+            enemy.draw(window)
 
     def draw_projectiles(self, window: pygame.Surface) -> None:
         """Public method to allow states to draw projectiles

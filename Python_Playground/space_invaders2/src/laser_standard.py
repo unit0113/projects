@@ -16,9 +16,11 @@ class StandardLaser(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
 
         self.speed = speed
-        self.direction = pygame.math.Vector2(direction).rotate(
-            random.randrange(-dispersion, dispersion)
-        )
+        self.direction = pygame.math.Vector2(direction)
+        if dispersion:
+            self.direction = self.direction.rotate(
+                random.randrange(-dispersion, dispersion)
+            )
         self.damage = damage
 
         # Create image

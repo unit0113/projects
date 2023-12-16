@@ -11,6 +11,8 @@ from .random_single_fire_behavior import RandomSingleFireBehavior
 from .random_double_tap_fire_behavior import RandomDoubleTapFireBehavior
 from .random_burst_fire_behavior import RandomBurstFireBehavior
 
+from .shield import Shield
+
 BEHAVIORS = {
     "forward_behavior": ForwardBehavior,
     "stall_behavior": StallBehavior,
@@ -23,7 +25,7 @@ BEHAVIORS = {
 
 class Enemy(Ship, pygame.sprite.Sprite):
     def __init__(self, ship_type: str, x: int, y: int) -> None:
-        Ship.__init__(self, ENEMY_SHIP_DATA[ship_type]["hp"])
+        Ship.__init__(self, ENEMY_SHIP_DATA[ship_type])
         pygame.sprite.Sprite.__init__(self)
 
         self.sprites = self.load_sprite_sheet(
@@ -46,10 +48,17 @@ class Enemy(Ship, pygame.sprite.Sprite):
         # Behaviors
         self.movement_behavior = BEHAVIORS[
             ENEMY_SHIP_DATA[ship_type]["movement_behavior"]
-        ](*ENEMY_SHIP_DATA[ship_type]["movement_behavior_args"])
+        ](self.speed)
         self.fire_behavior = BEHAVIORS[ENEMY_SHIP_DATA[ship_type]["fire_behavior"]](
             *ENEMY_SHIP_DATA[ship_type]["fire_behavior_args"]
         )
+
+        # Load shield
+        if ENEMY_SHIP_DATA[ship_type]["shield_args"]:
+            self.shield = Shield(
+                *ENEMY_SHIP_DATA[ship_type]["shield_args"],
+                self.image.get_width() // 1.5
+            )
 
     def update(self, dt: float) -> None:
         """Update game object in game loop
@@ -62,6 +71,8 @@ class Enemy(Ship, pygame.sprite.Sprite):
         self.pos += self.movement_behavior.get_movement()
         self.rect.center = self.pos
         self.animate()
+        if self.shield:
+            self.shield.update(self.rect.center, self.last_hit)
 
     def animate(self) -> None:
         """Controls sprite animation of ship"""
@@ -95,3 +106,5 @@ class Enemy(Ship, pygame.sprite.Sprite):
         """
 
         window.blit(self.image, self.rect)
+        if self.shield:
+            self.shield.draw(window)

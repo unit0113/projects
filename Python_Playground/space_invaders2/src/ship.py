@@ -1,14 +1,18 @@
 import pygame
 from abc import ABC, abstractmethod
 
-from .primary_weapon_factory import PrimaryWeaponFactory
+from .weapon_factories import PrimaryWeaponFactory, SecondaryWeaponFactory
 
 
 class Ship(ABC):
-    def __init__(self, health: float) -> None:
-        self.health = health
-        self.max_health = health
+    def __init__(self, ship_data: dict) -> None:
+        self.health = ship_data["hp"]
+        self.max_health = self.health
+        self.speed = ship_data["speed"]
+        self.secondary_offsets = ship_data["secondary_offsets"]
+        self.projectile_color = ship_data["projectile_color"]
         self.shield = None
+        self.last_hit = 0
 
     @abstractmethod
     def update(self, dt: float) -> None:
@@ -72,11 +76,22 @@ class Ship(ABC):
         self.primary_weapons = []
         for weapon, offset in ship_data["primary_weapons"]:
             self.primary_weapons.append(
-                PrimaryWeaponFactory.get_weapon(weapon, offset, is_player)
+                PrimaryWeaponFactory.get_weapon(
+                    weapon, offset, self.projectile_color, is_player
+                )
+            )
+
+        self.secondary_weapons = []
+        for weapon in ship_data["secondary_weapons"]:
+            self.secondary_weapons.extend(
+                SecondaryWeaponFactory.get_weapon(
+                    weapon, self.secondary_offsets, self.projectile_color, is_player
+                )
             )
 
     def take_damage(self, damage: float) -> None:
         self.health -= damage
+        self.last_hit = pygame.time.get_ticks()
 
     @property
     def is_dead(self) -> bool:
