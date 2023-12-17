@@ -30,7 +30,7 @@ ENEMY_SHIP_DATA = {
         "hp": 25,
         "sprite_sheet": "bug_3",
         "primary_weapons": [["standard", (32, 0)]],
-        "secondary_weapons": [],
+        "secondary_weapons": ["side_cannon"],
         "secondary_offsets": [(20, 16), (44, 16)],
         "projectile_color": "Red",
         "movement_behavior": "stall_behavior",

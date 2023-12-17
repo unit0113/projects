@@ -172,8 +172,10 @@ class PlayerShip(Ship):
 
         if self.is_firing_secondary:
             for weapon in self.secondary_weapons:
-                projectile = weapon.fire(self.rect.topleft, (0, -1))
-                if projectile:
-                    projectiles.append(projectile)
+                side_projectiles = weapon.fire(self.rect.topleft, (0, -1))
+                if side_projectiles:
+                    for projectile in side_projectiles:
+                        if projectile:
+                            projectiles.append(projectile)
 
         return projectiles

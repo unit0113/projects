@@ -83,7 +83,7 @@ class Ship(ABC):
 
         self.secondary_weapons = []
         for weapon in ship_data["secondary_weapons"]:
-            self.secondary_weapons.extend(
+            self.secondary_weapons.append(
                 SecondaryWeaponFactory.get_weapon(
                     weapon, self.secondary_offsets, self.projectile_color, is_player
                 )

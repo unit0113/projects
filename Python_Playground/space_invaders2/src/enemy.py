@@ -95,6 +95,10 @@ class Enemy(Ship, pygame.sprite.Sprite):
                 if projectile:
                     self.fire_behavior.fire()
                     projectiles.append(projectile)
+            for weapon in self.secondary_weapons:
+                projectile = weapon.fire(self.rect.topleft, (0, 1))
+                if projectile:
+                    projectiles.append(projectile)
 
         return projectiles
 

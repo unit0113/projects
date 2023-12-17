@@ -10,7 +10,7 @@ class StandardLaser(pygame.sprite.Sprite):
         image: pygame.Surface,
         speed: int,
         direction: tuple[float, float],
-        damage: float,
+        damages: tuple[float, float],
         dispersion: float,
     ) -> None:
         pygame.sprite.Sprite.__init__(self)
@@ -21,7 +21,7 @@ class StandardLaser(pygame.sprite.Sprite):
             self.direction = self.direction.rotate(
                 random.randrange(-dispersion, dispersion)
             )
-        self.damage = damage
+        self.shield_damage, self.ship_damage = damages
 
         # Create image
         angle = math.degrees(math.atan2(-self.direction[1], self.direction[0]))
@@ -30,14 +30,28 @@ class StandardLaser(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.midtop = pos
 
-    def update(self, dt: float) -> None:
-        """Update game objects in game loop
+    def update(self, dt: float, enemies: pygame.sprite.Group = None) -> None:
+        """Update game object in game loop
 
         Args:
             dt (float): time since last frame
+            enemies (pygame.sprite.Group): enemies currently in game, unused
         """
 
         self.rect.center += self.speed * self.direction * dt
 
-    def get_damage(self) -> float:
-        return self.damage
+    def get_shield_damage(self) -> float:
+        """Getter for shield damage
+
+        Returns:
+            float: damage done to shields
+        """
+        return self.shield_damage
+
+    def get_ship_damage(self) -> float:
+        """Getter for ship damage
+
+        Returns:
+            float: damage done to ships
+        """
+        return self.ship_damage
