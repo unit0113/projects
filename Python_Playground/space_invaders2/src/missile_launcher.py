@@ -8,15 +8,17 @@ class MissileLauncher:
         self,
         offsets: list[tuple[int, int]],
         cooldown: float,
-        base_dmg: int,
+        base_damages: tuple[float, float],
         missile_speed: int,
         missile_type: str,
+        direction: tuple[float, float],
     ) -> None:
-        self.base_dmg = base_dmg
-        self.dmg = base_dmg
+        self.base_damages = base_damages
+        self.damages = base_damages
         self.base_cooldown = cooldown
         self.cooldown = cooldown
         self.offsets = offsets
+        self.direction = direction
         self.missile_speed = missile_speed
         self.last_shot = 0
         self.load_sprites(missile_type)
@@ -32,20 +34,22 @@ class MissileLauncher:
         self.sprites = []
 
         for column in range(num_cols):
-            self.sprites.append(
-                sprite_sheet.subsurface(column * size_h, 0, size_h, size_v)
-            )
+            sprite = sprite_sheet.subsurface(column * size_h, 0, size_h, size_v)
+            # If owner is enemy
+            if self.direction == (0, 1):
+                sprite = pygame.transform.rotate(sprite, 180)
+            self.sprites.append(sprite)
 
-    def fire(self, ship_pos: tuple[int, int], direction: tuple[int, int]):
+    def fire(self, ship_pos: tuple[int, int]):
         if pygame.time.get_ticks() > self.last_shot + self.cooldown:
             self.last_shot = pygame.time.get_ticks()
             return [
                 Missile(
                     self.sprites,
                     (ship_pos[0] + offset[0], ship_pos[1] + offset[1]),
-                    self.dmg,
+                    self.damages,
                     self.missile_speed,
-                    direction,
+                    self.direction,
                 )
                 for offset in self.offsets
             ]

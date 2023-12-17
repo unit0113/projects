@@ -6,9 +6,10 @@ from .settings import WIDTH, HEIGHT, FRAME_TIME
 from .shield import Shield
 
 
-class PlayerShip(Ship):
+class PlayerShip(Ship, pygame.sprite.Sprite):
     def __init__(self, ship_type: str) -> None:
         Ship.__init__(self, PLAYER_SHIP_DATA[ship_type])
+        pygame.sprite.Sprite.__init__(self)
 
         self.sprites = self.load_sprite_sheet(
             PLAYER_SHIP_DATA[ship_type]["sprite_sheet"], 5, 4
@@ -166,13 +167,13 @@ class PlayerShip(Ship):
         projectiles = []
         if self.is_firing_primary:
             for weapon in self.primary_weapons:
-                projectile = weapon.fire(self.rect.topleft, (0, -1))
+                projectile = weapon.fire(self.rect.topleft)
                 if projectile:
                     projectiles.append(projectile)
 
         if self.is_firing_secondary:
             for weapon in self.secondary_weapons:
-                side_projectiles = weapon.fire(self.rect.topleft, (0, -1))
+                side_projectiles = weapon.fire(self.rect.topleft)
                 if side_projectiles:
                     for projectile in side_projectiles:
                         if projectile:

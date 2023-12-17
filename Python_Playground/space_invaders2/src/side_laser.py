@@ -10,10 +10,12 @@ class SideLaser:
         base_damages: tuple[float, float],
         muzzle_velocity: int,
         dispersion: float,
+        direction: tuple[int, int],
     ) -> None:
         self.base_damages = base_damages
         self.base_cooldown = cooldown
         self.offsets = offsets
+        self.direction = direction
         self.cannons = [
             LaserCannon(
                 offset,
@@ -22,9 +24,10 @@ class SideLaser:
                 base_damages,
                 muzzle_velocity,
                 dispersion,
+                self.direction,
             )
             for offset in offsets
         ]
 
-    def fire(self, ship_pos: tuple[int, int], direction: tuple[int, int]):
-        return [cannon.fire(ship_pos, direction) for cannon in self.cannons]
+    def fire(self, ship_pos: tuple[int, int]):
+        return [cannon.fire(ship_pos) for cannon in self.cannons]

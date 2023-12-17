@@ -16,14 +16,16 @@ class Game:
             self.assets["background"], self.assets["foreground"]
         )
 
-        self.state_stack = StateStack()
-        self.state_stack.push(TestState(self))
-
         # Initialize game asset groups
         self.playerProjectileGroup = pygame.sprite.Group()
         self.enemyGroup = pygame.sprite.Group()
         self.enemyProjectileGroup = pygame.sprite.Group()
         self.enemyGroup.add(Enemy("bug_3_b", WIDTH // 2, 0))
+        self.playerGroup = pygame.sprite.Group()
+
+        # Initialize state stack
+        self.state_stack = StateStack()
+        self.state_stack.push(TestState(self))
 
     def set_player(self, player: PlayerShip) -> None:
         """Recieves the player ship from the ship select state
@@ -32,7 +34,8 @@ class Game:
             player (PlayerShip): the players ship
         """
 
-        self.player = player
+        self.playerGroup.empty()
+        self.playerGroup.add(player)
 
     def load_assets(self) -> None:
         """Loads and stores game assets"""
@@ -66,7 +69,7 @@ class Game:
             dt (float): time since last frame
         """
 
-        self.player.update(dt)
+        self.playerGroup.update(dt)
 
     def update_enemies(self, dt: float) -> None:
         """Public method to allow states to update enemies groups
@@ -85,43 +88,41 @@ class Game:
         """
 
         self.playerProjectileGroup.update(dt, self.enemyGroup)
-        self.enemyProjectileGroup.update(dt, self.enemyGroup)
+        self.enemyProjectileGroup.update(dt, self.playerGroup)
 
     def check_collisions(self) -> None:
         """Public method to determine collisions and calculate damage done"""
 
         # Check damage to enemies
         for enemy in self.enemyGroup:
-            for laser in self.playerProjectileGroup:
+            for projectile in self.playerProjectileGroup:
                 if enemy.shield_active and pygame.sprite.collide_circle(
-                    enemy.shield, laser
+                    enemy.shield, projectile
                 ):
-                    enemy.shield.take_damage(laser.get_shield_damage())
-                    laser.kill()
-                elif self.is_collision(enemy, laser):
-                    enemy.take_damage(laser.get_ship_damage())
-                    laser.kill()
+                    enemy.shield.take_damage(projectile.get_shield_damage())
+                elif self.is_collision(enemy, projectile):
+                    enemy.take_damage(projectile.get_ship_damage())
                     if enemy.is_dead:
                         break
             if enemy.is_dead:
                 pass
 
         # Check damage to player
-        for laser in self.enemyProjectileGroup:
-            if self.player.shield_active and pygame.sprite.collide_circle(
-                self.player.shield, laser
-            ):
-                self.player.shield.take_damage(laser.get_shield_damage())
-                laser.kill()
-            elif self.is_collision(self.player, laser):
-                self.player.take_damage(laser.get_ship_damage())
-                laser.kill()
+        for player in self.playerGroup:
+            for projectile in self.enemyProjectileGroup:
+                if player.shield_active and pygame.sprite.collide_circle(
+                    player.shield, projectile
+                ):
+                    player.shield.take_damage(projectile.get_shield_damage())
+                elif self.is_collision(player, projectile):
+                    player.take_damage(projectile.get_ship_damage())
 
         # Check ship to ship collision
-        for enemy in self.enemyGroup:
-            if self.is_collision(enemy, self.player):
-                self.player.take_damage(enemy.max_health)
-                enemy.kill()
+        for player in self.playerGroup:
+            for enemy in self.enemyGroup:
+                if self.is_collision(enemy, player):
+                    player.take_damage(enemy.max_health)
+                    enemy.kill()
 
     def is_collision(self, obj1: object, obj2: object) -> bool:
         """Effeciently check for object collisions
@@ -143,9 +144,10 @@ class Game:
         """
 
         # Get player projectiles
-        player_projectiles = self.player.fire()
-        if player_projectiles:
-            self.playerProjectileGroup.add(player_projectiles)
+        for player in self.playerGroup:
+            player_projectiles = player.fire()
+            if player_projectiles:
+                self.playerProjectileGroup.add(player_projectiles)
 
         # Get enemy projectiles
         for enemy in self.enemyGroup:
@@ -156,13 +158,13 @@ class Game:
     def remove_offscreen_objects(self) -> None:
         """Deletes objects that have fallen off the screen"""
 
-        for laser in self.playerProjectileGroup:
-            if not self.object_is_onscreen(laser, [self.is_offscreen_up]):
-                laser.kill()
+        for projectile in self.playerProjectileGroup:
+            if not self.object_is_onscreen(projectile, [self.is_offscreen_up]):
+                projectile.kill()
 
-        for laser in self.enemyProjectileGroup:
-            if not self.object_is_onscreen(laser, [self.is_offscreen_down]):
-                laser.kill()
+        for projectile in self.enemyProjectileGroup:
+            if not self.object_is_onscreen(projectile, [self.is_offscreen_down]):
+                projectile.kill()
 
         for enemy in self.enemyGroup:
             if not self.object_is_onscreen(enemy, [self.is_offscreen_down]):
@@ -210,7 +212,8 @@ class Game:
             window (pygame.Surface): pygame surface to draw on
         """
 
-        self.player.draw(window)
+        for player in self.playerGroup:
+            player.draw(window)
 
     def draw_enemies(self, window: pygame.Surface) -> None:
         """Public method to allow states to draw enemies

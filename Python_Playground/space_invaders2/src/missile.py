@@ -1,5 +1,6 @@
 import pygame
 import math
+
 from .settings import (
     MISSILE_VISION,
     MISSILE_BORESIGHT,
@@ -207,6 +208,11 @@ class Missile(pygame.sprite.Sprite):
             -MISSILE_TURN_RATE,
             min(MISSILE_TURN_RATE, latax * 1_000_000),
         )
+
+        # Flip angle if launched by enemy
+        if self.direction == (0, 1):
+            clamped_delta_angle *= -1
+
         self.vel_vector.rotate_ip(clamped_delta_angle)
 
     def get_shield_damage(self) -> float:
@@ -215,6 +221,7 @@ class Missile(pygame.sprite.Sprite):
         Returns:
             float: damage done to shields
         """
+        self.kill()
         return self.shield_damage
 
     def get_ship_damage(self) -> float:
@@ -223,4 +230,5 @@ class Missile(pygame.sprite.Sprite):
         Returns:
             float: damage done to ships
         """
+        self.kill()
         return self.ship_damage

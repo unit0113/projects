@@ -3,7 +3,7 @@ PLAYER_SHIP_DATA = {
         "speed": 400,
         "hp": 100,
         "sprite_sheet": "vulcanA",
-        "primary_weapons": [["standard", (48, 0)]],
+        "primary_weapons": [["beam", (48, 20)]],
         "secondary_weapons": ["missile"],
         "secondary_offsets": [(30, 24), (66, 24)],
         "projectile_color": "Green",
