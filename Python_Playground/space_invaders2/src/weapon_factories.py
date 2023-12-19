@@ -50,7 +50,7 @@ class PrimaryWeaponFactory:
                     f"{projectile_color}ThinShort",
                     (5, 5),
                     1000,
-                    1,
+                    3,
                     (0, -1),
                 )
             elif name == "beam":

@@ -28,6 +28,7 @@ class Laser(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(image, angle - 90)
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
+        self.pos = pos
         self.rect.midtop = pos
 
     def update(self, dt: float, enemies: pygame.sprite.Group = None) -> None:
@@ -38,7 +39,8 @@ class Laser(pygame.sprite.Sprite):
             enemies (pygame.sprite.Group): enemies currently in game, unused
         """
 
-        self.rect.center += self.speed * self.direction * dt
+        self.pos += self.speed * self.direction * dt
+        self.rect.center = self.pos
 
     def get_shield_damage(self) -> float:
         """Getter for shield damage

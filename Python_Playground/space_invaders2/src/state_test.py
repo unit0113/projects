@@ -36,7 +36,7 @@ class TestState(State):
 
     def enter(self, **kwargs) -> None:
         """Actions to perform upon entering the state"""
-        self.game.set_player(PlayerShip("Vulcan"))
+        self.game.set_player(PlayerShip("Lightning"))
 
     def exit(self) -> None:
         """Actions to perform upon exiting the state"""

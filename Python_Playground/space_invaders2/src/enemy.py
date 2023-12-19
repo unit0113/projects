@@ -4,12 +4,14 @@ from .ship import Ship
 from .enemy_ship_data import ENEMY_SHIP_DATA
 from .settings import FRAME_TIME
 
-from .forward_behavior import ForwardBehavior
-from .stall_behavior import StallBehavior
-from .s_behavior import SBehavior
-from .random_single_fire_behavior import RandomSingleFireBehavior
-from .random_double_tap_fire_behavior import RandomDoubleTapFireBehavior
-from .random_burst_fire_behavior import RandomBurstFireBehavior
+from .behavior_forward import ForwardBehavior
+from .behavior_stall import StallBehavior
+from .behavior_s import SBehavior
+from .behavior_zig_zag import ZigZagBehavior
+from .behavior_circle import CircleBehavior
+from .fire_behavior_random_single import RandomSingleFireBehavior
+from .fire_behavior_random_double_tap import RandomDoubleTapFireBehavior
+from .fire_behavior_random_burst import RandomBurstFireBehavior
 
 from .shield import Shield
 
@@ -17,6 +19,8 @@ BEHAVIORS = {
     "forward_behavior": ForwardBehavior,
     "stall_behavior": StallBehavior,
     "s_behavior": SBehavior,
+    "zig_zag_behavior": ZigZagBehavior,
+    "circle_behavior": CircleBehavior,
     "random_single_fire_behavior": RandomSingleFireBehavior,
     "random_double_tap_fire_behavior": RandomDoubleTapFireBehavior,
     "random_burst_fire_behavior": RandomBurstFireBehavior,

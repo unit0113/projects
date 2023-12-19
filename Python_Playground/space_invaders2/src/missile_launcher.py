@@ -4,6 +4,8 @@ from .missile import Missile
 
 
 class MissileLauncher:
+    launcher_is_left = [True, False]
+
     def __init__(
         self,
         offsets: list[tuple[int, int]],
@@ -50,6 +52,9 @@ class MissileLauncher:
                     self.damages,
                     self.missile_speed,
                     self.direction,
+                    is_left,
                 )
-                for offset in self.offsets
+                for offset, is_left in zip(
+                    self.offsets, MissileLauncher.launcher_is_left
+                )
             ]

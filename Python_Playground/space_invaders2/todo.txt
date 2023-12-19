@@ -1,5 +1,6 @@
 design patterns
 wave factory->enemy factory->movement profile factory + weapon factory + shield factory + fire behavior factory
+select type and distibution in type based on level. Value of enemy increases with type/subtype
 Fixed level mode vs random level mode
 Camera shake: trauma^2, trauma ~= percentage health taken
 State stack: title, game, store
@@ -19,3 +20,5 @@ power ups
 particle effects on hits/deaths
 utlities (turret, mines, activatible shield battery, repair bots, bomb fabricator, increase fire rate/damage (turbo mode), absorb shield dmg to reload)
 tutorial screen/State
+
+wingmen drones

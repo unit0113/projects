@@ -1,5 +1,8 @@
 import pygame
+import random
+
 from .behavior import Behavior
+from .settings import BASE_SPEED
 
 
 class StallBehavior(Behavior):
@@ -13,6 +16,7 @@ class StallBehavior(Behavior):
         self.accel_magnitude = 0.02 * jerk
         self.direction = 1 if "r" in direction.lower() else -1
         self.jerk = jerk
+        self.wait_time = 1 / self.jerk + random.random()
 
     def update(self, dt: float) -> None:
         self.movement = (
@@ -23,7 +27,7 @@ class StallBehavior(Behavior):
         self.timer += dt
 
         # Come onto screen start to slow
-        if self.state == 0 and self.timer > 1 / self.jerk:
+        if self.state == 0 and self.timer > self.wait_time / self.jerk:
             self.accel_vector.y = -self.accel_magnitude
             self.state = 1
         # Come to stop
@@ -33,23 +37,23 @@ class StallBehavior(Behavior):
             self.timer = 0
             self.state = 2
             self._can_fire = True
-        # Wait and accel to right
-        elif self.state == 2 and self.timer > 1:
+        # Wait and accel to first direction
+        elif self.state == 2 and self.timer > self.wait_time:
             self.accel_vector.x = self.direction * self.accel_magnitude
             self.timer = 0
             self.state = 3
-        # Drift to right
-        elif self.state == 3 and self.timer > 1 / self.jerk:
+        # Drift
+        elif self.state == 3 and self.timer > BASE_SPEED / (self.jerk * self.speed):
             self.accel_vector.x = 0
             self.timer = 0
             self.state = 4
-        # Accel to left
+        # Accel to opposite direction
         elif self.state == 4 and self.timer > 1:
             self.accel_vector.x = self.direction * -self.accel_magnitude
             self.timer = 0
             self.state = 5
-        # Drift to left
-        elif self.state == 5 and self.timer > 2 / self.jerk:
+        # Drift
+        elif self.state == 5 and self.timer > 2 * BASE_SPEED / (self.jerk * self.speed):
             self.accel_vector.x = 0
             self.timer = 0
             self.state = 6
@@ -59,16 +63,13 @@ class StallBehavior(Behavior):
             self.timer = 0
             self.state = 7
         # Stop
-        elif self.state == 7 and (
-            (self.direction == 1 and self.vel_vector.x >= 0)
-            or (self.direction == -1 and self.vel_vector.x <= 0)
-        ):
+        elif self.state == 7 and self.vel_vector.x * -self.direction > 0:
             self.vel_vector.x = 0
             self.accel_vector.x = 0
             self.timer = 0
             self.state = 8
         # Accel down
-        elif self.state == 8 and self.timer > 1:
+        elif self.state == 8 and self.timer > self.wait_time:
             self.accel_vector.y = 2 * self.accel_magnitude
             self.timer = 0
             self.state = 9

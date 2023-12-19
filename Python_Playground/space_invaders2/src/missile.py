@@ -18,6 +18,7 @@ class Missile(pygame.sprite.Sprite):
         damages: tuple[float, float],
         speed: int,
         direction: tuple[float, float],
+        is_left: bool,
     ):
         pygame.sprite.Sprite.__init__(self)
         self.shield_damage, self.ship_damage = damages
@@ -39,7 +40,7 @@ class Missile(pygame.sprite.Sprite):
 
         self.timer = 0
         self.direction = direction
-        self.vel_vector = pygame.Vector2(0, 0.25 * -direction[1])
+        self.vel_vector = pygame.Vector2(-0.1 if is_left else 0.1, 0.25 * -direction[1])
         self.accel_vector = pygame.Vector2(0, 0)
         self.state = 0
 
@@ -122,6 +123,7 @@ class Missile(pygame.sprite.Sprite):
         # Launch profile state machine
         self.timer += dt
         if self.state == 0 and self.timer > 0.5:
+            self.vel_vector.x = 0
             self.accel_vector.y = 0.02 * self.direction[1]
             self.state = 1
         elif self.state == 1 and self.vel_vector.magnitude() > 1:
