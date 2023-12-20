@@ -60,3 +60,6 @@ class LaserCannon:
         """
 
         return pygame.time.get_ticks() > self.last_shot + self.cooldown
+
+    def get_status(self) -> float:
+        return (pygame.time.get_ticks() - self.last_shot) / self.cooldown

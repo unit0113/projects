@@ -4,16 +4,17 @@ import random
 from .behavior import Behavior
 
 
-class RandomDoubleTapFireBehavior(Behavior):
-    def __init__(self, cooldown: int) -> None:
+class BurstFireBehavior(Behavior):
+    def __init__(self, cooldown: int, burst_size: int = 3) -> None:
         super().__init__()
         self.cooldown = cooldown
-        self.waiting_on_primary = True
+        self.burst_size = burst_size
+        self.shot_counter = 0
         self.shot_spacing = 50
         self.next_shot = self.get_next_shot_time()
 
     def get_next_shot_time(self) -> int:
-        if self.waiting_on_primary:
+        if not self.shot_counter:
             return (
                 pygame.time.get_ticks()
                 + random.randint(self.cooldown // 2, self.cooldown)
@@ -28,5 +29,7 @@ class RandomDoubleTapFireBehavior(Behavior):
 
     def fire(self):
         self._can_fire = False
-        self.waiting_on_primary = not self.waiting_on_primary
+        self.shot_counter += 1
+        if self.shot_counter >= self.burst_size:
+            self.shot_counter = 0
         self.next_shot = self.get_next_shot_time()

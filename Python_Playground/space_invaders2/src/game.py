@@ -4,7 +4,7 @@ from typing import Callable
 from .state_stack import StateStack
 from .background import Background
 from .state_test import TestState
-from .settings import WIDTH, HEIGHT
+from .settings import WIDTH, HEIGHT, YELLOW, RED, GREEN, SHIELD_BLUE
 from .player_ship import PlayerShip
 from .enemy import Enemy
 
@@ -20,7 +20,7 @@ class Game:
         self.playerProjectileGroup = pygame.sprite.Group()
         self.enemyGroup = pygame.sprite.Group()
         self.enemyProjectileGroup = pygame.sprite.Group()
-        self.enemyGroup.add(Enemy("bug_3_b", WIDTH // 2, 0))
+        self.enemyGroup.add(Enemy("bug_6", WIDTH // 2, 0))
         self.playerGroup = pygame.sprite.Group()
 
         # Initialize state stack
@@ -33,7 +33,7 @@ class Game:
         Args:
             player (PlayerShip): the players ship
         """
-
+        self.player = player
         self.playerGroup.empty()
         self.playerGroup.add(player)
 
@@ -234,3 +234,71 @@ class Game:
 
         self.playerProjectileGroup.draw(window)
         self.enemyProjectileGroup.draw(window)
+
+    def draw_UI(self, window: pygame.Surface) -> None:
+        """Draws the UI elements onto the game window
+
+        Args:
+            window (pygame.Surface): pygame surface to draw on
+        """
+
+        (
+            health_status,
+            shield_status,
+            primary_weapon_status,
+            secondary_weapon_statuses,
+        ) = self.player.get_status()
+        x, y, width, height = self.player.get_rect_data()
+
+        # Health status
+        if health_status > 0.5:
+            color = GREEN
+        elif health_status > 0.25:
+            color = YELLOW
+        else:
+            color = RED
+
+        pygame.draw.rect(
+            window,
+            color,
+            pygame.Rect(
+                x,
+                y + height + 10,
+                width * health_status,
+                6,
+            ),
+        )
+
+        # Shield status
+        if shield_status:
+            shield_surface = pygame.Surface((int(width * shield_status), 10))
+            shield_surface.set_alpha(min(150, max(100, shield_status * 255)))
+            shield_surface.fill(SHIELD_BLUE)
+            window.blit(shield_surface, (x, y + height + 8))
+
+        # Primary weapon status
+        if primary_weapon_status:
+            pygame.draw.rect(
+                window,
+                YELLOW,
+                pygame.Rect(
+                    x - 10,
+                    y + (width * (1 - primary_weapon_status)),
+                    6,
+                    width * primary_weapon_status,
+                ),
+            )
+
+        # Secondary weapon status
+        if secondary_weapon_statuses:
+            for index, status in enumerate(secondary_weapon_statuses):
+                pygame.draw.rect(
+                    window,
+                    YELLOW,
+                    pygame.Rect(
+                        x + width + 10 * (index + 1),
+                        y + (width * (1 - status)),
+                        6,
+                        width * status,
+                    ),
+                )

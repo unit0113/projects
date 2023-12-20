@@ -1,5 +1,7 @@
 import pygame
+
 from .behavior import Behavior
+from .settings import BASE_SPEED
 
 
 class SBehavior(Behavior):
@@ -22,22 +24,27 @@ class SBehavior(Behavior):
         self.timer += dt
 
         # Come onto screen start to slow
-        if self.state == 0 and self.timer > 1:
-            self.accel_vector.x = -self.direction * self.accel_magnitude
+        if self.state == 0 and self.timer > 1 / (self.speed / BASE_SPEED):
+            self.accel_vector.x = (
+                -self.direction * self.accel_magnitude * (self.speed / BASE_SPEED)
+            )
             self.timer = 0
             self.state = 1
             self._can_fire = True
         # Stop lateral movement
-        elif self.state == 1 and self.timer > 2.5:
+        elif self.state == 1 and self.timer > 2.5 / (self.speed / BASE_SPEED):
             self.accel_vector.x = 0
             self.timer = 0
             self.state = 2
-        # Wait and accel to right
-        elif self.state == 2 and self.timer > 1.5:
-            self.accel_vector.x = self.direction * self.accel_magnitude
+        # Wait and accel to opposite direction
+        elif self.state == 2 and self.timer > 1.5 / (self.speed / BASE_SPEED):
+            self.accel_vector.x = (
+                self.direction * self.accel_magnitude * (self.speed / BASE_SPEED)
+            )
             self.timer = 0
             self.state = 3
-        elif self.state == 3 and self.timer > 2.5:
+        # Drift
+        elif self.state == 3 and self.timer > 2.5 / (self.speed / BASE_SPEED):
             self.accel_vector.x = 0
             self.timer = 0
             self.state = 4

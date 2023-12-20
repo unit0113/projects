@@ -9,9 +9,10 @@ from .behavior_stall import StallBehavior
 from .behavior_s import SBehavior
 from .behavior_zig_zag import ZigZagBehavior
 from .behavior_circle import CircleBehavior
-from .fire_behavior_random_single import RandomSingleFireBehavior
-from .fire_behavior_random_double_tap import RandomDoubleTapFireBehavior
-from .fire_behavior_random_burst import RandomBurstFireBehavior
+from .fire_behavior_single import SingleFireBehavior
+from .fire_behavior_double_tap import DoubleTapFireBehavior
+from .fire_behavior_burst import BurstFireBehavior
+from .fire_behavior_beam import BeamFireBehavior
 
 from .shield import Shield
 
@@ -21,9 +22,10 @@ BEHAVIORS = {
     "s_behavior": SBehavior,
     "zig_zag_behavior": ZigZagBehavior,
     "circle_behavior": CircleBehavior,
-    "random_single_fire_behavior": RandomSingleFireBehavior,
-    "random_double_tap_fire_behavior": RandomDoubleTapFireBehavior,
-    "random_burst_fire_behavior": RandomBurstFireBehavior,
+    "single_fire_behavior": SingleFireBehavior,
+    "double_tap_fire_behavior": DoubleTapFireBehavior,
+    "burst_fire_behavior": BurstFireBehavior,
+    "beam_fire_behavior": BeamFireBehavior,
 }
 
 
@@ -97,12 +99,13 @@ class Enemy(Ship, pygame.sprite.Sprite):
             for weapon in self.primary_weapons:
                 projectile = weapon.fire(self.rect.bottomleft)
                 if projectile:
-                    self.fire_behavior.fire()
                     projectiles.append(projectile)
             for weapon in self.secondary_weapons:
                 projectile = weapon.fire(self.rect.topleft)
                 if projectile:
                     projectiles.append(projectile)
+            if projectiles:
+                self.fire_behavior.fire()
 
         return projectiles
 

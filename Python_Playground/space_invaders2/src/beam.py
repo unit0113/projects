@@ -22,7 +22,7 @@ class Beam(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(image, angle - 90)
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
-        if direction[0] > 0:
+        if direction[1] > 0:
             self.rect.midtop = pos
         else:
             self.rect.midbottom = pos

@@ -33,10 +33,11 @@ class TestState(State):
         self.game.draw_projectiles(window)
         self.game.draw_enemies(window)
         self.game.draw_player(window)
+        self.game.draw_UI(window)
 
     def enter(self, **kwargs) -> None:
         """Actions to perform upon entering the state"""
-        self.game.set_player(PlayerShip("Lightning"))
+        self.game.set_player(PlayerShip("Defiance"))
 
     def exit(self) -> None:
         """Actions to perform upon exiting the state"""

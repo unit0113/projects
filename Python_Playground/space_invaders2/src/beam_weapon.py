@@ -69,3 +69,6 @@ class BeamWeapon:
             self.last_shot = pygame.time.get_ticks()
             return True
         return False
+
+    def get_status(self) -> float:
+        return (pygame.time.get_ticks() - self.last_shot) / self.cooldown

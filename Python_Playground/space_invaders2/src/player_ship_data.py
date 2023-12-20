@@ -83,4 +83,18 @@ PLAYER_SHIP_DATA = {
         "projectile_color": "Blue",
         "shield_args": [125, 1, 1000],
     },
+    "Test": {
+        "speed": 500,
+        "hp": 200,
+        "sprite_sheet": "planes_03A",
+        "primary_weapons": [["turbolaser", (48, 20)]],
+        "secondary_weapons": ["torpedo"],
+        "secondary_offsets": [
+            [(40, 35), (56, 35)],
+            [(34, 40), (62, 40)],
+            [(28, 40), (68, 40)],
+        ],
+        "projectile_color": "Blue",
+        "shield_args": [125, 1, 1000],
+    },
 }

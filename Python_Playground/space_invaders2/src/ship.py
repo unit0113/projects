@@ -102,3 +102,27 @@ class Ship(ABC):
     @property
     def shield_active(self) -> bool:
         return self.shield and self.shield.active
+
+    def get_status(self) -> tuple[float, float, float]:
+        health_status = self.health / self.max_health
+        shield_status = None if not self.shield else self.shield.get_status()
+        primary_weapon_status = (
+            None
+            if not self.primary_weapons
+            else min(1, self.primary_weapons[0].get_status())
+        )
+        secondary_weapon_statuses = (
+            None
+            if not self.secondary_weapons
+            else [min(1, weapon.get_status()) for weapon in self.secondary_weapons]
+        )
+
+        return (
+            health_status,
+            shield_status,
+            primary_weapon_status,
+            secondary_weapon_statuses,
+        )
+
+    def get_rect_data(self) -> tuple[int, int, int, int]:
+        return self.rect.x, self.rect.y, self.rect.width, self.rect.height

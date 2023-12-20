@@ -2,6 +2,7 @@ from .laser_cannon import LaserCannon
 from .beam_weapon import BeamWeapon
 from .side_laser import SideLaser
 from .missile_launcher import MissileLauncher
+from .torpedo_launcher import TorpedoLauncher
 
 
 class PrimaryWeaponFactory:
@@ -94,6 +95,16 @@ class PrimaryWeaponFactory:
                     1,
                     (0, 1),
                 )
+            elif name == "beam":
+                return BeamWeapon(
+                    muzzle_offset,
+                    0,
+                    500,
+                    projectile_color,
+                    (1, 1),
+                    6,
+                    (0, 1),
+                )
 
 
 class SecondaryWeaponFactory:
@@ -110,9 +121,9 @@ class SecondaryWeaponFactory:
                     muzzle_offsets, 250, projectile_color, (10, 10), 1000, 2, (0, -1)
                 )
             elif name == "missile":
-                return MissileLauncher(
-                    muzzle_offsets, 1000, (0, 100), 600, "missile", (0, -1)
-                )
+                return MissileLauncher(muzzle_offsets, 1000, (0, 50), 600, (0, -1))
+            elif name == "torpedo":
+                return TorpedoLauncher(muzzle_offsets, 2000, (0, 250), 400, (0, -1))
 
         else:
             if name == "side_cannon":
@@ -120,6 +131,6 @@ class SecondaryWeaponFactory:
                     muzzle_offsets, 0, projectile_color, (10, 10), 1000, 2, (0, 1)
                 )
             elif name == "missile":
-                return MissileLauncher(
-                    muzzle_offsets, 1000, (0, 100), 600, "missile", (0, 1)
-                )
+                return MissileLauncher(muzzle_offsets, 1000, (0, 100), 600, (0, 1))
+            elif name == "torpedo":
+                return TorpedoLauncher(muzzle_offsets, 0, (0, 250), 400, (0, 1))

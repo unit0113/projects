@@ -31,3 +31,6 @@ class SideLaser:
 
     def fire(self, ship_pos: tuple[int, int]):
         return [cannon.fire(ship_pos) for cannon in self.cannons]
+
+    def get_status(self) -> float:
+        return self.cannons[0].get_status()

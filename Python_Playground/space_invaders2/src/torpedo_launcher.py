@@ -1,9 +1,9 @@
 import pygame
 
-from .missile import Missile
+from .torpedo import Torpedo
 
 
-class MissileLauncher:
+class TorpedoLauncher:
     launcher_is_left = [True, False]
 
     def __init__(
@@ -26,7 +26,7 @@ class MissileLauncher:
 
     def load_sprites(self) -> None:
         sprite_sheet = pygame.image.load(
-            f"src/assets/projectiles/missile.png"
+            f"src/assets/projectiles/torpedo.png"
         ).convert_alpha()
         num_cols = 3
         size_h = sprite_sheet.get_width() // num_cols
@@ -45,7 +45,7 @@ class MissileLauncher:
         if self._can_fire:
             self.last_shot = pygame.time.get_ticks()
             return [
-                Missile(
+                Torpedo(
                     self.sprites,
                     (ship_pos[0] + offset[0], ship_pos[1] + offset[1]),
                     self.damages,
@@ -54,7 +54,7 @@ class MissileLauncher:
                     is_left,
                 )
                 for offset, is_left in zip(
-                    self.offsets, MissileLauncher.launcher_is_left
+                    self.offsets, TorpedoLauncher.launcher_is_left
                 )
             ]
 

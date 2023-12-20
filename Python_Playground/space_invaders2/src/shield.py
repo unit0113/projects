@@ -1,7 +1,6 @@
 import pygame
 
-SHIELD_BLUE_INNER = (63, 94, 249, 50)
-SHIELD_BLUE_OUTER = (63, 94, 249, 200)
+from .settings import SHIELD_BLUE_INNER, SHIELD_BLUE_OUTER
 
 
 class Shield:
@@ -9,7 +8,7 @@ class Shield:
         self, strength: int, regen: float, regen_cooldown: int, radius: int
     ) -> None:
         self.base_strength = strength
-        self.strength = strength
+        self.max_strength = strength
         self.current_strength = strength
         self.base_regen = regen
         self.regen = regen
@@ -36,12 +35,12 @@ class Shield:
     def update(self, pos: tuple[int, int], last_ship_hit: int) -> None:
         self.rect.center = pos
         if (
-            self.current_strength < self.strength
+            self.current_strength < self.max_strength
             and pygame.time.get_ticks() - max(self.last_hit, last_ship_hit)
             > self.regen_cooldown
         ):
             self.current_strength = min(
-                self.strength, self.current_strength + self.regen
+                self.max_strength, self.current_strength + self.regen
             )
 
     def draw(self, window: pygame.Surface) -> None:
@@ -56,9 +55,12 @@ class Shield:
                 SHIELD_BLUE_OUTER,
                 (self.radius, self.radius),
                 self.radius,
-                max(1, int(2 * self.current_strength / self.base_strength)),
+                max(1, int(2 * self.current_strength / self.max_strength)),
             )
             window.blit(self.image, self.rect)
 
     def upgrade(self) -> None:
         pass
+
+    def get_status(self) -> float:
+        return self.current_strength / self.max_strength
