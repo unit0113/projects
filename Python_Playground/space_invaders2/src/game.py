@@ -4,7 +4,7 @@ from typing import Callable
 from .state_stack import StateStack
 from .background import Background
 from .state_test import TestState
-from .settings import WIDTH, HEIGHT, YELLOW, RED, GREEN, SHIELD_BLUE
+from .settings import WIDTH, HEIGHT, YELLOW, RED, GREEN, SHIELD_BLUE, GREY, NUM_LIVES
 from .player_ship import PlayerShip
 from .enemy import Enemy
 
@@ -20,12 +20,29 @@ class Game:
         self.playerProjectileGroup = pygame.sprite.Group()
         self.enemyGroup = pygame.sprite.Group()
         self.enemyProjectileGroup = pygame.sprite.Group()
-        self.enemyGroup.add(Enemy("bug_6", WIDTH // 2, 0))
         self.playerGroup = pygame.sprite.Group()
 
         # Initialize state stack
         self.state_stack = StateStack()
+
+        self.reset()
+
+    def reset(self) -> None:
+        """Reset the game"""
+        self.playerProjectileGroup.empty()
+        self.enemyGroup.empty()
+        self.enemyProjectileGroup.empty()
+        self.playerGroup.empty()
+
+        self.state_stack.empty()
+
+        self.score = 0
+        self.level = 1
+        self.lives = NUM_LIVES
+        self.num_bombs = 3
+
         self.state_stack.push(TestState(self))
+        self.enemyGroup.add(Enemy("bug_6", WIDTH // 2, 0))
 
     def set_player(self, player: PlayerShip) -> None:
         """Recieves the player ship from the ship select state
@@ -50,6 +67,16 @@ class Game:
         ).convert_alpha()
         self.assets["foreground"] = pygame.image.load(
             f"{folder}/stars.png"
+        ).convert_alpha()
+
+        # Load fonts
+        self.assets["score_font"] = pygame.font.Font(
+            "src/assets/fonts/kenvector_future.ttf", 40
+        )
+
+        # Load bomb icon
+        self.assets["bomb"] = pygame.image.load(
+            f"src/assets/ui/icon-bomb.png"
         ).convert_alpha()
 
     def update(self, dt: float) -> None:
@@ -296,9 +323,21 @@ class Game:
                     window,
                     YELLOW,
                     pygame.Rect(
-                        x + width + 10 * (index + 1),
+                        x + width + 4 * (index + 1),
                         y + (width * (1 - status)),
-                        6,
+                        2,
                         width * status,
                     ),
                 )
+
+        # Draw score
+        score_text = self.assets["score_font"].render(f"Score: {self.score}", 1, GREY)
+        window.blit(score_text, (20, 20))
+
+        # Draw lives
+        for life in range(self.lives):
+            window.blit(self.player.get_icon_sprite(), (16 + life * 30, 70))
+
+        # Draw bombs
+        for bomb in range(self.num_bombs):
+            window.blit(self.assets["bomb"], (20 + bomb * 15, 105))

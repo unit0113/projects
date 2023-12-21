@@ -89,5 +89,10 @@ class StateStack:
 
         return len(self.states) == 0
 
+    def empty(self) -> None:
+        """Empties the current stack"""
+
+        self.states.clear()
+
     def __str__(self):
         return "\n".join(str(state) for state in self.states)

@@ -47,7 +47,7 @@ def main() -> None:
 
         # Reset if r is pressed
         if inputs[pygame.K_r]:
-            main()
+            game.reset()
 
         # Update game
         game.update(dt)

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap" rel="stylesheet">
+        <link href="styles.css" rel="stylesheet">
+        <title>Trivia!</title>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function(){
+                // Question 1
+                let correct = document.querySelector('.correct');
+                let incorrects = document.querySelectorAll('.incorrect');
+
+                // Correct Answer
+                correct.addEventListener('click', function() {
+                    correct.style.backgroundColor = 'green';
+                    document.querySelector('#feedback1').innerHTML = 'Correct';
+                })
+
+                // Incorrect Answer
+                for (let i = 0; i < incorrects.length; i++){
+                    incorrects[i].addEventListener('click', function() {
+                        incorrects[i].style.backgroundColor = 'red';
+                        document.querySelector('#feedback1').innerHTML = 'Incorrect';
+                    })
+                }
+
+                // Question 2
+                document.querySelector('#check').addEventListener('click', function(){
+                    let input = document.querySelector('input');
+                    if (input.value === 'Angel Falls') {
+                        input.style.backgroundColor = 'green';
+                        document.querySelector('#feedback2').innerHTML = 'Correct';
+                    } else {
+                         input.style.backgroundColor = 'red';
+                        document.querySelector('#feedback2').innerHTML = 'Incorrect';
+                    }
+
+                })
+
+            });
+
+
+        </script>
+    </head>
+    <body>
+
+        <div class="jumbotron">
+            <h1>Trivia!</h1>
+        </div>
+
+        <div class="container">
+
+            <div class="section">
+                <h2>Part 1: Multiple Choice </h2>
+                <hr>
+
+                <!-- Question 1 -->
+                <h3>What was the name of the B-29 that dropped a nuclear bomb on Hiroshima?</h3>
+
+                <button class="incorrect">Bockscar</button>
+                <button class="incorrect">Jokers Wild</button>
+                <button class="incorrect">Ancient Marniner</button>
+                <button class="correct">Enola Gay</button>
+
+                <p id="feedback1"></p>
+
+            </div>
+
+            <div class="section">
+                <h2>Part 2: Free Response</h2>
+                <hr>
+
+                <!-- Question 2 -->
+                <h3>What is the tallest waterfall in the world?</h3>
+                <input type="text"></input>
+                <button id="check">Check Answer</button>
+
+                <p id="feedback2"></p>
+
+            </div>
+
+        </div>
+    </body>
+</html>

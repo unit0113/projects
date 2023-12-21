@@ -60,7 +60,7 @@ class PrimaryWeaponFactory:
                     2500,
                     500,
                     projectile_color,
-                    (1, 1),
+                    (2, 2),
                     6,
                     (0, -1),
                 )
@@ -101,7 +101,7 @@ class PrimaryWeaponFactory:
                     0,
                     500,
                     projectile_color,
-                    (1, 1),
+                    (2, 2),
                     6,
                     (0, 1),
                 )

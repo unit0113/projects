@@ -2,17 +2,48 @@ import pygame
 from abc import ABC, abstractmethod
 
 from .weapon_factories import PrimaryWeaponFactory, SecondaryWeaponFactory
+from .shield import Shield
+from .settings import (
+    BASE_HP,
+    BASE_SPEED,
+    BASE_SHIELD_STRENGTH,
+    BASE_SHIELD_COOLDOWN,
+    BASE_SHIELD_REGEN,
+)
 
 
 class Ship(ABC):
     def __init__(self, ship_data: dict) -> None:
-        self.health = ship_data["hp"]
+        self.health = ship_data["multipliers"]["hp"] * BASE_HP
         self.max_health = self.health
-        self.speed = ship_data["speed"]
+        self.speed = ship_data["multipliers"]["speed"] * BASE_SPEED
         self.secondary_offsets = ship_data["secondary_offsets"]
         self.projectile_color = ship_data["projectile_color"]
         self.shield = None
+        self.base_shield_strength = (
+            ship_data["multipliers"]["shield_strength"] * BASE_SHIELD_STRENGTH
+        )
+        self.base_shield_cooldown = (
+            ship_data["multipliers"]["shield_cooldown"] * BASE_SHIELD_COOLDOWN
+        )
+        self.base_shield_regen = (
+            ship_data["multipliers"]["shield_regen"] * BASE_SHIELD_REGEN
+        )
         self.last_hit = 0
+
+    def add_shield(self, divisor: float) -> None:
+        """Adds shield to ship
+
+        Args:
+            divisor (float): Amount to divide image size by for shield size
+        """
+
+        self.shield = Shield(
+            self.base_shield_strength,
+            self.base_shield_regen,
+            self.base_shield_cooldown,
+            self.image.get_width() // divisor,
+        )
 
     @abstractmethod
     def update(self, dt: float) -> None:
@@ -92,18 +123,42 @@ class Ship(ABC):
             )
 
     def take_damage(self, damage: float) -> None:
+        """Take damage to ship
+
+        Args:
+            damage (float): amount of damage
+        """
+
         self.health -= damage
         self.last_hit = pygame.time.get_ticks()
 
     @property
     def is_dead(self) -> bool:
+        """Whether ship is dead
+
+        Returns:
+            bool: if ship is dead
+        """
+
         return self.health <= 0
 
     @property
     def shield_active(self) -> bool:
+        """Whether shield is active
+
+        Returns:
+            bool: if shield is active
+        """
+
         return self.shield and self.shield.active
 
-    def get_status(self) -> tuple[float, float, float]:
+    def get_status(self) -> tuple[float, float, float, float]:
+        """Returns the status of ship systems for display in UI
+
+        Returns:
+            tuple[float, float, float, float]: statuses of health, shield, primary weapons and secondary weapons
+        """
+
         health_status = self.health / self.max_health
         shield_status = None if not self.shield else self.shield.get_status()
         primary_weapon_status = (
@@ -125,4 +180,21 @@ class Ship(ABC):
         )
 
     def get_rect_data(self) -> tuple[int, int, int, int]:
+        """Returns data on ship rect for placement of UI elements
+
+        Returns:
+            tuple[int, int, int, int]: x, y, width, height of rect object
+        """
+
         return self.rect.x, self.rect.y, self.rect.width, self.rect.height
+
+    def draw(self, window: pygame.Surface) -> None:
+        """Draws to the game window
+
+        Args:
+            window (pygame.Surface): pygame surface to draw on
+        """
+
+        window.blit(self.image, self.rect)
+        if self.shield:
+            self.shield.draw(window)

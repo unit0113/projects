@@ -9,12 +9,11 @@ from .behavior_stall import StallBehavior
 from .behavior_s import SBehavior
 from .behavior_zig_zag import ZigZagBehavior
 from .behavior_circle import CircleBehavior
+from .behavior_side_circle import SideCircleBehavior
 from .fire_behavior_single import SingleFireBehavior
 from .fire_behavior_double_tap import DoubleTapFireBehavior
 from .fire_behavior_burst import BurstFireBehavior
 from .fire_behavior_beam import BeamFireBehavior
-
-from .shield import Shield
 
 BEHAVIORS = {
     "forward_behavior": ForwardBehavior,
@@ -22,6 +21,7 @@ BEHAVIORS = {
     "s_behavior": SBehavior,
     "zig_zag_behavior": ZigZagBehavior,
     "circle_behavior": CircleBehavior,
+    "side_circle_behavior": SideCircleBehavior,
     "single_fire_behavior": SingleFireBehavior,
     "double_tap_fire_behavior": DoubleTapFireBehavior,
     "burst_fire_behavior": BurstFireBehavior,
@@ -60,11 +60,8 @@ class Enemy(Ship, pygame.sprite.Sprite):
         )
 
         # Load shield
-        if ENEMY_SHIP_DATA[ship_type]["shield_args"]:
-            self.shield = Shield(
-                *ENEMY_SHIP_DATA[ship_type]["shield_args"],
-                self.image.get_width() // 1.5
-            )
+        if ENEMY_SHIP_DATA[ship_type]["start_with_shield"]:
+            self.add_shield(1.5)
 
     def update(self, dt: float) -> None:
         """Update game object in game loop
@@ -108,14 +105,3 @@ class Enemy(Ship, pygame.sprite.Sprite):
                 self.fire_behavior.fire()
 
         return projectiles
-
-    def draw(self, window: pygame.Surface) -> None:
-        """Draws to the game window
-
-        Args:
-            window (pygame.Surface): pygame surface to draw on
-        """
-
-        window.blit(self.image, self.rect)
-        if self.shield:
-            self.shield.draw(window)

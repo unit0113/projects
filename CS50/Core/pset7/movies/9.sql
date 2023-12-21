@@ -1,1 +1,0 @@
-SELECT distinct(name) FROM people WHERE id IN (SELECT person_id FROM stars WHERE movie_ID IN(SELECT id FROM movies WHERE year = 2004)) ORDER BY birth;

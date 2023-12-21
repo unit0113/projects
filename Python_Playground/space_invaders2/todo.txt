@@ -22,3 +22,4 @@ utlities (turret, mines, activatible shield battery, repair bots, bomb fabricato
 tutorial screen/State
 
 wingmen drones
+memoize asset loading

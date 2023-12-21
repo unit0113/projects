@@ -3,7 +3,6 @@ import pygame
 from .ship import Ship
 from .player_ship_data import PLAYER_SHIP_DATA
 from .settings import WIDTH, HEIGHT, FRAME_TIME
-from .shield import Shield
 
 
 class PlayerShip(Ship, pygame.sprite.Sprite):
@@ -11,9 +10,14 @@ class PlayerShip(Ship, pygame.sprite.Sprite):
         Ship.__init__(self, PLAYER_SHIP_DATA[ship_type])
         pygame.sprite.Sprite.__init__(self)
 
+        self.ship_type = ship_type
         self.sprites = self.load_sprite_sheet(
             PLAYER_SHIP_DATA[ship_type]["sprite_sheet"], 5, 4
         )
+        sprite_number = PLAYER_SHIP_DATA[ship_type]["sprite_sheet"][-2]
+        self.sprites["ship_icon"] = pygame.image.load(
+            f"src/assets/ui/icon-plane-0{sprite_number}.png"
+        ).convert_alpha()
 
         # Image and animation data
         self.orientation = "level"
@@ -29,10 +33,16 @@ class PlayerShip(Ship, pygame.sprite.Sprite):
         self.is_firing_secondary = False
         self.load_weapons(PLAYER_SHIP_DATA[ship_type], True)
 
-        if PLAYER_SHIP_DATA[ship_type]["shield_args"]:
-            self.shield = Shield(
-                *PLAYER_SHIP_DATA[ship_type]["shield_args"], self.image.get_width() // 2
-            )
+        if PLAYER_SHIP_DATA[ship_type]["start_with_shield"]:
+            self.add_shield(2)
+
+    def get_icon_sprite(self) -> pygame.Surface:
+        """Returns the ship icon for the UI
+
+        Returns:
+            pygame.Surface: icon of ship sprite
+        """
+        return self.sprites["ship_icon"]
 
     def update(self, dt: float) -> None:
         """Update game objects in game loop
@@ -67,17 +77,6 @@ class PlayerShip(Ship, pygame.sprite.Sprite):
         """Loads correct image based on animation"""
 
         self.image = self.sprites[self.orientation][self.frame_index]
-
-    def draw(self, window: pygame.Surface) -> None:
-        """Draws to the game window
-
-        Args:
-            window (pygame.Surface): pygame surface to draw on
-        """
-
-        window.blit(self.image, self.rect)
-        if self.shield:
-            self.shield.draw(window)
 
     def parse_control_input(self, dt: float) -> None:
         """Moves player based on control input. Sets firing flag if player is firing
