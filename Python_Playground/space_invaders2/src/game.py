@@ -6,7 +6,7 @@ from .background import Background
 from .state_test import TestState
 from .settings import WIDTH, HEIGHT, YELLOW, RED, GREEN, SHIELD_BLUE, GREY, NUM_LIVES
 from .player_ship import PlayerShip
-from .enemy import Enemy
+from .enemy_factory import EnemyFactory
 
 
 class Game:
@@ -42,7 +42,7 @@ class Game:
         self.num_bombs = 3
 
         self.state_stack.push(TestState(self))
-        self.enemyGroup.add(Enemy("bug_6", WIDTH // 2, 0))
+        self.enemyGroup.add(EnemyFactory.get_enemy(1, "bug"))
 
     def set_player(self, player: PlayerShip) -> None:
         """Recieves the player ship from the ship select state
@@ -332,12 +332,12 @@ class Game:
 
         # Draw score
         score_text = self.assets["score_font"].render(f"Score: {self.score}", 1, GREY)
-        window.blit(score_text, (20, 20))
+        window.blit(score_text, (20, 10))
 
         # Draw lives
         for life in range(self.lives):
-            window.blit(self.player.get_icon_sprite(), (16 + life * 30, 70))
+            window.blit(self.player.get_icon_sprite(), (16 + life * 30, 60))
 
         # Draw bombs
         for bomb in range(self.num_bombs):
-            window.blit(self.assets["bomb"], (20 + bomb * 15, 105))
+            window.blit(self.assets["bomb"], (20 + bomb * 15, 95))

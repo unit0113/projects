@@ -66,7 +66,7 @@ class Ship(ABC):
         pass
 
     def load_sprite_sheet(
-        self, ship_type: str, num_rows: int, num_cols: int
+        self, ship_type: str, num_rows: int, num_cols: int, *, scale: float = 1
     ) -> dict[str, list[pygame.Surface]]:
         """Loads and parses the spritesheet of the provided ship_type
 
@@ -89,11 +89,12 @@ class Ship(ABC):
         for row, orientation in zip(range(num_rows), orientations):
             sprites[orientation] = []
             for column in range(num_cols):
-                sprites[orientation].append(
-                    sprite_sheet.subsurface(
-                        column * size_h, row * size_v, size_h, size_v
-                    )
+                sprite = sprite_sheet.subsurface(
+                    column * size_h, row * size_v, size_h, size_v
                 )
+                if scale > 1:
+                    sprite = pygame.transform.scale_by(sprite, scale)
+                sprites[orientation].append(sprite)
 
         return sprites
 

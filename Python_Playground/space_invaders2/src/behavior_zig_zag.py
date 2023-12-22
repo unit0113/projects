@@ -2,23 +2,48 @@ import pygame
 import random
 
 from .behavior import Behavior
-from .settings import BASE_SPEED
+from .settings import BASE_SPEED, WIDTH
 
 
 class ZigZagBehavior(Behavior):
-    def __init__(self, speed: int, jerk: float = 2, direction: str = "r") -> None:
+    valid_start_locations = {
+        "r": {"start_x": 25, "end_x": WIDTH // 2 - 75, "start_y": -50, "end_y": -50},
+        "l": {
+            "start_x": WIDTH // 2 - 75,
+            "end_x": WIDTH - 75,
+            "start_y": -50,
+            "end_y": -50,
+        },
+    }
+
+    def __init__(self, speed: float) -> None:
         self._can_fire = False
         self.speed = speed
-        self.vel_vector = pygame.Vector2(0, 1 * jerk)
         self.accel_vector = pygame.Vector2(0, 0)
         self.timer = 0
         self.state = 0
+
+    def set_starting_values(self, jerk: float = 0, direction: str = "r") -> None:
+        """Set starting behavior values from enemy factory
+
+        Args:
+            jerk (float, optional): derivative of acceleration. Defaults to 0.
+            direction (str, optional): direction of movement. Defaults to "r".
+        """
+
+        self.vel_vector = pygame.Vector2(0, 1 * jerk)
         self.accel_magnitude = 0.02 * jerk
         self.direction = 1 if "r" in direction.lower() else -1
         self.jerk = jerk
         self.wait_time = 1 / self.jerk + random.random()
 
     def update(self, dt: float) -> None:
+        """Calculate movement for this frame
+
+        Args:
+            dt (float): time since last frame
+        """
+
         self.movement = (
             dt * self.vel_vector * self.speed
             + 0.5 * self.speed * self.accel_vector * dt * dt
@@ -79,6 +104,3 @@ class ZigZagBehavior(Behavior):
             self.vel_vector.x = 0
             self.timer = 0
             self.state = 2
-
-    def get_movement(self) -> pygame.Vector2:
-        return self.movement

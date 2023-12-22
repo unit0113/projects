@@ -25,6 +25,7 @@ def main() -> None:
     game = Game()
     prev_time = time.time()
     run = True
+    reset_presed = False
 
     # Main loop
     while run:
@@ -46,8 +47,11 @@ def main() -> None:
             quit()
 
         # Reset if r is pressed
-        if inputs[pygame.K_r]:
+        if not reset_presed and inputs[pygame.K_r]:
             game.reset()
+            reset_presed = True
+        elif reset_presed and not inputs[pygame.K_r]:
+            reset_presed = False
 
         # Update game
         game.update(dt)

@@ -30,14 +30,13 @@ BEHAVIORS = {
 
 
 class Enemy(Ship, pygame.sprite.Sprite):
-    def __init__(self, ship_type: str, x: int, y: int) -> None:
+    def __init__(self, ship_type: str) -> None:
         Ship.__init__(self, ENEMY_SHIP_DATA[ship_type])
         pygame.sprite.Sprite.__init__(self)
 
         self.sprites = self.load_sprite_sheet(
-            ENEMY_SHIP_DATA[ship_type]["sprite_sheet"], 1, 6
+            ENEMY_SHIP_DATA[ship_type]["sprite_sheet"], 1, 6, scale=1
         )
-        self.pos = pygame.Vector2(x, y)
 
         # Image and animation data
         self.orientation = "level"
@@ -45,7 +44,6 @@ class Enemy(Ship, pygame.sprite.Sprite):
         self.image = self.sprites[self.orientation][self.frame_index]
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
-        self.rect.center = self.pos
         self.last_frame = pygame.time.get_ticks()
 
         # Weapon data
@@ -62,6 +60,16 @@ class Enemy(Ship, pygame.sprite.Sprite):
         # Load shield
         if ENEMY_SHIP_DATA[ship_type]["start_with_shield"]:
             self.add_shield(1.5)
+
+    def get_valid_start_positions(self) -> dict:
+        return self.movement_behavior.valid_start_locations
+
+    def set_start_position(
+        self, x: int, y: int, behavior_jerk: float, direction: str
+    ) -> None:
+        self.pos = pygame.Vector2(x, y)
+        self.rect.center = self.pos
+        self.movement_behavior.set_starting_values(behavior_jerk, direction)
 
     def update(self, dt: float) -> None:
         """Update game object in game loop

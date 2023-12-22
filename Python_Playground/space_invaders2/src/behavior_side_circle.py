@@ -2,18 +2,33 @@ import pygame
 import random
 
 from .behavior import Behavior
-from .settings import BASE_SPEED
+from .settings import BASE_SPEED, WIDTH, HEIGHT
 
 
 class SideCircleBehavior(Behavior):
-    def __init__(self, speed: int, jerk: float = 1, direction: str = "r") -> None:
+    valid_start_locations = {
+        "r": {"start_x": -50, "end_x": -50, "start_y": 40, "end_y": HEIGHT // 3},
+        "l": {"start_x": WIDTH, "end_x": WIDTH, "start_y": 40, "end_y": HEIGHT // 3},
+    }
+
+    def __init__(self, speed: float) -> None:
         self._can_fire = False
         self.speed = speed
-        self.direction = 1 if "r" in direction.lower() else -1
-        self.vel_vector = pygame.Vector2(self.direction, 0)
         self.accel_vector = pygame.Vector2(0, 0)
         self.timer = 0
         self.state = 0
+        self.wait_time = (1.5 + random.random() * 3) / (self.speed / BASE_SPEED)
+
+    def set_starting_values(self, jerk: float = 0, direction: str = "r") -> None:
+        """Set starting behavior values from enemy factory
+
+        Args:
+            jerk (float, optional): derivative of acceleration. Defaults to 0.
+            direction (str, optional): direction of movement. Defaults to "r".
+        """
+
+        self.direction = 1 if "r" in direction.lower() else -1
+        self.vel_vector = pygame.Vector2(self.direction, 0)
         self.accel_magnitude = 0.01 * jerk * (self.speed / BASE_SPEED)
         self.circle_function = (
             self._move_perpendicular_counter_clockwise
@@ -21,9 +36,14 @@ class SideCircleBehavior(Behavior):
             else self._move_perpendicular_clockwise
         )
         self.jerk = jerk
-        self.wait_time = (1.5 + random.random() * 3) / (self.speed / BASE_SPEED)
 
     def update(self, dt: float) -> None:
+        """Calculate movement for this frame
+
+        Args:
+            dt (float): time since last frame
+        """
+
         self.movement = (
             dt * self.vel_vector * self.speed
             + 0.5 * self.speed * self.accel_vector * dt * dt

@@ -19,7 +19,7 @@ ENEMY_SHIP_DATA = {
     },
     "bug_2": {
         "multipliers": {
-            "speed": 2,
+            "speed": 1.5,
             "hp": 0.2,
             "shield_strength": 0.25,
             "shield_cooldown": 0.5,

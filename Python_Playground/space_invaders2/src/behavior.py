@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import pygame
 
 
 class Behavior(ABC):
@@ -11,3 +12,12 @@ class Behavior(ABC):
 
     def can_fire(self) -> bool:
         return self._can_fire
+
+    def get_movement(self) -> pygame.Vector2:
+        """Return the movement calculated during update
+
+        Returns:
+            pygame.Vector2: 2D vector of ships movement in this frame
+        """
+
+        return self.movement
