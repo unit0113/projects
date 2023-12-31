@@ -2,15 +2,41 @@ import pygame
 
 from .ship import Ship
 from .player_ship_data import PLAYER_SHIP_DATA
-from .settings import WIDTH, HEIGHT, FRAME_TIME
+from .settings import (
+    WIDTH,
+    HEIGHT,
+    FRAME_TIME,
+    PLAYER_BASE_HP,
+    PLAYER_BASE_SHIELD_COOLDOWN,
+    PLAYER_BASE_SHIELD_REGEN,
+    PLAYER_BASE_SHIELD_STRENGTH,
+    PLAYER_BASE_SPEED,
+)
 
 
 class PlayerShip(Ship, pygame.sprite.Sprite):
     def __init__(self, ship_type: str) -> None:
-        Ship.__init__(self, PLAYER_SHIP_DATA[ship_type])
+        Ship.__init__(self)
         pygame.sprite.Sprite.__init__(self)
 
-        self.ship_type = ship_type
+        ship_data = PLAYER_SHIP_DATA[ship_type]
+
+        self.health = ship_data["multipliers"]["hp"] * PLAYER_BASE_HP
+        self.max_health = self.health
+        self.speed = ship_data["multipliers"]["speed"] * PLAYER_BASE_SPEED
+        self.secondary_offsets = ship_data["secondary_offsets"]
+        self.projectile_color = ship_data["projectile_color"]
+
+        self.base_shield_strength = (
+            ship_data["multipliers"]["shield_strength"] * PLAYER_BASE_SHIELD_STRENGTH
+        )
+        self.base_shield_cooldown = (
+            ship_data["multipliers"]["shield_cooldown"] * PLAYER_BASE_SHIELD_COOLDOWN
+        )
+        self.base_shield_regen = (
+            ship_data["multipliers"]["shield_regen"] * PLAYER_BASE_SHIELD_REGEN
+        )
+
         self.sprites = self.load_sprite_sheet(
             PLAYER_SHIP_DATA[ship_type]["sprite_sheet"], 5, 4
         )

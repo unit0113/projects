@@ -3,46 +3,25 @@ from abc import ABC, abstractmethod
 
 from .weapon_factories import PrimaryWeaponFactory, SecondaryWeaponFactory
 from .shield import Shield
-from .settings import (
-    BASE_HP,
-    BASE_SPEED,
-    BASE_SHIELD_STRENGTH,
-    BASE_SHIELD_COOLDOWN,
-    BASE_SHIELD_REGEN,
-)
 
 
 class Ship(ABC):
-    def __init__(self, ship_data: dict) -> None:
-        self.health = ship_data["multipliers"]["hp"] * BASE_HP
-        self.max_health = self.health
-        self.speed = ship_data["multipliers"]["speed"] * BASE_SPEED
-        self.secondary_offsets = ship_data["secondary_offsets"]
-        self.projectile_color = ship_data["projectile_color"]
+    def __init__(self) -> None:
         self.shield = None
-        self.base_shield_strength = (
-            ship_data["multipliers"]["shield_strength"] * BASE_SHIELD_STRENGTH
-        )
-        self.base_shield_cooldown = (
-            ship_data["multipliers"]["shield_cooldown"] * BASE_SHIELD_COOLDOWN
-        )
-        self.base_shield_regen = (
-            ship_data["multipliers"]["shield_regen"] * BASE_SHIELD_REGEN
-        )
         self.last_hit = 0
 
-    def add_shield(self, divisor: float) -> None:
+    def add_shield(self, size_ratio: float) -> None:
         """Adds shield to ship
 
         Args:
-            divisor (float): Amount to divide image size by for shield size
+            size_ratio (float): Amount to divide image size by for shield size
         """
 
         self.shield = Shield(
             self.base_shield_strength,
             self.base_shield_regen,
             self.base_shield_cooldown,
-            self.image.get_width() // divisor,
+            self.image.get_width() // size_ratio,
         )
 
     @abstractmethod

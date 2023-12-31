@@ -1,7 +1,7 @@
 import pygame
 
 from .behavior import Behavior
-from .settings import WIDTH
+from .settings import WIDTH, ENEMY_BASE_SPEED
 
 
 class ForwardBehavior(Behavior):
@@ -22,7 +22,7 @@ class ForwardBehavior(Behavior):
             direction (str, optional): direction of movement. Defaults to "r".
         """
 
-        pass
+        self.speed *= jerk
 
     def update(self, dt: float) -> None:
         """Calculate movement for this frame
@@ -32,3 +32,12 @@ class ForwardBehavior(Behavior):
         """
 
         self.movement = dt * self.vel_vector * self.speed
+
+    def get_points(self) -> float:
+        """Returns the value of the behavior. Used to determine difficulty of host enemy
+
+        Returns:
+            float: value of movement behavior
+        """
+
+        return self.speed / ENEMY_BASE_SPEED

@@ -13,9 +13,8 @@ ENEMY_SHIP_DATA = {
         "secondary_offsets": [[(24, 16), (40, 16)], [(20, 16), (44, 16)]],
         "projectile_color": "Red",
         "movement_behavior": "forward_behavior",
-        "fire_behavior": "single_fire_behavior",
-        "fire_behavior_args": [1500],
-        "start_with_shield": False,
+        "fire_behavior": "laser_fire_behavior",
+        "fire_behavior_args": [1500, 1],
     },
     "bug_2": {
         "multipliers": {
@@ -31,9 +30,8 @@ ENEMY_SHIP_DATA = {
         "secondary_offsets": [],
         "projectile_color": "Red",
         "movement_behavior": "s_behavior",
-        "fire_behavior": "double_tap_fire_behavior",
-        "fire_behavior_args": [750],
-        "start_with_shield": False,
+        "fire_behavior": "laser_fire_behavior",
+        "fire_behavior_args": [1000, 2],
     },
     "bug_3": {
         "multipliers": {
@@ -51,9 +49,8 @@ ENEMY_SHIP_DATA = {
         "secondary_offsets": [[(20, 16), (44, 16)]],
         "projectile_color": "Red",
         "movement_behavior": "stall_behavior",
-        "fire_behavior": "single_fire_behavior",
-        "fire_behavior_args": [1000],
-        "start_with_shield": False,
+        "fire_behavior": "laser_fire_behavior",
+        "fire_behavior_args": [1500, 1],
     },
     "bug_4": {
         "multipliers": {
@@ -69,9 +66,8 @@ ENEMY_SHIP_DATA = {
         "secondary_offsets": [],
         "projectile_color": "Red",
         "movement_behavior": "zig_zag_behavior",
-        "fire_behavior": "single_fire_behavior",
-        "fire_behavior_args": [1500],
-        "start_with_shield": False,
+        "fire_behavior": "laser_fire_behavior",
+        "fire_behavior_args": [1500, 1],
     },
     "bug_5": {
         "multipliers": {
@@ -89,7 +85,6 @@ ENEMY_SHIP_DATA = {
         "movement_behavior": "zig_zag_behavior",
         "fire_behavior": "beam_fire_behavior",
         "fire_behavior_args": [1500, 250],
-        "start_with_shield": False,
     },
     "bug_6": {
         "multipliers": {
@@ -105,8 +100,7 @@ ENEMY_SHIP_DATA = {
         "secondary_offsets": [],
         "projectile_color": "Red",
         "movement_behavior": "circle_behavior",
-        "fire_behavior": "single_fire_behavior",
-        "fire_behavior_args": [1500],
-        "start_with_shield": False,
+        "fire_behavior": "laser_fire_behavior",
+        "fire_behavior_args": [1500, 1],
     },
 }

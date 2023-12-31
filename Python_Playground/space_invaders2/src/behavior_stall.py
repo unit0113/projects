@@ -2,7 +2,7 @@ import pygame
 import random
 
 from .behavior import Behavior
-from .settings import BASE_SPEED, WIDTH
+from .settings import ENEMY_BASE_SPEED, WIDTH
 
 
 class StallBehavior(Behavior):
@@ -68,7 +68,9 @@ class StallBehavior(Behavior):
             self.timer = 0
             self.state = 3
         # Drift
-        elif self.state == 3 and self.timer > BASE_SPEED / (self.jerk * self.speed):
+        elif self.state == 3 and self.timer > ENEMY_BASE_SPEED / (
+            self.jerk * self.speed
+        ):
             self.accel_vector.x = 0
             self.timer = 0
             self.state = 4
@@ -78,7 +80,9 @@ class StallBehavior(Behavior):
             self.timer = 0
             self.state = 5
         # Drift
-        elif self.state == 5 and self.timer > 2 * BASE_SPEED / (self.jerk * self.speed):
+        elif self.state == 5 and self.timer > 2 * ENEMY_BASE_SPEED / (
+            self.jerk * self.speed
+        ):
             self.accel_vector.x = 0
             self.timer = 0
             self.state = 6
@@ -103,3 +107,12 @@ class StallBehavior(Behavior):
             self.accel_vector.y = 0
             self.timer = 0
             self.state = 10
+
+    def get_points(self) -> float:
+        """Returns the value of the behavior. Used to determine difficulty of host enemy
+
+        Returns:
+            float: value of movement behavior
+        """
+
+        return self.jerk * self.speed / ENEMY_BASE_SPEED

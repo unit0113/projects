@@ -25,6 +25,9 @@ class Game:
         # Initialize state stack
         self.state_stack = StateStack()
 
+        # Initialize enemy factory
+        self.enemy_factory = EnemyFactory(1, "bug")
+
         self.reset()
 
     def reset(self) -> None:
@@ -42,7 +45,7 @@ class Game:
         self.num_bombs = 3
 
         self.state_stack.push(TestState(self))
-        self.enemyGroup.add(EnemyFactory.get_enemy(1, "bug"))
+        self.enemyGroup.add(self.enemy_factory.get_enemy())
 
     def set_player(self, player: PlayerShip) -> None:
         """Recieves the player ship from the ship select state

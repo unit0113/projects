@@ -2,7 +2,7 @@ import pygame
 import random
 
 from .behavior import Behavior
-from .settings import BASE_SPEED, WIDTH
+from .settings import ENEMY_BASE_SPEED, WIDTH
 
 
 class CircleBehavior(Behavior):
@@ -23,7 +23,7 @@ class CircleBehavior(Behavior):
         self.accel_vector = pygame.Vector2(0, 0)
         self.timer = 0
         self.state = 0
-        self.wait_time = (1.5 + random.random() * 3) / (self.speed / BASE_SPEED)
+        self.wait_time = (1.5 + random.random() * 3) / (self.speed / ENEMY_BASE_SPEED)
 
     def set_starting_values(self, jerk: float = 0, direction: str = "r") -> None:
         """Set starting behavior values from enemy factory
@@ -33,7 +33,7 @@ class CircleBehavior(Behavior):
             direction (str, optional): direction of movement. Defaults to "r".
         """
 
-        self.accel_magnitude = 0.01 * jerk * (self.speed / BASE_SPEED)
+        self.accel_magnitude = 0.01 * jerk * (self.speed / ENEMY_BASE_SPEED)
         self.circle_function = (
             self._move_perpendicular_counter_clockwise
             if "r" in direction.lower()
@@ -78,3 +78,12 @@ class CircleBehavior(Behavior):
 
     def _aligned(self) -> bool:
         return 0.99 < self.vel_vector.y < 1.01
+
+    def get_points(self) -> float:
+        """Returns the value of the behavior. Used to determine difficulty of host enemy
+
+        Returns:
+            float: value of movement behavior
+        """
+
+        return self.jerk * self.speed / ENEMY_BASE_SPEED

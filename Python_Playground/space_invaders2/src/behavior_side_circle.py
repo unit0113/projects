@@ -2,7 +2,7 @@ import pygame
 import random
 
 from .behavior import Behavior
-from .settings import BASE_SPEED, WIDTH, HEIGHT
+from .settings import ENEMY_BASE_SPEED, WIDTH, HEIGHT
 
 
 class SideCircleBehavior(Behavior):
@@ -17,7 +17,7 @@ class SideCircleBehavior(Behavior):
         self.accel_vector = pygame.Vector2(0, 0)
         self.timer = 0
         self.state = 0
-        self.wait_time = (1.5 + random.random() * 3) / (self.speed / BASE_SPEED)
+        self.wait_time = (1.5 + random.random() * 3) / (self.speed / ENEMY_BASE_SPEED)
 
     def set_starting_values(self, jerk: float = 0, direction: str = "r") -> None:
         """Set starting behavior values from enemy factory
@@ -29,7 +29,7 @@ class SideCircleBehavior(Behavior):
 
         self.direction = 1 if "r" in direction.lower() else -1
         self.vel_vector = pygame.Vector2(self.direction, 0)
-        self.accel_magnitude = 0.01 * jerk * (self.speed / BASE_SPEED)
+        self.accel_magnitude = 0.01 * jerk * (self.speed / ENEMY_BASE_SPEED)
         self.circle_function = (
             self._move_perpendicular_counter_clockwise
             if "r" in direction.lower()
@@ -78,3 +78,12 @@ class SideCircleBehavior(Behavior):
 
     def _aligned(self) -> bool:
         return 0.99 < self.direction * self.vel_vector.x < 1.01
+
+    def get_points(self) -> float:
+        """Returns the value of the behavior. Used to determine difficulty of host enemy
+
+        Returns:
+            float: value of movement behavior
+        """
+
+        return self.jerk * self.speed / ENEMY_BASE_SPEED

@@ -2,7 +2,7 @@ import pygame
 import random
 
 from .behavior import Behavior
-from .settings import BASE_SPEED, WIDTH
+from .settings import ENEMY_BASE_SPEED, WIDTH
 
 
 class ZigZagBehavior(Behavior):
@@ -67,8 +67,11 @@ class ZigZagBehavior(Behavior):
             self.accel_vector.x = self.direction * self.accel_magnitude
             self.timer = 0
             self.state = 3
+            self._can_fire = False
         # Drift
-        elif self.state == 3 and self.timer > BASE_SPEED / (self.jerk * self.speed):
+        elif self.state == 3 and self.timer > ENEMY_BASE_SPEED / (
+            self.jerk * self.speed
+        ):
             self.accel_vector.x = 0
             self.timer = 0
             self.state = 4
@@ -83,13 +86,17 @@ class ZigZagBehavior(Behavior):
             self.vel_vector.x = 0
             self.timer = 0
             self.state = 6
+            self._can_fire = True
         # Accel to opposite direction
         elif self.state == 6 and self.timer > 1:
             self.accel_vector.x = self.direction * -self.accel_magnitude
             self.timer = 0
             self.state = 7
+            self._can_fire = False
         # Drift
-        elif self.state == 7 and self.timer > BASE_SPEED / (self.jerk * self.speed):
+        elif self.state == 7 and self.timer > ENEMY_BASE_SPEED / (
+            self.jerk * self.speed
+        ):
             self.accel_vector.x = 0
             self.timer = 0
             self.state = 8
@@ -104,3 +111,13 @@ class ZigZagBehavior(Behavior):
             self.vel_vector.x = 0
             self.timer = 0
             self.state = 2
+            self._can_fire = True
+
+    def get_points(self) -> float:
+        """Returns the value of the behavior. Used to determine difficulty of host enemy
+
+        Returns:
+            float: value of movement behavior
+        """
+
+        return self.jerk * self.speed / ENEMY_BASE_SPEED
