@@ -97,6 +97,7 @@ class Enemy(Ship, pygame.sprite.Sprite):
         self.movement_behavior.set_starting_values(behavior_jerk, direction)
         self.fire_behavior.set_level_improvement(fire_behavior_multiplier)
         self.health *= health_multiplier
+        self.max_health = self.health
         self.speed *= speed_multiplier
 
         self.points = (

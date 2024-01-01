@@ -22,6 +22,7 @@ class TestState(State):
 
         self.game.fire()
         self.game.remove_offscreen_objects()
+        self.game.spawn_enemies()
 
     def draw(self, window: pygame.Surface) -> None:
         """Draws to the game window

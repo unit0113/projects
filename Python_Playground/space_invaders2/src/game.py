@@ -6,7 +6,7 @@ from .background import Background
 from .state_test import TestState
 from .settings import WIDTH, HEIGHT, YELLOW, RED, GREEN, SHIELD_BLUE, GREY, NUM_LIVES
 from .player_ship import PlayerShip
-from .enemy_factory import EnemyFactory
+from .level_generator import LevelGenerator
 
 
 class Game:
@@ -18,34 +18,51 @@ class Game:
 
         # Initialize game asset groups
         self.playerProjectileGroup = pygame.sprite.Group()
-        self.enemyGroup = pygame.sprite.Group()
+        self.enemy_group = pygame.sprite.Group()
         self.enemyProjectileGroup = pygame.sprite.Group()
-        self.playerGroup = pygame.sprite.Group()
+        self.player_group = pygame.sprite.Group()
 
         # Initialize state stack
         self.state_stack = StateStack()
 
-        # Initialize enemy factory
-        self.enemy_factory = EnemyFactory(1, "bug")
+        # Initialize level generator
+        self.level_generator = LevelGenerator()
+        self.level_generator.generate_level()
 
         self.reset()
 
     def reset(self) -> None:
         """Reset the game"""
+        # Empty groups
         self.playerProjectileGroup.empty()
-        self.enemyGroup.empty()
+        self.enemy_group.empty()
         self.enemyProjectileGroup.empty()
-        self.playerGroup.empty()
+        self.player_group.empty()
 
+        # Clear state stack
         self.state_stack.empty()
 
+        # Reset game variables
         self.score = 0
         self.level = 1
         self.lives = NUM_LIVES
         self.num_bombs = 3
 
+        # Start first state
         self.state_stack.push(TestState(self))
-        self.enemyGroup.add(self.enemy_factory.get_enemy())
+
+    def next_level(self) -> None:
+        """Progress to next level"""
+        self.level += 1
+
+        # Empty Groups
+        self.playerProjectileGroup.empty()
+        self.enemy_group.empty()
+        self.enemyProjectileGroup.empty()
+
+        # Generate enemies
+        self.level_generator.next_level()
+        self.level_generator.generate_level()
 
     def set_player(self, player: PlayerShip) -> None:
         """Recieves the player ship from the ship select state
@@ -54,8 +71,8 @@ class Game:
             player (PlayerShip): the players ship
         """
         self.player = player
-        self.playerGroup.empty()
-        self.playerGroup.add(player)
+        self.player_group.empty()
+        self.player_group.add(player)
 
     def load_assets(self) -> None:
         """Loads and stores game assets"""
@@ -99,7 +116,7 @@ class Game:
             dt (float): time since last frame
         """
 
-        self.playerGroup.update(dt)
+        self.player_group.update(dt)
 
     def update_enemies(self, dt: float) -> None:
         """Public method to allow states to update enemies groups
@@ -108,7 +125,7 @@ class Game:
             dt (float): time since last frame
         """
 
-        self.enemyGroup.update(dt)
+        self.enemy_group.update(dt)
 
     def update_projectiles(self, dt: float) -> None:
         """Public method to allow states to update projectile groups
@@ -117,14 +134,14 @@ class Game:
             dt (float): time since last frame
         """
 
-        self.playerProjectileGroup.update(dt, self.enemyGroup)
-        self.enemyProjectileGroup.update(dt, self.playerGroup)
+        self.playerProjectileGroup.update(dt, self.enemy_group)
+        self.enemyProjectileGroup.update(dt, self.player_group)
 
     def check_collisions(self) -> None:
         """Public method to determine collisions and calculate damage done"""
 
         # Check damage to enemies
-        for enemy in self.enemyGroup:
+        for enemy in self.enemy_group:
             for projectile in self.playerProjectileGroup:
                 if enemy.shield_active and pygame.sprite.collide_circle(
                     enemy.shield, projectile
@@ -138,7 +155,7 @@ class Game:
                 pass
 
         # Check damage to player
-        for player in self.playerGroup:
+        for player in self.player_group:
             for projectile in self.enemyProjectileGroup:
                 if player.shield_active and pygame.sprite.collide_circle(
                     player.shield, projectile
@@ -148,8 +165,8 @@ class Game:
                     player.take_damage(projectile.get_ship_damage())
 
         # Check ship to ship collision
-        for player in self.playerGroup:
-            for enemy in self.enemyGroup:
+        for player in self.player_group:
+            for enemy in self.enemy_group:
                 if self.is_collision(enemy, player):
                     player.take_damage(enemy.max_health)
                     enemy.kill()
@@ -174,13 +191,13 @@ class Game:
         """
 
         # Get player projectiles
-        for player in self.playerGroup:
+        for player in self.player_group:
             player_projectiles = player.fire()
             if player_projectiles:
                 self.playerProjectileGroup.add(player_projectiles)
 
         # Get enemy projectiles
-        for enemy in self.enemyGroup:
+        for enemy in self.enemy_group:
             enemy_projectiles = enemy.fire()
             if enemy_projectiles:
                 self.enemyProjectileGroup.add(enemy_projectiles)
@@ -196,7 +213,7 @@ class Game:
             if not self.object_is_onscreen(projectile, [self.is_offscreen_down]):
                 projectile.kill()
 
-        for enemy in self.enemyGroup:
+        for enemy in self.enemy_group:
             if not self.object_is_onscreen(enemy, [self.is_offscreen_down]):
                 enemy.kill()
 
@@ -235,6 +252,11 @@ class Game:
         self.background.draw(window)
         self.state_stack.draw(window)
 
+    def spawn_enemies(self) -> None:
+        enemy = self.level_generator.spawn_enemy()
+        if enemy:
+            self.enemy_group.add(enemy)
+
     def draw_player(self, window: pygame.Surface) -> None:
         """Public method to allow states to draw player
 
@@ -242,7 +264,7 @@ class Game:
             window (pygame.Surface): pygame surface to draw on
         """
 
-        for player in self.playerGroup:
+        for player in self.player_group:
             player.draw(window)
 
     def draw_enemies(self, window: pygame.Surface) -> None:
@@ -252,7 +274,7 @@ class Game:
             window (pygame.Surface): pygame surface to draw on
         """
 
-        for enemy in self.enemyGroup:
+        for enemy in self.enemy_group:
             enemy.draw(window)
 
     def draw_projectiles(self, window: pygame.Surface) -> None:
