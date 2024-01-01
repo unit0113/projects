@@ -37,13 +37,14 @@ class Enemy(Ship, pygame.sprite.Sprite):
         Ship.__init__(self)
         pygame.sprite.Sprite.__init__(self)
 
+        # Set basic ship data
         ship_data = ENEMY_SHIP_DATA[ship_type]
-
         self.health = ship_data["multipliers"]["hp"] * ENEMY_BASE_HP
         self.speed = ship_data["multipliers"]["speed"] * ENEMY_BASE_SPEED
         self.secondary_offsets = ship_data["secondary_offsets"]
         self.projectile_color = ship_data["projectile_color"]
 
+        # Set shield baseline stats
         self.base_shield_strength = (
             ship_data["multipliers"]["shield_strength"] * ENEMY_BASE_SHIELD_STRENGTH
         )
@@ -78,7 +79,20 @@ class Enemy(Ship, pygame.sprite.Sprite):
         )
 
     def get_valid_start_positions(self) -> dict:
+        """Returns the movement behavior's starting location data
+
+        Returns:
+            dict: valid start positions of the assigned movement behavior
+        """
         return self.movement_behavior.valid_start_locations
+
+    def get_group_data(self) -> dict:
+        """Returns the movement behavior's group starting location data
+
+        Returns:
+            dict: valid start positions of the assigned movement behavior for groups
+        """
+        return self.movement_behavior.group_data
 
     def set_start_condition(
         self,
@@ -92,6 +106,20 @@ class Enemy(Ship, pygame.sprite.Sprite):
         shield_strength_multipler: float,
         speed_multiplier: float,
     ) -> None:
+        """Initialize the position and capabilities of the ship based on the movement behavior and level difficulty
+
+        Args:
+            x (int): Starting X position
+            y (int): Starting Y position
+            behavior_jerk (float): Jerk to be assigned to movement behavior
+            direction (str): Direction of the movement behavior
+            fire_behavior_multiplier (float): Fire rate cooldown modifier
+            health_multiplier (float): Health modifier
+            add_shield (bool): Whether to add shield to the ship
+            shield_strength_multipler (float): Shield strength modifier
+            speed_multiplier (float): Speed modifier
+        """
+        # Update stats
         self.pos = pygame.Vector2(x, y)
         self.rect.center = self.pos
         self.movement_behavior.set_starting_values(behavior_jerk, direction)
@@ -100,6 +128,7 @@ class Enemy(Ship, pygame.sprite.Sprite):
         self.max_health = self.health
         self.speed *= speed_multiplier
 
+        # Initialize ship point value
         self.points = (
             self.movement_behavior.get_points()
             + self.fire_behavior.get_points()
@@ -107,6 +136,7 @@ class Enemy(Ship, pygame.sprite.Sprite):
             * health_multiplier
             * speed_multiplier
         )
+
         if add_shield:
             self.base_shield_strength *= shield_strength_multipler
             self.add_shield(1.5)
@@ -140,6 +170,11 @@ class Enemy(Ship, pygame.sprite.Sprite):
             self.image = self.sprites[self.orientation][self.frame_index]
 
     def fire(self):
+        """Creates projectiles if the ship is able to fire
+
+        Returns:
+            Optional[Laser, Missile, Torpedo]: projectiles fired during this frame
+        """
         projectiles = []
         if self.movement_behavior.can_fire() and self.fire_behavior.can_fire():
             for weapon in self.primary_weapons:
@@ -156,4 +191,9 @@ class Enemy(Ship, pygame.sprite.Sprite):
         return projectiles
 
     def get_points(self) -> float:
+        """Return the point value of the ship
+
+        Returns:
+            float: Ship's point value
+        """
         return self.points

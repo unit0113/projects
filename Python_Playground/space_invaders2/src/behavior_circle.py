@@ -16,6 +16,11 @@ class CircleBehavior(Behavior):
         },
     }
 
+    group_data = {
+        "max_group_size": 5,
+        "spawn_timing": "sequential",
+    }
+
     def __init__(self, speed: int) -> None:
         self._can_fire = False
         self.speed = speed

@@ -134,8 +134,8 @@ PLAYER_SHIP_DATA = {
         "speed": 500,
         "hp": 200,
         "sprite_sheet": "planes_03A",
-        "primary_weapons": [["turbolaser", (48, 20)]],
-        "secondary_weapons": ["torpedo"],
+        "primary_weapons": [["gatling", (48, 20)]],
+        "secondary_weapons": ["missile"],
         "secondary_offsets": [
             [(40, 35), (56, 35)],
             [(34, 40), (62, 40)],

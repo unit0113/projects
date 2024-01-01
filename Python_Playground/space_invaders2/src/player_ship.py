@@ -186,7 +186,7 @@ class PlayerShip(Ship, pygame.sprite.Sprite):
         """Returns the projectiles that the ship fired this frame
 
         Returns:
-            Optional[Projectile]: projectiles fired
+            Optional[Laser, Missile, Torpedo]: projectiles fired
         """
 
         projectiles = []

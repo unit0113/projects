@@ -7,13 +7,48 @@ from .settings import ENEMY_BASE_SPEED, WIDTH
 
 class StallBehavior(Behavior):
     valid_start_locations = {
-        "r": {"start_x": 25, "end_x": WIDTH // 2 - 75, "start_y": -50, "end_y": -50},
+        "r": {"start_x": 25, "end_x": WIDTH // 2 - 50, "start_y": -50, "end_y": -50},
         "l": {
             "start_x": WIDTH // 2 - 75,
-            "end_x": WIDTH - 75,
+            "end_x": WIDTH - 50,
             "start_y": -50,
             "end_y": -50,
         },
+    }
+
+    group_data = {
+        "max_group_size": 4,
+        "spawn_timing": "simultaneous",
+        "starting_positions": [
+            {
+                "start_x": 25,
+                "end_x": 150,
+                "start_y": -50,
+                "end_y": -50,
+                "direction": "r",
+            },
+            {
+                "start_x": 200,
+                "end_x": WIDTH // 2 - 50,
+                "start_y": -50,
+                "end_y": -50,
+                "direction": "r",
+            },
+            {
+                "start_x": WIDTH // 2 - 75,
+                "end_x": WIDTH // 2 + 75,
+                "start_y": -50,
+                "end_y": -50,
+                "direction": "l",
+            },
+            {
+                "start_x": WIDTH // 2 + 125,
+                "end_x": WIDTH - 50,
+                "start_y": -50,
+                "end_y": -50,
+                "direction": "l",
+            },
+        ],
     }
 
     def __init__(self, speed: float) -> None:

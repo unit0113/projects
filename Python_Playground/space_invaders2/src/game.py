@@ -4,9 +4,12 @@ from typing import Callable
 from .state_stack import StateStack
 from .background import Background
 from .state_test import TestState
+from .state_menu import MenuState
 from .settings import WIDTH, HEIGHT, YELLOW, RED, GREEN, SHIELD_BLUE, GREY, NUM_LIVES
 from .player_ship import PlayerShip
 from .level_generator import LevelGenerator
+
+DEV_MODE = False
 
 
 class Game:
@@ -44,12 +47,17 @@ class Game:
 
         # Reset game variables
         self.score = 0
+        self.money = 0
         self.level = 1
         self.lives = NUM_LIVES
         self.num_bombs = 3
 
         # Start first state
-        self.state_stack.push(TestState(self))
+        self.level_generator.generate_level()
+        if DEV_MODE:
+            self.state_stack.push(TestState(self))
+        else:
+            self.state_stack.push(MenuState(self))
 
     def next_level(self) -> None:
         """Progress to next level"""
@@ -90,7 +98,7 @@ class Game:
         ).convert_alpha()
 
         # Load fonts
-        self.assets["score_font"] = pygame.font.Font(
+        self.assets["font"] = pygame.font.Font(
             "src/assets/fonts/kenvector_future.ttf", 40
         )
 
@@ -152,7 +160,8 @@ class Game:
                     if enemy.is_dead:
                         break
             if enemy.is_dead:
-                pass
+                self.score += int(enemy.get_points() * 10)
+                enemy.kill()
 
         # Check damage to player
         for player in self.player_group:
@@ -356,7 +365,7 @@ class Game:
                 )
 
         # Draw score
-        score_text = self.assets["score_font"].render(f"Score: {self.score}", 1, GREY)
+        score_text = self.assets["font"].render(f"Score: {self.score}", 1, GREY)
         window.blit(score_text, (20, 10))
 
         # Draw lives

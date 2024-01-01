@@ -11,6 +11,11 @@ class SideCircleBehavior(Behavior):
         "l": {"start_x": WIDTH, "end_x": WIDTH, "start_y": 40, "end_y": HEIGHT // 3},
     }
 
+    group_data = {
+        "max_group_size": 5,
+        "spawn_timing": "sequential",
+    }
+
     def __init__(self, speed: float) -> None:
         self._can_fire = False
         self.speed = speed
