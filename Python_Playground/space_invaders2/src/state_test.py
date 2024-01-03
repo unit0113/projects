@@ -45,11 +45,11 @@ class TestState(State):
 
         pass
 
-    def process_event(self, event: pygame.event.Event):
-        """Handle specific event
+    def process_events(self, events: list[pygame.event.Event]):
+        """Handle game events
 
         Args:
-            event (pygame.event.Event): event to handle
+            events (list[pygame.event.Event]): events to handle
         """
 
         pass

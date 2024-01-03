@@ -1,12 +1,9 @@
 import pygame
 
 from .state import State
-from .state_test import TestState
-from .functions import draw_text, draw_lines
-from .settings import WIDTH, HEIGHT
-
-Y_GAP = 50
-KEY_PRESS_DELAY = 0.1
+from .state_ship_select import ShipSelectState
+from .functions import Text, create_stacked_text, draw_lines
+from .settings import WIDTH, HEIGHT, KEY_PRESS_DELAY
 
 
 class MenuState(State):
@@ -31,9 +28,30 @@ class MenuState(State):
             (WIDTH // 2 + 200, HEIGHT // 4 + 25),
             (WIDTH // 2 + 100, HEIGHT // 4 + 25),
         ]
+
+        self.title_text = Text(
+            "Menu", (WIDTH // 2, HEIGHT // 4 + 25), self.game.assets["font"]
+        )
         self.menu_title_position = (WIDTH // 2, HEIGHT // 4 + 25)
-        self.options = ["New Game", "Options", "Exit"]
-        self.options_start_pos = HEIGHT // 2 - 50
+        self.options = create_stacked_text(
+            ["New Game", "Options", "Exit"],
+            WIDTH // 2,
+            HEIGHT // 2 - 50,
+            50,
+            self.game.assets["font"],
+        )
+
+        # Semi-transparent backround
+        # Half height due to overlap with main rect
+        self.title_backround_rect = pygame.Surface((200, 25))
+        self.title_backround_rect.set_alpha(128)
+        self.title_backround_rect.fill((0, 0, 0))
+
+        self.main_backround_rect = pygame.Surface(
+            (400, (3 * HEIGHT // 4) - (HEIGHT // 4 + 25))
+        )
+        self.main_backround_rect.set_alpha(128)
+        self.main_backround_rect.fill((0, 0, 0))
 
     def update(self, dt: float, **kwargs) -> None:
         """Update game object in game loop
@@ -68,18 +86,33 @@ class MenuState(State):
                 if self.selected >= len(self.options):
                     self.selected = 0
 
+        # Mouse over
+        pos = pygame.mouse.get_pos()
+        for index, option in enumerate(self.options):
+            if option.mouse_over(pos):
+                self.selected = index
+                break
+
         # Select option
         if keys[pygame.K_RETURN]:
-            # Start game
-            if self.selected == 0:
-                self.should_exit = True
-            # Options
-            if self.selected == 1:
-                pass
-            # Exit
-            if self.selected == 2:
-                pygame.quit()
-                quit()
+            self._select_menu_option(self.selected)
+
+    def _select_menu_option(self, selected: int = None) -> None:
+        """Executes a selected menu option
+
+        Args:
+            selected (int): Index of selected option
+        """
+        # Start game
+        if selected == 0:
+            self.should_exit = True
+        # Options
+        if selected == 1:
+            pass
+        # Exit
+        if selected == 2:
+            pygame.quit()
+            quit()
 
     def draw(self, window: pygame.Surface) -> None:
         """Draws to the game window
@@ -87,10 +120,16 @@ class MenuState(State):
         Args:
             window (pygame.Surface): pygame surface to draw on
         """
+        # Draw transparent rects
+        window.blit(self.title_backround_rect, self.points1[0])
+        window.blit(self.main_backround_rect, self.points2[1])
+        # Draw outline
         draw_lines(window, self.points1, 4)
         draw_lines(window, self.points2, 4)
-        draw_text(window, "Menu", *self.menu_title_position, self.game.assets["font"])
-        self._draw_options(window)
+        # Draw text
+        self.title_text.draw(window)
+        for index, option in enumerate(self.options):
+            option.draw(window, self.selected == index)
 
     def enter(self, **kwargs) -> None:
         """Actions to perform upon entering the state"""
@@ -99,29 +138,21 @@ class MenuState(State):
     def exit(self) -> None:
         """Actions to perform upon exiting the state"""
 
-        self.next_state = TestState(self.game)
+        self.next_state = ShipSelectState(self.game)
 
-    def process_event(self, event: pygame.event.Event):
-        """Handle specific event
-
-        Args:
-            event (pygame.event.Event): event to handle
-        """
-
-        pass
-
-    def _draw_options(self, window: pygame.Surface) -> None:
-        """Draws the menu options to the screen
+    def process_events(self, events: list[pygame.event.Event]):
+        """Handle game events
 
         Args:
-            window (pygame.Surface): pygame surface to draw on
+            events (list[pygame.event.Event]): events to handle
         """
-        for index, option in enumerate(self.options):
-            draw_text(
-                window,
-                option,
-                WIDTH // 2,
-                self.options_start_pos + Y_GAP * index,
-                self.game.assets["font"],
-                self.selected != None and self.selected == index,
-            )
+
+        # Select option mouse
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONUP:
+                pos = pygame.mouse.get_pos()
+                for index, option in enumerate(self.options):
+                    if option.mouse_over(pos):
+                        self._select_menu_option(index)
+                        break
+                break

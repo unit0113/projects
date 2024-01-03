@@ -48,7 +48,7 @@ class StateStack:
             return self.states[-1]
         return None
 
-    def update(self, dt: float):
+    def update(self, dt: float, events: list[pygame.event.Event]):
         """Update game objects in game loop
 
         Args:
@@ -57,6 +57,7 @@ class StateStack:
 
         if self.states:
             self.states[-1].update(dt)
+            self.states[-1].process_events(events)
             if self.states[-1].should_exit:
                 self.pop()
 

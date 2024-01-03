@@ -35,7 +35,8 @@ def main() -> None:
         prev_time = now
 
         # Event handler
-        for event in pygame.event.get():
+        events = pygame.event.get()
+        for event in events:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
@@ -54,7 +55,7 @@ def main() -> None:
             reset_presed = False
 
         # Update game
-        game.update(dt)
+        game.update(dt, events)
         game.draw(window)
 
         pygame.display.update()

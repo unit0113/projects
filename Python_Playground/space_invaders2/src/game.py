@@ -101,13 +101,19 @@ class Game:
         self.assets["font"] = pygame.font.Font(
             "src/assets/fonts/kenvector_future.ttf", 40
         )
+        self.assets["med_font"] = pygame.font.Font(
+            "src/assets/fonts/kenvector_future.ttf", 30
+        )
+        self.assets["small_font"] = pygame.font.Font(
+            "src/assets/fonts/kenvector_future.ttf", 25
+        )
 
         # Load bomb icon
         self.assets["bomb"] = pygame.image.load(
             f"src/assets/ui/icon-bomb.png"
         ).convert_alpha()
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: float, events: list[pygame.event.Event]) -> None:
         """Update game objects in game loop
 
         Args:
@@ -115,7 +121,7 @@ class Game:
         """
 
         self.background.update(dt)
-        self.state_stack.update(dt)
+        self.state_stack.update(dt, events)
 
     def update_player(self, dt: float) -> None:
         """Public method to allow states to update player ship
