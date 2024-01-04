@@ -10,6 +10,9 @@ from .functions import (
 from .settings import WIDTH, HEIGHT, FRAME_TIME, KEY_PRESS_DELAY, GREY, MAGENTA
 from .player_ship import PlayerShip
 from .button import Button
+from .status_bar import StatusBar
+
+Y_GAP = 40
 
 
 class ShipSelectState(State):
@@ -18,7 +21,7 @@ class ShipSelectState(State):
 
         self.key_down = False
         self.key_timer = 0
-        self.selected_ship = 7
+        self.selected_ship = 0
         self.ships = list(PLAYER_SHIP_DATA.keys())
         characteristics = [
             "Base Stats",
@@ -40,7 +43,7 @@ class ShipSelectState(State):
         ]
         colors = [GREY if item[0] == " " else MAGENTA for item in characteristics]
         self.characteristics = create_mixed_stacked_text(
-            characteristics, WIDTH // 2 - 275, 200, 40, fonts, colors, True
+            characteristics, WIDTH // 2 - 275, 200, Y_GAP, fonts, colors, True
         )
         self.get_ship_min_max_data()
 
@@ -71,6 +74,67 @@ class ShipSelectState(State):
         self.main_backround_rect = pygame.Surface((600, HEIGHT - 425))
         self.main_backround_rect.set_alpha(128)
         self.main_backround_rect.fill((0, 0, 0))
+
+        # Status bars
+        self.health_status_bar = StatusBar(
+            (WIDTH // 2 + 50, 200 + Y_GAP),
+            (225, 25),
+            self.min_hp,
+            self.max_hp,
+            PLAYER_SHIP_DATA[self.ships[self.selected_ship]]["multipliers"]["hp"],
+        )
+        self.speed_status_bar = StatusBar(
+            (WIDTH // 2 + 50, 200 + 2 * Y_GAP),
+            (225, 25),
+            self.min_speed,
+            self.max_speed,
+            PLAYER_SHIP_DATA[self.ships[self.selected_ship]]["multipliers"]["speed"],
+        )
+        self.shield_strength_status_bar = StatusBar(
+            (WIDTH // 2 + 50, 200 + 4 * Y_GAP),
+            (225, 25),
+            self.min_shield_strength,
+            self.max_shield_strength,
+            PLAYER_SHIP_DATA[self.ships[self.selected_ship]]["multipliers"][
+                "shield_strength"
+            ],
+        )
+        self.shield_cooldown_status_bar = StatusBar(
+            (WIDTH // 2 + 50, 200 + 5 * Y_GAP),
+            (225, 25),
+            self.min_shield_cooldown,
+            self.max_shield_cooldown,
+            PLAYER_SHIP_DATA[self.ships[self.selected_ship]]["multipliers"][
+                "shield_cooldown"
+            ],
+        )
+        self.shield_regen_status_bar = StatusBar(
+            (WIDTH // 2 + 50, 200 + 6 * Y_GAP),
+            (225, 25),
+            self.min_shield_regen,
+            self.max_shield_regen,
+            PLAYER_SHIP_DATA[self.ships[self.selected_ship]]["multipliers"][
+                "shield_regen"
+            ],
+        )
+        self.starting_firepower_status_bar = StatusBar(
+            (WIDTH // 2 + 50, 200 + 8 * Y_GAP),
+            (225, 25),
+            self.min_starting_firepower,
+            self.max_starting_firepower,
+            self._calculate_starting_firepower(
+                PLAYER_SHIP_DATA[self.ships[self.selected_ship]]
+            ),
+        )
+        self.potential_firepower_status_bar = StatusBar(
+            (WIDTH // 2 + 50, 200 + 9 * Y_GAP),
+            (225, 25),
+            self.min_potential_firepower,
+            self.max_potential_firepower,
+            self._calculate_potential_firepower(
+                PLAYER_SHIP_DATA[self.ships[self.selected_ship]]
+            ),
+        )
 
         # Ship animation
         self.ship_sprites = {}
@@ -144,6 +208,39 @@ class ShipSelectState(State):
                 sprite = pygame.transform.scale_by(sprite, 2)
                 sprites.append(sprite)
             self.ship_sprites[self.selected_ship] = sprites
+
+        # Update status bars
+        self.health_status_bar.update_value(
+            PLAYER_SHIP_DATA[self.ships[self.selected_ship]]["multipliers"]["hp"]
+        )
+        self.speed_status_bar.update_value(
+            PLAYER_SHIP_DATA[self.ships[self.selected_ship]]["multipliers"]["speed"]
+        )
+        self.shield_strength_status_bar.update_value(
+            PLAYER_SHIP_DATA[self.ships[self.selected_ship]]["multipliers"][
+                "shield_strength"
+            ]
+        )
+        self.shield_cooldown_status_bar.update_value(
+            PLAYER_SHIP_DATA[self.ships[self.selected_ship]]["multipliers"][
+                "shield_cooldown"
+            ]
+        )
+        self.shield_regen_status_bar.update_value(
+            PLAYER_SHIP_DATA[self.ships[self.selected_ship]]["multipliers"][
+                "shield_regen"
+            ]
+        )
+        self.starting_firepower_status_bar.update_value(
+            self._calculate_starting_firepower(
+                PLAYER_SHIP_DATA[self.ships[self.selected_ship]]
+            )
+        )
+        self.potential_firepower_status_bar.update_value(
+            self._calculate_potential_firepower(
+                PLAYER_SHIP_DATA[self.ships[self.selected_ship]]
+            )
+        )
 
     def get_ship_min_max_data(self) -> None:
         """Parses the player ship data and finds the min and max values of characteristics"""
@@ -220,20 +317,47 @@ class ShipSelectState(State):
                     "shield_regen"
                 ]
             # Firepower
-            starting_firepower = 2 * len(
-                PLAYER_SHIP_DATA[ship]["primary_weapons"]
-            ) + len(PLAYER_SHIP_DATA[ship]["secondary_weapons"])
+            starting_firepower = self._calculate_starting_firepower(
+                PLAYER_SHIP_DATA[ship]
+            )
             if starting_firepower < self.min_starting_firepower:
                 self.min_starting_firepower = starting_firepower
             if starting_firepower > self.max_starting_firepower:
                 self.max_starting_firepower = starting_firepower
-            potential_firepower = 2 * len(
-                PLAYER_SHIP_DATA[ship]["primary_weapons"]
-            ) + len(PLAYER_SHIP_DATA[ship]["secondary_offsets"])
+
+            potential_firepower = self._calculate_potential_firepower(
+                PLAYER_SHIP_DATA[ship]
+            )
             if potential_firepower < self.min_potential_firepower:
                 self.min_potential_firepower = potential_firepower
             if potential_firepower > self.max_potential_firepower:
                 self.max_potential_firepower = potential_firepower
+
+    def _calculate_starting_firepower(self, ship_data: dict) -> float:
+        """Determines the starting firepower of the provided ship
+
+        Args:
+            ship_data (dict): Ship data to calculate from
+
+        Returns:
+            float: Starting firepower of provided ship
+        """
+        return 2 * len(ship_data["primary_weapons"]) + len(
+            ship_data["secondary_weapons"]
+        )
+
+    def _calculate_potential_firepower(self, ship_data: dict) -> float:
+        """Determines the potential firepower of the provided ship
+
+        Args:
+            ship_data (dict): Ship data to calculate from
+
+        Returns:
+            float: Potential firepower of provided ship
+        """
+        return 2 * len(ship_data["primary_weapons"]) + len(
+            ship_data["secondary_offsets"]
+        )
 
     def update(self, dt: float, **kwargs) -> None:
         """Update game object in game loop
@@ -325,6 +449,14 @@ class ShipSelectState(State):
         window.blit(self.right_arrow_image, self.right_arrow_rect)
         # Draw button
         self.select_button.draw(window)
+        # Draw status bars
+        self.health_status_bar.draw(window)
+        self.speed_status_bar.draw(window)
+        self.shield_strength_status_bar.draw(window)
+        self.shield_cooldown_status_bar.draw(window)
+        self.shield_regen_status_bar.draw(window)
+        self.starting_firepower_status_bar.draw(window)
+        self.potential_firepower_status_bar.draw(window)
 
     def enter(self, **kwargs) -> None:
         """Actions to perform upon entering the state"""
