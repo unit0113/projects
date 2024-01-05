@@ -6,7 +6,7 @@ from .settings import MIN_JERK, MAX_JERK, LEVEL_IMPROVEMENT_FACTOR
 
 
 class EnemyFactory:
-    def __init__(self, level: int, faction: str) -> None:
+    def __init__(self, level: int, faction: str, enemy_sprites: dict) -> None:
         self.improvement_dist = self._get_distribution(
             MIN_JERK,
             MAX_JERK,
@@ -14,6 +14,7 @@ class EnemyFactory:
             0.25,
         )
         self.faction = faction
+        self.enemy_sprites = enemy_sprites
 
     def _get_distribution(self, minimum: float, maximum: float, avg: float, std: float):
         dist = truncnorm(
@@ -21,13 +22,22 @@ class EnemyFactory:
         )
         return dist
 
+    def get_raw_enemy(self) -> Enemy:
+        """Return a created enemy
+
+        Returns:
+            Enemy: Raw enemy
+        """
+        enemy_type = f"{self.faction}_{random.randint(1, 6)}"
+        return Enemy(enemy_type, self.enemy_sprites[enemy_type])
+
     def get_enemy(self) -> Enemy:
         """Generate a single enemy
 
         Returns:
             Enemy: Single Enemy
         """
-        enemy = Enemy(f"{self.faction}_{random.randint(1, 6)}")
+        enemy = self.get_raw_enemy()
 
         start_position_data = enemy.get_valid_start_positions()
         direction = random.choice(list(start_position_data.keys()))
@@ -62,8 +72,8 @@ class EnemyFactory:
         Returns:
             list[Enemy]: Group of enemies
         """
-        enemy_type = random.randint(1, 6)
-        enemy_template = Enemy(f"{self.faction}_{enemy_type}")
+        enemy_type = f"{self.faction}_{random.randint(1, 6)}"
+        enemy_template = self.get_raw_enemy()
 
         group_data = enemy_template.get_group_data()
         spawn_timing = group_data["spawn_timing"]
@@ -101,7 +111,7 @@ class EnemyFactory:
 
         # Generate enemies
         for slot in slots:
-            enemy = Enemy(f"{self.faction}_{enemy_type}")
+            enemy = Enemy(enemy_type, self.enemy_sprites[enemy_type])
             factors = self.improvement_dist.rvs(6)
             x = random.randint(
                 group_data["starting_positions"][slot]["start_x"],
@@ -156,7 +166,7 @@ class EnemyFactory:
 
         # Generate enemies
         for _ in range(num_enemies):
-            enemy = Enemy(f"{self.faction}_{enemy_type}")
+            enemy = Enemy(enemy_type, self.enemy_sprites[enemy_type])
             factors = self.improvement_dist.rvs(6)
             enemy.set_start_condition(
                 x,

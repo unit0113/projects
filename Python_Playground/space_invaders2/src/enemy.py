@@ -33,7 +33,7 @@ BEHAVIORS = {
 
 
 class Enemy(Ship, pygame.sprite.Sprite):
-    def __init__(self, ship_type: str) -> None:
+    def __init__(self, ship_type: str, sprite_sheet: pygame.Surface) -> None:
         Ship.__init__(self)
         pygame.sprite.Sprite.__init__(self)
 
@@ -55,9 +55,7 @@ class Enemy(Ship, pygame.sprite.Sprite):
             ship_data["multipliers"]["shield_regen"] * ENEMY_BASE_SHIELD_REGEN
         )
 
-        self.sprites = self.load_sprite_sheet(
-            ENEMY_SHIP_DATA[ship_type]["sprite_sheet"], 1, 6, scale=1
-        )
+        self.sprites = self.split_sprite_sheet(sprite_sheet, 1, 6, scale=1)
 
         # Image and animation data
         self.orientation = "level"

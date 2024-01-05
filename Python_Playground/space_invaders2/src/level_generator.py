@@ -15,10 +15,11 @@ ENEMY_TYPES = ["bug"]
 
 
 class LevelGenerator:
-    def __init__(self) -> None:
+    def __init__(self, enemy_sprites: dict[str, pygame.Surface]) -> None:
         self.level = 1
         self.level_points = BASE_LEVEL_POINTS
         self.spacing = BASE_ENEMY_SPACING_MS
+        self.enemy_sprites = enemy_sprites
 
     def next_level(self) -> None:
         """Increase the level to be generated"""
@@ -39,7 +40,9 @@ class LevelGenerator:
     def generate_level(self) -> None:
         """Generates the enemies that will spawn during the level"""
         self.enemy_queue = []
-        enemy_factory = EnemyFactory(self.level, random.choice(ENEMY_TYPES))
+        enemy_factory = EnemyFactory(
+            self.level, random.choice(ENEMY_TYPES), self.enemy_sprites
+        )
         points_remaining = self.level_points
         spawn_time = BASE_ENEMY_SPACING_MS // 2
 

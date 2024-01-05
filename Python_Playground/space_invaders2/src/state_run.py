@@ -3,7 +3,7 @@ import pygame
 from .state import State
 
 
-class TestState(State):
+class RunState(State):
     def __init__(self, game) -> None:
         super().__init__(game)
 
@@ -37,7 +37,7 @@ class TestState(State):
 
     def enter(self, **kwargs) -> None:
         """Actions to perform upon entering the state"""
-        self.game.set_player("Test")
+        pass
 
     def exit(self) -> None:
         """Actions to perform upon exiting the state"""

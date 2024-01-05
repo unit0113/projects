@@ -44,21 +44,26 @@ class Ship(ABC):
 
         pass
 
-    def load_sprite_sheet(
-        self, ship_type: str, num_rows: int, num_cols: int, *, scale: float = 1
+    def split_sprite_sheet(
+        self,
+        sprite_sheet: pygame.Surface,
+        num_rows: int,
+        num_cols: int,
+        *,
+        scale: float = 1
     ) -> dict[str, list[pygame.Surface]]:
-        """Loads and parses the spritesheet of the provided ship_type
+        """Parses the spritesheet of the provided ship_type
 
         Args:
-            ship_type (str): name of ship to load
+            sprite_sheet (pygame.Surface): Sprite sheet to parse
+            num_rows (int): Number of rows
+            num_cols (int): Number of columns
+            scale (float, optional): Factor to scale sprites by. Defaults to 1.
 
         Returns:
             dict[str, list[pygame.Surface]]: dict containing animation frames
         """
 
-        sprite_sheet = pygame.image.load(
-            f"src/assets/ships/{ship_type}.png"
-        ).convert_alpha()
         size_h = sprite_sheet.get_width() // num_cols
         size_v = sprite_sheet.get_height() // num_rows
 

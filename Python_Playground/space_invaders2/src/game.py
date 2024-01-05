@@ -1,4 +1,5 @@
 import pygame
+import os
 from typing import Callable
 
 from .state_stack import StateStack
@@ -7,6 +8,7 @@ from .state_test import TestState
 from .state_menu import MenuState
 from .settings import WIDTH, HEIGHT, YELLOW, RED, GREEN, SHIELD_BLUE, GREY, NUM_LIVES
 from .player_ship import PlayerShip
+from .player_ship_data import PLAYER_SHIP_DATA
 from .level_generator import LevelGenerator
 
 DEV_MODE = False
@@ -29,7 +31,7 @@ class Game:
         self.state_stack = StateStack()
 
         # Initialize level generator
-        self.level_generator = LevelGenerator()
+        self.level_generator = LevelGenerator(self.assets["sprite_sheets"])
         self.level_generator.generate_level()
 
         self.reset()
@@ -72,15 +74,21 @@ class Game:
         self.level_generator.next_level()
         self.level_generator.generate_level()
 
-    def set_player(self, player: PlayerShip) -> None:
-        """Recieves the player ship from the ship select state
+    def set_player(self, ship_type: str) -> None:
+        """Initializes the player ship
 
         Args:
             player (PlayerShip): the players ship
         """
-        self.player = player
+        self.player = PlayerShip(
+            ship_type,
+            self.assets["sprite_sheets"][PLAYER_SHIP_DATA[ship_type]["sprite_sheet"]],
+            self.assets["sprite_icons"][
+                PLAYER_SHIP_DATA[ship_type]["sprite_sheet"][-2]
+            ],
+        )
         self.player_group.empty()
-        self.player_group.add(player)
+        self.player_group.add(self.player)
 
     def load_assets(self) -> None:
         """Loads and stores game assets"""
@@ -111,6 +119,34 @@ class Game:
         # Load bomb icon
         self.assets["bomb"] = pygame.image.load(
             f"src/assets/ui/icon-bomb.png"
+        ).convert_alpha()
+
+        # Load ship sprite sheets
+        self.assets["sprite_sheets"] = {}
+        for ship_type in os.listdir("src/assets/ships"):
+            self.assets["sprite_sheets"][
+                ship_type.replace(".png", "")
+            ] = pygame.image.load(f"src/assets/ships/{ship_type}").convert_alpha()
+
+        # Load sprite icons
+        self.assets["sprite_icons"] = {}
+        for index in range(1, 10):
+            self.assets["sprite_icons"][str(index)] = pygame.image.load(
+                f"src/assets/ui/icon-plane-0{index}.png"
+            ).convert_alpha()
+
+        # Load arrows
+        self.assets["left_arrow"] = pygame.image.load(
+            f"src/assets/ui/left_arrow.png"
+        ).convert_alpha()
+        self.assets["left_arrow_filled"] = pygame.image.load(
+            f"src/assets/ui/left_arrow_filled.png"
+        ).convert_alpha()
+        self.assets["right_arrow"] = pygame.image.load(
+            f"src/assets/ui/right_arrow.png"
+        ).convert_alpha()
+        self.assets["right_arrow_filled"] = pygame.image.load(
+            f"src/assets/ui/right_arrow_filled.png"
         ).convert_alpha()
 
     def update(self, dt: float, events: list[pygame.event.Event]) -> None:
