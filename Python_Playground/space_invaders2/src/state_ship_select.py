@@ -15,6 +15,7 @@ from .state_run import RunState
 
 Y_GAP = 40
 MAX_WALK = 5
+SHIP_TRANSITION_TIME = 0.4
 
 
 class ShipSelectState(State):
@@ -146,9 +147,22 @@ class ShipSelectState(State):
         self._swap_ship()
         self.frame_index = 0
         self.last_frame = pygame.time.get_ticks()
+        self.is_transitioning = False
+        self.last_selected_ship = None
         self._reset_image()
         self.ship_pos = [WIDTH // 2 - self.ship_image.get_width() // 2, HEIGHT - 250]
-        self.ship_pos_start = self.ship_pos
+        self.ship_pos_start = self.ship_pos[:]
+
+        # Swap ship animation
+        self.transition_bar = pygame.image.load(
+            f"src/assets/projectiles/beamBlue.png"
+        ).convert_alpha()
+        self.transition_bar = pygame.transform.rotate(self.transition_bar, 90)
+        self.transition_bar = pygame.transform.scale(
+            self.transition_bar,
+            (self.ship_sprites[self.selected_ship][0].get_width(), 10),
+        )
+        self.transition_distance = self.ship_sprites[self.selected_ship][0].get_height()
 
         # Ship select arrows
         self.left_arrow_normal_image = pygame.transform.scale_by(
@@ -213,7 +227,7 @@ class ShipSelectState(State):
             True,
         )
 
-        # Get level sprite sheet, memoized
+        # Parse ship sprite sheet, memoized
         if self.selected_ship not in self.ship_sprites.keys():
             sprite_sheet = self.game.assets["sprite_sheets"][
                 PLAYER_SHIP_DATA[self.ships[self.selected_ship]]["sprite_sheet"]
@@ -260,6 +274,10 @@ class ShipSelectState(State):
                 PLAYER_SHIP_DATA[self.ships[self.selected_ship]]
             )
         )
+
+        # Start ship transition animation
+        self.is_transitioning = True
+        self.transition_timer = 0
 
     def _get_ship_min_max_data(self) -> None:
         """Parses the player ship data and finds the min and max values of characteristics"""
@@ -408,15 +426,25 @@ class ShipSelectState(State):
 
         keys = pygame.key.get_pressed()
         # Change menu selection
-        if keys[pygame.K_LEFT]:
-            self._swap_left()
-        elif keys[pygame.K_RIGHT]:
-            self._swap_right()
+        if not self.is_transitioning:
+            if keys[pygame.K_LEFT]:
+                self._swap_left()
+            elif keys[pygame.K_RIGHT]:
+                self._swap_right()
+
+        # Ship transition animation
+        if self.is_transitioning:
+            self.transition_timer += dt
+            if self.transition_timer > SHIP_TRANSITION_TIME:
+                self.is_transitioning = False
+                self.last_selected_ship = None
+
         self._animate()
 
     def _swap_left(self) -> None:
         """Select the ship to the left"""
         self.key_down = True
+        self.last_selected_ship = self.selected_ship
         self.selected_ship -= 1
         if self.selected_ship < 0:
             self.selected_ship = len(self.ships) - 1
@@ -425,6 +453,7 @@ class ShipSelectState(State):
     def _swap_right(self) -> None:
         """Select the ship to the right"""
         self.key_down = True
+        self.last_selected_ship = self.selected_ship
         self.selected_ship += 1
         if self.selected_ship >= len(self.ships):
             self.selected_ship = 0
@@ -441,10 +470,16 @@ class ShipSelectState(State):
                 self.frame_index = 0
             self._reset_image()
             self._random_walk()
+        elif self.is_transitioning:
+            self._reset_image()
 
     def _reset_image(self) -> None:
         """Loads correct image based on animation"""
         self.ship_image = self.ship_sprites[self.selected_ship][self.frame_index]
+        if self.is_transitioning:
+            self.last_ship_image = self.ship_sprites[self.last_selected_ship][
+                self.frame_index
+            ]
 
     def _random_walk(self) -> None:
         """Randomly moves ship sprite around"""
@@ -480,7 +515,36 @@ class ShipSelectState(State):
         self.weapon_text.draw(window)
 
         # Draw ship
-        window.blit(self.ship_image, self.ship_pos)
+        if self.last_selected_ship is not None:
+            transition_y = self.transition_distance * (
+                self.transition_timer / SHIP_TRANSITION_TIME
+            )
+            window.blit(
+                self.last_ship_image,
+                (self.ship_pos[0], self.ship_pos[1] + transition_y),
+                area=(
+                    0,
+                    transition_y,
+                    self.last_ship_image.get_width(),
+                    self.last_ship_image.get_height() - transition_y,
+                ),
+            )
+            window.blit(
+                self.ship_image,
+                self.ship_pos,
+                area=(
+                    0,
+                    0,
+                    self.ship_image.get_width(),
+                    transition_y,
+                ),
+            )
+            window.blit(
+                self.transition_bar,
+                (self.ship_pos_start[0], self.ship_pos_start[1] + transition_y),
+            )
+        else:
+            window.blit(self.ship_image, self.ship_pos)
 
         # Draw arrows
         window.blit(self.left_arrow_image, self.left_arrow_rect)
@@ -514,14 +578,17 @@ class ShipSelectState(State):
         Args:
             events (list[pygame.event.Event]): events to handle
         """
-
+        if self.is_transitioning:
+            return
         # Select option mouse
         for event in events:
             if event.type == pygame.MOUSEBUTTONUP:
                 pos = pygame.mouse.get_pos()
                 if self.left_arrow_rect.collidepoint(pos):
                     self._swap_left()
+                    self._reset_image()
                 if self.right_arrow_rect.collidepoint(pos):
                     self._swap_right()
+                    self._reset_image()
                 if self.select_button.mouse_over(pos):
                     self.should_exit = True
