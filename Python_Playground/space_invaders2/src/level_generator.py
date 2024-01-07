@@ -57,14 +57,21 @@ class LevelGenerator:
                         spawn_time += self.get_random_spawn_spacing()
 
                 # Longer spawn time after group
-                spawn_time += len(enemies) * self.get_random_spawn_spacing()
+                spawn_time += (
+                    len(enemies)
+                    * self.get_random_spawn_spacing()
+                    * self.get_nishikado_motion_factor(points_remaining)
+                )
 
             else:
                 # Spawn single ship
                 enemy = enemy_factory.get_enemy()
                 points_remaining -= enemy.get_points()
                 self.enemy_queue.append((spawn_time, enemy))
-                spawn_time += self.get_random_spawn_spacing()
+                spawn_time += (
+                    self.get_random_spawn_spacing()
+                    * self.get_nishikado_motion_factor(points_remaining)
+                )
 
         self.level_start_time = pygame.time.get_ticks()
 
@@ -75,6 +82,17 @@ class LevelGenerator:
             int: time until next spawn
         """
         return random.randrange(self.spacing // 2, int(self.spacing * 2))
+
+    def get_nishikado_motion_factor(self, points_remaining: float) -> float:
+        """Calculates a multiplicative factor that accelerates enemy generation at end of levels
+
+        Args:
+            points_remaining (float): points remaining to spawn
+
+        Returns:
+            float: Nishikado motion factor
+        """
+        return 1 - 0.5 * (self.level_points - points_remaining) / self.level_points
 
     def spawn_enemy(self):
         """Get next enemy if spawn time is passed"""

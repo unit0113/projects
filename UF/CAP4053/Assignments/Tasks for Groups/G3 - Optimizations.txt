@@ -1,0 +1,1 @@
+A) Consider your pathing discussion. What optimizations would you integrate into the problem you tackled?

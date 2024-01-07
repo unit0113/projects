@@ -38,6 +38,7 @@ class Enemy(Ship, pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
 
         # Set basic ship data
+        self.ship_type = ship_type
         ship_data = ENEMY_SHIP_DATA[ship_type]
         self.health = ship_data["multipliers"]["hp"] * ENEMY_BASE_HP
         self.speed = ship_data["multipliers"]["speed"] * ENEMY_BASE_SPEED
@@ -195,3 +196,6 @@ class Enemy(Ship, pygame.sprite.Sprite):
             float: Ship's point value
         """
         return self.points
+
+    def __str__(self) -> str:
+        return f"{self.ship_type}: ({self.pos[0]}, {self.pos[1]}); {type(self.movement_behavior)}"

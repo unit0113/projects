@@ -11,7 +11,7 @@ class BeamWeapon:
         muzzle_pos_offset: tuple[int, int],
         cooldown: float,
         duration: float,
-        projectile_color: str,
+        projectile_image: pygame.Surface,
         base_damages: tuple[float, float],
         width: float,
         direction: tuple[int, int],
@@ -28,9 +28,7 @@ class BeamWeapon:
         self.last_shot = pygame.time.get_ticks()
         self.start_of_shot = pygame.time.get_ticks()
 
-        self.projectile_image = pygame.image.load(
-            f"src/assets/projectiles/beam{projectile_color}.png"
-        ).convert_alpha()
+        self.projectile_image = projectile_image
         self.projectile_image = pygame.transform.scale(
             self.projectile_image, (self.width, HEIGHT)
         )

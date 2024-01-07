@@ -13,6 +13,7 @@ class TorpedoLauncher:
         base_damages: tuple[float, float],
         missile_speed: int,
         direction: tuple[float, float],
+        sprite_sheet: pygame.Surface,
     ) -> None:
         self.base_damages = base_damages
         self.damages = base_damages
@@ -22,12 +23,9 @@ class TorpedoLauncher:
         self.direction = direction
         self.missile_speed = missile_speed
         self.last_shot = 0
-        self.load_sprites()
+        self.load_sprites(sprite_sheet)
 
-    def load_sprites(self) -> None:
-        sprite_sheet = pygame.image.load(
-            f"src/assets/projectiles/torpedo.png"
-        ).convert_alpha()
+    def load_sprites(self, sprite_sheet: pygame.Surface) -> None:
         num_cols = 3
         size_h = sprite_sheet.get_width() // num_cols
         size_v = sprite_sheet.get_height()

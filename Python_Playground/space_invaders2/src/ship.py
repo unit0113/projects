@@ -88,21 +88,22 @@ class Ship(ABC):
         Args:
             ship_data (dict): specifications for the ship
         """
-
+        primary_weapon_factory = PrimaryWeaponFactory()
         self.primary_weapons = []
         for weapon, offset in ship_data["primary_weapons"]:
             self.primary_weapons.append(
-                PrimaryWeaponFactory.get_weapon(
+                primary_weapon_factory.get_weapon(
                     weapon, offset, self.projectile_color, is_player
                 )
             )
 
+        secondary_weapon_factory = SecondaryWeaponFactory()
         self.secondary_weapons = []
         for weapon, offsets in zip(
             ship_data["secondary_weapons"], self.secondary_offsets
         ):
             self.secondary_weapons.append(
-                SecondaryWeaponFactory.get_weapon(
+                secondary_weapon_factory.get_weapon(
                     weapon, offsets, self.projectile_color, is_player
                 )
             )

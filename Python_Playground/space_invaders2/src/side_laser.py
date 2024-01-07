@@ -1,3 +1,5 @@
+import pygame
+
 from .laser_cannon import LaserCannon
 
 
@@ -6,7 +8,7 @@ class SideLaser:
         self,
         offsets: list[tuple[int, int]],
         cooldown: float,
-        projectile_color: str,
+        projectile_image: pygame.Surface,
         base_damages: tuple[float, float],
         muzzle_velocity: int,
         dispersion: float,
@@ -20,7 +22,7 @@ class SideLaser:
             LaserCannon(
                 offset,
                 cooldown,
-                f"{projectile_color}ThinLong",
+                projectile_image,
                 base_damages,
                 muzzle_velocity,
                 dispersion,

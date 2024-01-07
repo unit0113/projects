@@ -9,7 +9,7 @@ class ZigZagBehavior(Behavior):
     valid_start_locations = {
         "r": {"start_x": 25, "end_x": WIDTH // 2 - 50, "start_y": -50, "end_y": -50},
         "l": {
-            "start_x": WIDTH // 2 - 50,
+            "start_x": WIDTH // 2,
             "end_x": WIDTH - 50,
             "start_y": -50,
             "end_y": -50,

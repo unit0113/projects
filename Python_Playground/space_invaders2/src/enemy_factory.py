@@ -22,14 +22,15 @@ class EnemyFactory:
         )
         return dist
 
-    def get_raw_enemy(self) -> Enemy:
-        """Return a created enemy
+    def get_raw_enemy(self) -> tuple[Enemy, str]:
+        """Return a created enemy and it's type
 
         Returns:
             Enemy: Raw enemy
+            str: type of enemy
         """
         enemy_type = f"{self.faction}_{random.randint(1, 6)}"
-        return Enemy(enemy_type, self.enemy_sprites[enemy_type])
+        return Enemy(enemy_type, self.enemy_sprites[enemy_type]), enemy_type
 
     def get_enemy(self) -> Enemy:
         """Generate a single enemy
@@ -37,7 +38,7 @@ class EnemyFactory:
         Returns:
             Enemy: Single Enemy
         """
-        enemy = self.get_raw_enemy()
+        enemy, _ = self.get_raw_enemy()
 
         start_position_data = enemy.get_valid_start_positions()
         direction = random.choice(list(start_position_data.keys()))
@@ -72,8 +73,7 @@ class EnemyFactory:
         Returns:
             list[Enemy]: Group of enemies
         """
-        enemy_type = f"{self.faction}_{random.randint(1, 6)}"
-        enemy_template = self.get_raw_enemy()
+        enemy_template, enemy_type = self.get_raw_enemy()
 
         group_data = enemy_template.get_group_data()
         spawn_timing = group_data["spawn_timing"]

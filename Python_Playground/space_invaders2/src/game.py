@@ -10,8 +10,9 @@ from .settings import WIDTH, HEIGHT, YELLOW, RED, GREEN, SHIELD_BLUE, GREY, NUM_
 from .player_ship import PlayerShip
 from .player_ship_data import PLAYER_SHIP_DATA
 from .level_generator import LevelGenerator
+from .weapon_factories import PrimaryWeaponFactory, SecondaryWeaponFactory
 
-DEV_MODE = False
+DEV_MODE = True
 
 
 class Game:
@@ -32,7 +33,10 @@ class Game:
 
         # Initialize level generator
         self.level_generator = LevelGenerator(self.assets["sprite_sheets"])
-        self.level_generator.generate_level()
+
+        # Initialize singleton weapon factories
+        self.primary_weapon_factory = PrimaryWeaponFactory(self.assets)
+        self.secondary_weapon_factory = SecondaryWeaponFactory(self.assets)
 
         self.reset()
 
@@ -149,6 +153,16 @@ class Game:
             f"src/assets/ui/right_arrow_filled.png"
         ).convert_alpha()
 
+        # Load projectiles
+        self.assets["projectiles"] = {}
+        for projectile in os.listdir("src/assets/projectiles"):
+            image = pygame.image.load(
+                f"src/assets/projectiles/{projectile}"
+            ).convert_alpha()
+            if "laser" in projectile:
+                image = pygame.transform.scale_by(image, 0.5)
+            self.assets["projectiles"][projectile[:-4]] = image
+
     def update(self, dt: float, events: list[pygame.event.Event]) -> None:
         """Update game objects in game loop
 
@@ -220,6 +234,7 @@ class Game:
             for enemy in self.enemy_group:
                 if self.is_collision(enemy, player):
                     player.take_damage(enemy.max_health)
+                    self.score += int(enemy.get_points() * 10)
                     enemy.kill()
 
     def is_collision(self, obj1: object, obj2: object) -> bool:

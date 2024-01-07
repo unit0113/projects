@@ -9,7 +9,7 @@ class LaserCannon:
         self,
         muzzle_pos_offset: tuple[int, int],
         cooldown: float,
-        projectile_type: str,
+        projectile_image: pygame.Surface,
         base_damages: tuple[float, float],
         muzzle_velocity: float,
         dispersion: float,
@@ -25,10 +25,7 @@ class LaserCannon:
         self.direction = direction
         self.last_shot = pygame.time.get_ticks()
 
-        self.projectile_image = pygame.image.load(
-            f"src/assets/projectiles/laser{projectile_type}.png"
-        ).convert_alpha()
-        self.projectile_image = pygame.transform.scale_by(self.projectile_image, 0.5)
+        self.projectile_image = projectile_image
 
     def fire(self, ship_pos: tuple[int, int]) -> Optional[Laser]:
         """Returns the projectiles that the ship fired this frame

@@ -1,0 +1,6 @@
+A) Design a simulation or game mechanic that could use a GA. Identify…
+
+1) What would the solutions - i.e., chromosomes - be?
+2) How would the genes be defined (sub-parts of the chromosomes)?
+3) What would the fitness function measure? (Sketch it out.)
+4) What selection / mutation / recombination processes is best, & why?
