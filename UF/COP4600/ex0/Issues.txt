@@ -1,0 +1,6 @@
+The included install video was great and pretty much covered 100% of what I needed.
+Only issue encountered was that at the very end of the video (when demonstrating snapshots)
+when they closed out the VM there was an additional option in the video (Restore current snapshot "snapshot_name_here").
+Had to spend a few minutes looking around to figure out how to restore the snapshot
+(right click on the snapshot in virtualbox and click restore).
+And that was it, everything else went really smoothly.

@@ -1,8 +1,10 @@
 import pygame
 
 from .state import State
+from .state_menu_ship_select_transition import MenuShipSelectTransitionState
 from .state_ship_select import ShipSelectState
-from .functions import Text, create_stacked_text, draw_lines
+from .functions import create_stacked_text, draw_lines
+from .text import Text
 from .settings import WIDTH, HEIGHT, KEY_PRESS_DELAY
 
 
@@ -138,7 +140,15 @@ class MenuState(State):
     def exit(self) -> None:
         """Actions to perform upon exiting the state"""
 
-        self.next_state = ShipSelectState(self.game)
+        self.next_state = MenuShipSelectTransitionState(
+            self.game,
+            self.points1,
+            self.points2,
+            self.title_backround_rect,
+            self.main_backround_rect,
+            self.title_text,
+            self.options,
+        )
 
     def process_events(self, events: list[pygame.event.Event]):
         """Handle game events

@@ -1,0 +1,47 @@
+Name
+	Name of project. E.g. P0 - my first kernel mod
+
+Synopsis
+	A brief description of goals of project/exercise
+
+Description
+	introductory paragraph <optional>
+
+	path_to_edited_file/file1.c
+		how did you figure out this is the one to change
+
+		what did you change
+
+		why did you make the changes
+
+	
+	path_to_new_file/file2.c
+
+		what is the purpose of this file?
+
+		briefly explain the code/content
+
+	command [-options] [-arguments]
+
+		How did you find out about this command?
+
+		What does this command do? Explain the options you used.
+
+		Why did you decide to use this command?
+
+TESTING
+
+	list steps taken to test the changes.
+
+BUGS
+	List any known bugs.
+
+LINK
+	link to screencast.
+
+
+REFERENCES/CITATIONS
+		Cite sources/references used to complete this
+
+AUTHOR
+        your name here

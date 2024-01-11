@@ -12,7 +12,7 @@ from .player_ship_data import PLAYER_SHIP_DATA
 from .level_generator import LevelGenerator
 from .weapon_factories import PrimaryWeaponFactory, SecondaryWeaponFactory
 
-DEV_MODE = True
+DEV_MODE = False
 
 
 class Game:

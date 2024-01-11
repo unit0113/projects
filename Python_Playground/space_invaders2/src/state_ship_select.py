@@ -3,11 +3,8 @@ from random import choice
 
 from .state import State
 from .player_ship_data import PLAYER_SHIP_DATA
-from .functions import (
-    Text,
-    create_mixed_stacked_text,
-    draw_lines,
-)
+from .functions import create_mixed_stacked_text, draw_lines
+from .text import Text
 from .settings import WIDTH, HEIGHT, FRAME_TIME, KEY_PRESS_DELAY, GREY, MAGENTA
 from .button import Button
 from .status_bar import StatusBar
