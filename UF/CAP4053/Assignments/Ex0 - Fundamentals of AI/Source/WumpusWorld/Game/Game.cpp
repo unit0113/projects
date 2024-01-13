@@ -14,6 +14,11 @@
 #include "Game.h"
 #include "Behaviors.h"
 
+// Check Memory leaks
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+
 using namespace std;
 using namespace ufl_cap4053::fundamentals;
 
@@ -112,6 +117,15 @@ int main()
 
 	// Then, run the wumpus world game simulation.
 	ufl_cap4053::fundamentals::Game::main();
+
+	// Memory leak detection
+	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
+	_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDOUT);
+	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
+	_CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDOUT);
+	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
+	_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDOUT);
+	_CrtDumpMemoryLeaks();
 }
 
 Behavior* buildTree()

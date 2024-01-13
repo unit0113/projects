@@ -49,6 +49,7 @@ class Text:
                 self._set_rect_pos()
             text_surf = self.standard_text.copy()
         self.was_selected = selected
+
         # Draw with alpha
         alpha_surf = pygame.Surface(text_surf.get_size(), pygame.SRCALPHA)
         alpha_surf.fill((255, 255, 255, int(255 * alpha)))

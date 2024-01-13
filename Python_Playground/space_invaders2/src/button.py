@@ -18,22 +18,36 @@ class Button:
     ) -> None:
         self.text = font.render(text, 1, MAGENTA)
 
-        # Upper left corner of text
-        self.start_x = x - self.text.get_width() // 2
-        self.start_y = y + self.text.get_height() // 2
-
         # Outline
-        self.rect_outer = pygame.Rect(
-            self.start_x - OUTER_REC_SIZE // 2,
-            self.start_y - OUTER_REC_SIZE // 2,
+        self.rect_pos = (
+            x - self.text.get_width() // 2 - OUTER_REC_SIZE // 2,
+            y + self.text.get_height() // 2 - OUTER_REC_SIZE // 2,
+        )
+        self.text_offset = (OUTER_REC_SIZE // 2, OUTER_REC_SIZE // 2)
+
+        self.collision_outer = pygame.Rect(
+            *self.rect_pos,
             size + OUTER_REC_SIZE,
             self.text.get_height() + OUTER_REC_SIZE,
         )
+
+        self.rect_outer = pygame.Rect(
+            0,
+            0,
+            size + OUTER_REC_SIZE,
+            self.text.get_height() + OUTER_REC_SIZE,
+        )
+
         self.rect_inner = pygame.Rect(
-            self.start_x - INNER_REC_SIZE // 2,
-            self.start_y - INNER_REC_SIZE // 2,
+            (OUTER_REC_SIZE - INNER_REC_SIZE) // 2,
+            (OUTER_REC_SIZE - INNER_REC_SIZE) // 2,
             size + INNER_REC_SIZE,
             self.text.get_height() + INNER_REC_SIZE,
+        )
+
+        # Alpha surface
+        self.alpha_surface = pygame.Surface(
+            (size + OUTER_REC_SIZE, self.text.get_height() + OUTER_REC_SIZE)
         )
 
         # Highlighted variables
@@ -57,13 +71,23 @@ class Button:
             bool: Whether this button was clicked on
         """
 
-        return self.rect_outer.collidepoint(mouse_pos)
+        return self.collision_outer.collidepoint(mouse_pos)
 
-    def draw(self, window: pygame.Surface) -> None:
+    def draw(self, window: pygame.Surface, alpha: float = 1) -> None:
         """Draw objects to the pygame window"""
 
         inner_rect_color = DARK_GREY if self.highlighted else BLACK
+        self.alpha_surface.fill((255, 255, 255))
+        self.alpha_surface.set_colorkey((255, 255, 255))
 
-        pygame.draw.rect(window, MAGENTA, self.rect_outer, border_radius=10)
-        pygame.draw.rect(window, inner_rect_color, self.rect_inner, border_radius=10)
-        window.blit(self.text, (self.start_x, self.start_y))
+        pygame.draw.rect(self.alpha_surface, MAGENTA, self.rect_outer, border_radius=10)
+        pygame.draw.rect(
+            self.alpha_surface,
+            inner_rect_color,
+            self.rect_inner,
+            border_radius=10,
+        )
+        self.alpha_surface.blit(self.text, self.text_offset)
+
+        self.alpha_surface.set_alpha(int(255 * alpha))
+        window.blit(self.alpha_surface, self.rect_pos)

@@ -62,8 +62,8 @@ class ShipSelectState(State):
         self.points2 = [
             (WIDTH // 2 - 150, 125),
             (WIDTH // 2 - 300, 125),
-            (WIDTH // 2 - 300, HEIGHT - 300),
-            (WIDTH // 2 + 300, HEIGHT - 300),
+            (WIDTH // 2 - 300, 3 * HEIGHT // 4),
+            (WIDTH // 2 + 300, 3 * HEIGHT // 4),
             (WIDTH // 2 + 300, 125),
             (WIDTH // 2 + 150, 125),
         ]
@@ -74,7 +74,7 @@ class ShipSelectState(State):
         self.title_backround_rect.set_alpha(128)
         self.title_backround_rect.fill((0, 0, 0))
 
-        self.main_backround_rect = pygame.Surface((600, HEIGHT - 425))
+        self.main_backround_rect = pygame.Surface((600, 3 * HEIGHT // 4 - 125))
         self.main_backround_rect.set_alpha(128)
         self.main_backround_rect.fill((0, 0, 0))
 
@@ -147,7 +147,7 @@ class ShipSelectState(State):
         self.is_transitioning = False
         self.last_selected_ship = None
         self._reset_image()
-        self.ship_pos = [WIDTH // 2 - self.ship_image.get_width() // 2, HEIGHT - 250]
+        self.ship_pos = [WIDTH // 2 - self.ship_image.get_width() // 2, HEIGHT - 225]
         self.ship_pos_start = self.ship_pos[:]
 
         # Swap ship animation
@@ -172,7 +172,7 @@ class ShipSelectState(State):
         self.left_arrow_rect = self.left_arrow_image.get_rect()
         self.left_arrow_rect.midright = (
             WIDTH // 2 - self.ship_image.get_width() // 2,
-            HEIGHT - 250 + self.ship_image.get_height() // 2,
+            HEIGHT - 225 + self.ship_image.get_height() // 2,
         )
 
         self.right_arrow_normal_image = pygame.transform.scale_by(
@@ -185,12 +185,12 @@ class ShipSelectState(State):
         self.right_arrow_rect = self.right_arrow_image.get_rect()
         self.right_arrow_rect.midleft = (
             WIDTH // 2 + self.ship_image.get_width() // 2,
-            HEIGHT - 250 + self.ship_image.get_height() // 2,
+            HEIGHT - 225 + self.ship_image.get_height() // 2,
         )
 
         # Select ship button
         self.select_button = Button(
-            WIDTH // 2, HEIGHT - 400, "Select Ship", self.game.assets["font"], 310
+            WIDTH // 2, HEIGHT - 375, "Select Ship", self.game.assets["font"], 310
         )
 
     def _get_weapon_name(self) -> str:

@@ -5,6 +5,11 @@
 #include <cassert>
 #include <iostream>
 
+// Check Memory leaks
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+
 using namespace std;
 namespace fund = ufl_cap4053::fundamentals;
 
@@ -15,7 +20,7 @@ void traverse(fund::LinkedList<T> const& q, F& dataFunction);
 void printString(string testString);
 void printCString(char const* testString);
 
-int main()
+int run()
 {
     // Get ready.
     fund::LinkedList<string> valueList;
@@ -216,6 +221,18 @@ int main()
     cout << "Press ENTER to continue..." << endl;
     while(cin.get() != '\n') {;}
     return 0;
+}
+
+int main() {
+    run();
+    // Memory leak detection
+    _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
+    _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDOUT);
+    _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
+    _CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDOUT);
+    _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
+    _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDOUT);
+    _CrtDumpMemoryLeaks();
 }
 
 template <typename T, typename F>

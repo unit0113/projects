@@ -17,8 +17,6 @@ using ufl_cap4053::fundamentals::Iterator;
 template <typename T>
 class Node {
 private:
-	template <typename T>
-	friend class LinkedList;
 	T data;
 	Node* next{ nullptr };
 	Node* prev{ nullptr };
@@ -37,8 +35,8 @@ public:
 template <typename T>
 class Iterator {
 private:
-	template <typename T>
-	friend class LinkedList;
+	Node<T>* current{ nullptr };
+
 public:
 	Iterator() = default;
 	Iterator(Node<T>* node) : current(node) {};
@@ -46,11 +44,6 @@ public:
 	Iterator& operator++();
 	bool operator==(const Iterator& rhs) { return current == rhs.current; };
 	bool operator!=(const Iterator& rhs) { return current != rhs.current; };
-
-
-private:
-	Node<T>* current{ nullptr };
-
 };
 
 template <typename T>
@@ -96,7 +89,7 @@ void LinkedList<T>::clear() {
 	Node<T>* current = head;
 	Node<T>* next_node;
 	head = nullptr;
-	while (current != nullptr) {
+	while (current) {
 		next_node = current->getNext();
 		delete current;
 		current = next_node;

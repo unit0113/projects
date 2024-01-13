@@ -45,12 +45,20 @@ class MenuState(State):
 
         # Semi-transparent backround
         # Half height due to overlap with main rect
-        self.title_backround_rect = pygame.Surface((200, 25))
+        self.title_backround_rect = pygame.Surface(
+            (
+                self.points1[1][0] - self.points1[0][0],
+                (self.points1[2][1] - self.points1[0][1]) // 2,
+            )
+        )
         self.title_backround_rect.set_alpha(128)
         self.title_backround_rect.fill((0, 0, 0))
 
         self.main_backround_rect = pygame.Surface(
-            (400, (3 * HEIGHT // 4) - (HEIGHT // 4 + 25))
+            (
+                self.points2[3][0] - self.points2[1][0],
+                self.points2[2][1] - self.points2[0][1],
+            )
         )
         self.main_backround_rect.set_alpha(128)
         self.main_backround_rect.fill((0, 0, 0))
@@ -125,9 +133,11 @@ class MenuState(State):
         # Draw transparent rects
         window.blit(self.title_backround_rect, self.points1[0])
         window.blit(self.main_backround_rect, self.points2[1])
+
         # Draw outline
         draw_lines(window, self.points1, 4)
         draw_lines(window, self.points2, 4)
+
         # Draw text
         self.title_text.draw(window)
         for index, option in enumerate(self.options):
