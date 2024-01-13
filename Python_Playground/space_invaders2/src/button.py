@@ -74,7 +74,12 @@ class Button:
         return self.collision_outer.collidepoint(mouse_pos)
 
     def draw(self, window: pygame.Surface, alpha: float = 1) -> None:
-        """Draw objects to the pygame window"""
+        """Draw object to the pygame window
+
+        Args:
+            window (pygame.Surface): Pygame surface to draw on
+            alpha (float, optional): Alpha value for button. Defaults to 1.
+        """
 
         inner_rect_color = DARK_GREY if self.highlighted else BLACK
         self.alpha_surface.fill((255, 255, 255))

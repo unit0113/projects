@@ -13,7 +13,7 @@ LINE_TWEEN_DURATION = 0.75
 LINE_TWEEN_DELAY = 0.5
 SHIP_SELECT_TEXT_START = LINE_TWEEN_DELAY + LINE_TWEEN_DURATION + 0.25
 SHIP_SELECT_TEXT_DELAY = 0.1
-BUTTON_TWEEN_TIME = 0.2
+BUTTON_TWEEN_TIME = 0.4
 FINAL_DELAY = 0.25
 
 
@@ -103,6 +103,9 @@ class MenuShipSelectTransitionState(State):
         self.select_button = Button(
             WIDTH // 2, HEIGHT - 375, "Select Ship", self.game.assets["font"], 310
         )
+
+        # Ship select status bars
+        self.status_bars = self.next_state.status_bars
 
     def update(self, dt: float, **kwargs) -> None:
         """Update game object in game loop
@@ -235,10 +238,15 @@ class MenuShipSelectTransitionState(State):
             option.draw(window, index == 0, self.menu_alpha)
 
         # Draw ship select text
-        for text, alpha in zip(
-            self.ship_select_characteristics, self.ship_select_alphas
+        status_bar_index = 0
+        for index, (text, alpha) in enumerate(
+            zip(self.ship_select_characteristics, self.ship_select_alphas)
         ):
             text.draw(window, False, alpha)
+            # Draw status bars
+            if index not in [0, 3, 7]:
+                self.status_bars[status_bar_index].draw_empty(window, alpha)
+                status_bar_index += 1
 
         # Draw button
         self.select_button.draw(window, self.button_alpha)

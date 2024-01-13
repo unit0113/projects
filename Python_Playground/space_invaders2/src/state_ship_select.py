@@ -1,5 +1,6 @@
 import pygame
 from random import choice
+import pytweening as tween
 
 from .state import State
 from .player_ship_data import PLAYER_SHIP_DATA
@@ -13,6 +14,7 @@ from .state_run import RunState
 Y_GAP = 40
 MAX_WALK = 5
 SHIP_TRANSITION_TIME = 0.4
+TEXT_TRANSITION_TIME = SHIP_TRANSITION_TIME / 2
 
 
 class ShipSelectState(State):
@@ -84,67 +86,62 @@ class ShipSelectState(State):
             (225, 25),
             self.min_hp,
             self.max_hp,
-            PLAYER_SHIP_DATA[self.ships[self.selected_ship]]["multipliers"]["hp"],
         )
         self.speed_status_bar = StatusBar(
             (WIDTH // 2 + 50, 200 + 2 * Y_GAP),
             (225, 25),
             self.min_speed,
             self.max_speed,
-            PLAYER_SHIP_DATA[self.ships[self.selected_ship]]["multipliers"]["speed"],
         )
         self.shield_strength_status_bar = StatusBar(
             (WIDTH // 2 + 50, 200 + 4 * Y_GAP),
             (225, 25),
             self.min_shield_strength,
             self.max_shield_strength,
-            PLAYER_SHIP_DATA[self.ships[self.selected_ship]]["multipliers"][
-                "shield_strength"
-            ],
         )
         self.shield_cooldown_status_bar = StatusBar(
             (WIDTH // 2 + 50, 200 + 5 * Y_GAP),
             (225, 25),
             self.min_shield_cooldown,
             self.max_shield_cooldown,
-            PLAYER_SHIP_DATA[self.ships[self.selected_ship]]["multipliers"][
-                "shield_cooldown"
-            ],
         )
         self.shield_regen_status_bar = StatusBar(
             (WIDTH // 2 + 50, 200 + 6 * Y_GAP),
             (225, 25),
             self.min_shield_regen,
             self.max_shield_regen,
-            PLAYER_SHIP_DATA[self.ships[self.selected_ship]]["multipliers"][
-                "shield_regen"
-            ],
         )
         self.starting_firepower_status_bar = StatusBar(
             (WIDTH // 2 + 50, 200 + 8 * Y_GAP),
             (225, 25),
             self.min_starting_firepower,
-            self.max_starting_firepower,
-            self._calculate_starting_firepower(
-                PLAYER_SHIP_DATA[self.ships[self.selected_ship]]
-            ),
+            self.max_potential_firepower,
         )
         self.potential_firepower_status_bar = StatusBar(
             (WIDTH // 2 + 50, 200 + 9 * Y_GAP),
             (225, 25),
-            self.min_potential_firepower,
+            self.min_starting_firepower,
             self.max_potential_firepower,
-            self._calculate_potential_firepower(
-                PLAYER_SHIP_DATA[self.ships[self.selected_ship]]
-            ),
         )
+        self.status_bars = [
+            self.health_status_bar,
+            self.speed_status_bar,
+            self.shield_strength_status_bar,
+            self.shield_cooldown_status_bar,
+            self.shield_regen_status_bar,
+            self.starting_firepower_status_bar,
+            self.potential_firepower_status_bar,
+        ]
 
         # Ship animation
         self.ship_sprites = {}
+        self.title_text = None
+        self.weapon_text = None
         self._swap_ship()
+        self.previous_text_alpha = 1
+        self.current_text_alpha = 0
         self.frame_index = 0
         self.last_frame = pygame.time.get_ticks()
-        self.is_transitioning = False
         self.last_selected_ship = None
         self._reset_image()
         self.ship_pos = [WIDTH // 2 - self.ship_image.get_width() // 2, HEIGHT - 225]
@@ -213,6 +210,14 @@ class ShipSelectState(State):
 
     def _swap_ship(self) -> None:
         """Generates the title text and loads ship sprites"""
+        # Save previous text to tween
+        self.previous_title_text = self.title_text
+        self.previous_weapon_text = self.weapon_text
+        self.previous_text_alpha = 1
+        self.current_text_alpha = 0
+        self.is_transitioning = True
+        self.transition_timer = 0
+
         self.title_text = Text(
             self.ships[self.selected_ship], (WIDTH // 2, 125), self.game.assets["font"]
         )
@@ -272,10 +277,6 @@ class ShipSelectState(State):
             )
         )
 
-        # Start ship transition animation
-        self.is_transitioning = True
-        self.transition_timer = 0
-
     def _get_ship_min_max_data(self) -> None:
         """Parses the player ship data and finds the min and max values of characteristics"""
         self.min_hp = 100
@@ -289,8 +290,6 @@ class ShipSelectState(State):
         self.min_shield_regen = 100
         self.max_shield_regen = 0
         self.min_starting_firepower = 100
-        self.max_starting_firepower = 0
-        self.min_potential_firepower = 100
         self.max_potential_firepower = 0
 
         # Find max and min of ship statistics
@@ -356,14 +355,10 @@ class ShipSelectState(State):
             )
             if starting_firepower < self.min_starting_firepower:
                 self.min_starting_firepower = starting_firepower
-            if starting_firepower > self.max_starting_firepower:
-                self.max_starting_firepower = starting_firepower
 
             potential_firepower = self._calculate_potential_firepower(
                 PLAYER_SHIP_DATA[ship]
             )
-            if potential_firepower < self.min_potential_firepower:
-                self.min_potential_firepower = potential_firepower
             if potential_firepower > self.max_potential_firepower:
                 self.max_potential_firepower = potential_firepower
 
@@ -432,9 +427,24 @@ class ShipSelectState(State):
         # Ship transition animation
         if self.is_transitioning:
             self.transition_timer += dt
+            # Calculate text tween
+            if self.transition_timer < TEXT_TRANSITION_TIME:
+                self.current_text_alpha = 0
+                self.previous_text_alpha = tween.easeInOutSine(
+                    1 - self.transition_timer / TEXT_TRANSITION_TIME
+                )
+            elif self.transition_timer < SHIP_TRANSITION_TIME:
+                self.previous_text_alpha = 0
+                self.current_text_alpha = tween.easeInOutSine(
+                    (self.transition_timer - TEXT_TRANSITION_TIME)
+                    / TEXT_TRANSITION_TIME
+                )
+
             if self.transition_timer > SHIP_TRANSITION_TIME:
                 self.is_transitioning = False
                 self.last_selected_ship = None
+                self.previous_text_alpha = 0
+                self.current_text_alpha = 1
 
         self._animate()
 
@@ -473,7 +483,7 @@ class ShipSelectState(State):
     def _reset_image(self) -> None:
         """Loads correct image based on animation"""
         self.ship_image = self.ship_sprites[self.selected_ship][self.frame_index]
-        if self.is_transitioning:
+        if self.is_transitioning and self.last_selected_ship is not None:
             self.last_ship_image = self.ship_sprites[self.last_selected_ship][
                 self.frame_index
             ]
@@ -506,26 +516,28 @@ class ShipSelectState(State):
         draw_lines(window, self.points2, 4)
 
         # Draw text
-        self.title_text.draw(window)
         for item in self.characteristics:
             item.draw(window)
-        self.weapon_text.draw(window)
 
         # Draw ship
-        if self.last_selected_ship is not None:
+        # If transitioning
+        if self.is_transitioning:
             transition_y = self.transition_distance * (
                 self.transition_timer / SHIP_TRANSITION_TIME
             )
-            window.blit(
-                self.last_ship_image,
-                (self.ship_pos[0], self.ship_pos[1] + transition_y),
-                area=(
-                    0,
-                    transition_y,
-                    self.last_ship_image.get_width(),
-                    self.last_ship_image.get_height() - transition_y,
-                ),
-            )
+            # Draw previous ship
+            if self.last_selected_ship is not None:
+                window.blit(
+                    self.last_ship_image,
+                    (self.ship_pos[0], self.ship_pos[1] + transition_y),
+                    area=(
+                        0,
+                        transition_y,
+                        self.last_ship_image.get_width(),
+                        self.last_ship_image.get_height() - transition_y,
+                    ),
+                )
+            # Draw new ship
             window.blit(
                 self.ship_image,
                 self.ship_pos,
@@ -536,12 +548,36 @@ class ShipSelectState(State):
                     transition_y,
                 ),
             )
+            # Draw teleport bar
             window.blit(
                 self.transition_bar,
                 (self.ship_pos_start[0], self.ship_pos_start[1] + transition_y),
             )
+
+            # Draw text
+            if self.previous_title_text:
+                self.previous_title_text.draw(window, False, self.previous_text_alpha)
+                self.previous_weapon_text.draw(window, False, self.previous_text_alpha)
+            self.title_text.draw(window, False, self.current_text_alpha)
+            self.weapon_text.draw(window, False, self.current_text_alpha)
+
+            # Draw status bars
+            for status_bar in self.status_bars:
+                status_bar.draw_tween(
+                    window, self.transition_timer / SHIP_TRANSITION_TIME
+                )
+
         else:
+            # Draw ship
             window.blit(self.ship_image, self.ship_pos)
+
+            # Draw Text
+            self.title_text.draw(window)
+            self.weapon_text.draw(window)
+
+            # Draw status bars
+            for status_bar in self.status_bars:
+                status_bar.draw(window)
 
         # Draw arrows
         window.blit(self.left_arrow_image, self.left_arrow_rect)
@@ -549,15 +585,6 @@ class ShipSelectState(State):
 
         # Draw button
         self.select_button.draw(window)
-
-        # Draw status bars
-        self.health_status_bar.draw(window)
-        self.speed_status_bar.draw(window)
-        self.shield_strength_status_bar.draw(window)
-        self.shield_cooldown_status_bar.draw(window)
-        self.shield_regen_status_bar.draw(window)
-        self.starting_firepower_status_bar.draw(window)
-        self.potential_firepower_status_bar.draw(window)
 
     def enter(self, **kwargs) -> None:
         """Actions to perform upon entering the state"""
