@@ -4,17 +4,25 @@ import pytweening as tween
 
 from .state import State
 from .player_ship_data import PLAYER_SHIP_DATA
-from .functions import create_mixed_stacked_text, draw_lines
+from .functions import create_mixed_stacked_text, draw_lines, random_walk
 from .text import Text
-from .settings import WIDTH, HEIGHT, FRAME_TIME, KEY_PRESS_DELAY, GREY, MAGENTA
+from .settings import (
+    WIDTH,
+    HEIGHT,
+    FRAME_TIME,
+    KEY_PRESS_DELAY,
+    GREY,
+    MAGENTA,
+    MAX_WALK,
+)
 from .button import Button
 from .status_bar import StatusBar
-from .state_run import RunState
+from .state_ship_select_run_transition import ShipSelectRunTransitionState
 
 Y_GAP = 40
-MAX_WALK = 5
-SHIP_TRANSITION_TIME = 0.4
+SHIP_TRANSITION_TIME = 0.5
 TEXT_TRANSITION_TIME = SHIP_TRANSITION_TIME / 2
+TRANSITION_BAR_EXPANSION_TIME = 0.1
 
 
 class ShipSelectState(State):
@@ -148,13 +156,22 @@ class ShipSelectState(State):
         self.ship_pos_start = self.ship_pos[:]
 
         # Swap ship animation
-        self.transition_bar = pygame.image.load(
+        self.orignial_transition_bar = pygame.image.load(
             f"src/assets/projectiles/beamBlue.png"
         ).convert_alpha()
-        self.transition_bar = pygame.transform.rotate(self.transition_bar, 90)
+        self.orignial_transition_bar = pygame.transform.rotate(
+            self.orignial_transition_bar, 90
+        )
+        self.transition_bar_full_width = self.ship_sprites[self.selected_ship][
+            0
+        ].get_width()
+        self.orignial_transition_bar = pygame.transform.scale(
+            self.orignial_transition_bar,
+            (self.transition_bar_full_width, 10),
+        )
         self.transition_bar = pygame.transform.scale(
-            self.transition_bar,
-            (self.ship_sprites[self.selected_ship][0].get_width(), 10),
+            self.orignial_transition_bar,
+            (0, 10),
         )
         self.transition_distance = self.ship_sprites[self.selected_ship][0].get_height()
 
@@ -446,6 +463,48 @@ class ShipSelectState(State):
                 self.previous_text_alpha = 0
                 self.current_text_alpha = 1
 
+            # Update width of transition bar
+            # Expand bar
+            if self.transition_timer < TRANSITION_BAR_EXPANSION_TIME:
+                self.transition_bar = pygame.transform.scale(
+                    self.orignial_transition_bar,
+                    (
+                        self.transition_bar_full_width
+                        * tween.easeInOutSine(
+                            self.transition_timer / TRANSITION_BAR_EXPANSION_TIME
+                        ),
+                        10,
+                    ),
+                )
+            # If transition complete
+            elif self.transition_timer > SHIP_TRANSITION_TIME:
+                self.transition_bar = pygame.transform.scale(
+                    self.orignial_transition_bar,
+                    (0, 10),
+                )
+            # Shrink bar
+            elif (
+                self.transition_timer
+                > SHIP_TRANSITION_TIME - TRANSITION_BAR_EXPANSION_TIME
+            ):
+                self.transition_bar = pygame.transform.scale(
+                    self.orignial_transition_bar,
+                    (
+                        self.transition_bar_full_width
+                        * tween.easeInOutSine(
+                            (SHIP_TRANSITION_TIME - self.transition_timer)
+                            / TRANSITION_BAR_EXPANSION_TIME
+                        ),
+                        10,
+                    ),
+                )
+            # If in middle
+            elif self.transition_bar.get_width() != self.transition_bar_full_width:
+                self.transition_bar = pygame.transform.scale(
+                    self.orignial_transition_bar,
+                    (self.transition_bar_full_width, 10),
+                )
+
         self._animate()
 
     def _swap_left(self) -> None:
@@ -476,7 +535,7 @@ class ShipSelectState(State):
                 # Loop animation
                 self.frame_index = 0
             self._reset_image()
-            self._random_walk()
+            self.ship_pos = random_walk(self.ship_pos, self.ship_pos_start)
         elif self.is_transitioning:
             self._reset_image()
 
@@ -487,19 +546,6 @@ class ShipSelectState(State):
             self.last_ship_image = self.ship_sprites[self.last_selected_ship][
                 self.frame_index
             ]
-
-    def _random_walk(self) -> None:
-        """Randomly moves ship sprite around"""
-        x_move = choice([-1, 0, 1])
-        y_move = choice([-1, 0, 1])
-        self.ship_pos[0] = max(
-            self.ship_pos_start[0] - MAX_WALK,
-            min(self.ship_pos_start[0] + MAX_WALK, self.ship_pos[0] + x_move),
-        )
-        self.ship_pos[1] = max(
-            self.ship_pos_start[1] - MAX_WALK,
-            min(self.ship_pos_start[1] + MAX_WALK, self.ship_pos[1] + y_move),
-        )
 
     def draw(self, window: pygame.Surface) -> None:
         """Draws to the game window
@@ -551,7 +597,12 @@ class ShipSelectState(State):
             # Draw teleport bar
             window.blit(
                 self.transition_bar,
-                (self.ship_pos_start[0], self.ship_pos_start[1] + transition_y),
+                (
+                    self.ship_pos_start[0]
+                    + (self.transition_bar_full_width - self.transition_bar.get_width())
+                    // 2,
+                    self.ship_pos_start[1] + transition_y,
+                ),
             )
 
             # Draw text
@@ -594,7 +645,22 @@ class ShipSelectState(State):
         """Actions to perform upon exiting the state"""
 
         self.game.set_player(self.ships[self.selected_ship])
-        self.next_state = RunState(self.game)
+        self.next_state = ShipSelectRunTransitionState(
+            self.game,
+            self.characteristics,
+            self.points1,
+            self.points2,
+            self.title_backround_rect,
+            self.main_backround_rect,
+            self.status_bars,
+            self.select_button,
+            self.title_text,
+            self.weapon_text,
+            self.game.assets["sprite_sheets"][
+                PLAYER_SHIP_DATA[self.ships[self.selected_ship]]["sprite_sheet"]
+            ],
+            self.ship_pos,
+        )
 
     def process_events(self, events: list[pygame.event.Event]):
         """Handle game events

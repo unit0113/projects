@@ -5,23 +5,12 @@ from src.settings import WIDTH, HEIGHT, FPS
 from src.game import Game
 
 
-def init_pygame() -> tuple[pygame.surface.Surface, pygame.time.Clock]:
-    """Perform pygame initialization, create main window and clock
-
-    Returns:
-        tuple[pygame.surface.Surface, pygame.time.Clock]: main window and clock
-    """
-
+def main() -> None:
+    """Initiates game loop"""
     pygame.init()
     clock = pygame.time.Clock()
     window = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("2145")
-
-    return window, clock
-
-
-def main() -> None:
-    window, clock = init_pygame()
     game = Game()
     prev_time = time.time()
     run = True

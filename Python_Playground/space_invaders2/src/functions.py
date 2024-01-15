@@ -1,7 +1,8 @@
 import pygame
+from random import choice
 
 from .text import Text
-from .settings import GREY
+from .settings import GREY, MAX_WALK
 
 
 def create_stacked_text(
@@ -82,3 +83,20 @@ def draw_lines(
 
     for index in range(1, len(points)):
         pygame.draw.line(window, color, points[index - 1], points[index], line_width)
+
+
+def random_walk(
+    current_ship_pos: list[int, int], center_ship_pos: list[int, int]
+) -> None:
+    """Randomly moves ship sprite around"""
+    x_move = choice([-1, 0, 1])
+    y_move = choice([-1, 0, 1])
+    x = max(
+        center_ship_pos[0] - MAX_WALK,
+        min(center_ship_pos[0] + MAX_WALK, current_ship_pos[0] + x_move),
+    )
+    y = max(
+        center_ship_pos[1] - MAX_WALK,
+        min(center_ship_pos[1] + MAX_WALK, current_ship_pos[1] + y_move),
+    )
+    return [x, y]

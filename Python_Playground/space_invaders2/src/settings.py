@@ -18,6 +18,7 @@ GROUP_CHANCE = 0.1
 
 # Animation settings
 FRAME_TIME = 100
+MAX_WALK = 5
 
 # Missile default settings
 MISSILE_BORESIGHT = 40
