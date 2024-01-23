@@ -1,0 +1,9 @@
+# Basic
+WIDTH = 640
+HEIGHT = 480
+FPS = 60
+
+BASE_IMG_PATH = "assets/images/"
+
+TERMINAL_VELOCITY = 5
+GRAVITY = 0.1

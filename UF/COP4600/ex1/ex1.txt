@@ -1,0 +1,57 @@
+.Dd 1/15/24               \" DATE
+.Dt Ex1      \" Program name and manual section number
+.Os Reptilian
+.Sh NAME                 \" Section Header - required - don't modify
+.Nm Ex1
+.\" Use .Nm macro to designate other names for the documented program.
+.Nd The Command Line
+.Sh SYNOPSIS             \" Section Header - required - don't modify
+The purpose of
+.Nm
+is to build experience with command line usage and the available commands.
+.Sh DESCRIPTION          \" Section Header - required - don't modify
+Part 1 of 
+.Nm
+focused on file packaging, specifically the use of the following commands:
+.Bl -tag -width -indent
+.It Fl gzip
+Used to zip a file or files
+.It Fl gunzip
+Used to unzip a .gz file
+.It Fl tar
+Used to create and extract .tar files. Can also be used to create .gz files from the tar files
+.El
+Part 2 of 
+.Nm
+focused on terminal navigation. It covered the use of the find command and how to pipe the output of a command into a file.
+Part 2 concludes with the creation of this man page and extracting the files creating during the portion of
+.Nm
+using sftp.
+.Sh FILES                \" File used or created by the topic of the man page
+.Bl -tag -width -indent
+.It Pa ex1.tar.gz
+Zipped tar file of the directory created in part 2, includes output.txt
+.It Pa ex1.txt
+This man page
+.El                      \" Ends the list
+.Sh Part 2 Steps
+.Bl -tag -width -indent
+.It 1)
+Use the mkdir command to create kyle_lund
+.It 2)
+Use grep -R "android_dev" /usr/rep/src to search for the specified phrase in the kernel source directory
+.It 3)
+Run the same command as 2, but append > output.txt to store the results to a file
+.It 4)
+Use the mv command to move output.txt to the directory created in step 1
+.It 5)
+Use the tar command from part 1 to package the created directory and its contents
+.It 6)
+Write this man page
+.It 7)
+Use sftp to test this man page in the kernel, and extract the .tar.gz file created in step 5
+.El
+.Sh SEE ALSO
+Far too many stack overflow threads were referenced to list individually. Most discussed steps 8-10 on part 1
+(I was thrown off track when they mentioned piping, as I thought we were literally supposed to pipe the output of tar in gzip
+and vice versa) and how to package a directory into a tar during part 2.

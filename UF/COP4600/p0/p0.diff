@@ -1,0 +1,13 @@
+diff --git a/init/main.c b/init/main.c
+index 02f6b6bd6a17..022f1d52a66e 100644
+--- a/init/main.c
++++ b/init/main.c
+@@ -1111,6 +1111,8 @@ static int __ref kernel_init(void *unused)
+ 
+ 	rcu_end_inkernel_boot();
+ 
++	pr_err("\n\n##### Kyle Lund (UFID: 29501039) Well hello there! #####");
++
+ 	if (ramdisk_execute_command) {
+ 		ret = run_init_process(ramdisk_execute_command);
+ 		if (!ret)

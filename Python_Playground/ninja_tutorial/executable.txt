@@ -1,0 +1,7 @@
+-m pip install PyInstaller
+cd to folder
+-m PyInstaller game.py --noconsole --onefile
+note: game.py is whatever the main file is
+
+for not --onefile
+copy assets/src into created folder

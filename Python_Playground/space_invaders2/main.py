@@ -14,7 +14,6 @@ def main() -> None:
     game = Game()
     prev_time = time.time()
     run = True
-    reset_presed = False
 
     # Main loop
     while run:
@@ -29,19 +28,13 @@ def main() -> None:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-
-        inputs = pygame.key.get_pressed()
-        # Quit if escape is pressed
-        if inputs[pygame.K_ESCAPE]:
-            pygame.quit()
-            quit()
-
-        # Reset if r is pressed
-        if not reset_presed and inputs[pygame.K_r]:
-            game.reset()
-            reset_presed = True
-        elif reset_presed and not inputs[pygame.K_r]:
-            reset_presed = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    # Quit if escape is pressed
+                    pygame.quit()
+                    quit()
+                elif event.key == pygame.K_r:
+                    game.reset()
 
         # Update game
         game.update(dt, events)
