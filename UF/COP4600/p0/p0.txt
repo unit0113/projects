@@ -1,5 +1,5 @@
 .Dd 2024/01/17              \" DATE
-.Dt P0
+.Dt P0-Kyle-Lund
 .Os Reptilian
 .Sh NAME                 \" Section Header - required - don't modify
 .Nm Project 0
@@ -8,7 +8,7 @@
 .Sh SYNOPSIS             \" Section Header - required - don't modify
 The purpose of
 .Nm
-is to build experience with modifying a linux kernel and applying patches.
+is to build experience with modifying a Linux kernel and applying patches.
 .Sh DESCRIPTION          \" Section Header - required - don't modify
 .Nm
 begins by searching for a file where a specific function
@@ -23,6 +23,10 @@ function is called. Using the ctrl-W find the command,
 this line was found in the kernel_init function.
 Immediately after where this function is called, a pr_err function
 was added to print the requested info to the screen.
+The pr_err function was chosen for two reasons,
+first was that the first print statement I recognized from the start up process
+utilized this function. Second, in one of the random Stack Overflow threads I read,
+it mentioned error was the lowest level that would print by default.
 .sp 1
 Finally, this edit needed to be applied. This was done by executing the "make"
 and "sudo make install; sudo make modules_install" commands as specified in Ex0.
@@ -64,7 +68,7 @@ Link that pointed me in the right direction for the menu.lst file
 .Sh BUGS
 There are numbers surrounded by brackets where "\\n"s are used in the pr_err
 function. Specifically my output shows several instances of [    10.142866].
-These also appears in the reference screenshot,
+These also appear in the reference screenshot,
 and I was unable to find a solution to surpress this output.
 .sp 1
 The grub menu edit for the extra credit portion was not applied with the patch. I suspect that this is expected behavior, but am unable to confirm.
