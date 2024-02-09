@@ -1,0 +1,6 @@
+The error message in GDB failed when executing the pthread_join function with a file not found error. Searching through process.c, in the loadSubRoutine function, there was a line referencing a memset function, which had a similar name to the missing file (it also had a suspicious comment above it). Commenting out this line of code resulted in a successful run of the program.
+
+layout asm
+doYouSeekThePassword
+whereIsIt
+deepLayer

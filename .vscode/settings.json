@@ -87,7 +87,8 @@
     "complex": "cpp",
     "csignal": "cpp",
     "cwctype": "cpp",
-    "shared_mutex": "cpp"
+    "shared_mutex": "cpp",
+    "filesystem": "cpp"
   },
   "dotnet.defaultSolution": "disable",
   "[python]": {
