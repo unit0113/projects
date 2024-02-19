@@ -3,8 +3,6 @@
 437	log_msg
 
 globals: https://stackoverflow.com/questions/40455523/when-creating-global-kernel-variables-where-do-i-actually-declare-the-variable-t
-pid: https://linuxhandbook.com/system-calls/
-superuser: https://serverfault.com/questions/300051/how-to-check-if-a-normal-user-has-super-user-privileges
-and: https://man7.org/linux/man-pages/man2/geteuid.2.html
+pid: https://stackoverflow.com/questions/10524500/in-linux-how-do-i-retrieve-the-pid-of-the-process-making-a-system-call
+name: https://stackoverflow.com/questions/5406942/linux-get-process-name-from-pid-within-kernel
 https://cheat-sheets.org/saved-copy/Linux_Syscall_quickref.pdf
-pid: https://stackoverflow.com/questions/7894359/how-to-make-system-call-from-another-system-call-in-kernel-space

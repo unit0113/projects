@@ -72,7 +72,6 @@ namespace ufl_cap4053
 			void buildSolution();
 			bool areAdjacent(const Tile* lhs, const Tile* rhs) const;
 			double heuristic(const Tile* src) const;
-			bool isInvalidNode(PlannerNode* current) const;
 		};
 	}
 }  // close namespace ufl_cap4053::searches

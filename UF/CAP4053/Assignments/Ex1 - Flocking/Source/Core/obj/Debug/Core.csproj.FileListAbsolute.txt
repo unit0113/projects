@@ -1,0 +1,6 @@
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex1 - Flocking\Source\Core\bin\Debug\CoreAI.dll
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex1 - Flocking\Source\Core\bin\Debug\CoreAI.pdb
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex1 - Flocking\Source\Core\obj\Debug\Core.csproj.AssemblyReference.cache
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex1 - Flocking\Source\Core\obj\Debug\Core.csproj.CoreCompileInputs.cache
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex1 - Flocking\Source\Core\obj\Debug\CoreAI.dll
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex1 - Flocking\Source\Core\obj\Debug\CoreAI.pdb

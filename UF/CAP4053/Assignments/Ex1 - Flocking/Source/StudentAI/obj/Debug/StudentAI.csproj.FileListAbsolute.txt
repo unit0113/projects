@@ -1,0 +1,9 @@
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex1 - Flocking\Source\StudentAI\obj\Debug\StudentAI.csproj.AssemblyReference.cache
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex1 - Flocking\Source\StudentAI\obj\Debug\StudentAI.csproj.CoreCompileInputs.cache
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex1 - Flocking\Source\StudentAI\bin\Debug\SudentAI.dll
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex1 - Flocking\Source\StudentAI\bin\Debug\SudentAI.pdb
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex1 - Flocking\Source\StudentAI\bin\Debug\CoreAI.dll
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex1 - Flocking\Source\StudentAI\bin\Debug\CoreAI.pdb
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex1 - Flocking\Source\StudentAI\obj\Debug\StudentAI.csproj.CopyComplete
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex1 - Flocking\Source\StudentAI\obj\Debug\SudentAI.dll
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex1 - Flocking\Source\StudentAI\obj\Debug\SudentAI.pdb

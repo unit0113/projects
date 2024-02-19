@@ -1,13 +1,18 @@
 #include "PathSearch.h"
 #include <chrono>
+#include <algorithm>
+#include <iostream>
 
-#define DEBUG true
+// Required due to max being redefined by some other import
+#undef max
+
+#define DEBUG 2
 
 namespace ufl_cap4053
 {
 	namespace constants {
 		const std::unordered_map<int, std::unordered_set<std::pair<int, int>, searches::pair_hash>> ADJACENT_TILES = { {0, {{1, -1}, {0, -1}, {-1, -1}, {-1, 0}, {0, 1}, {1, 0}}}, {1, {{-1, 0}, {0, -1}, {1, 0}, {-1, 1}, {0, 1}, {1, 1}}} };
-		const double HEURISTIC_WEIGHT = 4.0f;
+		const double HEURISTIC_WEIGHT = 1.0f;
 	}
 
 	namespace searches
@@ -22,7 +27,7 @@ namespace ufl_cap4053
 
 		void PlannerNode::setGivenCost(double newCost) {
 			givenCost = newCost;
-			finalCost = givenCost + heuristicCost;
+			finalCost = givenCost + constants::HEURISTIC_WEIGHT * heuristicCost;
 		}
 
 
@@ -66,7 +71,7 @@ namespace ufl_cap4053
 							if (neighborTile && (int)neighborTile->getWeight() != 0) {
 								searchGraph[keyTile].insert(neighborTile);
 								//If debuging, draw search graph
-								if (DEBUG) {
+								if (DEBUG > 2) {
 									keyTile->addLineTo(neighborTile, 0xFFFFFFFF);
 								}
 							}
@@ -83,7 +88,9 @@ namespace ufl_cap4053
 			startTile = tileMap->getTile(startRow, startCol);
 			goalTile = tileMap->getTile(goalRow, goalCol);
 			isComplete = false;
-			open.push(new PlannerNode(startTile));
+			PlannerNode* startNode = new PlannerNode(startTile);
+			open.push(startNode);
+			visited[startTile] = startNode;
 			solution.clear();
 		}
 
@@ -133,29 +140,28 @@ namespace ufl_cap4053
 		void PathSearch::aStarIteration() {
 			if (!open.empty()) {
 				// Retrieve next node
-				PlannerNode* current;
-				// Ensure node is valid
-				do {
-					current = open.front();
-					open.pop();
-					if (DEBUG) {
-						tileMap->getTile(current->getTile()->getRow(), current->getTile()->getColumn())->setMarker(0xff7f0000);
-					}
-				} while (isInvalidNode(current));
+				PlannerNode* current = open.front();
+				open.pop();
 
-				visited[current->getTile()] = current;
+				if (DEBUG > 1) {
+					tileMap->getTile(current->getTile()->getRow(), current->getTile()->getColumn())->setMarker(0xffff0000);
+				}
+
+				//visited[current->getTile()] = current;
 
 				double cost{};
 				PlannerNode* next;
 				for (const Tile* neighbor : searchGraph.at(current->getTile())) {
+					cost = current->getGivenCost() + (int)neighbor->getWeight() * std::sqrt(std::pow(neighbor->getXCoordinate() - current->getTile()->getXCoordinate(), 2) + std::pow(neighbor->getYCoordinate() - current->getTile()->getYCoordinate(), 2));
 					// Check if goal
 					if (neighbor == goalTile) {
 						isComplete = true;
 						visited[neighbor] = new PlannerNode(neighbor, current->getTile(), cost, heuristic(neighbor));
+						if (DEBUG > 0) { std::cout << "Cost: " << cost << std::endl; }
 						buildSolution();
 						return;
 					}
-					cost = current->getGivenCost() + (int)neighbor->getWeight() * tileMap->getTileRadius();
+					
 					// Check if visited
 					if (visited.find(neighbor) != visited.end()) {
 						// Replace node if better path found
@@ -165,19 +171,20 @@ namespace ufl_cap4053
 							next->setGivenCost(cost);
 							next->setParent(current->getTile());
 							open.push(next);
+							if (DEBUG > 0) {
+								tileMap->getTile(neighbor->getRow(), neighbor->getColumn())->setMarker(0x7f007f00);
+							}
 						}
 					}
 					// If not found
 					else {
 						next = new PlannerNode(neighbor, current->getTile(), cost, heuristic(neighbor));
+						visited[neighbor] = next;
 						open.push(next);
-						if (DEBUG) {
+						if (DEBUG > 0) {
 							tileMap->getTile(neighbor->getRow(), neighbor->getColumn())->setMarker(0x7f007f00);
 						}
 					}
-				}
-				if (DEBUG) {
-					tileMap->getTile(open.front()->getTile()->getRow(), open.front()->getTile()->getColumn())->setMarker(0xff00ff00);
 				}
 			}
 		}
@@ -198,17 +205,7 @@ namespace ufl_cap4053
 		}
 
 		double PathSearch::heuristic(const Tile* src) const {
-			return tileMap->getTileRadius() * std::abs(src->getRow() - goalTile->getRow()) + std::abs(src->getColumn() - goalTile->getColumn());
-		}
-
-		bool PathSearch::isInvalidNode(PlannerNode* current) const {
-			if (visited.find(current->getTile()) == visited.end()) {
-				return false;
-			}
-			else if (visited.at(current->getTile())->getFinalCost() > current->getFinalCost()) {
-				return false;
-			}
-			return true;
+			return std::sqrt(std::pow(src->getXCoordinate() - goalTile->getXCoordinate(), 2) + std::pow(src->getYCoordinate() - goalTile->getYCoordinate(), 2));
 		}
 	}
 }  // close namespace ufl_cap4053::searches
