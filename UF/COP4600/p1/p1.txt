@@ -1,8 +1,98 @@
-435	set_log_level
-436	get_log_level
-437	log_msg
+.Dd 2/21/2024               \" DATE
+.Dt Project_1      \" Program name and manual section number
+.Os Reptilian
+.Sh NAME                 \" Section Header - required - don't modify
+.Nm Project 1: System Calls
+.Sh SYNOPSIS             \" Section Header - required - don't modify
+.Nm
+implements a global log level variable and three system calls which either
+interact with this variable or log a message.
+Additionally, implements static library functions to call the newly created syscalls
+.Sh DESCRIPTION          \" Section Header - required - don't modify
+.Nm
+was implented by applying the following changes to a clean kernel:
+.Bl -tag -width -indent
+.It Fl Editing ./arch/x86/entry/syscalls/syscall_64.tbl
+The three system calls were added to the table.
+.Pp
+435: set_log_level
+.Pp
+436: get_log_level
+.Pp
+437: log_msg
+.Pp
+Adding calls to the system call table allows them to be called by the kernel.
+.It Fl Implementing the function prototypes in include/linux/syscalls.h
+Prototypes for the three syscalls were implemented using the asmlinkage keyword
+which avoids any dependence on registers.
+.It Fl Implementing the function definitions and global variable in kernel/sys.c
+Functions were defined here.
+.It Fl Implementing the static library and Makefile to invoke the new syscalls
+.El
 
-globals: https://stackoverflow.com/questions/40455523/when-creating-global-kernel-variables-where-do-i-actually-declare-the-variable-t
-pid: https://stackoverflow.com/questions/10524500/in-linux-how-do-i-retrieve-the-pid-of-the-process-making-a-system-call
-name: https://stackoverflow.com/questions/5406942/linux-get-process-name-from-pid-within-kernel
-https://cheat-sheets.org/saved-copy/Linux_Syscall_quickref.pdf
+Syscall and global implementations:
+.Bl -tag -width -indent
+.It Fl Global
+A global log level variable was declared in sys.c
+.It Fl 435: set_log_level(int new_level)
+First checks if caller is a superuser by verifiying that current_cred()->euid.val
+is equal to 0. If it is not, or if the level is outside the range of 0-7
+inclusive, the call returns -1. Otherwise, the call sets the global level to
+new_level and returns new_level.
+.It Fl 436: get_log_level()
+Returns the current global log level. No known failure conditions.
+.It Fl 437: log_msg(char* msg, int level)
+First, the call validates that level is between 0-7 inclusive.
+If this check fails, -1 is returned. Next, the provided level is checked against
+the current global log level, if the provided level is less severe than the current
+level, nothing is logged and the function returns the provided level.
+Otherwise, the log message is retrieved from the user using the memset and
+copy_from_user functions. Then the message is logged utilizing printk and the
+corresponding kernel log level. The caller name and pid are retrieved from the
+current struct, specifically the comm and pid members.
+Finally, level is returned to the user.
+.El
+
+The following static library functions were also implemented. Each functions
+calls the appropriate syscall via its system call table number:
+.Bl -tag -width -indent
+.It Fl get_proc_log_level()
+Invokes get_log_level syscall and returns the current log level to the user.
+.It Fl set_proc_log_level(int new_level)
+Invokes set_log_level syscall, returns new_level on success and -1 on failure.
+.It Fl proc_log_message(int level, char* message)
+Invokes log_msg syscall, returns level on success and -1 on failure.
+.El
+
+.Sh TESTING
+Testing for
+.Nm
+was first accomplished with a custom test file which allowed me to call both
+the syscalls and library functions to test their functionality while they were
+being implemented. Next, the provided test harnesses were expanded upon and used.
+Next, the kernel changes were applied to a clean kernel using the heartbeat-p1.sh file.
+Finally, the process_log.tar.gz file was unpacked and its structure verified
+in the clean kernel and the harness and library testing was reaccomplished in
+the new kernel.
+
+.Sh FILES
+.Bl -tag -width -compact
+.It Pa /usr/rep/src/reptilian-kernel/arch/x86/entry/syscalls/syscall_64.tbl
+Syscall table
+.It Pa /usr/rep/src/reptilian-kernel/include/linux/syscalls.h
+Syscall function prototypes
+.It Pa process_log.h and process_log.c
+Header and definition file for static library functions
+.It Pa Makefile
+Makefile for the static library
+.El
+
+.Sh Screencast
+https://youtu.be/7nPdThbM1Lo
+
+.Sh REFERENCES
+Globals: https://stackoverflow.com/questions/40455523/when-creating-global-kernel-variables-where-do-i-actually-declare-the-variable-t
+.Pp
+PID: https://stackoverflow.com/questions/10524500/in-linux-how-do-i-retrieve-the-pid-of-the-process-making-a-system-call
+.Pp
+Caller name: https://stackoverflow.com/questions/5406942/linux-get-process-name-from-pid-within-kernel

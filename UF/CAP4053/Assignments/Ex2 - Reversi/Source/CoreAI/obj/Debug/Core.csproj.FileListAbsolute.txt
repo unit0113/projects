@@ -1,0 +1,6 @@
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\CoreAI\bin\Debug\Core.dll
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\CoreAI\bin\Debug\Core.pdb
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\CoreAI\obj\Debug\Core.csproj.AssemblyReference.cache
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\CoreAI\obj\Debug\Core.csproj.CoreCompileInputs.cache
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\CoreAI\obj\Debug\Core.dll
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\CoreAI\obj\Debug\Core.pdb

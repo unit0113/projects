@@ -1,0 +1,10 @@
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\StudentAI\bin\Debug\StudentAI.dll
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\StudentAI\bin\Debug\StudentAI.pdb
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\StudentAI\bin\Debug\Core.dll
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\StudentAI\bin\Debug\ExampleAI.dll
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\StudentAI\bin\Debug\Core.pdb
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\StudentAI\obj\Debug\StudentAI.csproj.AssemblyReference.cache
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\StudentAI\obj\Debug\StudentAI.csproj.CoreCompileInputs.cache
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\StudentAI\obj\Debug\StudentAI.csproj.CopyComplete
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\StudentAI\obj\Debug\StudentAI.dll
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\StudentAI\obj\Debug\StudentAI.pdb

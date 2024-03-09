@@ -1,0 +1,98 @@
+diff --git a/arch/x86/entry/syscalls/syscall_64.tbl b/arch/x86/entry/syscalls/syscall_64.tbl
+index bbfc6d440870..7cd224012276 100644
+--- a/arch/x86/entry/syscalls/syscall_64.tbl
++++ b/arch/x86/entry/syscalls/syscall_64.tbl
+@@ -345,6 +345,9 @@
+ 334	common	rseq			__x64_sys_rseq
+ 424	common	pidfd_send_signal	__x64_sys_pidfd_send_signal
+ 434	common	pidfd_open		__x64_sys_pidfd_open
++435	common	set_log_level		__x64_sys_set_log_level
++436	common	get_log_level		__x64_sys_get_log_level
++437	common	log_msg			__x64_sys_log_msg
+ 
+ #
+ # x32-specific system call numbers start at 512 to avoid cache impact
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index 8e5b2c6d5dea..745626421fc1 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -1298,3 +1298,7 @@ static inline unsigned int ksys_personality(unsigned int personality)
+ }
+ 
+ #endif
++
++asmlinkage int sys_set_log_level(int level);
++asmlinkage int sys_get_log_level(void);
++asmlinkage int sys_log_msg(char* msg, int level);
+diff --git a/kernel/sys.c b/kernel/sys.c
+index 0a1cdee858de..9e2807eb9cca 100644
+--- a/kernel/sys.c
++++ b/kernel/sys.c
+@@ -2807,3 +2807,67 @@ COMPAT_SYSCALL_DEFINE1(sysinfo, struct compat_sysinfo __user *, info)
+ 	return 0;
+ }
+ #endif /* CONFIG_COMPAT */
++
++// Project 1 global
++int global_log_level = 0;
++EXPORT_SYMBOL(global_log_level);
++
++// Project 1 system calls
++SYSCALL_DEFINE1(set_log_level, int, level){
++	// Check superuse
++	if (current_cred()->euid.val != 0) { return -1; }
++	// Validate level
++	if (level < 0 || level > 7) { return -1; }
++
++	global_log_level = level;
++	return level;
++}
++
++SYSCALL_DEFINE0(get_log_level){
++	extern int global_log_level;
++	return global_log_level;
++}
++
++SYSCALL_DEFINE2(log_msg, char*, msg, int, level){
++	char safeMessage[129];
++	long ret_val;
++
++	// Validate level
++	if (level < 0 || level > 7) { return -1; }
++	if (level > global_log_level) { return level; }
++
++	// Zeroize memory
++	memset(safeMessage, 0, 129);
++
++	// Copy message
++	ret_val = copy_from_user(safeMessage, msg, 128);
++	if(ret_val != 0) { return -1; }
++
++	switch (level)  {
++		case 0:
++			printk(KERN_EMERG "PROC_OVERRIDE [%s, %d]: %s", current->comm, current->pid, safeMessage);
++			break;
++		case 1:
++			printk(KERN_ALERT "PROC_ALERT [%s, %d]: %s", current->comm, current->pid, safeMessage);
++			break;
++		case 2:
++			printk(KERN_CRIT "PROC_CRITICAL [%s, %d]: %s", current->comm, current->pid, safeMessage);
++			break;
++		case 3:
++			printk(KERN_ERR "PROC_ERROR [%s, %d]: %s", current->comm, current->pid, safeMessage);
++			break;
++		case 4:
++			printk(KERN_WARNING "PROC_WARNING [%s, %d]: %s", current->comm, current->pid, safeMessage);
++			break;
++		case 5:
++			printk(KERN_NOTICE "PROC_NOTICE [%s, %d]: %s", current->comm, current->pid, safeMessage);
++			break;
++		case 6:
++			printk(KERN_INFO "PROC_INFO [%s, %d]: %s", current->comm, current->pid, safeMessage);
++			break;
++		case 7:
++			printk(KERN_DEBUG "PROC_DEBUG [%s, %d]: %s", current->comm, current->pid, safeMessage);
++			break;
++	}
++	return level;
++}
