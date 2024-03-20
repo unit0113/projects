@@ -1,0 +1,94 @@
+.Dd 3/18/2024               \" DATE
+.Dt Project_2      \" Program name and manual section number
+.Os Reptilian
+.Sh NAME                 \" Section Header - required - don't modify
+.Nm Project 2: Memory Management
+.Sh SYNOPSIS             \" Section Header - required - don't modify
+.Nm
+implements a memory manager featuring initilization, tracking,
+allocating, and deallocating sections of memory.
+.Sh DESCRIPTION          \" Section Header - required - don't modify
+.Nm
+was implemented by creating two allocator classes and one memory manger class:
+.Bl -tag -width -indent
+.It Fl Allocators
+.Pp
+Both best and worst fit iterate through available holes to find the "best" hole.
+The bestFit finds the smallest hole that can fit the requested size,
+whereas the worstFit simply finds the biggest hole that fits.
+Both allocators return the offset of that "best" hole.
+.It Fl MemoryManager
+Implements the following functions:
+.It Fl Constructor:
+stores provided wordSize and allocator function.
+.It Fl Desctructor:
+calls the shutdown function
+.It Fl initialize:
+After initial checks, it requests memory from the OS using sbrk,
+passing in the number of bytes to reserve and getting the
+the base address of the allocated block in return.
+Finally, the holes data structure is initialized with data for the allocated memory.
+.It Fl shutdown:
+data for both allocated memory and memory holes are stored in separate 
+maps. The shutdown function
+begins by iterating through both of these maps, freeing any allocated memory
+and then clearing the map.
+Finally, if data has been allocated to the manager, it is freed with the brk command.
+.It Fl allocate
+Passes the number of requested words and the list of holes to the current allocator.
+If the offset returned from allocator is invalid, returns nullptr.
+Otherwise, the hole that the data is allocated from is updated. The existing hole is removed
+from the hole map, and if the previous hole was larger than the request, a new hole
+is created with the new offset and size. Finally, address of the allocated
+memory is returned by adding the offset * wordSize to base ptr.
+.It Fl free
+Returned memory is removed from the allocated map and added to the
+hole map by iterating through the existing holes. If a hole
+is found that ends where freed memory starts or that starts where the freed hole ends,
+holes are combined.
+.It Fl setAllocator
+Updates allocator function.
+.It Fl dumpMemoryMap
+Writes existing holes to provided file. If file cannot be opened, or
+if write is unsuccessful, returns -1. Otherwise, returns 0.
+.It Fl getList
+Converts hole map into void array. Returns nullptr if no memory has been
+allocated or if no memory is available. Otherwise, creates array with
+the number of holes, and the offset/size of each hole
+in order of offset.
+.It Fl getBitmap
+Creates bitmap representing current memory allocation. Memory
+is allocated and initialized to 1. Then, bits representing holes
+are cleared. The bytes are then mirrored. Finally, the size of the array is
+encoded (little-endian) in the first two bytes of the array.
+.It Fl getWordSize
+Returns current wordSize.
+.It Fl getMemoryStart
+Returns base address of allocated memory block.
+.It Fl getMemoryLimit
+Returns size of allocated memory in bytes.
+.El
+
+.Sh TESTING
+Testing for
+.Nm
+was first accomplished with a custom test file which allowed an iterative
+expansion of the core functionality. Once getList
+was written, the provided tests were also run alongside the custom tests.
+All tests were run through valgrind using bash scripts.
+
+.Sh FILES
+.Bl -tag -width -compact
+.It Pa MemoryManger.h
+Header file
+.It Pa MemoryManger.cpp
+Source file
+.It Pa Makefile
+Makefile for the static library
+.El
+
+.Sh Screencast
+https://youtu.be/rnAcQRyob18
+
+.Sh REFERENCES
+sbrk: https://www.man7.org/linux/man-pages/man2/brk.2.html
