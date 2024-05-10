@@ -1,0 +1,11 @@
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\P2 - Robocode\Source\env\robots\Doombas.dll
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\P2 - Robocode\Source\env\robots\Doombas.pdb
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\P2 - Robocode\Source\StudentRobot\obj\Debug\StudentRobot.csproj.AssemblyReference.cache
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\P2 - Robocode\Source\StudentRobot\obj\Debug\StudentRobot.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\P2 - Robocode\Source\StudentRobot\obj\Debug\StudentRobot.AssemblyInfoInputs.cache
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\P2 - Robocode\Source\StudentRobot\obj\Debug\StudentRobot.AssemblyInfo.cs
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\P2 - Robocode\Source\StudentRobot\obj\Debug\StudentRobot.csproj.CoreCompileInputs.cache
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\P2 - Robocode\Source\StudentRobot\obj\Debug\StudentRobot.sourcelink.json
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\P2 - Robocode\Source\StudentRobot\obj\Debug\StudentR.35A71884.Up2Date
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\P2 - Robocode\Source\StudentRobot\obj\Debug\Doombas.dll
+C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\P2 - Robocode\Source\StudentRobot\obj\Debug\Doombas.pdb

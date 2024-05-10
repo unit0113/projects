@@ -2,7 +2,7 @@ Humans do not always act rationally - but just as importantly, the agents humans
 
 Consider this perspective in Robocode. Work on answering these questions first:
 1) What decision making models do you think are likely to be deployed by opponents?
-2) What sorts of heuristics do yo expect them to employ?
+2) What sorts of heuristics do you expect them to employ?
 3) What would they predict your agents' behaviors to be?
 
 Now consider how your agents can use this information. Can you mislead other agents to take advantage? How does this information impact your current strategy?

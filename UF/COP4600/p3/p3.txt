@@ -1,0 +1,157 @@
+.Dd 3/30/2024               \" DATE
+.Dt Project_3      \" Program name and manual section number
+.Os Reptilian
+.Sh NAME                 \" Section Header - required - don't modify
+.Nm Project 3: File Systems
+.Sh SYNOPSIS             \" Section Header - required - don't modify
+.Nm
+integrates with fuse library to implement custom file system.
+.Sh DESCRIPTION          \" Section Header - required - don't modify
+.Nm
+was implemented by creating an n-array tree to maintain the structure of the
+file system, and a hash table for direct access to each node.
+
+.Bl -tag -width -indent
+.It Fl Wad
+.Bl -tag -width -indent
+.It Fl Structure:
+Consists of header, lump data, and descriptors. Header has 4B
+magic, 4B descriptorCount, and 4B descriptorOffset.
+Lump data comprises raw data for content.
+Each descriptor contains 4B offset, 4B length, and 8B name.
+.El
+
+.It Fl Wad class
+.Bl -tag -width -indent
+.It Fl loadWad:
+Calls Wad constructor and returns pointer to created Wad
+
+.It Fl Constructor:
+Initializes fstream, reads/stores header, initializes
+tree and map, moves cursor to descriptorOffset,
+calls root's addChildren.
+
+.It Fl isContent:
+Returns false if path doesn't exist or if path points to directory.
+Otherwise, returns true.
+
+.It Fl isDirectory:
+Returns false if path doesn't exist or if path points to content.
+Otherwise, returns true.
+
+.It Fl getSize:
+Returns -1 if path isn't content. Otherwise, returns number of bytes in file.
+
+.It Fl getContents:
+If path isn't content, returns -1. Otherwise, determines number of
+bytes to copy, reads wad data into provided buffer, and returns number of copied bytes.
+
+.It Fl getDirectory:
+If path isn't directory, returns -1. Else, loads names of all children
+into provided vector and returns number of copied children.
+
+.It Fl createDirectory:
+If path exists, returns. Parses parent
+and child directories. If parent doesn't exist or is map
+marker, returns. Otherwise, creates new treeNode, adds node as child of parent,
+and adds reference to node in map.
+Header/directory info is updated and written to file.
+
+.It Fl createFile:
+If path exists, returns. Parses parent directory
+and filename. If filename or parent directory are invalid, returns. Otherwise,
+creates new treeNode, adds node as child of parent directory,
+and adds reference to node in map.
+Header/directory info is updated and written to file.
+
+.It Fl writeToFile:
+If provided path isn't content, returns -1. If file is not empty, returns 0.
+Otherwise, fstream cursor is moved to start of descriptor block, provided
+data is written into file, descriptorOffset is updated,
+and header/directory info is updated and written to file. 
+
+.It Fl writeDescriptors:
+Private function: Moves fstream cursor to start of descriptors,
+then calls root's writeNode function.
+.El
+
+.It Fl treeNode
+.Bl -tag -width -indent
+.It Fl Constructors:
+Primary constructor takes in an fstream object to construct nodes from reading in descriptors.
+
+.It Fl addChildren:
+Recursively builds tree. Starting at root, while there are
+descriptors to read, creates node via constructor. If node marks
+end of a namespace, node is deleted and loop is exited.
+Otherwise, node is added as child of parent node.
+If node represents a map marker, next 10
+descriptors are read and added as children. If node is
+namespace directory, addChildren function is called on that node.
+
+.It Fl writeNode:
+Recursively writes descriptors. If node is not root, descriptor is
+written. WriteNode is then called for all children.
+Finally, if node is namespace node, _END descriptor is written.
+.El
+
+.It Fl wadfs
+.Bl -tag -width -indent
+.It Fl Main:
+Validates arguments. Converts relative path to absolute
+path as required. Creates Wad object from path and passes it and other args to fuse_main.
+
+.It Fl getattr:
+Sets data in stat struct depending on if path is content or directory. If
+path is not valid, returns -ENOENT, otherwise, returns 0;
+
+.It Fl mknod:
+Passes path to createFile.
+
+.It Fl mkdir:
+Passes path to createDirectory.
+
+.It Fl read:
+Passes args togetContents.
+
+.It Fl write:
+Passes args to writeToFile, loops until nothing written.
+
+.It Fl readdir:
+Uses filler to add parent/current directories to buffer.
+Copies getDirectory data into buffer.
+
+.El
+.El
+
+.Sh TESTING
+Testing for
+.Nm
+relied heavily on the provided testing suite. For testing wadfs a .sh file was
+used to compile and create the mountdir. Then each of the 6 functions was
+tested manually.
+
+.Sh FILES
+.Bl -tag -width -compact
+.It Pa Wad.h
+Header file
+.It Pa Wad.cpp
+Source file for Wad and treeNode objects
+.It Pa Makefile
+Makefile for Wad static library
+.It Pa wadfs.cpp
+Source file integrating fuse with Wad library
+.It Pa Makefile
+Makefile for wadfs
+.El
+
+.Sh Screencast
+https://youtu.be/kZeT_izp318
+
+.Sh REFERENCES
+How to use fuse private data: //https://www.cs.nmsu.edu/~pfeiffer/fuse-tutorial/html/private.html
+.Pp
+Fuse callbacks: //https://maastaar.net/fuse/linux/filesystem/c/2019/09/28/writing-less-simple-yet-stupid-filesystem-using-FUSE-in-C/
+wadfs main function: project video
+.Pp
+StackOverflow: everything else

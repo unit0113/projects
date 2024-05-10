@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net481</TargetFramework>
     <RootNamespace>CAP4053.Student</RootNamespace>
-    <AssemblyName>MyTeam</AssemblyName>
+    <AssemblyName>Doombas</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

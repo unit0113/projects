@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "7PWHlPd0VQvT76CFx2dHeDHpM713izGPQh4dD7eDxnoxEhq0gs95h0i+PrNQSxWTBiYAs24Wcml/kFCzZivuYw==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\unit0\\Desktop\\Python\\projects\\UF\\CAP4053\\Assignments\\P2 - Robocode\\Source\\StudentRobot\\StudentRobot.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\unit0\\.nuget\\packages\\microsoft.netframework.referenceassemblies\\1.0.3\\microsoft.netframework.referenceassemblies.1.0.3.nupkg.sha512",
+    "C:\\Users\\unit0\\.nuget\\packages\\microsoft.netframework.referenceassemblies.net481\\1.0.3\\microsoft.netframework.referenceassemblies.net481.1.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}
