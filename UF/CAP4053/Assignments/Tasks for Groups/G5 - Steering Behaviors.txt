@@ -1,1 +1,3 @@
-Design a simulation (game or otherwise) that utilizes steering behaviors other than flocking. Discuss how the behaviors could be used to build / enhance gameplay and mechanics; how it would impact player decisions; and how the agents would interact with the environment. Are the behaviors uniform, or do they vary by agent / group? Are they controlled by the player, or do they respond to the player / environment? What makes the steering behavior unique / useful / interesting in this context?
+version https://git-lfs.github.com/spec/v1
+oid sha256:8ac91a104f9f7e2b5f636e3212fc929dd14bceafb4ede0a3d7e10317a8426f8c
+size 494

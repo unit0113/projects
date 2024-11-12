@@ -1,7 +1,3 @@
-Not worth it
-Kind of cheap
-Really bad
-Didn't work the way we expected
-Overpriced for what you get
-Could have been much better
-Bad experience with this, would not buy
+version https://git-lfs.github.com/spec/v1
+oid sha256:1c63a1f12242d6783a0dcc9305c9b6cae076e79aa25f89f22355b2eacbda2ae2
+size 166

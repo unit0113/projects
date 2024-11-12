@@ -1,1 +1,3 @@
-Holmes chuckled to himself.
+version https://git-lfs.github.com/spec/v1
+oid sha256:a0b37854e469fc2e97a23ee39f3df88c04f637b67af8e7db823d25ee89bf3659
+size 28

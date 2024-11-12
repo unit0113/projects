@@ -1,1 +1,3 @@
-Holmes sat down and lit his pipe.
+version https://git-lfs.github.com/spec/v1
+oid sha256:11c1171179647b42fd58d4321de1669d4495b8527ccc8c27aee44a14673fe083
+size 34

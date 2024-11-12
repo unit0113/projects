@@ -1,9 +1,3 @@
-8
-insert "Brandon" 45674567
-insert "Brian" 35455565
-insert "Briana" 87878787
-insert "Bella" 95462138
-printInorder
-remove 45674567
-removeInorder 2
-printInorder
+version https://git-lfs.github.com/spec/v1
+oid sha256:8b9e59d15ceba5c48c428401fdf4d4d454149ef9e47aaa30326067ba964d8ef9
+size 166

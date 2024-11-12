@@ -1,11 +1,3 @@
-[Default]
-speed=4.0
-steer=1.0
-sensorAngleSpacing=0.78539816339
-sensorDistance=16
-
-[profile1]
-speed=4.37
-steer=0.79
-sensorAngleSpacing=2.0
-sensorDistance=88
+version https://git-lfs.github.com/spec/v1
+oid sha256:14f0b48f7ea83020b4d81b069d17f76b97533b4627eb2d38d66bc53fe32f950c
+size 165

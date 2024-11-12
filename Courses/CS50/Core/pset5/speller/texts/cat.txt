@@ -1,1 +1,3 @@
-A cat is not a caterpillar.
+version https://git-lfs.github.com/spec/v1
+oid sha256:f23ff8155de390da68220b5980d30e94f8453b9681f5ee431e1766ba828f38e5
+size 28

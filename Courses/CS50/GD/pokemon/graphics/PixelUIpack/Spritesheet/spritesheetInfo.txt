@@ -1,6 +1,3 @@
-The tiles are 16 x 16px and have a 2px margin between them.
-
----
-
-TILE SIZE: 16 x 16
-MARGIN:	   2
+version https://git-lfs.github.com/spec/v1
+oid sha256:746bf8d67eaa7e86d0859d8d6d880df43a6904e89c97fdb45881abf9d9b80b28
+size 97

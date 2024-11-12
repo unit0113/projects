@@ -1,7 +1,3 @@
-
-MISSPELLED WORDS
-
-
-WORDS MISSPELLED:     0
-WORDS IN DICTIONARY:  143091
-WORDS IN TEXT:        20
+version https://git-lfs.github.com/spec/v1
+oid sha256:db7018ccc198cbf45f122c61093d21604c7159c6b1d63fe0583d2011aa06c136
+size 98

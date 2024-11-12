@@ -1,6 +1,3 @@
-It was great!
-So much fun
-Great product, would recommend
-My grandson loved it
-My mother really enjoyed the gift
-Great purchase!
+version https://git-lfs.github.com/spec/v1
+oid sha256:47dace79a7928a6ffb492fb0fe7c37a2f989aaa67740cec4a7321298e62e36f5
+size 128

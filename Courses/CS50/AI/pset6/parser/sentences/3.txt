@@ -1,1 +1,3 @@
-We arrived the day before Thursday.
+version https://git-lfs.github.com/spec/v1
+oid sha256:bc8cfbba23ff84d82f732d9f40040db9344bf75c2c0d5fd8ca94b45891ffc324
+size 36

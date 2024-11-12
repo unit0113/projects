@@ -1,1 +1,3 @@
-target area: x=96..125, y=-144..-98
+version https://git-lfs.github.com/spec/v1
+oid sha256:a8099ac03f72c764a9d6387f12ca8f1abbc53889708b6cd550b71f2c497b2978
+size 35

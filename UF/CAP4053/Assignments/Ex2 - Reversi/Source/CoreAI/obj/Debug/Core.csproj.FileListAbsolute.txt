@@ -1,6 +1,3 @@
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\CoreAI\bin\Debug\Core.dll
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\CoreAI\bin\Debug\Core.pdb
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\CoreAI\obj\Debug\Core.csproj.AssemblyReference.cache
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\CoreAI\obj\Debug\Core.csproj.CoreCompileInputs.cache
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\CoreAI\obj\Debug\Core.dll
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\CoreAI\obj\Debug\Core.pdb
+version https://git-lfs.github.com/spec/v1
+oid sha256:06dbf67ea58773649658ad6ddfbec841162222b815ad876c472ed7038b3ad7a1
+size 714

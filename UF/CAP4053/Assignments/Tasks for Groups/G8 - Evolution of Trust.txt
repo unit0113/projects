@@ -1,5 +1,3 @@
-First, play "The Evolution of Trust" (https://ncase.me/trust/). In this activity, you will reflect on it.
-
-Have you seen the archetypes in existing games? Talk about how these behaviors impact your decision making. Does your behavior come close to any of these?
-
-Now, think about trust from a designer's perspective. How can we use different models of trust and behavior to elicit reactions (whichever ones we want - happiness, anger, etc) from players?
+version https://git-lfs.github.com/spec/v1
+oid sha256:ff68ff1ee4b8f7562624b20cd18830bea0770b5be79fc93677e0f2e43b0e5d40
+size 457

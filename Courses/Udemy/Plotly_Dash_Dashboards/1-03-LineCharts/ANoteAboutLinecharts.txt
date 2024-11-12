@@ -1,4 +1,3 @@
-The file line2.py uses a customized dataset that
-reduces U.S. Census Bureau statistics down to just
-six New England states. To see how pandas was used
-to trim the original data, see line3.py.
+version https://git-lfs.github.com/spec/v1
+oid sha256:a3d11898552cb203f08fb63a249654cd134876bf3b284f9e4b347d54c928f288
+size 192

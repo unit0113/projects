@@ -1,11 +1,3 @@
-The Chain Rule of Calculus
-http://tutorial.math.lamar.edu/Classes/CalcI/ChainRule.aspx
-
-Yes you should understand backprop by Andrej Karpathy
-https://medium.com/@karpathy/yes-you-should-understand-backprop-e2f06eab496b
-
-The Matrix Cookbook
-https://www.math.uwaterloo.ca/~hwolkowi/matrixcookbook.pdf
-
-Rumelhart, D. E., Hinton, G. E., and Williams, R. J. (1986) Learning representations by back-propagating errors.
-https://www.iro.umontreal.ca/~vincentp/ift3395/lectures/backprop_old.pdf
+version https://git-lfs.github.com/spec/v1
+oid sha256:bc35fed2cc46f6cff7479ac27a7573229f8d6015d584b48bacf62cb162f808d9
+size 485

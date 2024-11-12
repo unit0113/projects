@@ -1,14 +1,3 @@
-A Neural Algorithm of Artistic Style
-https://arxiv.org/abs/1508.06576
-
-SSD: Single Shot MultiBox Detector
-https://arxiv.org/abs/1512.02325
-
-Very Deep Convolutional Networks for Large-Scale Image Recognition (VGG)
-https://arxiv.org/abs/1409.1556
-
-Deep Residual Learning for Image Recognition
-https://arxiv.org/abs/1512.03385
-
-Going Deeper with Convolutions (Inception)
-https://arxiv.org/abs/1409.4842
+version https://git-lfs.github.com/spec/v1
+oid sha256:6b15de77839e1136baad27bad15f0e357bdc5db20f218f1c3725be72d0321891
+size 399

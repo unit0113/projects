@@ -1,5 +1,3 @@
-NEAT algorithm
-human play
-AI train
-AI save/load
-AI play
+version https://git-lfs.github.com/spec/v1
+oid sha256:02c510054735c08b08c2bb503ea017654ed4f398080fc8e649ae7c5d36057d2b
+size 61

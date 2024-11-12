@@ -1,8 +1,3 @@
-Humans do not always act rationally - but just as importantly, the agents humans develop do not always act rationally. This must be a consideration in the development of AI agents, as discussed in our videos.
-
-Consider this perspective in Robocode. Work on answering these questions first:
-1) What decision making models do you think are likely to be deployed by opponents?
-2) What sorts of heuristics do you expect them to employ?
-3) What would they predict your agents' behaviors to be?
-
-Now consider how your agents can use this information. Can you mislead other agents to take advantage? How does this information impact your current strategy?
+version https://git-lfs.github.com/spec/v1
+oid sha256:65f1f0d4947b2cb17e811776a1921028dd9b5ab3e6447bd226b20373493ab432
+size 655

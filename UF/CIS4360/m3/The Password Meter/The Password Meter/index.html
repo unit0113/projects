@@ -1,0 +1,359 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Password Strength Checker</title>
+<link type="text/css" href="css/pwdmeter.css" media="screen" rel="stylesheet" />
+<!--[if lt IE 7]>
+  <link type="text/css" href="css/ie.css" media="screen" rel="stylesheet" />
+<![endif]-->
+<script type="text/javascript" src="js/pwdmeter.js" language="javascript"></script>  
+<!-- <script type="text/javascript" src="js/require.js"></script> -->
+
+</head>
+<body>
+  <div id="header">
+    <div id="logo">
+      <h1 id="blogname"><a href="http://passwordmeter.com">The Password Meter</a></h1>
+    </div>
+    <div>
+      <!-- <ul id="navigation">
+        <li class="current_page_item"><a href="http://passwordmeter.com" title="Home"><span>Home</span></a></li>
+        <li class="current_page_item"><a href="http://blogs.passwordmeter.com" title="Home"><span>Feed</span></a></li>
+      </ul>-->
+    </div>
+  </div>
+  <div class="advertTop">
+		<script type="text/javascript"><!--
+		google_ad_client = "ca-pub-8841956045132710";
+		/* PasswordMeter - 728x90 - Image Text */
+		google_ad_slot = "5216551763";
+		google_ad_width = 728;
+		google_ad_height = 90;
+		//-->
+		</script>
+		<script type="text/javascript"
+		<!-src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+		</script>
+	</div>
+  <div id="content">
+<form id="formPassword" name="formPassword">
+            <table id="tablePwdCheck" cellpadding="5" cellspacing="1" border="0">
+              <tr>
+                  <th colspan="2" class="txtCenter">Test Your Password</th>
+                    <th class="txtCenter">Minimum Requirements</th>
+               </tr>
+               <tr>
+                    <th>Password:</th>
+                    <td>
+                      <input type="password" id="passwordPwd" name="passwordPwd" autocomplete="off" onkeyup="chkPass(this.value);" />
+            <input type="text" id="passwordTxt" name="passwordTxt" autocomplete="off" onkeyup="chkPass(this.value);" class="hide" />
+                    </td>
+                    <td rowspan="7">
+                        <ul>
+                            <li>Minimum 8 characters in length</li>
+                            <li>Contains 3/4 of the following items:<br />
+                                - Uppercase Letters<br />
+                                - Lowercase Letters<br />
+                                - Numbers<br />
+                                - Symbols<br />
+                            </li>
+
+			</ul>
+                <font color="red">NOTE: To evaluate pwds from a pwd file, <br>you need to copy all the pwds to Pwd File <br>Content and click OK.<br> The output columns represent pwd, score <br>and complexity, respectively.</font>
+
+                    </td>
+                </tr>
+   
+             
+                <tr>
+                    <th>Hide:</th>
+                    <td><input type="checkbox" id="mask" name="mask" value="1" checked="checked" onclick="togPwdMask();" /></td>
+                </tr>
+
+
+                <tr>
+                    <th>Score:</th>
+                    <td>
+                        <div id="scorebarBorder">
+                        <div id="score">0%</div>
+                        <div id="scorebar">&nbsp;</div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Complexity:</th>
+                    <td><div id="complexity">Too Short</div></td>
+                </tr>
+                <tr>
+                    <th colspan="1">Pwd File Content</th>
+
+                    <td colspan="1">
+                      <textarea id="passwordPwdcontent" name="passwordPwdcontent" autocomplete="on"  class="scrollabletextbox" rows="5" >
+
+                      </textarea>
+                    <button onclick="readpwdfile(passwordPwdcontent)">OK</button>
+                  
+                    </td>
+
+                </tr>
+            </table>
+            <!-- <table id="tablePwdfile" cellpadding="4" cellspacing="1" border="0">
+                <tr>
+                    <th colspan="4">Pwd File Content (Copy the text from pwd file)</th>
+                </tr>
+                 <tr>
+                    <td colspan="2">
+                      <textarea id="passwordPwdcontent" name="passwordPwdcontent" autocomplete="on"  class="scrollabletextbox" rows="10" >
+
+                      </textarea>
+                    <button onclick="readpwdfile(passwordPwdcontent)">OK</button>
+                  
+                    </td>
+
+                </tr>
+                </table> -->
+           <table id="tablePwdStatus" cellpadding="5" cellspacing="1" border="0">
+                <tr>
+                    <th colspan="2">Additions</th>
+                    <th class="txtCenter">Type</th>
+                    <th class="txtCenter">Rate</th>
+                    <th class="txtCenter">Count</th>
+                    <th class="txtCenter">Bonus</th>
+                </tr>
+                <tr>
+                    <td width="1%"><div id="div_nLength" class="fail">&nbsp;</div></td>
+                    <td width="94%">Number of Characters</td>
+                    <td width="1%" class="txtCenter">Flat</td>
+                    <td width="1%" class="txtCenter italic">+(n*4)</td>
+                    <td width="1%"><div id="nLength" class="box">&nbsp;</div></td>
+                    <td width="1%"><div id="nLengthBonus" class="boxPlus">&nbsp;</div></td>
+                </tr>  
+                <tr>
+                    <td><div id="div_nAlphaUC" class="fail">&nbsp;</div></td>
+                    <td>Uppercase Letters</td>
+                    <td class="txtCenter">Cond/Incr</td>
+                    <td nowrap="nowrap" class="txtCenter italic">+((len-n)*2)</td>
+                   <td><div id="nAlphaUC" class="box">&nbsp;</div></td>
+                    <td><div id="nAlphaUCBonus" class="boxPlus">&nbsp;</div></td>
+                </tr>  
+                <tr>
+                    <td><div id="div_nAlphaLC" class="fail">&nbsp;</div></td>
+                    <td>Lowercase Letters</td>
+                    <td class="txtCenter">Cond/Incr</td>
+                    <td class="txtCenter italic">+((len-n)*2)</td>
+                    <td><div id="nAlphaLC" class="box">&nbsp;</div></td>
+                    <td><div id="nAlphaLCBonus" class="boxPlus">&nbsp;</div></td>
+                </tr>
+                <tr>
+                    <td><div id="div_nNumber" class="fail">&nbsp;</div></td>
+                    <td>Numbers</td>
+                    <td class="txtCenter">Cond</td>
+                    <td class="txtCenter italic">+(n*4)</td>
+                    <td><div id="nNumber" class="box">&nbsp;</div></td>
+                    <td><div id="nNumberBonus" class="boxPlus">&nbsp;</div></td>
+               </tr>
+                <tr>
+                    <td><div id="div_nSymbol" class="fail">&nbsp;</div></td>
+                    <td>Symbols</td>
+                    <td class="txtCenter">Flat</td>
+                    <td class="txtCenter italic">+(n*6)</td>
+                    <td><div id="nSymbol" class="box">&nbsp;</div></td>
+                    <td><div id="nSymbolBonus" class="boxPlus">&nbsp;</div></td>
+               </tr>
+                <tr>
+                    <td><div id="div_nMidChar" class="fail">&nbsp;</div></td>
+                    <td>Middle Numbers or Symbols</td>
+                    <td class="txtCenter">Flat</td>
+                    <td class="txtCenter italic">+(n*2)</td>
+                    <td><div id="nMidChar" class="box">&nbsp;</div></td>
+                    <td><div id="nMidCharBonus" class="boxPlus">&nbsp;</div></td>
+               </tr>
+                <tr>
+                    <td><div id="div_nRequirements" class="fail">&nbsp;</div></td>
+                    <td>Requirements</td>
+                    <td class="txtCenter">Flat</td>
+                    <td class="txtCenter italic">+(n*2)</td>
+                    <td><div id="nRequirements" class="box">&nbsp;</div></td>
+                    <td><div id="nRequirementsBonus" class="boxPlus">&nbsp;</div></td>
+               </tr>
+                <tr>
+                    <th colspan="6">Deductions</th>
+                </tr>
+        <tr>
+                    <td width="1%"><div id="div_nAlphasOnly" class="pass">&nbsp;</div></td>
+                    <td width="94%">Letters Only</td>
+                    <td width="1%" class="txtCenter">Flat</td>
+                    <td width="1%" class="txtCenter italic">-n</td>
+                    <td width="1%"><div id="nAlphasOnly" class="box">&nbsp;</div></td>
+                    <td width="1%"><div id="nAlphasOnlyBonus" class="boxMinus">&nbsp;</div></td>
+        </tr>  
+        <tr>
+                    <td><div id="div_nNumbersOnly" class="pass">&nbsp;</div></td>
+                    <td>Numbers Only</td>
+                    <td class="txtCenter">Flat</td>
+                    <td class="txtCenter italic">-n</td>
+                    <td><div id="nNumbersOnly" class="box">&nbsp;</div></td>
+                    <td><div id="nNumbersOnlyBonus" class="boxMinus">&nbsp;</div></td>
+        </tr>  
+        <tr>
+                    <td><div id="div_nRepChar" class="pass">&nbsp;</div></td>
+                    <td>Repeat Characters (Case Insensitive)</td>
+                    <td class="txtCenter">Comp</td>
+                    <td nowrap="nowrap" class="txtCenter italic"> - </td>
+                    <td><div id="nRepChar" class="box">&nbsp;</div></td>
+                    <td><div id="nRepCharBonus" class="boxMinus">&nbsp;</div></td>
+        </tr>  
+        <tr>
+                    <td><div id="div_nConsecAlphaUC" class="pass">&nbsp;</div></td>
+                    <td>Consecutive Uppercase Letters</td>
+                    <td class="txtCenter">Flat</td>
+                    <td class="txtCenter italic">-(n*2)</td>
+                    <td><div id="nConsecAlphaUC" class="box">&nbsp;</div></td>
+                    <td><div id="nConsecAlphaUCBonus" class="boxMinus">&nbsp;</div></td>
+        </tr>  
+        <tr>
+                    <td><div id="div_nConsecAlphaLC" class="pass">&nbsp;</div></td>
+                    <td>Consecutive Lowercase Letters</td>
+                    <td class="txtCenter">Flat</td>
+                    <td class="txtCenter italic">-(n*2)</td>
+                    <td><div id="nConsecAlphaLC" class="box">&nbsp;</div></td>
+                    <td><div id="nConsecAlphaLCBonus" class="boxMinus">&nbsp;</div></td>
+        </tr>  
+        <tr>
+                    <td><div id="div_nConsecNumber" class="pass">&nbsp;</div></td>
+                    <td>Consecutive Numbers</td>
+                    <td class="txtCenter">Flat</td>
+                    <td class="txtCenter italic">-(n*2)</td>
+                    <td><div id="nConsecNumber" class="box">&nbsp;</div></td>
+                    <td><div id="nConsecNumberBonus" class="boxMinus">&nbsp;</div></td>
+        </tr>  
+        <tr>
+                    <td><div id="div_nSeqAlpha" class="pass">&nbsp;</div></td>
+                    <td>Sequential Letters (3+)</td>
+                    <td class="txtCenter">Flat</td>
+                    <td class="txtCenter italic">-(n*3)</td>
+                    <td><div id="nSeqAlpha" class="box">&nbsp;</div></td>
+                    <td><div id="nSeqAlphaBonus" class="boxMinus">&nbsp;</div></td>
+        </tr>  
+        <tr>
+                    <td><div id="div_nSeqNumber" class="pass">&nbsp;</div></td>
+                    <td>Sequential Numbers (3+)</td>
+                    <td class="txtCenter">Flat</td>
+                    <td class="txtCenter italic">-(n*3)</td>
+                    <td><div id="nSeqNumber" class="box">&nbsp;</div></td>
+                    <td><div id="nSeqNumberBonus" class="boxMinus">&nbsp;</div></td>
+        </tr>  
+        <tr>
+                    <td><div id="div_nSeqSymbol" class="pass">&nbsp;</div></td>
+                    <td>Sequential Symbols (3+)</td>
+                    <td class="txtCenter">Flat</td>
+                    <td class="txtCenter italic">-(n*3)</td>
+                    <td><div id="nSeqSymbol" class="box">&nbsp;</div></td>
+                    <td><div id="nSeqSymbolBonus" class="boxMinus">&nbsp;</div></td>
+        </tr>  
+                <tr>
+                    <th colspan="6">Legend</th>
+                </tr>
+                <tr>
+                    <td colspan="6">
+                        <ul id="listLegend">
+                            <li><div class="exceed imgLegend">&nbsp;</div> <span class="bold">Exceptional:</span> Exceeds minimum standards. Additional bonuses are applied.</li>
+                            <li><div class="pass imgLegend">&nbsp;</div> <span class="bold">Sufficient:</span> Meets minimum standards. Additional bonuses are applied.</li>
+                            <li><div class="warn imgLegend">&nbsp;</div> <span class="bold">Warning:</span> Advisory against employing bad practices. Overall score is reduced.</li>
+                            <li><div class="fail imgLegend">&nbsp;</div> <span class="bold">Failure:</span> Does not meet the minimum standards. Overall score is reduced.</li>
+                        </ul>
+                    </td>
+                </tr>
+      </table>
+<!-- <p style="margin: 10px auto 20px auto; width:500px; text-align:center;">
+<a href="http://www.expeditionr.com/" target="_blank" style="border-bottom: none !important; text-decoration:none !important"><img src="http://passwordmeter.com/images/_signature_pic_fjcruiserforums.gif" alt="" border="0" /></a><br />
+<a href="http://www.facebook.com/pages/Expeditionr/144306958964425" target="_blank" style="color:#db3838">Expeditionr on Facebook</a> - <a href="http://twitter.com/#%21/expeditionr" target="_blank" style="color:#db3838">Expeditionr on Twitter</a> - <a href="http://www.expeditionr.com/feed/" target="_blank" style="color:#db3838">Expeditionr on RSS</a>
+       </p>
+--> 
+  <div class="advertMid">
+		<script type="text/javascript"><!--
+		google_ad_client = "ca-pub-8841956045132710";
+		/* PasswordMeter - 728x90 - Image Text */
+		google_ad_slot = "5216551763";
+		google_ad_width = 728;
+		google_ad_height = 90;
+		//-->
+		</script>
+		<script type="text/javascript"
+		<!-src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+		</script>
+	</div>
+
+         <table id="tablePwdNotes" cellpadding="5" cellspacing="1" border="0">
+                <tr>
+                    <th>Quick Footnotes</th>
+                </tr>
+                <tr>
+                    <td>
+            &bull; <strong>Flat:</strong> Rates that add/remove in non-changing increments.<br />
+            &bull; <strong>Incr:</strong> Rates that add/remove in adjusting increments.<br />
+            &bull; <strong>Cond:</strong> Rates that add/remove depending on additional factors.<br />
+            &bull; <strong>Comp:</strong> Rates that are too complex to summarize. See source code for details.<br />
+            &bull; <strong>n:</strong> Refers to the total number of occurrences.<br />
+            &bull; <strong>len:</strong> Refers to the total password length.<br />
+                      &bull; Additional bonus scores are given for increased character variety.<br />
+                        &bull; Final score is a cumulative result of all bonuses minus deductions.<br />
+                        &bull; Final score is capped with a minimum of 0 and a maximum of 100.<br />
+                      &bull; Score and Complexity ratings are not conditional on meeting minimum requirements.<br />
+          </td>
+                </tr>
+                <tr>
+                    <th>Disclaimer</th>
+                </tr>
+                <tr>
+                    <td>
+            <p>This application is designed to assess the strength of password strings.  The instantaneous visual feedback provides the user a means to improve the strength of their passwords, with a hard focus on breaking the typical bad habits of faulty password formulation.  Since no official weighting system exists, we created our own formulas to assess the overall strength of a given password.  Please note, that this application does not utilize the typical "days-to-crack" approach for strength determination.  We have found that particular system to be severely lacking and unreliable for real-world scenarios.  This application is neither perfect nor foolproof, and should only be utilized as a loose guide in determining methods for improving the password creation process. </p>
+          </td>
+                </tr>
+                <tr>
+                    <th>Software Links</th>
+                </tr>
+                <tr>
+                    <td>
+			<p>
+				If you like Password Meter, you should really check out <a href="http://www.amplescaffolder.com" target="_blank" title="Check out the AMPLE Scaffolder Web Site">our sister site</a> with the newly released <a href="http://www.amplescaffolder.com/#page-content" target="_blank" title="Check out the AMPLE Scaffolder Package">AMPLE Scaffolder software</a>. It's also completely free and <a href="http://www.amplescaffolder.com/download/" target="_blank" title="Download the AMPLE Scaffolder Package">available for download</a>.<br /><hr /><br />
+			</p>
+            <div align="center">
+				<a href="http://metabetageek.com/software/" target="_blank" title="Download Password Meter Package">Download Password Meter Package</a>&nbsp; or &nbsp;<a href="http://www.amplescaffolder.com" target="_blank" title="Check out the AMPLE Scaffolder Package">Check out the AMPLE Scaffolder Package</a>
+				<br /><br />
+			</div>
+          
+          </td>
+                </tr>
+      </table>
+       </form>
+    <div class="xtend">&nbsp;</div>
+  </div>
+  <div class="advertBtm">
+		<script type="text/javascript"><!--
+		google_ad_client = "ca-pub-8841956045132710";
+		/* PasswordMeter - 728x90 - Image Text */
+		google_ad_slot = "5216551763";
+		google_ad_width = 728;
+		google_ad_height = 90;
+		//-->
+		</script>
+		<script type="text/javascript"
+		<!-src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+		</script>
+	</div>
+  <div id="footer">
+    <div class="txtRight txtSmall noPad">v.2.0 (rev.100518)</div>
+	<p class="txtCenter txtSmall">Other sites maintained by this author: 
+		<a href="http://www.amplescaffolder.com/" target="_blank">amplescaffolder.com</a>,  
+		<a href="http://www.expeditionr.com/" target="_blank">expeditionr.com</a>,  
+		<a href="http://www.metabetageek.com/" target="_blank">metabetageek.com</a>, 
+		<a href="http://www.moopad.com/" target="_blank">moopad.com</a>  
+	</p>
+    <p class="txtCenter txtSmall">This software is freely available for distribution under the <a href="http://www.gnu.org/licenses/gpl-3.0.txt" target="_blank">GNU General Public License (GPL)</a>.</p>
+  </div>        
+
+</body>
+</html>
+

@@ -1,7 +1,3 @@
--m pip install PyInstaller
-cd to folder
--m PyInstaller game.py --noconsole --onefile
-note: game.py is whatever the main file is
-
-for not --onefile
-copy assets/src into created folder
+version https://git-lfs.github.com/spec/v1
+oid sha256:46758337d9536adca76c02ff0330e1c75e668f16fa140e7ec069f3f50d36de40
+size 188

@@ -1,5 +1,3 @@
-pandas==0.22.0
-seaborn==0.8.1
-numpy==1.14.0
-matplotlib==2.2.2
-ipython==6.2.1
+version https://git-lfs.github.com/spec/v1
+oid sha256:1ace5fef3b402dcb62baa40fba5ecf7c3358d00cb5a5fca23ada85c782b6dd55
+size 77

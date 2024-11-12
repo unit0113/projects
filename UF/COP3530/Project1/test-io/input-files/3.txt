@@ -1,7 +1,3 @@
-6
-insert "Evan" 44985771
-insert "Earl" 31834874
-insert "Erica" 21456789
-printLevelCount
-insert "Enrique" 17891824
-printLevelCount
+version https://git-lfs.github.com/spec/v1
+oid sha256:d343d576c4a026aa38bfb37ec8a1b815d6b99a5d63668a89868df3352a56239a
+size 135

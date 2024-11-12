@@ -1,2 +1,3 @@
-numpy
-pyqt5
+version https://git-lfs.github.com/spec/v1
+oid sha256:dbeee50d52acee0d2d2e4827d30ddc20e50aa7da905fdd6338a09646aa28a45f
+size 12

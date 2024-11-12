@@ -1,1 +1,3 @@
-Holmes lit a pipe.
+version https://git-lfs.github.com/spec/v1
+oid sha256:8ebc4b12dab1835b70699e8014b60783b00aed07cfb478e3cb0440a574b8b470
+size 19

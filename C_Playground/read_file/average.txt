@@ -1,21 +1,3 @@
-#include <stdio.h>
-
-
-int main() {
-    FILE *file;
-    if ((file = fopen("elephant_seal_data.txt", "r")) == NULL) {
-        printf("Error opening file");
-        return 1;
-    }
-
-    int counter = 0;
-    int sum = 0;
-    int weights[1000];
-
-    while(fscanf(file, "%d", &weights[counter]) != EOF) {
-        sum += weights[counter++];
-    }
-
-    printf("Average weight: %.3lf", (double)sum / counter);
-    fclose(file);
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:317f9a98bd2d8da185a827ba413bb8b66d879e747a0e8d650528bc61e372420a
+size 439

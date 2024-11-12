@@ -1,11 +1,3 @@
-sort1 uses: Bubble Sort
-.114, .466, 16.544, .109, .422, 11.714, .023, .026, 2.974
-How do you know?: Significant outperformance on sorted lists
-
-sort2 uses: Merge Sort
-.012, .025, 3.285, .012, .03, 2.653, .012, .032, 4.180
-How do you know?: Significant outperformance of everything except when compared to bubble sort's Omega(n) on already sorted data
-
-sort3 uses: Selection Sort
-.039, .206, 7.799, .034, .179, 8.437, .035, .227, 8.271
-How do you know?: No difference based on list type, meaning there is no best case scenario. O and Omega are on the same order
+version https://git-lfs.github.com/spec/v1
+oid sha256:5316b6a11ec2246a73c97a3953561195738ebd223c0033c95f139db12cc2c3d6
+size 561

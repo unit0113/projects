@@ -1,4 +1,3 @@
-According to Merriam-Webster's Medical Dictionary,
-pneumonoultramicroscopicsilicovolcanoconiosis is a
-pneumoconiosis caused by inhalation of very fine
-silicate or quartz dust.
+version https://git-lfs.github.com/spec/v1
+oid sha256:28349707eaff9466cc5003d44d3e1b462bc183b1beeda6b6d9acee3556189512
+size 176

@@ -1,5 +1,3 @@
-name: ProGrids
-identifier: ProGrids2_AboutWindowIdentifier
-version: 2.5.0f0
-date: 8-3-2017
-changelog: Assets/ProCore/ProGrids/About/changelog.txt
+version https://git-lfs.github.com/spec/v1
+oid sha256:2e1c2d7f37674954058a31b7c90233c8938d362ffacb61c08288ce66980e1e41
+size 146

@@ -1,3 +1,3 @@
-If you're here, this means you haven't watched the "where to get the code" lecture very carefully!
-
-Please watch it again, and follow the instructions.
+version https://git-lfs.github.com/spec/v1
+oid sha256:d6bf08a72b72172f5d8deff6d5574ae7882016a82e1a5bc3d8eb640c174be475
+size 151

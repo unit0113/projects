@@ -1,17 +1,3 @@
-Gradient-Based Learning Applied to Document Recognition
-http://yann.lecun.com/exdb/publis/pdf/lecun-01a.pdf
-
-ImageNet Classification with Deep Convolutional Neural Networks
-https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf
-
-Convolution arithmetic tutorial
-https://theano-pymc.readthedocs.io/en/latest/tutorial/conv_arithmetic.html
-
-Very Deep Convolutional Networks for Large-Scale Visual Recognition
-http://www.robots.ox.ac.uk/~vgg/research/very_deep/
-
-ImageNet Classification with Deep Convolutional Neural Networks
-http://image-net.org/challenges/LSVRC/2012/supervision.pdf
-
-Going deeper with convolutions
-https://arxiv.org/pdf/1409.4842.pdf
+version https://git-lfs.github.com/spec/v1
+oid sha256:29d7eb57bdcff7f8ee62d757735bc87f01da70e68c31c5d87b16da12ea8cfbe2
+size 695

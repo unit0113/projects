@@ -1,21 +1,3 @@
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\bin\Debug\Reversi.chm
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\bin\Debug\Reversi.exe
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\bin\Debug\Reversi.pdb
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\bin\Debug\Core.dll
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\bin\Debug\ExampleAI.dll
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\bin\Debug\StudentAI.dll
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\bin\Debug\Core.pdb
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\bin\Debug\StudentAI.pdb
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\obj\Debug\Reversi.csproj.AssemblyReference.cache
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\obj\Debug\GameAI.GamePlaying.AboutDialog.resources
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\obj\Debug\GameAI.GamePlaying.ConfirmDialog.resources
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\obj\Debug\GameAI.GamePlaying.OptionsDialog.resources
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\obj\Debug\GameAI.GamePlaying.ReversiForm.resources
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\obj\Debug\GameAI.GamePlaying.SquareControl.resources
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\obj\Debug\GameAI.GamePlaying.StatisticsDialog.resources
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\obj\Debug\GameAI.GamePlaying.Properties.Resources.resources
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\obj\Debug\Reversi.csproj.GenerateResource.cache
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\obj\Debug\Reversi.csproj.CoreCompileInputs.cache
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\obj\Debug\Reversi.csproj.CopyComplete
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\obj\Debug\Reversi.exe
-C:\Users\unit0\Desktop\Python\projects\UF\CAP4053\Assignments\Ex2 - Reversi\Source\Reversi\obj\Debug\Reversi.pdb
+version https://git-lfs.github.com/spec/v1
+oid sha256:7f55162a1f803986cd7eeea647cb0c83be6380818f6d30b5b6774dece65ad439
+size 2713

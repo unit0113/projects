@@ -1,1 +1,3 @@
-Holmes sat in the red armchair and he chuckled.
+version https://git-lfs.github.com/spec/v1
+oid sha256:703afbaa41d0009ef088e482c0057a177bd639662ac80d51eb809d36e1d125d0
+size 48

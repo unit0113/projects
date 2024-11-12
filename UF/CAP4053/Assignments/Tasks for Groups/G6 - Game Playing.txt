@@ -1,7 +1,3 @@
-Identify an analog (non-digital) game that could be implemented as a computer game using game-playing techniques. Specifically identify…
-
-a) Representation of the game state
-b) Representation of the actions
-c) What minimax extensions would be applicable / appropriate
-d) How an action would be applied to a game state to yield a successor game state
-e) Heuristic(s) to evaluate game states for the purposes of comparison
+version https://git-lfs.github.com/spec/v1
+oid sha256:41f2ba2b8c3b7e5e1c85cf4532e9dbe18a38e3a3463bdccc199b43e7317d229d
+size 428

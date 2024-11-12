@@ -1,24 +1,3 @@
-// trigger file - if you've done problem 9 but no stories are popping up, you
-// should edit this file to contain triggers that will fire on current news
-// stories!
-
-// title trigger named t1
-t1,TITLE,election
-
-// description trigger named t2
-t2,DESCRIPTION,Trump
-
-// description trigger named t3
-t3,DESCRIPTION,Clinton
-
-// after trigger named t4
-t4,AFTER,3 Oct 2016 17:00:10
-
-// composite trigger named t4
-t5,AND,t2,t3
-
-// composite trigger named t4
-t6,AND,t1,t4
-
-// the trigger list contains t1 and t4
-ADD,t5,t6
+version https://git-lfs.github.com/spec/v1
+oid sha256:7d30b2355ed5a4b2fbcbcfa254ccd2b4ff7d5481cc3f2e74bb0cac4e1c281c74
+size 515

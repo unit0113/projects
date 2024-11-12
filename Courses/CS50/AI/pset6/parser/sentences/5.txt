@@ -1,1 +1,3 @@
-My companion smiled an enigmatical smile. 
+version https://git-lfs.github.com/spec/v1
+oid sha256:f52948561308e1d533c17abee5e89849eda7c76b485beb01d2544c06bef0c5f8
+size 42

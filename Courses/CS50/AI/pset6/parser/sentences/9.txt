@@ -1,1 +1,3 @@
-I had a country walk on Thursday and came home in a dreadful mess.
+version https://git-lfs.github.com/spec/v1
+oid sha256:a61df7b2c811dad9104b24ce3047664518767c1c2c9f71c1228a9496babf069b
+size 67

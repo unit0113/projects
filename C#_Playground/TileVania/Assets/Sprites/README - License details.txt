@@ -1,3 +1,3 @@
-These assets are provided as part of GameDev.tv's Complete Unity Developer 2D course and a part of the Super Platformer Assets created by Foxfin and available on the Unity Asset store - https://assetstore.unity.com/packages/2d/environments/super-platformer-assets-42013.
-
-You are permitted to use these with a personal license which means you can use them for your student project and for learning but you CANNOT use them in a published game. To use these assets in a published game you will need to purchase the asset pack from the asset store - https://assetstore.unity.com/packages/2d/environments/super-platformer-assets-42013
+version https://git-lfs.github.com/spec/v1
+oid sha256:ae2cda1d3036aa1db5e09306545c333e548f8f6e4adb2357a2ae916f5a2d7a7f
+size 632
