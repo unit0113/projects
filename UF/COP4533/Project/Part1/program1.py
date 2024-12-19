@@ -23,23 +23,27 @@ def program1(
 
     # Initialize loop parameters
     curr_width = widths[0]
-    total_height = heights[0]
+    total_height = 0
     platforms = [1]
 
     # Loop through all scultpures
+    platform_height = heights[0]
     for index in range(1, n):
         # If can fit on current platform
         if curr_width + widths[index] <= W:
             # Add to current platform
             curr_width += widths[index]
             platforms[-1] += 1
+            platform_height = max(platform_height, heights[index])
 
         # If can't fit on current platform
         else:
             # Initialize new platform
             curr_width = widths[index]
-            total_height += heights[index]
+            total_height += platform_height
+            platform_height = heights[index]
             platforms.append(1)
+    total_height += platform_height
 
     return len(platforms), total_height, platforms
 

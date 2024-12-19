@@ -20,13 +20,20 @@ def program5A(
     """
 
     # Initialize memo and set base case to 0
-    memo = [float("inf")] * (n + 1)
+    memo = {}
     memo[0] = 0
 
     # Precalculate running sums for width
     width_sum = [0] * (n + 1)
     for i in range(1, n + 1):
         width_sum[i] = width_sum[i - 1] + widths[i - 1]
+
+    # Precompute max heights for each segment
+    max_height_segment = [[0] * (n + 1) for _ in range(n + 1)]
+    for i in range(n):
+        max_height_segment[i][i] = heights[i]
+        for j in range(i + 1, n):
+            max_height_segment[i][j] = max(max_height_segment[i][j - 1], heights[j])
 
     # Recursive call
     def dp(i):
@@ -38,28 +45,22 @@ def program5A(
         if i == 0:
             return 0
 
-        # Explore partitions
         min_height = float("inf")
 
         # Try all partitions from j to i
-        max_height = 0
         for j in range(i, 0, -1):
             total_width = width_sum[i] - width_sum[j - 1]
-
-            # Break if doesn't fit
             if total_width > W:
-                break
+                break  # If the partition doesn't fit, stop exploring further
 
-            # Update max height
-            max_height = max(max_height, heights[j - 1])
+            # Get the maximum height in the current segment from j to i
+            segment_max_height = max_height_segment[j - 1][i - 1]
 
-            # Recursively calculate height for partition
-            height_for_this_partition = dp(j - 1) + max_height
-
-            # Minimize the total height
+            # Recursively calculate height for this partition and minimize total height
+            height_for_this_partition = dp(j - 1) + segment_max_height
             min_height = min(min_height, height_for_this_partition)
 
-        # Update memo and return
+        # Memoize the result for dp(i)
         memo[i] = min_height
         return min_height
 
