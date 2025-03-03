@@ -1,0 +1,7 @@
+set.seed(42)
+x=rnorm(1000,0,1)
+mean(x)
+median(x)
+mean(x, trime=0.1)
+quantile(x, 0.35)
+hist(x, main="Generated Data Distribution", xlab = "x", breaks=50)
