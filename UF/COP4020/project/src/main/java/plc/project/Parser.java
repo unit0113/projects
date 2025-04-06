@@ -52,10 +52,49 @@ public final class Parser {
      */
     public Ast.Field parseField() throws ParseException {
         //field ::= 'LET' 'CONST'? identifier ('=' expression)? ';'
+        //Updated for Analyser: field ::= field ::= 'LET' 'CONST'? identifier ':' identifier ('=' expression)? ';'
+        /* For original Parser
         try {
             boolean constant = match("CONST");
             Ast.Statement.Declaration declaration = parseDeclarationStatement();
             return new Ast.Field(declaration.getName(), constant, declaration.getValue());
+        } catch (ParseException p) {
+            throw new ParseException(p.getMessage(), p.getIndex());
+        }*/
+        try {
+            boolean constant = match("CONST");
+
+            if (!match(Token.Type.IDENTIFIER)) {
+                int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
+                throw new ParseException("Invalid Identifier", index);
+            }
+
+            String identifier = tokens.get(-1).getLiteral();
+
+            // Get Type
+            if (!match(":")) {
+                int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
+                throw new ParseException("Expected ':'", index);
+            }
+
+            if (!match(Token.Type.IDENTIFIER)) {
+                int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
+                throw new ParseException("Invalid Identifier", index);
+            }
+            String typeName = tokens.get(-1).getLiteral();
+
+            if (match("=")) {
+                Ast.Expression rightExpr = parseExpression();
+                if (match(";")) {
+                    return new Ast.Field(identifier, typeName, constant, Optional.of(rightExpr));
+                }
+            } else {
+                if (match(";")) {
+                    return new Ast.Field(identifier, typeName, constant,Optional.empty());
+                }
+            }
+            int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
+            throw new ParseException("Expected Semicolon", index);
         } catch (ParseException p) {
             throw new ParseException(p.getMessage(), p.getIndex());
         }
@@ -67,6 +106,8 @@ public final class Parser {
      */
     public Ast.Method parseMethod() throws ParseException {
         //method ::= 'DEF' identifier '(' (identifier (',' identifier)*)? ')' 'DO' statement* 'END'
+        //Update for Analyzer: 'DEF' identifier '(' (identifier ':' identifier (',' identifier ':' identifier)*)? ')' (':' identifier)? 'DO' statement* 'END'
+        /* Previous version
         try {
             if (!match(Token.Type.IDENTIFIER)) {
                 int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
@@ -113,6 +154,75 @@ public final class Parser {
             return new Ast.Method(functionName, params, statements);
         } catch (ParseException p) {
             throw new ParseException(p.getMessage(), p.getIndex());
+        }*/
+        try {
+            if (!match(Token.Type.IDENTIFIER)) {
+                int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
+                throw new ParseException("Expected Identifier", index);
+            }
+
+            String functionName = tokens.get(-1).getLiteral();
+            if (!match("(")) {
+                int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
+                throw new ParseException("Expected Parenthesis", index);
+            }
+
+            List<String> params = new ArrayList<>();
+            List<String> paramTypes = new ArrayList<>();
+            //Loop through args and store
+            while (match(Token.Type.IDENTIFIER)) {
+                params.add(tokens.get(-1).getLiteral());
+                if (!match(":")) {
+                    int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
+                    throw new ParseException("Expected ':'", index);
+                }
+                if (!match(Token.Type.IDENTIFIER)) {
+                    int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
+                    throw new ParseException("Invalid Identifier", index);
+                }
+                paramTypes.add(tokens.get(-1).getLiteral());
+
+                if (!match(",")) {
+                    if (!peek(")")) {
+                        int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
+                        throw new ParseException("Invalid Syntax: Function arguments must be comma separated", index);
+                    }
+                }
+            }
+
+            if (!match(")")) {
+                int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
+                throw new ParseException("Expected Parenthesis", index);
+            }
+
+            // Return type
+            Optional<String> returnType = Optional.empty();
+            if (match(":")) {
+                if (!match(Token.Type.IDENTIFIER)) {
+                    int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
+                    throw new ParseException("Invalid Identifier", index);
+                }
+                returnType = Optional.of(tokens.get(-1).getLiteral());
+            }
+
+            if (!match("DO")) {
+                int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
+                throw new ParseException("Expected DO", index);
+            }
+
+            //Loop through all statements
+            List<Ast.Statement> statements = new ArrayList<>();
+            while (!match("END") && tokens.has(0)) {
+                statements.add(parseStatement());
+            }
+
+            if(!tokens.get(-1).getLiteral().equals("END")) {
+                int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
+                throw new ParseException("missing END", index);
+            }
+            return new Ast.Method(functionName, params, paramTypes, returnType, statements);
+        } catch (ParseException p) {
+            throw new ParseException(p.getMessage(), p.getIndex());
         }
     }
 
@@ -123,7 +233,8 @@ public final class Parser {
      */
     public Ast.Statement parseStatement() throws ParseException {
         /** statement ::=
-        *    'LET' identifier ('=' expression)? ';' |
+        *    //'LET' identifier ('=' expression)? ';' |
+        *    Update for Analyzer: 'LET' identifier (':' identifier)? ('=' expression)? ';' |
         *    'IF' expression 'DO' statement* ('ELSE' statement*)? 'END' |
         *    'FOR' identifier 'IN' expression 'DO' statement* 'END' |
         *    'WHILE' expression 'DO' statement* 'END' |
@@ -171,22 +282,33 @@ public final class Parser {
      */
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
         //'LET' identifier ('=' expression)? ';'
+        //Update for Analyzer: 'LET' identifier (':' identifier)? ('=' expression)? ';'
         try {
             if (!match(Token.Type.IDENTIFIER)) {
                 int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
                 throw new ParseException("Invalid Identifier", index);
             }
 
-            //Branch
             String identifier = tokens.get(-1).getLiteral();
+
+            // Get Type
+            Optional<String> typeName = Optional.empty();
+            if (match(":")) {
+                if (!match(Token.Type.IDENTIFIER)) {
+                    int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
+                    throw new ParseException("Invalid Identifier", index);
+                }
+                typeName = Optional.of(tokens.get(-1).getLiteral());
+            }
+
             if (match("=")) {
                 Ast.Expression rightExpr = parseExpression();
                 if (match(";")) {
-                    return new Ast.Statement.Declaration(identifier, Optional.of(rightExpr));
+                    return new Ast.Statement.Declaration(identifier, typeName, Optional.of(rightExpr));
                 }
             } else {
                 if (match(";")) {
-                    return new Ast.Statement.Declaration(identifier, Optional.empty());
+                    return new Ast.Statement.Declaration(identifier, typeName, Optional.empty());
                 }
             }
             int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
@@ -246,7 +368,7 @@ public final class Parser {
      */
     public Ast.Statement.For parseForStatement() throws ParseException {
         //'FOR' '(' (identifier '=' expression)? ';' expression ';' (identifier '=' expression)? ')' statement* 'END'
-        throw new UnsupportedOperationException(); //TODO Awaiting determination on optional in Ast.java
+        //TODO Awaiting determination on missing optionals in Ast.java
         /*try {
             if (!match("(")) {
                 throw new ParseException("Expected Parentheses", tokens.get(-1).getIndex());
@@ -285,6 +407,48 @@ public final class Parser {
         } catch (ParseException p) {
             throw new ParseException(p.getMessage(), p.getIndex());
         }*/
+        //TODO Optional-less version, remove when ast fixed
+        try {
+            if (!match("(")) {
+                throw new ParseException("Expected Parentheses", tokens.get(-1).getIndex());
+            }
+
+            if(!match(Token.Type.IDENTIFIER)) {
+                int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
+                throw new ParseException("Expected Identifier", index);
+            }
+            Ast.Statement initialization = parseStatement();
+
+            if (!match(";")) {
+                throw new ParseException("Expected Semicolon", tokens.get(-1).getIndex());
+            }
+
+            Ast.Expression condition = parseExpression();
+            if (!match(";")) {
+                throw new ParseException("Expected Semicolon", tokens.get(-1).getIndex());
+            }
+
+            if(!match(Token.Type.IDENTIFIER)) {
+                int index = (tokens.has(0)) ? tokens.get(0).getIndex() : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
+                throw new ParseException("Expected Identifier", index);
+            }
+            Ast.Statement increment = parseStatement();
+
+            if (!match(")")) {
+                throw new ParseException("Expected Parentheses", tokens.get(-1).getIndex());
+            }
+
+            List<Ast.Statement> statements = new ArrayList<>();
+            while (!match("END") && tokens.has(0)) {
+                statements.add(parseStatement());
+            }
+            if(!tokens.get(-1).getLiteral().equals("END")) {
+                throw new ParseException("Expected END", tokens.get(-1).getIndex());
+            }
+            return new Ast.Statement.For(initialization, condition, increment, statements);
+        } catch (ParseException p) {
+            throw new ParseException(p.getMessage(), p.getIndex());
+        }
     }
 
     /**
