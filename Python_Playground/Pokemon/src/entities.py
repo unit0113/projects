@@ -3,11 +3,13 @@ from random import choice
 from settings import *
 from support import *
 from timer import Timer
+from monster import Monster
+
 
 class Entity(pygame.sprite.Sprite):
     def __init__(self, pos, frames, groups, facing_direction):
         super().__init__(groups)
-        self.z = WORLD_LAYERS['main']
+        self.z = WORLD_LAYERS["main"]
 
         # Graphics
         self.frame_index = 0
@@ -22,7 +24,7 @@ class Entity(pygame.sprite.Sprite):
         # Sprites
         self.image = self.frames[self.get_state()][self.frame_index]
         self.rect = self.image.get_frect(center=pos)
-        self.hitbox = self.rect.inflate(-self.rect.width/2, -60)
+        self.hitbox = self.rect.inflate(-self.rect.width / 2, -60)
 
         self.y_sort = self.rect.centery
 
@@ -44,61 +46,101 @@ class Entity(pygame.sprite.Sprite):
     def change_facing_direction(self, target_pos):
         relation = vector(target_pos) - vector(self.rect.center)
         if abs(relation.y) < 30:
-            self.facing_direction = 'right' if relation.x > 0 else 'left'
+            self.facing_direction = "right" if relation.x > 0 else "left"
         else:
-            self.facing_direction = 'down' if relation.y > 0 else 'up'
+            self.facing_direction = "down" if relation.y > 0 else "up"
 
     def block(self):
         self.blocked = True
-        self.direction = vector(0,0)
+        self.direction = vector(0, 0)
 
     def unblock(self):
         self.blocked = False
 
+
 class Character(Entity):
-    def __init__(self, pos, frames, groups, facing_direction, character_data, player, create_dialog, collision_sprites, radius):
+    def __init__(
+        self,
+        pos,
+        frames,
+        groups,
+        facing_direction,
+        character_data,
+        player,
+        create_dialog,
+        collision_sprites,
+        radius,
+        nurse,
+        notice_sound,
+    ):
         super().__init__(pos, frames, groups, facing_direction)
         self.character_data = character_data
         self.player = player
         self.create_dialog = create_dialog
-        self.collision_rects = [sprite.rect for sprite in collision_sprites if sprite is not self]
+        self.collision_rects = [
+            sprite.rect for sprite in collision_sprites if sprite is not self
+        ]
+        self.nurse = nurse
+        self.monsters = (
+            {
+                i: Monster(name, lvl)
+                for i, (name, lvl) in character_data["monsters"].items()
+            }
+            if "monsters" in character_data
+            else None
+        )
 
         # Movement
         self.has_moved = False
         self.can_rotate = True
         self.has_noticed = False
         self.radius = int(radius)
-        self.view_directions = self.character_data['directions']
+        self.view_directions = self.character_data["directions"]
 
         self.timers = {
-            'look_around_timer': Timer(1500, autostart=True, repeat=True, func=self.random_view_direction),
-            'notice': Timer(500, func=self.start_move)
+            "look_around_timer": Timer(
+                1500, autostart=True, repeat=True, func=self.random_view_direction
+            ),
+            "notice": Timer(500, func=self.start_move),
         }
+
+        self.notice_sound = notice_sound
 
     def random_view_direction(self):
         if self.can_rotate:
             self.facing_direction = choice(self.view_directions)
 
     def get_dialog(self):
-        return self.character_data['dialog']['defeated' if self.character_data['defeated'] else 'default']
-    
+        return self.character_data["dialog"][
+            "defeated" if self.character_data["defeated"] else "default"
+        ]
+
     def raycast(self):
-        if not self.has_moved and not self.has_noticed and check_connections(self.radius, self, self.player) and self.has_los():
+        if (
+            not self.has_moved
+            and not self.has_noticed
+            and check_connections(self.radius, self, self.player)
+            and self.has_los()
+        ):
             self.player.block()
             self.player.change_facing_direction(self.rect.center)
-            self.timers['notice'].activate()
+            self.timers["notice"].activate()
             self.can_rotate = False
             self.has_noticed = True
             self.player.noticed = True
+            self.notice_sound.play()
 
     def has_los(self):
         if vector(self.rect.center).distance_to(self.player.rect.center) < self.radius:
-            collisions = [bool(rect.clipline(self.rect.center, self.player.rect.center)) for rect in self.collision_rects]
+            collisions = [
+                bool(rect.clipline(self.rect.center, self.player.rect.center))
+                for rect in self.collision_rects
+            ]
             return not any(collisions)
-        
+
     def move(self, dt):
         if not self.has_moved and self.direction:
-            if not self.hitbox.inflate(10,10).colliderect(self.player.hitbox):
+            if not self.hitbox.inflate(10, 10).colliderect(self.player.hitbox):
                 self.rect.center += self.direction * self.speed * dt
                 self.hitbox.center = self.rect.center
             else:
@@ -111,13 +153,16 @@ class Character(Entity):
         for timer in self.timers.values():
             timer.update()
         self.animate(dt)
-        if self.character_data['look_around']:
+        if self.character_data["look_around"]:
             self.raycast()
             self.move(dt)
 
     def start_move(self):
-        relation = (vector(self.player.rect.center) - vector(self.rect.center)).normalize()
+        relation = (
+            vector(self.player.rect.center) - vector(self.rect.center)
+        ).normalize()
         self.direction = vector(round(relation.x), round(relation.y))
+
 
 class Player(Entity):
     def __init__(self, pos, frames, groups, facing_direction, collision_sprites):
@@ -143,16 +188,16 @@ class Player(Entity):
     def move(self, dt):
         self.rect.centerx += self.direction.x * self.speed * dt
         self.hitbox.centerx = self.rect.centerx
-        self.collisions('horz')
+        self.collisions("horz")
 
         self.rect.centery += self.direction.y * self.speed * dt
         self.hitbox.centery = self.rect.centery
-        self.collisions('vert')
+        self.collisions("vert")
 
     def collisions(self, axis):
         for sprite in self.collision_sprites:
             if sprite.hitbox.colliderect(self.hitbox):
-                if axis == 'horz':
+                if axis == "horz":
                     if self.direction.x > 0:
                         self.hitbox.right = sprite.hitbox.left
                     elif self.direction.x < 0:
@@ -171,4 +216,3 @@ class Player(Entity):
             self.input()
             self.move(dt)
         self.animate(dt)
-        

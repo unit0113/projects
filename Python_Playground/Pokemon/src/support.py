@@ -106,24 +106,29 @@ def coast_importer(cols, rows, *path):
 
     return new_dict
 
+
 def tmx_importer(*path):
     tmx_dict = {}
     for folder_path, sub_folders, file_names in walk(join(*path)):
         for file in file_names:
-            tmx_dict[file.split('.')[0]] = load_pygame(join(folder_path, file))
+            tmx_dict[file.split(".")[0]] = load_pygame(join(folder_path, file))
     return tmx_dict
+
 
 def monster_importer(cols, rows, *path):
     monster_dict = {}
     for folder_path, sub_folders, image_names in walk(join(*path)):
         for image in image_names:
-            image_name = image.split('.')[0]
+            image_name = image.split(".")[0]
             monster_dict[image_name] = {}
             frame_dict = import_tilemap(cols, rows, *path, image_name)
-            for row, key in enumerate(('idle', 'attack')):
-                monster_dict[image_name][key] = [frame_dict[(col, row)] for col in range(cols)]
+            for row, key in enumerate(("idle", "attack")):
+                monster_dict[image_name][key] = [
+                    frame_dict[(col, row)] for col in range(cols)
+                ]
 
     return monster_dict
+
 
 def outline_creator(frame_dict, width):
     outline_frame_dict = {}
@@ -132,11 +137,13 @@ def outline_creator(frame_dict, width):
         for state, frames in monster_frames.items():
             outline_frame_dict[monster][state] = []
             for frame in frames:
-                new_surf = pygame.Surface(vector(frame.get_size()) + vector(width * 2), pygame.SRCALPHA)
-                new_surf.fill((0,0,0,0))
+                new_surf = pygame.Surface(
+                    vector(frame.get_size()) + vector(width * 2), pygame.SRCALPHA
+                )
+                new_surf.fill((0, 0, 0, 0))
                 white_frame = pygame.mask.from_surface(frame).to_surface()
-                white_frame.set_colorkey('black')
-                
+                white_frame.set_colorkey("black")
+
                 new_surf.blit(white_frame, (0, 0))
                 new_surf.blit(white_frame, (width, 0))
                 new_surf.blit(white_frame, (width * 2, 0))
@@ -149,6 +156,27 @@ def outline_creator(frame_dict, width):
 
     return outline_frame_dict
 
+
+def attack_importer(*path):
+    attack_dict = {}
+    for folder_path, _, image_names in walk(join(*path)):
+        for image in image_names:
+            image_name = image.split(".")[0]
+            attack_dict[image_name] = list(
+                import_tilemap(4, 1, folder_path, image_name).values()
+            )
+
+    return attack_dict
+
+
+def audio_importer(*path):
+    files = {}
+    for folder_path, _, file_names in walk(join(*path)):
+        for file_name in file_names:
+            full_path = join(folder_path, file_name)
+            files[file_name.split(".")[0]] = pygame.mixer.Sound(full_path)
+
+
 # Game Functions
 def draw_bar(surface, rect, value, max_value, color, bg_color, radius=1):
     ratio = rect.width / max_value
@@ -158,12 +186,23 @@ def draw_bar(surface, rect, value, max_value, color, bg_color, radius=1):
     pygame.draw.rect(surface, bg_color, bg_rect, 0, radius)
     pygame.draw.rect(surface, color, progress_rect, 0, radius)
 
-def check_connections(radius, entity, target, tolerance = 30):
+
+def check_connections(radius, entity, target, tolerance=30):
     relation = vector(target.rect.center) - vector(entity.rect.center)
     if relation.length() < radius:
-        if entity.facing_direction =='left' and relation.x < 0 and abs(relation.y) < tolerance\
-            or entity.facing_direction =='right' and relation.x > 0 and abs(relation.y) < tolerance\
-            or entity.facing_direction =='up' and relation.y < 0 and abs(relation.x) < tolerance\
-            or entity.facing_direction =='down' and relation.y > 0 and abs(relation.x) < tolerance:
+        if (
+            entity.facing_direction == "left"
+            and relation.x < 0
+            and abs(relation.y) < tolerance
+            or entity.facing_direction == "right"
+            and relation.x > 0
+            and abs(relation.y) < tolerance
+            or entity.facing_direction == "up"
+            and relation.y < 0
+            and abs(relation.x) < tolerance
+            or entity.facing_direction == "down"
+            and relation.y > 0
+            and abs(relation.x) < tolerance
+        ):
             return True
     return False
