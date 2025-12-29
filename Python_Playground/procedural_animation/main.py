@@ -1,6 +1,8 @@
+# https://github.com/argonautcode/animal-proc-anim/blob/main/Chain.pde
+# https://www.youtube.com/watch?v=qlfh_rv6khY
+
 import pygame
 
-from worm import Worm
 from snake import Snake
 
 
