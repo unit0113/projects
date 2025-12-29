@@ -1,0 +1,9 @@
+[project]
+name = "procedural-animation"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pygame-ce>=2.5.6",
+]
